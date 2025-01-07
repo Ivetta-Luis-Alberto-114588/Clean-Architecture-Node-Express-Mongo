@@ -1,9 +1,13 @@
-import {Request, Response} from "express"
+import {NextFunction, Request, Response} from "express"
 import { RegisterUserDto } from "../../domain/dtos/auth/register-user.dto"
+import { AuthRepository } from "../../domain/repositories/auth.repository"
+import { CustomError } from "../../domain/errors/custom.error"
 
 export class AuthController {
 
-    constructor(){
+    constructor(
+        private readonly authRepository: AuthRepository
+    ) {
         
     }
 
@@ -11,12 +15,18 @@ export class AuthController {
     registerUser =  (req: Request, res: Response)=>{
         const[error, registerUserDto] = RegisterUserDto.create(req.body)
 
-        if(error) return res.status(400).json({error})
+        if (error) {
+            res.status(400).json({ error });
+            return;
+          }
         
-        res.json(registerUserDto)
+        this.authRepository.register(registerUserDto!)
+            .then(x => res.json(x))
+            .catch(x => res.status(500).json(x))
+
     }
 
-    loginrUser =  (req: Request, res: Response)=>{
+    loginUser =  (req: Request, res: Response)=>{
         res.json("login controller")
     }
 }
