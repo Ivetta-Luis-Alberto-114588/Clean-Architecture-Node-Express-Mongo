@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from "express";
+import { JwtAdapter } from "../../configs/jwt";
 
 export class AuthMiddleware {
 
 
-    static  validateJwt = (req: Request, res: Response, next: NextFunction): void =>{
+    static  validateJwt = async (req: Request, res: Response, next: NextFunction) =>{
 
         const authorization = req.header('Authorization')
         
@@ -22,10 +23,14 @@ export class AuthMiddleware {
         try {
 
             //todo
-            //const payload = jwtAdapter
+            const payload = await JwtAdapter.validateToken<{id: string}>(token)
 
+            if(!payload){
+                res.status(401).json({error: "no payload"})
+                return
+            }
 
-            req.body.token = token
+            req.body.payload = payload
             
             next();
 
