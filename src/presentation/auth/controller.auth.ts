@@ -3,6 +3,7 @@ import { RegisterUserDto } from "../../domain/dtos/auth/register-user.dto"
 import { AuthRepository } from "../../domain/repositories/auth.repository"
 import { CustomError } from "../../domain/errors/custom.error"
 import { JwtAdapter } from "../../configs/jwt"
+import { UserModel } from "../../data/mongodb/models/user.model"
 
 export class AuthController {
 
@@ -41,5 +42,17 @@ export class AuthController {
 
     loginUser =  (req: Request, res: Response)=>{
         res.json("login controller")
+    }
+
+    getUsers = (req: Request, res: Response)=>{
+        UserModel.find()
+            .then(x => {
+                
+                res.json({
+                    x,
+                    token: req.body.token
+                })
+            })
+            .catch(x=> res.status(500).send({error: "internal server error"}))
     }
 }
