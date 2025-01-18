@@ -7,7 +7,7 @@ import { AuthDatasourceImpl } from "../../infrastructure/datasources/auth.dataso
 
 export class AuthRoutes { 
 
-    static get routes() : Router {
+    static get getAuthRoutes() : Router {
         
         const router = Router()
         const database = new AuthDatasourceImpl()

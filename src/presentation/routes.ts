@@ -3,13 +3,13 @@ import { AuthRoutes } from "./auth/routes.auth";
 
 
 
-export class AppRoutes { 
+export class MainRoutes { 
 
-    static get routes() : Router {
+    static get getMainRoutes() : Router {
         
         const router = Router()
 
-        router.use("/api/auth", AuthRoutes.routes)
+        router.use("/api/auth", AuthRoutes.getAuthRoutes)
         // router.use("/api/user")
         // router.use("/api/products")
         // router.use("/api/clients")
