@@ -2,6 +2,7 @@ import {NextFunction, Request, Response} from "express"
 import { RegisterUserDto } from "../../domain/dtos/auth/register-user.dto"
 import { AuthRepository } from "../../domain/repositories/auth.repository"
 import { CustomError } from "../../domain/errors/custom.error"
+import { JwtAdapter } from "../../configs/jwt"
 
 export class AuthController {
 
@@ -19,15 +20,22 @@ export class AuthController {
     }
 
 
-    registerUser = (req: Request, res: Response) => {
+    registerUser = (req: Request, res: Response): void => {
         const [error, registerUserDto] = RegisterUserDto.create(req.body);
     
         if (error) {
-            return res.status(400).json({ error });
+             res.status(400).json({ error });
         }
         
         this.authRepository.register(registerUserDto!)
-            .then(user => res.json(user))
+            .then(async(user) => {
+                
+                
+                res.json({
+                    user: user,
+                    token: await JwtAdapter.generateToken({id: user.id}, '2h')
+                })
+            })
             .catch(error => this.handleError(error, res));
     }
 
