@@ -48,7 +48,7 @@ export class AuthController {
         UserModel.find()
             .then(users => {
                 
-                res.json({
+                return res.json({
                     //users,
                     user: req.body.user
                 })
