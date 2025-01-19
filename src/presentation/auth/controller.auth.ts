@@ -5,6 +5,8 @@ import { CustomError } from "../../domain/errors/custom.error"
 import { JwtAdapter } from "../../configs/jwt"
 import { UserModel } from "../../data/mongodb/models/user.model"
 import { RegisterUser } from "../../domain/use-cases/auth/register-user.use-case"
+import { LoginUserDto } from "../../domain/dtos/auth/login-user.dto"
+import { LoginUser } from "../../domain/use-cases/auth/login-user.use-case"
 
 export class AuthController {
 
@@ -37,7 +39,16 @@ export class AuthController {
     }
 
     loginUser =  (req: Request, res: Response)=>{
-        res.json("login controller")
+        const [error, loginUserDto] = LoginUserDto.login(req.body);
+    
+        if (error) {
+             res.status(400).json({ error });
+        }
+        
+        new LoginUser(this.authRepository)
+            .execute(loginUserDto!)
+            .then(data => res.json(data))
+            .catch(err => this.handleError(err, res))     
     }
 
     getUsers = (req: Request, res: Response)=>{
