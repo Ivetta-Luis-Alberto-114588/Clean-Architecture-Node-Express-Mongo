@@ -7,6 +7,9 @@ import { Validators } from "../../../configs/validator"
 
 export class RegisterUserDto {
     
+
+    //el constructor es privado para que solo se puedan crear instancias
+    //dentro de esta clase solamente
     private constructor(
         public name: string,
         public email: string,
@@ -14,17 +17,23 @@ export class RegisterUserDto {
     ){}
 
     static create(object: {[key:string]:any}): [string?, RegisterUserDto?]{
+                // object("name": string)       [error, instancia del dto]
         
+        
+        // desestructo el objeto que estoy esperando
         const {name, email, password} = object
         
-        if(!name) return ["name is required"]
-        if(!email) return ["email is required"]
-        if(! Validators.checkEmail.test(email)) return ["email is not valid"]
-        if(!password) return ["password is required"]
-        if( password.length < 6 )  return ["password too short"]
+
+        //aca estan las validaciones necesarias y siempre debo devolver una tupla, 2 valores
+        if(!name) return ["name is required", undefined]
+        if(!email) return ["email is required", undefined]
+        if(!Validators.checkEmail.test(email)) return ["email is not valid", undefined]
+        if(!password) return ["password is required", undefined]
+        if( password.length < 6 )  return ["password too short", undefined]
         
 
-        return [undefined, new RegisterUserDto(name, email, password)]
+        //como no hay error devuelvo undefined y la instancia del dto (que es privada)
+        return [undefined, new RegisterUserDto(name.toLowerCase(), email.toLowerCase(), password)]
     }
 
 }

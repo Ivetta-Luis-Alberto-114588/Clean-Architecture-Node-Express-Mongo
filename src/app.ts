@@ -15,7 +15,7 @@ async function main() {
         p_dbName: envs.MONGO_DB_NAME
     })
 
-    //server
+    //server, le debo pasar el puerto y las rutas
     new server({
         p_port: envs.PORT, 
         p_routes: MainRoutes.getMainRoutes }).start()   

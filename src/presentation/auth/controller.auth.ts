@@ -23,7 +23,7 @@ export class AuthController {
         return res.status(500).json({error: "internal server error"});
     }
 
-
+    //aca se van a llamar los casos de uso
     registerUser = (req: Request, res: Response): void => {
         const [error, registerUserDto] = RegisterUserDto.create(req.body);
     
@@ -37,7 +37,9 @@ export class AuthController {
             .catch(err => this.handleError(err, res))       
 
     }
+    
 
+    //aca se van a llamar los casos de uso
     loginUser =  (req: Request, res: Response)=>{
         const [error, loginUserDto] = LoginUserDto.login(req.body);
     
@@ -51,6 +53,7 @@ export class AuthController {
             .catch(err => this.handleError(err, res))     
     }
 
+    //aca se van a llamar los casos de uso
     getUsers = (req: Request, res: Response)=>{
         UserModel.find()
             .then(users => {
