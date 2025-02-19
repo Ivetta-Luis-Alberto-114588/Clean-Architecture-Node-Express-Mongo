@@ -62,4 +62,6 @@ export class AuthController {
             })
             .catch(x=> res.status(500).send({error: "internal server error"}))
     }
+
+    //TODO delete, update, etc
 }

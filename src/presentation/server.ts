@@ -11,20 +11,24 @@ export class server {
 
     public readonly app = express()
     private readonly port : number
-    private readonly route: Router
+    private readonly routes: Router
 
     constructor(options: IOptions){
         const {p_port, p_routes} = options
         
         this.port = p_port
-        this.route = p_routes
+        this.routes = p_routes
     }
 
     async start(){
 
+        //permitir que express entienda json
         this.app.use(express.json())
-        this.app.use(MainRoutes.getMainRoutes)
+        
+        //usar las rutas definidas
+        this.app.use(this.routes)
 
+        //escuchar el puerto definido
         this.app.listen(this.port, ()=>{
             console.log("server running on port", this.port)
         })
