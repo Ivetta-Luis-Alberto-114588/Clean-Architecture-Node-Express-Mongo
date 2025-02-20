@@ -16,6 +16,8 @@ type CompareFunction = (password: string, hashed: string) => boolean
 export class AuthDatasourceImpl implements AuthDatasource{
     
     constructor(
+        // aca estoy inyectando las funciones que necesito para hashear y comparar contraseñas
+        // estoy poniendo los valores por defecto si es que no hago la inyeccion de dependencias
         private readonly hashPassword: HashFunction = BcryptAdapter.hash,
         private readonly comparePassword: CompareFunction = BcryptAdapter.compare
     ){}
@@ -53,7 +55,7 @@ export class AuthDatasourceImpl implements AuthDatasource{
 
             //1 verificar correo
             const exists = await UserModel.findOne({email: email})
-            if(exists) throw CustomError.badRequest('user already exists')
+            if(exists) throw CustomError.badRequest('User already exists')
 
             //2 encritar la contraseña
             const passwordHashed = this.hashPassword(password)
@@ -69,13 +71,23 @@ export class AuthDatasourceImpl implements AuthDatasource{
             //guardo el user en la bd
             await user.save()
 
-
-            //3 mapear la respuesa nuestra entidad
+            
+            //aca estoy mapeando la respuesta de la bd a mi entidad en forma manual
+            // return new UserEntity(
+                //     user.id, 
+                //     user.name,
+                //      user.email,
+                //     user.password,
+                //     user.roles)    
+                
+                
+            //3 mapear a una entidad la respuesta de la base de datos
             return UserMapper.userEntityFromObject(user)
             
         } catch (error) {
             
             if(error instanceof CustomError){
+                console.log("entro al throw error comun")
                 throw error
             }
 

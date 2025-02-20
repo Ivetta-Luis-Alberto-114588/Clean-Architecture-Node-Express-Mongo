@@ -25,7 +25,7 @@ export class CustomError extends Error {
     }
 
     static internalServerError(message: string = "Internal Server Error"){
-        console.log(message)
+        console.log('log del errors/custom_error.ts ',message)
         return new CustomError(500, message)
     }
 }

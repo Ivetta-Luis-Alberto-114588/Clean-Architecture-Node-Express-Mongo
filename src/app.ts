@@ -10,6 +10,7 @@ import { server } from "./presentation/server"
 
 async function main() {
     //await bd
+    //el servidor no se ejecuta hasta que la bd no se haya conectado
     await MongoDatabase.connect({
         p_mongoUrl: envs.MONGO_URL,
         p_dbName: envs.MONGO_DB_NAME

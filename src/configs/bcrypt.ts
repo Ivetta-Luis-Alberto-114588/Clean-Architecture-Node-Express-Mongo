@@ -6,8 +6,8 @@ export class BcryptAdapter {
         return hashSync(password)
     }
     
-
-    static compare(password: string, hashed: string): boolean {
-        return compareSync(password, hashed)
+ 
+    static compare(originalPassword: string, hashedPassword: string): boolean {
+        return compareSync(originalPassword, hashedPassword)
     } 
 }

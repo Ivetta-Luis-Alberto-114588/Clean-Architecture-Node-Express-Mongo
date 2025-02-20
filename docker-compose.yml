@@ -12,4 +12,4 @@ services:
     volumes:
       - ./mongo:/data/db
     ports:
-      - 27018:27017
+      - 27018:27017 # miPuerto:puertoContenedor

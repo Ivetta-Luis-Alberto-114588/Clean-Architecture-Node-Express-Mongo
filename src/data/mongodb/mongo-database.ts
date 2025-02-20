@@ -18,11 +18,11 @@ export class MongoDatabase {
                 dbName: p_dbName
             })
 
-            console.log("mongo connected")
+            console.log("Mongo connected")
             return true
 
         } catch (error) {
-            console.log("mongo connection error")
+            console.log("Mongo connection error")
             throw error;
         }
     }

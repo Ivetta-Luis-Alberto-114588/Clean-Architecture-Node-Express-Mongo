@@ -27,6 +27,8 @@ export class RegisterUserDto {
         //aca estan las validaciones necesarias y siempre debo devolver una tupla, 2 valores
         if(!name) return ["name is required", undefined]
         if(!email) return ["email is required", undefined]
+        
+        //validators.checkEmail va a devolver una expresion regular
         if(!Validators.checkEmail.test(email)) return ["email is not valid", undefined]
         if(!password) return ["password is required", undefined]
         if( password.length < 6 )  return ["password too short", undefined]

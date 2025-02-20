@@ -22,10 +22,16 @@ export class server {
 
     async start(){
 
-        //permitir que express entienda json
+        //middleware permitir que express entienda json
+
+        //express.json es para recibir raw en el body o 
+        //enviar raw
         this.app.use(express.json())
+
+        //es para que express permita entender urlencoded
+        this.app.use(express.urlencoded({extended: true}))
         
-        //usar las rutas definidas
+        //middleware usar las rutas definidas
         this.app.use(this.routes)
 
         //escuchar el puerto definido

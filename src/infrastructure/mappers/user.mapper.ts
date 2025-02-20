@@ -3,15 +3,19 @@ import { CustomError } from "../../domain/errors/custom.error";
 
 export class UserMapper {
 
+
+    //lo que voy a hacer es que va a venir informacion y la voy a transformar
+    //en una entidad y de paso voy a hacer validaciones minimas de los datos
+    //que me estan llegando
     static userEntityFromObject(object: {[key: string]: any}){
 
         const {_id, id, name, email, password, roles} = object
 
-        if(!_id || !id) throw CustomError.badRequest('missing id')
-        if(!name) throw CustomError.badRequest("missing name")
-        if(!email) throw CustomError.badRequest("missing email")
-        if(!password) throw CustomError.badRequest("missing password")
-        if(!roles) throw CustomError.badRequest("missing roles")
+        if(!_id || !id) throw CustomError.badRequest('mapper missing id')
+        if(!name) throw CustomError.badRequest("mapper missing name")
+        if(!email) throw CustomError.badRequest("mapper missing email")
+        if(!password) throw CustomError.badRequest("mapper missing password")
+        if(!roles) throw CustomError.badRequest("mapper missing roles")
 
 
         return new UserEntity(
