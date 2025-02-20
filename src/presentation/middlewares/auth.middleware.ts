@@ -10,24 +10,26 @@ export class AuthMiddleware {
         const authorization = req.header('Authorization')
         
         if(!authorization) {
-             res.status(401).json({error: "no token"})            
+             res.status(401).json({error: "Middleware, No authorization"})            
              return
         }
 
         if(!authorization!.startsWith("Bearer ")) {
-             res.status(401).json({error: "no bearer"})
+             res.status(401).json({error: "Middleware, No bearer"})
              return
         } 
         
         const token = authorization!.split(' ')[1] || ""
 
+
+
         try {
 
-            //todo
             const payload = await JwtAdapter.validateToken<{id: string}>(token)
 
+            console.log("payload", payload)
             if(!payload){
-                res.status(401).json({error: "token invalid"})
+                res.status(401).json({error: "Middleware, token invalid"})
                 return
             }
 
@@ -36,16 +38,16 @@ export class AuthMiddleware {
             const user = await UserModel.findById(payload.id)
 
             if(!user){
-                res.status(401).json({error: "invalid token - user not found"})
+                res.status(401).json({error: "Middleware, invalid token - user not found"})
             }
 
-            req.body.user = user
+            req.body.token = token
             
             next();
 
         } catch (error) {
             console.log(error)
-            res.status(500).json({error: "internal sever error"})
+            res.status(500).json({error: "Middleware, Internal server error"})
             
         }
         

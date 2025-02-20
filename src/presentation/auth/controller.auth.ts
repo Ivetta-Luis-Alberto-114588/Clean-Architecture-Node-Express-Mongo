@@ -75,10 +75,10 @@ export class AuthController {
     //aca se van a llamar los casos de uso
     getUsers = (req: Request, res: Response)=>{
         UserModel.find()
-            .then(users => res.json(
-                users
-                // user: req.body.user
-                )
+            .then(users => res.json({
+                users,
+                token :  req.body.token
+                })
             )
             .catch(x=> res.status(500).send({error: "controller.auth getUserInternal server error"}))
     }
@@ -101,7 +101,4 @@ export class AuthController {
             .catch(x=> res.status(500).send({error: "controller.auth updateUserInternal server error"}))
     }
 
-
-
-    //TODO delete, update, etc
 }

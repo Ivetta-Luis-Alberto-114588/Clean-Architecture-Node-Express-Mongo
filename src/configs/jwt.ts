@@ -25,8 +25,10 @@ export class JwtAdapter {
         return new Promise((resolve)=>{
             jwt.verify(token, JWT_SEED, (err, decoded)=>{
                 
+                //si hay un error devuelvo null
                 if(err) return resolve(null)
 
+                //si esta todo bien devuelvo el payload
                 resolve(decoded as T)
 
             })
