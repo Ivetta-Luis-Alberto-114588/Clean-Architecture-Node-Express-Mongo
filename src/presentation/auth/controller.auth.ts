@@ -75,15 +75,33 @@ export class AuthController {
     //aca se van a llamar los casos de uso
     getUsers = (req: Request, res: Response)=>{
         UserModel.find()
-            .then(users => {
-                
-                return res.json({
-                    //users,
-                    user: req.body.user
-                })
-            })
-            .catch(x=> res.status(500).send({error: "internal server error"}))
+            .then(users => res.json(
+                users
+                // user: req.body.user
+                )
+            )
+            .catch(x=> res.status(500).send({error: "controller.auth getUserInternal server error"}))
     }
+
+    deleteUser = (req: Request, res: Response)=>{
+        const id = req.params.id
+        UserModel.deleteOne({_id: id})
+            .exec()
+            .then(x=> res.json({message: "user deleted"}))
+            .catch(x=> res.status(500).send({error: "controller.auth deleteUserInternal server error"}))
+    }
+
+    updateUser = (req: Request, res: Response)=>{
+        const id = req.params.id
+        const userToModify = req.body
+        UserModel
+            .updateOne({_id: id}, userToModify)
+            .exec()
+            .then(x=> res.json({message: "user updated"}))
+            .catch(x=> res.status(500).send({error: "controller.auth updateUserInternal server error"}))
+    }
+
+
 
     //TODO delete, update, etc
 }

@@ -5,7 +5,7 @@ Ejecutar:
 * npm install, para instalar todos los modulos
 * docker desktop
 * docker-compose  up -d
-* mongo compass en el puerto 27018
+* mongo compass en el puerto 27018 (https://www.mongodb.com/try/download/compass)
 * npm run dev
 
 Depurar
