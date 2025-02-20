@@ -1,16 +1,17 @@
 Ejecutar:
 
-* docker-compose  up -d
+* debe estar instalado node 20
+* se puede usar nvm (list, install, use) para tener un manejador de versiones de node
+* npm install, para instalar todos los modulos
 * docker desktop
+* docker-compose  up -d
 * mongo compass en el puerto 27018
 * npm run dev
-
 
 Depurar
 
 * no tiene que estar andando la terminal
 * ctrl + shift + p  ==> debug npm script  ==> dev
-
 
 Rellenar las variables de entrono
 
