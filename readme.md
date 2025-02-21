@@ -7,6 +7,7 @@ Ejecutar:
 * docker-compose  up -d
 * mongo compass en el puerto 27018 (https://www.mongodb.com/try/download/compass)
 * npm run dev
+* openssl rand -hex 16 (para generar una semilla aleatoria de 16 caracteres con open ssl) (hay que buscar el directorio de git/usr/bin y ahi esta el archivo openssl y hay que ponerlo en las variables de entorno de windows
 
 Depurar
 
@@ -41,9 +42,10 @@ POST:
 
 GET
 
-1. http://localhost:3000/api/auth
+1. http://localhost:3000/api/auth   (trae el usuario loggeado)
 
    Authorization: 'Bearer 		eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YjQ4MmJkYzg3MTFjMzI4ZGZjMmVjNyIsImlhdCI6MTczOTg4MzE5NywiZXhwIjoxNzM5ODkwMzk3fQ.uyIG3mPVkHhKuJ_ESXlDgYG4_BaCMchazsE1Dgtebho'
+2. http://localhost:3000/api/auth/all  (trae todos los usuarios)
 
 DELETE
 

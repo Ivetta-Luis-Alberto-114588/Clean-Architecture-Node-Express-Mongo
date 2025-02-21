@@ -39,9 +39,11 @@ export class AuthMiddleware {
 
             if(!user){
                 res.status(401).json({error: "Middleware, invalid token - user not found"})
+                return
             }
 
-            req.body.token = token
+            //aca le agrego el usuario al body
+            req.body.user = user
             
             next();
 

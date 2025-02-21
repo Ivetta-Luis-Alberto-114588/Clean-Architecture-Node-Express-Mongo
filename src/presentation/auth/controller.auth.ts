@@ -72,12 +72,22 @@ export class AuthController {
             .catch(err => this.handleError(err, res))     
     }
 
+
     //aca se van a llamar los casos de uso
-    getUsers = (req: Request, res: Response)=>{
+    getUserByToken = (req: Request, res: Response)=>{
         UserModel.find()
             .then(users => res.json({
-                users,
-                token :  req.body.token
+                user: req.body.user
+                })
+            )
+            .catch(x=> res.status(500).send({error: "controller.auth getUserInternal server error"}))
+    }
+
+    //aca se van a llamar los casos de uso
+    getAllUsers = (req: Request, res: Response)=>{
+        UserModel.find()
+            .then(users => res.json({
+                users: users
                 })
             )
             .catch(x=> res.status(500).send({error: "controller.auth getUserInternal server error"}))
