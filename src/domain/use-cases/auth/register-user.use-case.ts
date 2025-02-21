@@ -3,52 +3,76 @@ import { RegisterUserDto } from "../../dtos/auth/register-user.dto";
 import { CustomError } from "../../errors/custom.error";
 import { AuthRepository } from "../../repositories/auth.repository";
 
-interface RegisterUserUseCase{
-    execute (registerUserDto: RegisterUserDto): Promise<UserToken>
+
+//defino la firma de los metodos de los casos de uso
+interface IRegisterUserUseCase{
+    execute (registerUserDto: RegisterUserDto): Promise<IUserWithToken>
 }
 
-interface UserToken{
-    token: string,
+
+//defino la firma de lo que va a devolver el caso de uso
+interface IUserWithToken{
     user: {
         id: string, 
         name: string,
-        email: string
-    }
+        email: string,
+        password: string,
+        role: string[],
+        token: string,
+    },
 }
 
-//es como una interfaz pero para una funcion
+//es como una interfaz pero para una funcion del token
 type SignToken = (payload: Object, duration?: "2h") => Promise<string | null>
             
 
-export class RegisterUser implements RegisterUserUseCase {
+export class RegisterUserUseCase implements IRegisterUserUseCase {
     
+
+    //aca tengo que inyectar el AuthRepository para poder usarlo en el controller
+    //ya que el controller no tiene que saber como se implementa el repositorio
     constructor(
         private readonly authRepository: AuthRepository,
+        
+        //aca inyecto el metodo de generar el token y pongo un valor por defecto
+        //para que si no la envian tome el valor por defecto
         private readonly signToken: SignToken = JwtAdapter.generateToken
     ){}
     
-    async execute(registerUserDto: RegisterUserDto): Promise<UserToken> {
-        
-        //crear usuario
-        const user = await this.authRepository.register(registerUserDto)
-        
+    async execute(registerUserDto: RegisterUserDto): Promise<IUserWithToken> {
 
-        //token
-        const token = await this.signToken({id: user.id}, '2h')
+        try {
+                    //crear usuario
+            const user = await this.authRepository.register(registerUserDto)
+            
 
-        if(!token) throw CustomError.internalServerError("error generating token")
+            //token
+            const token = await this.signToken({id: user.id}, '2h')
+
+            if(!token) throw CustomError.internalServerError("register-use-case, Error generating token")
 
 
 
-        return {
-            token: token,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-
+            return {
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    password: user.password,
+                    role: user.role,
+                    token: token
+                },
             }
-        }
+
+        } catch (error) {
+
+            // Propagamos el error para que lo maneje el controlador
+            if(error instanceof CustomError) {
+                throw error;
+            }
+            throw CustomError.internalServerError("register-use-case, internal server error");
+            }
+
     }
 
 }

@@ -8,6 +8,8 @@ export class LoginUserDto {
         public password: string
     ){}
 
+
+    //este metodo va a devolver una instancia de la clase actual o un array con los errores
     static login(object: {[key: string]: any}): [string?, LoginUserDto?]{
 
         const {email, password} = object

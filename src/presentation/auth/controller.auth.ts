@@ -4,9 +4,9 @@ import { AuthRepository } from "../../domain/repositories/auth.repository"
 import { CustomError } from "../../domain/errors/custom.error"
 import { JwtAdapter } from "../../configs/jwt"
 import { UserModel } from "../../data/mongodb/models/user.model"
-import { RegisterUser } from "../../domain/use-cases/auth/register-user.use-case"
+import { RegisterUserUseCase } from "../../domain/use-cases/auth/register-user.use-case"
 import { LoginUserDto } from "../../domain/dtos/auth/login-user.dto"
-import { LoginUser } from "../../domain/use-cases/auth/login-user.use-case"
+import { LoginUserUseCase } from "../../domain/use-cases/auth/login-user.use-case"
 
 export class AuthController {
 
@@ -26,11 +26,16 @@ export class AuthController {
 
     //aca se van a llamar los casos de uso
     registerUser = (req: Request, res: Response): void => {
+        
         const [error, registerUserDto] = RegisterUserDto.create(req.body);
     
         //si existe un error en el Dto lo capturo y envio como respuesta en el controller
         if (error) {
              res.status(400).json({ error });
+             console.log("error en controller.auth.registerUser", error)
+             
+             //si hay un error de validacion tengo que cortar la ejecucion
+             return
         }
  
         // 1) primer
@@ -48,10 +53,10 @@ export class AuthController {
 
 
         // 3) tercero
-        // como en este punto no hay error en el dto sigo normalmente
-        new RegisterUser(this.authRepository)
+        // aca mando a llamar el caso de uso para registrar un usuario
+        new RegisterUserUseCase(this.authRepository)
             .execute(registerUserDto!)
-            .then(data => res.json(data))
+            .then(data => res.json(data))  //aca puede haber error de binding
             .catch(err => this.handleError(err, res))          
 
 
@@ -64,11 +69,17 @@ export class AuthController {
     
         if (error) {
              res.status(400).json({ error });
+             console.log("error en controller.auth.loginUser", error)
+
+             //si hay un error de validacion tengo que cortar la ejecucion
+            return
         }
         
-        new LoginUser(this.authRepository)
+
+        //aca mando a llamar al caso de uso para loguear un usuario
+        new LoginUserUseCase(this.authRepository)
             .execute(loginUserDto!)
-            .then(data => res.json(data))
+            .then(data => res.json(data)) //aca puede haber error de binding
             .catch(err => this.handleError(err, res))     
     }
 

@@ -30,17 +30,23 @@ export class AuthDatasourceImpl implements AuthDatasource{
 
             const user = await UserModel.findOne({email: email})
 
-            if(!user) throw CustomError.badRequest("user does not exists - email")
+            if(!user) throw CustomError.badRequest("mongoAuthDataSourceImpl, user does not exists - email")
 
             const isPasswordMatching = this.comparePassword(password, user.password)
 
-            if(!isPasswordMatching) throw CustomError.badRequest("password is not valid")
+            if(!isPasswordMatching) throw CustomError.badRequest("mongoAuthDataSourceImpl, password is not valid")
 
-            return UserMapper.userEntityFromObject(user)    
+            return UserMapper.fromObjectToUserEntity(user)    
             
         } catch (error) {
+            
+            // Si ya es un CustomError, lo propagamos
+            if(error instanceof CustomError) {
+                throw error;
+            }
+            
             console.log(error)
-            throw CustomError.internalServerError()
+            throw CustomError.internalServerError("monogoAuthDataSourceImpl, internal server error")
         }
 
 
@@ -55,7 +61,7 @@ export class AuthDatasourceImpl implements AuthDatasource{
 
             //1 verificar correo
             const exists = await UserModel.findOne({email: email})
-            if(exists) throw CustomError.badRequest('User already exists')
+            if(exists) throw CustomError.badRequest('mongoAuthDataSourceImpl, monogoAuthDataSourceImplUser already exists')
 
             //2 encritar la contraseña
             const passwordHashed = this.hashPassword(password)
@@ -82,16 +88,17 @@ export class AuthDatasourceImpl implements AuthDatasource{
                 
                 
             //3 mapear a una entidad la respuesta de la base de datos
-            return UserMapper.userEntityFromObject(user)
+            return UserMapper.fromObjectToUserEntity(user)
             
         } catch (error) {
             
             if(error instanceof CustomError){
-                console.log("entro al throw error comun")
+                console.log("mongoAuthDataSourceImpl, entro al throw error comun")
                 throw error
             }
 
-            throw CustomError.internalServerError()
+            console.log(error)
+            throw CustomError.internalServerError("monogoAuthDataSourceImpl, internal server error")
         }
     
     }

@@ -7,7 +7,7 @@ export class UserMapper {
     //lo que voy a hacer es que va a venir informacion y la voy a transformar
     //en una entidad y de paso voy a hacer validaciones minimas de los datos
     //que me estan llegando
-    static userEntityFromObject(object: {[key: string]: any}){
+    static fromObjectToUserEntity(object: {[key: string]: any}){
 
         const {_id, id, name, email, password, roles} = object
 

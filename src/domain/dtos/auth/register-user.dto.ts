@@ -16,6 +16,7 @@ export class RegisterUserDto {
         public password: string
     ){}
 
+    //este metodo va a devolver una instancia de la clase actual o un array c
     static create(object: {[key:string]:any}): [string?, RegisterUserDto?]{
                 // object("name": string)       [error, instancia del dto]
         
