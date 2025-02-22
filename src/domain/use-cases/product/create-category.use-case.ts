@@ -18,6 +18,12 @@ export class CreateCategoryUseCase implements ICreateCategoryUseCase {
 
         try {
 
+            // Validaciones de negocio específicas para categoria
+            if (createCategoryDto.name.length < 2) {
+                throw CustomError.badRequest('El nombre de la categoria debe tener al menos 2 caracteres');
+                }
+
+
             // crear paginacion por defecto
             const [error, paginationDto] = PaginationDto.create(1, 10);
             if (error) throw CustomError.badRequest(error);
@@ -26,7 +32,11 @@ export class CreateCategoryUseCase implements ICreateCategoryUseCase {
             const categoryExist = await this.categoryRepository.findByName(createCategoryDto.name, paginationDto!)
             if (categoryExist) throw CustomError.badRequest("create-category-use-case, category already exist")
 
-            //creo la categoria
+            //creo la categoria pero todo con minusculas
+            createCategoryDto.name = createCategoryDto.name.toLowerCase();
+            createCategoryDto.description = createCategoryDto.description.toLowerCase();
+
+
             const category = await this.categoryRepository.create(createCategoryDto)
 
             return category;

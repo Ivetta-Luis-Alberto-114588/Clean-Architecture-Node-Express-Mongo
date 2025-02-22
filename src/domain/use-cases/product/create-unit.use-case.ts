@@ -15,6 +15,13 @@ export class CreateUnitUseCase implements ICreateUnitUseCase {
 
     async execute(createUnitDto: CreateUnitDto): Promise<UnitEntity> {
         try {
+
+            // Validaciones de negocio específicas para unit
+            if (createUnitDto.name.length < 2) {
+            throw CustomError.badRequest('El nombre de la unidad debe tener al menos 2 caracteres');
+            }
+
+
             // crear paginacion por defecto
             const [error, paginationDto] = PaginationDto.create(1, 10);
             if (error) throw CustomError.badRequest(error);
@@ -22,6 +29,10 @@ export class CreateUnitUseCase implements ICreateUnitUseCase {
             // verificar si existe la unity
             const xExist = await this.unitRepository.findByName(createUnitDto.name, paginationDto!)
             if(xExist) throw CustomError.badRequest("create-unit-use-case, unit already exist")  
+
+            //creo la unidad todo con minusculas
+            createUnitDto.name = createUnitDto.name.toLowerCase();
+            createUnitDto.description = createUnitDto.description.toLowerCase();
 
             // crear la unity
             const x = await this.unitRepository.create(createUnitDto)

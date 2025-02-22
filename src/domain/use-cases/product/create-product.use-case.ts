@@ -32,6 +32,10 @@ export class CreateProductUseCase implements ICreateProductUseCase{
             //verifico que no exista el producto con el mismo nombre
             if(productExist) throw CustomError.badRequest("create-product-use-case, product already exist")  
 
+            //creo todo con minusculas
+            createProductDto.name = createProductDto.name.toLowerCase();
+            createProductDto.description = createProductDto.description.toLowerCase();
+            
             //creo el producto
             const product = await this.productRepository.create(createProductDto)
 
