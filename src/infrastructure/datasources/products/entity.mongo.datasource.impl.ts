@@ -10,6 +10,35 @@ import { UnitMapper } from "../../mappers/products/unit.mapper";
 
 export class UnitMongoDatasourceImpl implements UnitDataSource {
     
+    async findByName(name: string, paginationDto: PaginationDto): Promise<UnitEntity[]> {
+        const {limit, page} = paginationDto
+        
+        try {
+            // Buscamos todos los documentos que coincidan con el nombre usando find en lugar de findOne
+        const units = await UnitModel.find({ name: name })
+                        .limit(limit)
+                        .skip(page * limit)
+                        .exec();
+
+        // Si no hay resultados, lanzamos un error
+        if (units.length === 0) {
+            throw CustomError.notFound("No units found with that name");
+        }
+
+        // Mapeamos cada resultado a UnitEntity
+        return units.map(unit => UnitMapper.fromObjectToUnitEntity(unit));
+            
+
+            
+        } catch (error) {
+            // Si ya es un CustomError, lo propagamos
+            if(error instanceof CustomError) { throw error }
+                
+            console.log(error)
+            throw CustomError.internalServerError("UnitMonogoDataSourceImpl, internal server error")            
+        }
+    }
+    
     
     async create(createUnitDto: CreateUnitDto): Promise<UnitEntity> {
         try {
@@ -40,7 +69,7 @@ export class UnitMongoDatasourceImpl implements UnitDataSource {
                 .exec()
             
             // Retornamos el objeto mapeado, pero lo tengo que aplicar de a uno en uno
-            return x.map(UnitMapper.fromObjectToUnitEntity)
+            return x.map(x => UnitMapper.fromObjectToUnitEntity(x))
 
 
         } catch (error) {

@@ -10,6 +10,27 @@ import { CategoryMapper } from "../../mappers/products/category.mapper";
 export class CategoryMongoDataSourceImpl extends CategoryDataSource {
     
     
+    async findByName(name: string): Promise<CategoryEntity> {
+        try {
+            // Buscamos el documento en la base de datos
+            const x = await CategoryModel.findOne({name: name})
+            
+            // Si no existe, lanzamos un error
+            if(!x) throw CustomError.notFound("category not found")
+            
+            // Retornamos el objeto mapeado
+            return CategoryMapper.fromObjectToCategoryEntity(x)
+            
+        } catch (error) {
+            // Si ya es un CustomError, lo propagamos
+            if(error instanceof CustomError) { throw error }
+
+            console.log(error)
+            throw CustomError.internalServerError("CategoryMonogoDataSourceImpl, internal server error")
+        }
+    }
+    
+    
     
     async create(createCategoryDto: CreateCategoryDto): Promise<CategoryEntity> {
         
