@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { AuthController } from "./controller.auth";
 import { AuthRepositoryImpl } from "../../infrastructure/repositories/auth.repository.impl";
-import { AuthDatasourceImpl } from "../../infrastructure/datasources/mongo.auth.datasource.impl";
+import { AuthDatasourceImpl } from "../../infrastructure/datasources/auth.mongo.datasource.impl";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 

@@ -1,6 +1,7 @@
 import { CategoryEntity } from "./category.entity";
 import { UnitEntity } from "./unit.entity";
 
+
 export class ProductEntity {
     constructor(
         public id: number,

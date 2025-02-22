@@ -1,5 +1,6 @@
 
 export class UnitEntity {
+
     constructor(
         public id: number,
         public name: string,
