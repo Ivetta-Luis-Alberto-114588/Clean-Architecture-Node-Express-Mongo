@@ -21,6 +21,26 @@ export class UpdateProductDto {
         if (Object.keys(object).length === 0) 
             return ["at least one field is required", undefined];
 
-        return [undefined, new UpdateProductDto(name.toLowerCase(), description.toLowerCase(), price, stock, category, unit, imgUrl, isActive)];
+         // Validamos el tipo de isActive si está presente
+         if ('isActive' in object && typeof isActive !== 'boolean') {
+            return ["isActive debe ser un valor booleano", undefined];
+        }
+
+        // Creamos un objeto solo con los campos proporcionados
+        const updateData: any = {};
+
+        if (name !== undefined) updateData.name = name.toLowerCase();
+        if (description !== undefined) updateData.description = description.toLowerCase();
+        if (isActive !== undefined) updateData.isActive = isActive;
+
+        return [undefined, new UpdateProductDto(
+            updateData.name.toLowerCase(), 
+            updateData.description.toLowerCase(), 
+            price,
+            stock,
+            category,
+            unit,
+            imgUrl, 
+            updateData.isActive)];
     }
 }

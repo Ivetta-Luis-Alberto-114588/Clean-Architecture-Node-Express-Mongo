@@ -9,6 +9,8 @@ import { GetAllProductsUseCase } from "../../domain/use-cases/product/get-all-pr
 import { DeleteProductUseCase } from "../../domain/use-cases/product/delete-product.use-case";
 import { GetProductByCategoryUseCase } from "../../domain/use-cases/product/get-product-by-category.use-case";
 import { CategoryRepository } from "../../domain/repositories/products/categroy.repository";
+import { UpdateProductUseCase } from "../../domain/use-cases/product/update-product.use-case";
+import { UpdateProductDto } from "../../domain/dtos/products/update-product.dto";
 
 
 export class ProductController {
@@ -112,7 +114,7 @@ export class ProductController {
         const { id } = req.params;
 
         //desectructuro el error y el dto del request
-        const [error, createProductDto] = CreateProductDto.create(req.body);
+        const [error, updateProductDto] = UpdateProductDto.create(req.body);
 
         //si existe un error en el Dto lo capturo y envio como respuesta en el controller
         if (error) {
@@ -122,7 +124,10 @@ export class ProductController {
         }
 
         //creo una instancia del caso de uso y le paso el repositorio
-        //TODO: implementar el caso de uso
+        new UpdateProductUseCase(this.productRepository)
+            .execute(id, updateProductDto!)
+            .then(data => res.json(data))
+            .catch(err => this.handleError(err, res));
     }
 
 }

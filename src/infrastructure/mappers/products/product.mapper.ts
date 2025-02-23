@@ -16,7 +16,8 @@ export class ProductMapper {
             if(!category) throw CustomError.badRequest("mapper missing category")
             if(!unit) throw CustomError.badRequest("mapper missing unit")
             if(!imgUrl) throw CustomError.badRequest("mapper missing imgUrl")
-            if(!isActive) throw CustomError.badRequest("mapper missing isActive")
+            // if(!isActive) throw CustomError.badRequest("mapper missing isActive")
+            if(typeof isActive !== 'boolean') throw CustomError.badRequest("mapper isActive must be a boolean")
             if(!description) throw CustomError.badRequest("mapper missing description")
             
             
