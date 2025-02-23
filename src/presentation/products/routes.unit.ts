@@ -13,11 +13,11 @@ export class UnitRoutes {
         const controller = new UnitController(unitRepository);
 
         // Definimos las rutas
-        router.get('/', controller.getAllUnits);
-        router.get('/:id', controller.getUnitById);
-        router.post('/', controller.createUnit);
-        router.put('/:id',  controller.updateUnit);
-        router.delete('/:id',  controller.deleteUnit);
+        router.get('/', controller.getAllUnits); //ok
+        router.get('/:id', controller.getUnitById); //ok
+        router.post('/', controller.createUnit); // ok
+        router.put('/:id',  controller.updateUnit); //ok
+        router.delete('/:id',  controller.deleteUnit); //ok
 
         return router;
     }

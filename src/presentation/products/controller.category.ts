@@ -7,6 +7,8 @@ import { PaginationDto } from "../../domain/dtos/shared/pagination.dto";
 import { GetAllCategoryUseCase } from "../../domain/use-cases/product/get-all-category.use-case";
 import { DeleteCategoryUseCase } from "../../domain/use-cases/product/delete-category.use-case";
 import { GetCategoryByIdUseCase } from "../../domain/use-cases/product/get-category-by-id.use-case";
+import { UpdateCategoryUseCase } from "../../domain/use-cases/product/update-category.use-case";
+import { UpdateCategoryDto } from "../../domain/dtos/products/update-category.dto";
 
 
 export class CategoryController {
@@ -99,11 +101,10 @@ export class CategoryController {
     
 
     updateCategory = (req: Request, res: Response): void => {
-        //desestructuro el id de la request
         const { id } = req.params;
-
-        //desectructuro el error y el dto del request
-        const [error, createCategoryDto] = CreateCategoryDto.create(req.body);
+        
+        // Usamos UpdateCategoryDto en lugar de CreateCategoryDto
+        const [error, updateCategoryDto] = UpdateCategoryDto.update(req.body);
 
         //si existe un error en el Dto lo capturo y envio como respuesta en el controller
         if (error) {
@@ -113,6 +114,9 @@ export class CategoryController {
         }
 
         //creo una instancia del caso de uso y le paso el repositorio
-        //TODO: implementar el caso de uso para actualizar una categoria
+        new UpdateCategoryUseCase(this.categoryRepository)
+            .execute(id, updateCategoryDto!)
+            .then(data => res.json(data))
+            .catch(err => this.handleError(err, res));
     }
 }

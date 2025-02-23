@@ -12,8 +12,9 @@ export class CategoryMapper {
         //validamos que los campos no esten vacios
         if(!_id || !id) throw CustomError.badRequest('mapper missing id')
         if(!name) throw CustomError.badRequest("mapper missing name")
-        if(!description) throw CustomError.badRequest("mapper missing email")
-        if(!isActive) throw CustomError.badRequest("mapper missing password")
+        if(!description) throw CustomError.badRequest("mapper missing description")
+        // if(!isActive) throw CustomError.badRequest("mapper missing password")
+        if(typeof isActive !== 'boolean') throw CustomError.badRequest("mapper isActive must be a boolean")
         
         
         //retornamos la entidad

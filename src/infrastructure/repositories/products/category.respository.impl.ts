@@ -1,5 +1,5 @@
 import { CreateCategoryDto } from "../../../domain/dtos/products/create-category";
-import { UpdateCategoryDto } from "../../../domain/dtos/products/update-category";
+import { UpdateCategoryDto } from "../../../domain/dtos/products/update-category.dto";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
 import { CategoryEntity } from "../../../domain/entities/products/category.entity";
 import { CategoryRepository } from "../../../domain/repositories/products/categroy.repository";

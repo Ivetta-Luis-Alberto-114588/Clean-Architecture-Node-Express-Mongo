@@ -7,6 +7,8 @@ import { PaginationDto } from "../../domain/dtos/shared/pagination.dto";
 import { GetAllUnitUseCase } from "../../domain/use-cases/product/get-all-unit.use-case";
 import { DeleteUnitUseCase } from "../../domain/use-cases/product/delete-unit.use-case";
 import { GetUnitByIdUseCase } from "../../domain/use-cases/product/get-unit-by-id.use-case";
+import { UpdateUnitUseCase } from "../../domain/use-cases/product/update-unit.use-case";
+import { UpdateUnitDto } from "../../domain/dtos/products/udpate-unit.dto";
 
 
 export class UnitController {
@@ -88,21 +90,22 @@ export class UnitController {
 
 
     updateUnit = (req: Request, res: Response) => {
-        //desestructuro el id de la request
         const { id } = req.params;
 
-        //desectructuro el error y el dto del request
-        const [error, createUnitDto] = CreateUnitDto.create(req.body);
+        // Usamos el método update del UpdateUnitDto
+        const [error, updateUnitDto] = UpdateUnitDto.update(req.body);
 
-        //si existe un error en el Dto lo capturo y envio como respuesta en el controller
         if (error) {
             res.status(400).json({ error });
-            console.log("error en controller.products.updateUnit", error);
+            console.log("error en controller.unit.updateUnit", error);
             return;
         }
 
-        //creo una instancia del caso de uso y le paso el repositorio
-        //TODO: implementar el caso de uso para actualizar una unidad
+        // Ejecutamos el caso de uso con los campos actualizados
+        new UpdateUnitUseCase(this.unitRepository)
+            .execute(id, updateUnitDto!)
+            .then(data => res.json(data))
+            .catch(err => this.handleError(err, res));
     }
 
     

@@ -1,7 +1,7 @@
 import { CategoryModel } from "../../../data/mongodb/models/products/category.model";
 import { CategoryDataSource } from "../../../domain/datasources/products/category.datasource";
 import { CreateCategoryDto } from "../../../domain/dtos/products/create-category";
-import { UpdateCategoryDto } from "../../../domain/dtos/products/update-category";
+import { UpdateCategoryDto } from "../../../domain/dtos/products/update-category.dto";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
 import { CategoryEntity } from "../../../domain/entities/products/category.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
