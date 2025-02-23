@@ -8,6 +8,9 @@ import { ProductRepository } from "../../../domain/repositories/products/product
 export class ProductRepositoryImpl implements ProductRepository {
     
     constructor(private readonly productDatasource: ProductDataSource){}
+    findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<ProductEntity | null> {
+        return this.productDatasource.findByNameForCreate(name, paginationDto)
+    }
     
     create(createProductDto: CreateProductDto): Promise<ProductEntity> {
         return this.productDatasource.create(createProductDto)

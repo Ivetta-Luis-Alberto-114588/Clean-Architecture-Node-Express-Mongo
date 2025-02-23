@@ -27,7 +27,7 @@ export class CreateProductUseCase implements ICreateProductUseCase{
             const [error, paginationDto] = PaginationDto.create(1,10)
 
             //obtengo el producto por el nombre
-            const productExist = await this.productRepository.findByName(createProductDto.name,paginationDto! )
+            const productExist = await this.productRepository.findByNameForCreate(createProductDto.name,paginationDto! )
             
             //verifico que no exista el producto con el mismo nombre
             if(productExist) throw CustomError.badRequest("create-product-use-case, product already exist")  

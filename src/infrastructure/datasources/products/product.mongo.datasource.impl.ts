@@ -9,6 +9,28 @@ import { ProductMapper } from "../../mappers/products/product.mapper";
 
 
 export class ProductMongoDataSourceImpl extends ProductDataSource {
+   
+    async findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<ProductEntity | null> {
+        const {limit, page} = paginationDto  
+        
+        try {
+                    // Buscamos el documento en la base de datos
+                    const product = await ProductModel.findOne({ name: name })
+                                    .populate(["Category", "Unit"]) 
+                                    .limit(limit)
+                                    .skip((page - 1) * limit)
+                    
+                    // Si no existe, retornamos null para poder crearlo
+                    if (!product) return null
+    
+                    // Retornamos el objeto mapeado
+                    return ProductMapper.fromObjectToProductEntity(product)
+    
+                } catch (error) {
+                    if (error instanceof CustomError) { throw error }
+                    throw CustomError.internalServerError("ProductMonogoDataSourceImpl, internal server error")
+                }
+    }
     
     async create(createProductDto: CreateProductDto): Promise<ProductEntity> {
        

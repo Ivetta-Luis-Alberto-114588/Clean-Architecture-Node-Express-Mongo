@@ -10,6 +10,7 @@ export abstract class ProductRepository {
   abstract findById(id: string): Promise<ProductEntity>;
   abstract update(id: string, updateProductDto: UpdateProductDto): Promise<ProductEntity>;
   abstract delete(id: string): Promise<ProductEntity>;
+  abstract findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<ProductEntity | null>
 
 
 
