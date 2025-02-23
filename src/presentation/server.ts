@@ -24,7 +24,7 @@ export class server {
     async start(){
 
 
-        // Aplicamos el rate limit GLOBAL antes de cualquier otro middleware
+        // Aplicamos el rate limit global antes de cualquier otro middleware
         this.app.use(RateLimitMiddleware.getGlobalRateLimit());
 
         //middleware permitir que express entienda json
