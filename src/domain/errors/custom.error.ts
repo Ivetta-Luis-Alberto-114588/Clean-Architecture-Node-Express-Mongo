@@ -23,6 +23,10 @@ export class CustomError extends Error {
     static notFound(message: string){
         return new CustomError(404, message)
     }
+    
+    static tooManyRequests(message: string) {
+        return new CustomError(429, message);
+    }
 
     static internalServerError(message: string = "Internal Server Error"){
         console.log('log del errors/custom_error.ts ',message)

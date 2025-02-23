@@ -1,5 +1,6 @@
 import express, { Router } from "express"
 import { MainRoutes } from "./routes"
+import { RateLimitMiddleware } from "./middlewares/rate-limit.middleware"
 
 interface IOptions {
     p_port: number,
@@ -21,6 +22,10 @@ export class server {
     }
 
     async start(){
+
+
+        // Aplicamos el rate limit GLOBAL antes de cualquier otro middleware
+        this.app.use(RateLimitMiddleware.getGlobalRateLimit());
 
         //middleware permitir que express entienda json
 

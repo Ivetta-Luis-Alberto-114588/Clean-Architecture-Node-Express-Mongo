@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-     "dev": "tsnd --respawn --clear src/app.ts",
+    "dev": "tsnd --respawn --clear src/app.ts",
     "build": "rimraf ./dist && tsc",
     "start": "npm run build && node dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -26,6 +26,7 @@
     "dotenv": "^16.4.7",
     "env-var": "^7.5.0",
     "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5"
   }
