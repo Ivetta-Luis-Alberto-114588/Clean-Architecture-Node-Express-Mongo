@@ -10,5 +10,6 @@ export abstract class UnitRepository {
   abstract findById(id: string): Promise<UnitEntity>;
   abstract updateUnit(id: string, updateUnitDto: UpdateUnitDto):Promise<UnitEntity>;
   abstract deleteUnit(id: string): Promise<UnitEntity>;
-  abstract findByName(name: string, paginationDto: PaginationDto): Promise<UnitEntity>;
+  abstract findByName(name: string, paginationDto: PaginationDto): Promise<UnitEntity[]>;
+  abstract findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<UnitEntity | null>
 }

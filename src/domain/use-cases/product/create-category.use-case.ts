@@ -25,11 +25,11 @@ export class CreateCategoryUseCase implements ICreateCategoryUseCase {
 
 
             // crear paginacion por defecto
-            const [error, paginationDto] = PaginationDto.create(1, 10);
+            const [error, paginationDto] = PaginationDto.create(1, 5);
             if (error) throw CustomError.badRequest(error);
 
             //verifico que no exista la categoria
-            const categoryExist = await this.categoryRepository.findByName(createCategoryDto.name, paginationDto!)
+            const categoryExist = await this.categoryRepository.findByNameForCreate(createCategoryDto.name, paginationDto!)
             if (categoryExist) throw CustomError.badRequest("create-category-use-case, category already exist")
 
             //creo la categoria pero todo con minusculas

@@ -22,7 +22,7 @@ export class GetAllProductsUseCase implements IGetAllProductsUseCase {
 
             //creo una paginacion 
             if (!paginationDto) {
-                const [error, defaultPagination] = PaginationDto.create(1, 10);
+                const [error, defaultPagination] = PaginationDto.create(1, 5);
                 if (error) throw CustomError.badRequest(error);
                 paginationDto = defaultPagination!;
             }

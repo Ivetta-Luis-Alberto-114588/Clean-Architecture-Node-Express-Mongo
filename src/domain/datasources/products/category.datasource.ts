@@ -13,6 +13,7 @@ export abstract class CategoryDataSource {
     abstract update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<CategoryEntity>
     abstract delete(id: string): Promise<CategoryEntity>
     abstract findByName(name: string, paginationDto: PaginationDto): Promise<CategoryEntity>
+    abstract findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<CategoryEntity | null>
 
 
 }

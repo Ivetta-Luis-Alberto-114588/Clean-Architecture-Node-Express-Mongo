@@ -1,4 +1,4 @@
-import { ProductModel } from "../../../data/mongodb/models/product.model";
+import { ProductModel } from "../../../data/mongodb/models/products/product.model";
 import { ProductDataSource } from "../../../domain/datasources/products/product.datasource";
 import { CreateProductDto } from "../../../domain/dtos/products/create-product.dto";
 import { UpdateProductDto } from "../../../domain/dtos/products/update-product.dto";
@@ -40,7 +40,7 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
             // Buscamos todos los documentos en la base de datos
             const x = await ProductModel.find()
                 .limit(limit)
-                .skip(page * limit)
+                .skip((page - 1) * limit)
                 .exec()
             
             // Retornamos el objeto mapeado, pero lo tengo que aplicar de a uno en uno
@@ -133,7 +133,7 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
             const x = await ProductModel.find({name: nameProduct})
                         .populate(["Category", "Unit"]) // populate para traer los datos de las relaciones
                         .limit(limit)
-                        .skip(page * limit)
+                        .skip((page - 1) * limit)
 
             // Si no existe, lanzamos un error 
             if(!x) throw CustomError.notFound("Product not found")
@@ -162,7 +162,7 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
             const x = await ProductModel.find({category: idCategory})
                         .populate(["Category", "Unit"]) // populate para traer los datos de las relaciones
                         .limit(limit)
-                        .skip(page * limit)
+                        .skip((page - 1) * limit)
 
             // Si no existe, lanzamos un error
             if(!x) throw CustomError.notFound("Product not found")
@@ -190,7 +190,7 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
             const x = await ProductModel.find({unit: idUnit})
                         .populate(["Category", "Unit"])  // populate para traer los datos de las relaciones
                         .limit(limit)
-                        .skip(page * limit)
+                        .skip((page - 1) * limit)
 
 
             // Si no existe, lanzamos un error

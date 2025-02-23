@@ -12,6 +12,14 @@ export class CategoryRepositoryImpl implements CategoryRepository {
         private readonly categoryDatasource: CategoryDataSource
     ){}
 
+    findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<CategoryEntity | null> {
+        return this.categoryDatasource.findByNameForCreate(name, paginationDto)
+    }
+    
+    findByName(name: string, paginationDto: PaginationDto): Promise<CategoryEntity> {
+        return this.categoryDatasource.findByName(name, paginationDto)
+    }
+
 
     create(createCategoryDto: CreateCategoryDto): Promise<CategoryEntity> {
         return this.categoryDatasource.create(createCategoryDto)

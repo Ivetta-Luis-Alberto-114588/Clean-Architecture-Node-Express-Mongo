@@ -1,4 +1,4 @@
-import { CategoryModel } from "../../../data/mongodb/models/category.model";
+import { CategoryModel } from "../../../data/mongodb/models/products/category.model";
 import { CategoryDataSource } from "../../../domain/datasources/products/category.datasource";
 import { CreateCategoryDto } from "../../../domain/dtos/products/create-category";
 import { UpdateCategoryDto } from "../../../domain/dtos/products/update-category";
@@ -8,6 +8,17 @@ import { CustomError } from "../../../domain/errors/custom.error";
 import { CategoryMapper } from "../../mappers/products/category.mapper";
 
 export class CategoryMongoDataSourceImpl extends CategoryDataSource {
+    
+    async findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<CategoryEntity | null> {
+        try {
+            const category = await CategoryModel.findOne({ name: name })
+            if (!category) return null
+            return CategoryMapper.fromObjectToCategoryEntity(category)
+        } catch (error) {
+            if (error instanceof CustomError) { throw error }
+            throw CustomError.internalServerError("CategoryMonogoDataSourceImpl, internal server error")
+        }
+    }
     
     
     async findByName(name: string): Promise<CategoryEntity> {
@@ -62,7 +73,7 @@ export class CategoryMongoDataSourceImpl extends CategoryDataSource {
             // Buscamos el documento en la base de datos
             const x = await CategoryModel.find()
                 .limit(limit)
-                .skip(page * limit)
+                .skip((page - 1) * limit)
                 .exec()
             
             // Retornamos el objeto mapeado, pero lo tengo que aplicar de a uno en uno

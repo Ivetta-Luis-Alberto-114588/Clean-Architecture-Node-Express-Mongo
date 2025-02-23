@@ -23,11 +23,11 @@ export class CreateUnitUseCase implements ICreateUnitUseCase {
 
 
             // crear paginacion por defecto
-            const [error, paginationDto] = PaginationDto.create(1, 10);
+            const [error, paginationDto] = PaginationDto.create(1, 5);
             if (error) throw CustomError.badRequest(error);
 
             // verificar si existe la unity
-            const xExist = await this.unitRepository.findByName(createUnitDto.name, paginationDto!)
+            const xExist = await this.unitRepository.findByNameForCreate(createUnitDto.name, paginationDto!)
             if(xExist) throw CustomError.badRequest("create-unit-use-case, unit already exist")  
 
             //creo la unidad todo con minusculas

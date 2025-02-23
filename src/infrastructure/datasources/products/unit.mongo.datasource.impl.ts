@@ -1,4 +1,4 @@
-import { UnitModel } from "../../../data/mongodb/models/unit.model";
+import { UnitModel } from "../../../data/mongodb/models/products/unit.model";
 import { UnitDataSource } from "../../../domain/datasources/products/unit.datasource";
 import { CreateUnitDto } from "../../../domain/dtos/products/create-unit.dto";
 import { UpdateUnitDto } from "../../../domain/dtos/products/udpate-unit.dto";
@@ -10,6 +10,23 @@ import { UnitMapper } from "../../mappers/products/unit.mapper";
 
 export class UnitMongoDatasourceImpl implements UnitDataSource {
     
+    async findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<UnitEntity | null> {
+        try {
+                // Buscamos el documento en la base de datos
+                const unit = await UnitModel.findOne({ name: name })
+                
+                // Si no existe, retornamos null para poder crearlo
+                if (!unit) return null
+
+                // Retornamos el objeto mapeado
+                return UnitMapper.fromObjectToUnitEntity(unit)
+
+            } catch (error) {
+                if (error instanceof CustomError) { throw error }
+                throw CustomError.internalServerError("UnitMonogoDataSourceImpl, internal server error")
+            }
+    }
+    
     async findByName(name: string, paginationDto: PaginationDto): Promise<UnitEntity[]> {
         const {limit, page} = paginationDto
         
@@ -17,7 +34,7 @@ export class UnitMongoDatasourceImpl implements UnitDataSource {
             // Buscamos todos los documentos que coincidan con el nombre usando find en lugar de findOne
         const units = await UnitModel.find({ name: name })
                         .limit(limit)
-                        .skip(page * limit)
+                        .skip((page - 1) * limit)
                         .exec();
 
         // Si no hay resultados, lanzamos un error
@@ -65,7 +82,7 @@ export class UnitMongoDatasourceImpl implements UnitDataSource {
         try {
             const x = await UnitModel.find()
                 .limit(limit)
-                .skip(page * limit)
+                .skip((page - 1) * limit)
                 .exec()
             
             // Retornamos el objeto mapeado, pero lo tengo que aplicar de a uno en uno
