@@ -16,6 +16,9 @@ const UnitSchema = new mongoose.Schema({
         required: false,
         default: true
     }
+},
+{
+    timestamps: true // Esto añade automáticamente createdAt y updatedAt
 })
 
 export const UnitModel = mongoose.model("Unit", UnitSchema);

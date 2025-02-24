@@ -43,6 +43,9 @@ const productSchema = new mongoose.Schema({
         required: false,
         default: true
     }
+},
+{
+    timestamps: true // Esto añade automáticamente createdAt y updatedAt
 })
 
 

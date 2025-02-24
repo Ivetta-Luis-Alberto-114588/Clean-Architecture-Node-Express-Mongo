@@ -3,21 +3,24 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
-        // digo si es requerido o no y el msj de error si no se cumple
-        required: [true, "name is required"]
+        required: [true, "name is required"], // digo si es requerido o no y el msj de error si no se cumple
+        trim: true,
+        lowercase: true
     },
 
     email:{
-        type: String,
-        // digo si es requerido o no y el msj de error si no se cumple
-        required: [true, "email is required"],
+        type: String,       
+        required: [true, "email is required"],  // digo si es requerido o no y el msj de error si no se cumple
+        trim: true,
+        lowercase: true,
         unique: true
     },
 
     password: {
         type: String,
-        // digo si es requerido o no y el msj de error si no se cumple
-        required: [true, "password is required"]
+        trim: true,
+        lowercase: true,
+        required: [true, "password is required"]  // digo si es requerido o no y el msj de error si no se cumple
     },
 
     img:{
@@ -29,6 +32,9 @@ const userSchema = new mongoose.Schema({
         default: ['USER_ROLE'],
         enum: ['USER_ROLE', 'ADMIN_ROLE']
     }
+},
+{
+    timestamps: true // Esto añade automáticamente createdAt y updatedAt
 })
 
 

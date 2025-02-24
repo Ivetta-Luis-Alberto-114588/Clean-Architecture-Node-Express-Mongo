@@ -17,8 +17,10 @@ const categorySchema = new mongoose.Schema({
         type: Boolean,
         required: false,
         default: true
-    }
-
+    },
+   
+}, {
+    timestamps: true // Esto añade automáticamente createdAt y updatedAt
 })
 
 export const CategoryModel = mongoose.model("Category", categorySchema);
