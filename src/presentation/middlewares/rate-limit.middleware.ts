@@ -19,7 +19,7 @@ declare global {
 // Creamos las instancias de rate limit durante la inicialización
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 10, // Límite de 10 solicitudes por windowMs
+    max: 100, // Límite de 10 solicitudes por windowMs
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req: Request, res: Response) => {
