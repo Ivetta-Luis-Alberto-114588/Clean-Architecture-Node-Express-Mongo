@@ -1,8 +1,27 @@
+# esta es mi version de mongo sin replicas, esto tiene el problema que no soporta transacciones
+# version: '3.8'
+
+
+# services:
+
+#   mongo-db:
+#     image: mongo:6.0.6
+#     restart: always
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: mongo-user
+#       MONGO_INITDB_ROOT_PASSWORD: 123456
+#     volumes:
+#       - ./mongo:/data/db
+#     ports:
+#       - 27018:27017 # miPuerto:puertoContenedor
+
+
+
+
+# este es el archivo de docker-compose para la version de mongo con replicas
 version: '3.8'
 
-
 services:
-
   mongo-db:
     image: mongo:6.0.6
     restart: always
@@ -11,5 +30,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: 123456
     volumes:
       - ./mongo:/data/db
+      - ./mongo-keyfile:/data/mongo-keyfile
     ports:
-      - 27018:27017 # miPuerto:puertoContenedor
+      - 27017:27017
+    command: sh -c "ls -l /data/mongo-keyfile && stat /data/mongo-keyfile/mongodb-keyfile && chmod 0600 /data/mongo-keyfile/mongodb-keyfile && stat /data/mongo-keyfile/mongodb-keyfile && mongod --replSet rs0 --bind_ip_all --keyFile /data/mongo-keyfile/mongodb-keyfile"

@@ -6,6 +6,7 @@ import { UnitRoutes } from "./products/routes.unit";
 import { CityRoutes } from "./customers/routes.city";
 import { NeighborhoodRoutes } from "./customers/routes.neighborhood";
 import { CustomerRoutes } from "./customers/routes.customer";
+import { SaleRoutes } from "./sales/routes.sale";
 
 
 
@@ -27,6 +28,9 @@ export class MainRoutes {
         router.use("/api/cities", CityRoutes.getCityRoutes);
         router.use("/api/neighborhoods", NeighborhoodRoutes.getNeighborhoodRoutes);
         router.use("/api/customers", CustomerRoutes.getCustomerRoutes);
+
+        // Rutas de ventas
+        router.use("/api/sales", SaleRoutes.getSaleRoutes);
         
         // router.use("/api/user")
         // router.use("/api/products")
