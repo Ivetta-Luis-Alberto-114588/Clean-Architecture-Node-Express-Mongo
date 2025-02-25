@@ -8,71 +8,54 @@ npm install, para instalar todos los modulos
 
 docker desktop
 
-la cadena de conexion para mongo y que permita operaciones transaccionales debe ser : MONGO_URL = 'mongodb://mongo-user:123456@localhost:27018/?replicaSet=rs0';
 
-despues ha que ejecutar esta linea de comando:dockerexec-itclean-architecture-node-express-mongo-mongo-db-1mongosh-umongo-user-p123456
+1. la cadena de conexion para mongo y que permita operaciones transaccionales debe ser :
+
+* MONGO_URL = 'mongodb://mongo-user:123456@localhost:27018/?replicaSet=rs0';
+* despues ha que ejecutar esta linea de comando:
+
+  * docker exec -it 14-clean-architecture-node-express-mongo-mongo-db-1 mongosh -u mongo-user -p 123456
 
 y despues dentro del shell ejecutar:
 
-
-rs.initiate({
-
-  _id:"rs0",
-
-  members: [
-
-    { _id:0,host:"localhost:27017"}
-
-  ]
-
-})
+* rs.initiate({  _id:"rs0",  members: [  { _id:0,host:"localhost:27017"} ]})
+* despues verificar el estado con: rs.status()
+* exit
 
 
-despues verificar el estado con: rs.status()
+1. docker-compose up -d
+2. docker-compose down
+3. docker-compose build
+4. si no anda, desde vscode en el archivo docker-compose.yml se puede apretar  "run all services"
+5. chmod 0600 ./mongo-keyfile/mongodb-keyfile
 
-docker-compose  up -d
+SI NO ANDA, BORRAR LA IMAGEN Y CREAR EL NUEVO CONTENEDOR
+
+**# 1. Listar los contenedores en ejecución para ver cuál necesitas regenerar**
+**docker**ps
+
+**# 2. Detener el contenedor de MongoDB**
+**docker** stop **[**nombre-del-contenedor-o-id**]**
+
+**# 3. Eliminar el contenedor**
+**docker**rm**[**nombre-del-contenedor-o-id**]**
+
+**# 4. Si necesitas eliminar también la imagen (opcional)**
+**docker** images           **# Para ver la lista de imágenes**
+**docker** rmi **[**imagen-id**]**# Para eliminar la imagen
+
+**# 5. Reconstruir y reiniciar el contenedor**
+**docker-compose** up -d    **# Si estás usando docker-compose**
+
 
 mongo compass en el puerto 27018 (https://www.mongodb.com/try/download/compass)
+
+
 
 npm run dev
 
 openssl rand -hex 16 (para generar una semilla aleatoria de 16 caracteres con open ssl) (hay que buscar el directorio de git/usr/bin y ahi esta el archivo openssl y hay que ponerlo en las variables de entorno de windows
 
-rs.initiate({
-
-  _id:"rs0",
-
-  members: [
-
-    { _id:0,host:"localhost:27017"}
-
-  ]
-
-})
-
-rs.initiate({
-
-  _id:"rs0",
-
-  members: [
-
-    { _id:0,host:"localhost:27017"}
-
-  ]
-
-})
-
-rs.initiate({
-
-  _id:"rs0",
-
-  members: [
-
-    { _id:0,host:"localhost:27017"}
-
-  ]
-
-})
 
 Depurar
 
@@ -84,44 +67,3 @@ Rellenar las variables de entrono
 * MONGO_URL= mongodb://usuario_del_docker:password_del_docker@localhost:27018
 * MONGO_DB_NAME= nombre_de_la_bd_que_creo
 * JWT_SEED=MiSemilla
-
-peticiones:
-
-POST:
-
-1) http://localhost:3000/api/auth/login
-
-   {
-   "email":"laivetta@gmail.com",
-   "password":"123456"
-   }
-
-   2. http://localhost:3000/api/auth/register
-
-   {
-
-   "name": "luis",
-   "email": "laivetta11@gmail.com",
-   "password":"123456"
-   }
-
-GET
-
-1. http://localhost:3000/api/auth   (trae el usuario loggeado)
-
-   Authorization: 'Bearer 		eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YjQ4MmJkYzg3MTFjMzI4ZGZjMmVjNyIsImlhdCI6MTczOTg4MzE5NywiZXhwIjoxNzM5ODkwMzk3fQ.uyIG3mPVkHhKuJ_ESXlDgYG4_BaCMchazsE1Dgtebho'
-2. http://localhost:3000/api/auth/all  (trae todos los usuarios)
-
-DELETE
-
-1. http://localhost:3000/api/users/6764af06aa9cf2cfa4fe4601
-
-PUT
-
-1. http://localhost:3000/api/users/67b482bdc8711c328dfc2ec7
-
-   {
-   "user": "luis",
-   "role": "admin",
-   "password":"holas"
-   }
