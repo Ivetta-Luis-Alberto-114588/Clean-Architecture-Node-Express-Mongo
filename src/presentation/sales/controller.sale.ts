@@ -122,14 +122,14 @@ export class SaleController {
             return;
         }
         
-        console.log('Fechas recibidas:', { startDate, endDate });
+        // console.log('Fechas recibidas:', { startDate, endDate });
         
         try {
             // Asegúrate de crear objetos Date correctos
             const start = new Date(startDate);
             const end = new Date(endDate);
             
-            console.log('Fechas convertidas:', { start, end });
+            // console.log('Fechas convertidas:', { start, end });
             
             if (isNaN(start.getTime()) || isNaN(end.getTime())) {
                 res.status(400).json({ error: "Formato de fecha inválido" });
