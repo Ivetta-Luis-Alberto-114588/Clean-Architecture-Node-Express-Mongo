@@ -8,7 +8,7 @@ npm install, para instalar todos los modulos
 
 instalar docker desktop
 
-* en el directorio del proyecto ejecutar docker-compose up -d (esto va  a hacer un pull de la imagen del contenedor)
+* en el directorio del proyecto ejecutar docker-compose up -d (esto va  a hacer un pull de la imagen del contenedor laivetta@mongo-transaccional:v1.1)
 * una vez que se haya hecho el pull ejecutar:
   * docker ps (esto buscar el container_id de la imagen que se esta ejecutando y poner el container_id en la linea de abajo
   * docker exec -it  container_id mongosh -u mongo-user -p 123456 --eval "rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]})"

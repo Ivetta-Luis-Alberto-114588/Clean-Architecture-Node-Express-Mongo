@@ -7,6 +7,7 @@ import { CityRoutes } from "./customers/routes.city";
 import { NeighborhoodRoutes } from "./customers/routes.neighborhood";
 import { CustomerRoutes } from "./customers/routes.customer";
 import { SaleRoutes } from "./sales/routes.sale";
+import { PaymentRoutes } from "./payment/routes.payment";
 
 
 
@@ -31,6 +32,10 @@ export class MainRoutes {
 
         // Rutas de ventas
         router.use("/api/sales", SaleRoutes.getSaleRoutes);
+
+
+        // Rutas de pagos con Mercado Pago
+        router.use("/api/payments", PaymentRoutes.getPaymentRoutes);
         
         // router.use("/api/user")
         // router.use("/api/products")
