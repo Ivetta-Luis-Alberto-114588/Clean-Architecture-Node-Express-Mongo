@@ -21,7 +21,6 @@ instalar docker desktop
   * docker-compose down
   * docker-compose build
 
-
 1. la cadena de conexion para mongo y que permita operaciones transaccionales debe ser :
 
 * MONGO_URL = 'mongodb://mongo-user:123456@localhost:27018/?replicaSet=rs0';
@@ -75,3 +74,13 @@ Rellenar las variables de entrono
 * MONGO_URL= mongodb://usuario_del_docker:password_del_docker@localhost:27018
 * MONGO_DB_NAME= nombre_de_la_bd_que_creo
 * JWT_SEED=MiSemilla
+
+MERCADO PAGO
+
+hay que usar ngrok para poder recibir los webhook de mercado pago
+
+https://www.mercadopago.com.ar/developers/
+
+(en ventana incognito) Comprador1: TESTUSER1283783729, FBB90AC2#25c3#4199#, test_user_1283783729@testuser.com
+
+(en otro navegador ventana incognito) Vendedor1: TESTUSER174603780, 9325521F#e74e#4a37#

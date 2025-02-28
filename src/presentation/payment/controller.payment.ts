@@ -95,12 +95,12 @@ export class PaymentController {
           // success: `${host}/api/payments/success?saleId=${saleId}`,
           // failure: `${host}/api/payments/failure?saleId=${saleId}`,
           // pending: `${host}/api/payments/pending?saleId=${saleId}`
-          success: `/api/payments/success?saleId=${saleId}`,
+          success: `www.google.com.ar`,
           failure: `/api/payments/failure?saleId=${saleId}`,
           pending: `/api/payments/pending?saleId=${saleId}`
         },
         // notificationUrl: `${host}/api/payments/webhook`,
-        notificationUrl: `https://5wl9804f-3000.brs.devtunnels.ms/api/payments/webhook`,
+        notificationUrl: `https://1f31-186-153-210-117.ngrok-free.app/api/payments/webhook`,
         idempotencyKey
       };
 
@@ -371,14 +371,9 @@ export class PaymentController {
 
 
 processWebhook = async (req: Request, res: Response): Promise<void> => {
- 
-  const webHook = req.body
-  console.log(webHook)
- 
-  res.sendStatus(200)
-  
 
   try {
+
     // Loguea la información completa recibida para depuración
     console.log('Webhook recibido:', { 
       query: req.query, 
@@ -479,6 +474,7 @@ processWebhook = async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({ status: 'error', message: 'Error procesando webhook' });
   }
 };
+
 
   // Endpoints para las redirecciones de MercadoPago
   paymentSuccess = async (req: Request, res: Response): Promise<void> => {
