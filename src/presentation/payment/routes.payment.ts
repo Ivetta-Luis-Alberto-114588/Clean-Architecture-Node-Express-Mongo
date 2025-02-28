@@ -43,6 +43,10 @@ export class PaymentRoutes {
     router.get("/by-sale/:saleId", controller.getPaymentsBySale);
     router.get("/", controller.getAllPayments);
     router.post("/verify", controller.verifyPayment);
+    router.get("/preference/:preferenceId", controller.verifyPreferenceStatus);
+
+    // Ruta nueva usando el método simplificado
+    router.post("/prueba/sale/:saleId", controller.createPaymentPrueba);
 
     return router;
   }

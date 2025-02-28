@@ -14,6 +14,7 @@ import { MercadoPagoAdapter } from "../../adapters/mercado-pago.adapter";
 import { SaleModel } from "../../../data/mongodb/models/sales/sale.model";
 import { CustomerModel } from "../../../data/mongodb/models/customers/customer.model";
 import { PaymentMapper } from "../../mappers/payment/payment.mapper";
+import { v4 } from 'uuid';
 
 export class PaymentMongoDataSourceImpl implements PaymentDataSource {
   
@@ -30,9 +31,13 @@ export class PaymentMongoDataSourceImpl implements PaymentDataSource {
         external_reference: createPaymentDto.externalReference || `sale-${createPaymentDto.saleId}`,
         notification_url: createPaymentDto.notificationUrl,
         statement_descriptor: 'Tu Tienda Online',
+        metadata: createPaymentDto.metadata || { uuid: v4 },
         expires: true,
         expiration_date_from: new Date().toISOString(),
         expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
+        // expires: false,       
+        // expiration_date_from: undefined,        
+        // expiration_date_to: undefined 
       };
       
       // Configuración de idempotencia si se proporciona una clave
@@ -559,4 +564,8 @@ export class PaymentMongoDataSourceImpl implements PaymentDataSource {
       throw CustomError.internalServerError(`Error al obtener pago por clave de idempotencia: ${error}`);
     }
   }
+}
+
+function uuidv4() {
+  throw new Error("Function not implemented.");
 }

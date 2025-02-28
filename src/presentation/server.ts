@@ -1,6 +1,7 @@
 import express, { Router } from "express"
 import { MainRoutes } from "./routes"
 import { RateLimitMiddleware } from "./middlewares/rate-limit.middleware"
+import cors from "cors"
 
 interface IOptions {
     p_port: number,
@@ -26,6 +27,13 @@ export class server {
 
         // Aplicamos el rate limit global antes de cualquier otro middleware
         this.app.use(RateLimitMiddleware.getGlobalRateLimit());
+
+        this.app.use(cors({
+            origin: '*', // En producción, restringe esto
+            methods: ['GET', 'POST', 'PUT', 'DELETE'],
+            allowedHeaders: ['Content-Type', 'Authorization']
+        }));
+
 
         //middleware permitir que express entienda json
 
