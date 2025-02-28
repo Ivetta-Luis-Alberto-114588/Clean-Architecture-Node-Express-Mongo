@@ -16,4 +16,7 @@ export const envs = {
     MERCADO_PAGO_PUBLIC_KEY: get('MERCADO_PAGO_PUBLIC_KEY').required().asString(),
 
     FRONTEND_URL: get('FRONTEND_URL').required().asString(),
+    URL_RESPONSE_WEBHOOK_NGROK : get('URL_RESPONSE_WEBHOOK_NGROK').required().asUrlString(),
+
+    NODE_ENV: get('NODE_ENV').required().asString(),
 }

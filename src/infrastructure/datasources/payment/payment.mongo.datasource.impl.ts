@@ -341,25 +341,83 @@ export class PaymentMongoDataSourceImpl implements PaymentDataSource {
     try {
       const { paymentId, status, providerPaymentId, metadata } = updatePaymentStatusDto;
       
-      const payment = await PaymentModel.findById(paymentId);
+      // Creamos un objeto con los campos a actualizar
+      const updateData: any = {
+        status: status,
+        providerPaymentId: providerPaymentId
+      };
       
-      if (!payment) {
-        throw CustomError.notFound(`Pago con ID ${paymentId} no encontrado`);
-      }
-      
-      // Actualizar el estado del pago
-      payment.status = status;
-      payment.providerPaymentId = providerPaymentId;
+      // Si hay metadata, la incluimos en la actualización
       if (metadata) {
-        payment.metadata = { 
-          ...payment.metadata, 
-          paymentInfo: metadata 
+        // Usamos $set para actualizar solo el campo paymentInfo dentro de metadata
+        // preservando el resto de los campos que pueda tener
+        updateData['$set'] = {
+          'metadata.paymentInfo': metadata
         };
       }
       
-      await payment.save();
+      // Realizamos la actualización atómica con condiciones
+      // La condición asegura que solo se actualizará si:
+      // 1. El documento existe
+      // 2. O bien el estado es diferente, o bien el providerPaymentId es diferente
+      const updatedPayment = await PaymentModel.findOneAndUpdate(
+        { 
+          _id: paymentId,
+          $or: [
+            { status: { $ne: status } },
+            { providerPaymentId: { $ne: providerPaymentId } }
+          ]
+        },
+        updateData,
+        { 
+          new: true, // Para que devuelva el documento actualizado
+          runValidators: true // Para asegurar que se ejecutan las validaciones del esquema
+        }
+      );
       
-      const updatedPayment = await PaymentModel.findById(paymentId)
+      // Si no se actualizó nada, verificamos si el pago existe
+      if (!updatedPayment) {
+        // Comprobamos si el pago existe
+        const existingPayment = await PaymentModel.findById(paymentId);
+        if (!existingPayment) {
+          throw CustomError.notFound(`Pago con ID ${paymentId} no encontrado`);
+        }
+        
+        // Si existe pero no se actualizó, es porque ya tiene el mismo estado y providerPaymentId
+        console.log(`No fue necesario actualizar el pago ${paymentId}: mismo estado y providerPaymentId`);
+        
+        // Devolvemos el pago existente sin cambios pero con las relaciones populadas
+        const currentPayment = await PaymentModel.findById(paymentId)
+          .populate({
+            path: 'saleId',
+            model: 'Sale',
+            populate: {
+              path: 'customer',
+              model: 'Customer',
+              populate: {
+                path: 'neighborhood',
+                populate: {
+                  path: 'city'
+                }
+              }
+            }
+          })
+          .populate({
+            path: 'customerId',
+            model: 'Customer',
+            populate: {
+              path: 'neighborhood',
+              populate: {
+                path: 'city'
+              }
+            }
+          });
+        
+        return PaymentMapper.fromObjectToPaymentEntity(currentPayment);
+      }
+      
+      // Si se realizó la actualización, populamos las relaciones
+      const populatedPayment = await PaymentModel.findById(updatedPayment._id)
         .populate({
           path: 'saleId',
           model: 'Sale',
@@ -385,15 +443,18 @@ export class PaymentMongoDataSourceImpl implements PaymentDataSource {
           }
         });
       
-      if (!updatedPayment) {
-        throw CustomError.internalServerError('Error al actualizar el pago en la base de datos');
+      if (!populatedPayment) {
+        throw CustomError.internalServerError('Error al obtener el pago actualizado de la base de datos');
       }
       
-      return PaymentMapper.fromObjectToPaymentEntity(updatedPayment);
+      return PaymentMapper.fromObjectToPaymentEntity(populatedPayment);
+      
     } catch (error) {
       if (error instanceof CustomError) {
         throw error;
       }
+      
+      console.error(`Error al actualizar estado del pago:`, error);
       throw CustomError.internalServerError(`Error al actualizar estado del pago: ${error}`);
     }
   }
