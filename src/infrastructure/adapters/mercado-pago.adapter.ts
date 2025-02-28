@@ -86,7 +86,7 @@ export class MercadoPagoAdapter {
           pending: "/pending",
           success: "/success"
         },
-        "notification_url": "https://5wl9804f-3001.brs.devtunnels.ms/webHook",
+        "notification_url": "https://5wl9804f-3000.brs.devtunnels.ms/webHook",
         "auto_return": "approved",
         "statement_descriptor": "Negocio startUp",
         "metadata": { uuid: uuidv4() }

@@ -44,6 +44,7 @@ export class PaymentRoutes {
     router.get("/", controller.getAllPayments);
     router.post("/verify", controller.verifyPayment);
     router.get("/preference/:preferenceId", controller.verifyPreferenceStatus);
+    router.post("/webHook", controller.processWebhook);
 
     // Ruta nueva usando el método simplificado
     router.post("/prueba/sale/:saleId", controller.createPaymentPrueba);

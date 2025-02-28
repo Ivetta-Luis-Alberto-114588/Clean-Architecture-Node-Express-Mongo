@@ -371,6 +371,13 @@ export class PaymentController {
 
 
 processWebhook = async (req: Request, res: Response): Promise<void> => {
+ 
+  const webHook = req.body
+  console.log(webHook)
+ 
+  res.sendStatus(200)
+  
+
   try {
     // Loguea la información completa recibida para depuración
     console.log('Webhook recibido:', { 
