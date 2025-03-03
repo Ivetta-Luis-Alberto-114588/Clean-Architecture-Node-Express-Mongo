@@ -2,11 +2,14 @@
   "name": "02-curso_clean",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "commonjs",
+
   "scripts": {
     "dev": "tsnd --respawn --clear src/app.ts",
     "build": "rimraf ./dist && tsc",
     "start": "npm run build && node dist/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+     "generate-embeddings": "node src/infrastructure/adapters/transformers-bridge.mjs"
   },
   "keywords": [],
   "author": "",
@@ -23,7 +26,10 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.33",
+    "@langchain/mongodb": "^0.1.0",
     "@types/uuid": "^10.0.0",
+    "@xenova/transformers": "^2.17.2",
     "axios": "^1.8.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -32,7 +38,9 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.0",
     "jsonwebtoken": "^9.0.2",
+    "langchain": "^0.3.19",
     "mongoose": "^8.9.5",
+    "onnxruntime-node": "^1.20.1",
     "uuid": "^11.1.0"
   }
 }

@@ -1,3 +1,4 @@
+// src/presentation/routes.ts
 import { Router } from "express";
 import { AuthRoutes } from "./auth/routes.auth";
 import { ProductRoutes } from "./products/routes.product";
@@ -8,8 +9,7 @@ import { NeighborhoodRoutes } from "./customers/routes.neighborhood";
 import { CustomerRoutes } from "./customers/routes.customer";
 import { SaleRoutes } from "./sales/routes.sale";
 import { PaymentRoutes } from "./payment/routes.payment";
-
-
+import { ChatbotRoutes } from "./chatbot/routes.chatbot"; // Importamos las rutas del chatbot
 
 export class MainRoutes { 
 
@@ -33,17 +33,12 @@ export class MainRoutes {
         // Rutas de ventas
         router.use("/api/sales", SaleRoutes.getSaleRoutes);
 
-
         // Rutas de pagos con Mercado Pago
         router.use("/api/payments", PaymentRoutes.getPaymentRoutes);
         
-        // router.use("/api/user")
-        // router.use("/api/products")
-        // router.use("/api/clients")
-        // router.use("/api/orders")
+        // Rutas del chatbot
+        router.use("/api/chatbot", ChatbotRoutes.getChatbotRoutes);
         
         return router
     }
-
-
 }
