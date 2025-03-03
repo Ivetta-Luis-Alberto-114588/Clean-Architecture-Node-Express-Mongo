@@ -227,6 +227,8 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
         }
     }
 
+    
+
     private async generateProductEmbeddings(): Promise<void> {
         const products = await ProductModel.find({ isActive: true }).populate(['category', 'unit']);
         
