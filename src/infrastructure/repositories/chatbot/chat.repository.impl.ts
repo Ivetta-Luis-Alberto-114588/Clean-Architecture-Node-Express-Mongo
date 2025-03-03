@@ -32,4 +32,8 @@ export class ChatRepositoryImpl implements ChatRepository {
     async generateEmbeddings(): Promise<void> {
         return this.chatDatasource.generateEmbeddings();
     }
+
+    async validateEmbeddings(): Promise<{ [key: string]: number }> {
+        return this.chatDatasource.validateEmbeddings();
+    }
 }

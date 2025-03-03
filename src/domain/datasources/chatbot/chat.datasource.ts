@@ -9,4 +9,5 @@ export abstract class ChatDatasource {
     abstract createSession(userType: 'customer' | 'owner'): Promise<ChatSessionEntity>;
     abstract getSessions(): Promise<ChatSessionEntity[]>;
     abstract generateEmbeddings(): Promise<void>;
+    abstract validateEmbeddings(): Promise<{ [key: string]: number }>;
 }

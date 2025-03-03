@@ -12,7 +12,6 @@ import { CustomError } from "../../../domain/errors/custom.error";
 import { SaleMapper } from "../../mappers/sales/sale.mapper";
 
 export class SaleMongoDataSourceImpl implements SaleDataSource {
-    
     async create(createSaleDto: CreateSaleDto): Promise<SaleEntity> {
         // Iniciar una sesión para la transacción
         const session = await mongoose.startSession();
@@ -43,6 +42,15 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
                     throw CustomError.badRequest(`El producto ${product.name || item.productId} no tiene información de stock definida`);
                 }
                 
+                // Verificar valores válidos
+                if (item.quantity <= 0) {
+                    throw CustomError.badRequest(`La cantidad para el producto ${product.name} debe ser mayor que cero`);
+                }
+                
+                if (item.unitPrice < 0) {
+                    throw CustomError.badRequest(`El precio unitario para el producto ${product.name} no puede ser negativo`);
+                }
+                
                 // Verificar que haya suficiente stock
                 if (productStock < item.quantity) {
                     throw CustomError.badRequest(`Stock insuficiente para el producto ${product.name || item.productId}. Disponible: ${productStock}, Solicitado: ${item.quantity}`);
@@ -52,8 +60,8 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
                 product.stock = productStock - item.quantity;
                 await product.save({ session });
                 
-                // Calcular el subtotal del item
-                const itemSubtotal = item.quantity * item.unitPrice;
+                // Calcular el subtotal del item con precisión de 2 decimales
+                const itemSubtotal = Math.round(item.quantity * item.unitPrice * 100) / 100;
                 subtotal += itemSubtotal;
                 
                 // Añadir el item a la venta
@@ -65,10 +73,29 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
                 });
             }
             
-            // Calcular impuestos y descuentos
-            const taxAmount = (subtotal * createSaleDto.taxRate) / 100;
-            const discountAmount = (subtotal * createSaleDto.discountRate) / 100;
-            const total = subtotal + taxAmount - discountAmount;
+            // Verificar que haya al menos un item
+            if (saleItems.length === 0) {
+                throw CustomError.badRequest('La venta debe tener al menos un producto');
+            }
+            
+            // Verificar valores de impuestos y descuentos
+            if (createSaleDto.taxRate < 0 || createSaleDto.taxRate > 100) {
+                throw CustomError.badRequest('La tasa de impuestos debe estar entre 0 y 100');
+            }
+            
+            if (createSaleDto.discountRate < 0 || createSaleDto.discountRate > 100) {
+                throw CustomError.badRequest('La tasa de descuento debe estar entre 0 y 100');
+            }
+            
+            // Calcular impuestos y descuentos con precisión de 2 decimales
+            const taxAmount = Math.round((subtotal * createSaleDto.taxRate) / 100 * 100) / 100;
+            const discountAmount = Math.round((subtotal * createSaleDto.discountRate) / 100 * 100) / 100;
+            const total = Math.round((subtotal + taxAmount - discountAmount) * 100) / 100;
+            
+            // Validar que el total no sea negativo
+            if (total < 0) {
+                throw CustomError.badRequest('El total de la venta no puede ser negativo. Revise la tasa de descuento.');
+            }
             
             // Crear la venta
             const saleData = {
@@ -80,7 +107,8 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
                 discountRate: createSaleDto.discountRate,
                 discountAmount,
                 total,
-                notes: createSaleDto.notes || ""
+                notes: createSaleDto.notes || "",
+                status: 'pending' // Estado inicial
             };
             
             const sale = await SaleModel.create([saleData], { session });

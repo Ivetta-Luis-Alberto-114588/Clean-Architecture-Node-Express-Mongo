@@ -12,6 +12,10 @@ import { CategoryModel } from "../../../data/mongodb/models/products/category.mo
 import { SaleModel } from "../../../data/mongodb/models/sales/sale.model";
 import { CustomerModel } from "../../../data/mongodb/models/customers/customer.model";
 import { CategoryEntity } from "../../../domain/entities/products/category.entity";
+import { UnitModel } from "../../../data/mongodb/models/products/unit.model";
+import { NeighborhoodModel } from "../../../data/mongodb/models/customers/neighborhood.model";
+import { CityModel } from "../../../data/mongodb/models/customers/city.model";
+import { PaymentModel } from "../../../data/mongodb/models/payment/payment.model";
 
 export class ChatMongoDatasourceImpl implements ChatDatasource {
     private readonly langchainAdapter: LangchainAdapter;
@@ -219,8 +223,19 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
             
             // Generar embeddings para clientes (accesibles solo para dueños)
             await this.generateCustomerEmbeddings();
+
+
+            // Generar embeddings para los nuevos modelos
+            await this.generateCityEmbeddings();
+            await this.generateNeighborhoodEmbeddings();
+            await this.generateUnitEmbeddings();
+            await this.generatePaymentEmbeddings();
             
             console.log("Generación de embeddings completada");
+
+            // Validar y reportar el estado de los embeddings
+            await this.validateEmbeddings();
+
         } catch (error) {
             console.error('Error en generación de embeddings:', error);
             throw CustomError.internalServerError('Error en generación de embeddings');
@@ -345,6 +360,8 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
         console.log(`Embeddings generados para ${sales.length} ventas`);
     }
 
+
+    
     private async generateCustomerEmbeddings(): Promise<void> {
         const customers = await CustomerModel.find({ isActive: true })
             .populate({
@@ -381,4 +398,205 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
         
         console.log(`Embeddings generados para ${customers.length} clientes`);
     }
+
+
+    // Método para generar embeddings de las ciudades
+private async generateCityEmbeddings(): Promise<void> {
+    const cities = await CityModel.find({ isActive: true });
+    
+    for (const city of cities) {
+        // Texto representativo
+        const text = `Ciudad: ${city.name}. 
+        Descripción: ${city.description || 'No disponible'}.`;
+        
+        // Generar embedding
+        const embedding = await this.transformersAdapter.embedText(text);
+        
+        // Guardar embedding
+        await EmbeddingModel.create({
+            objectId: city._id,
+            collectionName: 'City',
+            embedding,
+            text,
+            metadata: {
+                name: city.name,
+                description: city.description,
+                isActive: city.isActive
+            }
+        });
+    }
+    
+    console.log(`Embeddings generados para ${cities.length} ciudades`);
+}
+
+// Método para generar embeddings de los barrios
+private async generateNeighborhoodEmbeddings(): Promise<void> {
+    const neighborhoods = await NeighborhoodModel.find({ isActive: true })
+        .populate('city');
+    
+    for (const neighborhood of neighborhoods) {
+        // Texto representativo
+        const text = `Barrio: ${neighborhood.name}. 
+        Descripción: ${neighborhood.description || 'No disponible'}.
+        Ciudad: ${neighborhood.city && (neighborhood.city as any).name || 'No especificada'}.`;
+        
+        // Generar embedding
+        const embedding = await this.transformersAdapter.embedText(text);
+        
+        // Guardar embedding
+        await EmbeddingModel.create({
+            objectId: neighborhood._id,
+            collectionName: 'Neighborhood',
+            embedding,
+            text,
+            metadata: {
+                name: neighborhood.name,
+                description: neighborhood.description,
+                city: neighborhood.city && (neighborhood.city as any).name,
+                isActive: neighborhood.isActive
+            }
+        });
+    }
+    
+    console.log(`Embeddings generados para ${neighborhoods.length} barrios`);
+}
+
+// Método para generar embeddings de las unidades de medida
+private async generateUnitEmbeddings(): Promise<void> {
+    const units = await UnitModel.find({ isActive: true });
+    
+    for (const unit of units) {
+        // Texto representativo
+        const text = `Unidad de medida: ${unit.name}. 
+        Descripción: ${unit.description || 'No disponible'}.`;
+        
+        // Generar embedding
+        const embedding = await this.transformersAdapter.embedText(text);
+        
+        // Guardar embedding
+        await EmbeddingModel.create({
+            objectId: unit._id,
+            collectionName: 'Unit',
+            embedding,
+            text,
+            metadata: {
+                name: unit.name,
+                description: unit.description,
+                isActive: unit.isActive
+            }
+        });
+    }
+    
+    console.log(`Embeddings generados para ${units.length} unidades de medida`);
+}
+
+// Método para generar embeddings de los pagos
+private async generatePaymentEmbeddings(): Promise<void> {
+    const payments = await PaymentModel.find()
+        .populate({
+            path: 'saleId',
+            model: 'Sale'
+        })
+        .populate({
+            path: 'customerId',
+            model: 'Customer'
+        })
+        .limit(500); // Limitamos para eficiencia
+    
+    for (const payment of payments) {
+        // Texto representativo
+        const text = `Pago ID: ${payment._id}. 
+        Monto: ${payment.amount}.
+        Estado: ${payment.status}.
+        Método de pago: ${payment.paymentMethod}.
+        Cliente: ${payment.customerId && (payment.customerId as any).name || 'No especificado'}.
+        Venta asociada: ${payment.saleId && payment.saleId._id || 'No especificada'}.
+        Fecha de creación: ${payment.createdAt.toISOString().split('T')[0]}.`;
+        
+        // Generar embedding
+        const embedding = await this.transformersAdapter.embedText(text);
+        
+        // Guardar embedding
+        await EmbeddingModel.create({
+            objectId: payment._id,
+            collectionName: 'Payment',
+            embedding,
+            text,
+            metadata: {
+                amount: payment.amount,
+                status: payment.status,
+                paymentMethod: payment.paymentMethod,
+                customer: payment.customerId && (payment.customerId as any).name,
+                sale: payment.saleId && payment.saleId._id,
+                createdAt: payment.createdAt
+            }
+        });
+    }
+    
+    console.log(`Embeddings generados para ${payments.length} pagos`);
+}
+async validateEmbeddings(): Promise<{ [key: string]: number }> {
+    try {
+        // Objeto para almacenar los conteos de cada tipo de entidad
+        const counts: { [key: string]: number } = {};
+        
+        // Obtener conteos directos de las colecciones
+        counts.totalCustomers = await CustomerModel.countDocuments({ isActive: true });
+        counts.totalProducts = await ProductModel.countDocuments({ isActive: true });
+        counts.totalCategories = await CategoryModel.countDocuments({ isActive: true });
+        counts.totalCities = await CityModel.countDocuments({ isActive: true });
+        counts.totalNeighborhoods = await NeighborhoodModel.countDocuments({ isActive: true });
+        counts.totalUnits = await UnitModel.countDocuments({ isActive: true });
+        counts.totalSales = await SaleModel.countDocuments();
+        counts.totalPayments = await PaymentModel.countDocuments();
+        
+        // Obtener conteos de los embeddings por tipo
+        const embeddingCounts = await EmbeddingModel.aggregate([
+            { $group: { _id: "$collectionName", count: { $sum: 1 } } }
+        ]);
+        
+        // Mapear los resultados a un objeto
+        embeddingCounts.forEach((item) => {
+            counts[`embedded${item._id}`] = item.count;
+        });
+        
+        // Verificar y reportar discrepancias
+        const discrepancies = [];
+        if (counts.totalCustomers !== (counts.embeddedCustomer || 0)) {
+            discrepancies.push(`Clientes: ${counts.totalCustomers} en DB vs ${counts.embeddedCustomer || 0} embeddings`);
+        }
+        if (counts.totalProducts !== (counts.embeddedProduct || 0)) {
+            discrepancies.push(`Productos: ${counts.totalProducts} en DB vs ${counts.embeddedProduct || 0} embeddings`);
+        }
+        if (counts.totalCategories !== (counts.embeddedCategory || 0)) {
+            discrepancies.push(`Categorías: ${counts.totalCategories} en DB vs ${counts.embeddedCategory || 0} embeddings`);
+        }
+        if (counts.totalCities !== (counts.embeddedCity || 0)) {
+            discrepancies.push(`Ciudades: ${counts.totalCities} en DB vs ${counts.embeddedCity || 0} embeddings`);
+        }
+        if (counts.totalNeighborhoods !== (counts.embeddedNeighborhood || 0)) {
+            discrepancies.push(`Barrios: ${counts.totalNeighborhoods} en DB vs ${counts.embeddedNeighborhood || 0} embeddings`);
+        }
+        if (counts.totalUnits !== (counts.embeddedUnit || 0)) {
+            discrepancies.push(`Unidades: ${counts.totalUnits} en DB vs ${counts.embeddedUnit || 0} embeddings`);
+        }
+        
+        // Registrar resultados
+        console.log("Estado de embeddings:", counts);
+        if (discrepancies.length > 0) {
+            console.warn("Discrepancias encontradas:", discrepancies);
+        } else {
+            console.log("Todos los conteos coinciden correctamente");
+        }
+        
+        // Retornar el objeto counts
+        return counts;
+    } catch (error) {
+        console.error("Error validando embeddings:", error);
+        throw CustomError.internalServerError("Error al validar embeddings");
+    }
+}
+
+
+
 }

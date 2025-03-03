@@ -25,6 +25,8 @@ export class ChatbotRoutes {
         router.post('/change-llm', controller.changeLLM);
         router.get('/current-llm', controller.getCurrentLLM);
         
+        router.get('/validate-embeddings', controller.validateEmbeddings);
+        
         return router;
     }
 }

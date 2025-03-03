@@ -50,6 +50,7 @@ const chatSessionSchema = new mongoose.Schema({
 });
 
 // Esquema para almacenar embeddings de productos, ventas, etc.
+// Esquema para almacenar embeddings de productos, ventas, etc.
 const embeddingSchema = new mongoose.Schema({
     objectId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -58,7 +59,7 @@ const embeddingSchema = new mongoose.Schema({
     collectionName: {
         type: String,
         required: [true, "Collection name is required"],
-        enum: ['Product', 'Sale', 'Category', 'Customer'] // Colecciones que indexamos
+        enum: ['Product', 'Sale', 'Category', 'Customer', 'City', 'Neighborhood', 'Unit', 'Payment'] // Actualizado para incluir los nuevos modelos
     },
     embedding: {
         type: [Number], // Vector de embedding

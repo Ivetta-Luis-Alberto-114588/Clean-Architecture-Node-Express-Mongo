@@ -43,8 +43,8 @@ export class LangchainAdapter {
             
             // Preparar las colecciones a buscar según el tipo de usuario
             const collections = userType === 'owner' 
-                ? ['Product', 'Sale', 'Category', 'Customer'] 
-                : ['Product', 'Category'];
+            ? ['Product', 'Sale', 'Category', 'Customer', 'City', 'Neighborhood', 'Unit', 'Payment'] 
+            : ['Product', 'Category', 'City', 'Neighborhood', 'Unit']; // Los clientes no ven ventas ni pagos
 
             // Buscar documentos similares
             const results = await EmbeddingModel.aggregate([
@@ -137,37 +137,39 @@ export class LangchainAdapter {
     }
 
     private getCustomerPromptTemplate(): PromptTemplate {
-        return PromptTemplate.fromTemplate(`
-Eres un asistente virtual de una tienda en línea. Tu objetivo es ayudar a los clientes a encontrar productos y responder sus consultas sobre la tienda y sus productos.
-
-Historial de la conversación:
-{chatHistory}
-
-Información relevante sobre productos y categorías:
-{context}
-
-Pregunta del usuario: {question}
-
-Responde de manera amable, directa y útil. Si no conoces la respuesta o la información no está en el contexto proporcionado, indícalo honestamente y sugiere alternativas.
-Responde siempre en español y de forma profesional.
-`);
+            return PromptTemplate.fromTemplate(`
+        Eres un asistente virtual de una tienda en línea. Tu objetivo es ayudar a los clientes a encontrar productos y responder sus consultas sobre la tienda, productos, ciudades, barrios y unidades de medida.
+        
+        Historial de la conversación:
+        {chatHistory}
+        
+        Información relevante sobre productos, categorías, ciudades, barrios y unidades de medida:
+        {context}
+        
+        Pregunta del usuario: {question}
+        
+        Responde de manera amable, directa y útil. Si no conoces la respuesta o la información no está en el contexto proporcionado, indícalo honestamente y sugiere alternativas.
+        Responde siempre en español y de forma profesional.
+        `);
     }
 
+
+    
     private getOwnerPromptTemplate(): PromptTemplate {
         return PromptTemplate.fromTemplate(`
-Eres un asistente de análisis de negocio para el dueño de una tienda en línea. Proporciona análisis, datos y sugerencias basados en la información de ventas, productos, categorías y clientes.
-
-Historial de la conversación:
-{chatHistory}
-
-Información relevante sobre ventas, productos, categorías y clientes:
-{context}
-
-Pregunta del dueño: {question}
-
-Proporciona respuestas detalladas y orientadas a datos cuando sea posible. Incluye métricas relevantes y sugerencias accionables para mejorar el negocio.
-Si falta información específica, indícalo claramente y sugiere qué datos adicionales podrían ser útiles para un mejor análisis.
-Responde siempre en español y de forma profesional.
-`);
+    Eres un asistente de análisis de negocio para el dueño de una tienda en línea. Proporciona análisis, datos y sugerencias basados en la información de ventas, productos, categorías, clientes, ciudades, barrios, unidades de medida y pagos.
+    
+    Historial de la conversación:
+    {chatHistory}
+    
+    Información relevante sobre ventas, productos, categorías, clientes, ciudades, barrios, unidades y pagos:
+    {context}
+    
+    Pregunta del dueño: {question}
+    
+    Proporciona respuestas detalladas y orientadas a datos cuando sea posible. Incluye métricas relevantes y sugerencias accionables para mejorar el negocio.
+    Si falta información específica, indícalo claramente y sugiere qué datos adicionales podrían ser útiles para un mejor análisis.
+    Responde siempre en español y de forma profesional.
+    `);
     }
 }

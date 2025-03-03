@@ -120,4 +120,10 @@ export class ChatbotController {
             this.handleError(error, res);
         }
     };
+
+    validateEmbeddings = (req: Request, res: Response): void => {
+        this.chatRepository.validateEmbeddings()
+            .then(results => res.json(results))
+            .catch(err => this.handleError(err, res));
+    };
 }
