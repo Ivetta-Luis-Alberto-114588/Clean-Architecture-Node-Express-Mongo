@@ -53,12 +53,12 @@ export class LLMAdapter {
                 break;
 
             case LLMType.OPENAI:
-                if (!process.env.OPENAI_API_KEY) {
+                if (!envs.OPENAI_API_KEY) {
                     throw CustomError.internalServerError('OPENAI_API_KEY no configurada');
                 }
                 model = new ChatOpenAI({
                     modelName: "gpt-3.5-turbo",
-                    openAIApiKey: process.env.OPENAI_API_KEY,
+                    openAIApiKey: envs.OPENAI_API_KEY,
                     temperature: 0.2,
                 });
                 break;
@@ -73,7 +73,7 @@ export class LLMAdapter {
 
     private async callClaudeAPI(prompt: string | any): Promise<string> {
         try {
-            if (!process.env.ANTHROPIC_API_KEY) {
+            if (!envs.ANTHROPIC_API_KEY) {
                 throw CustomError.internalServerError('ANTHROPIC_API_KEY no configurada');
             }
     
@@ -108,7 +108,7 @@ export class LLMAdapter {
                 {
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': process.env.ANTHROPIC_API_KEY,
+                        'x-api-key': envs.ANTHROPIC_API_KEY,
                         'anthropic-version': '2023-06-01'
                     }
                 }

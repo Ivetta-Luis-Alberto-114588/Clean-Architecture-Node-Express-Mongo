@@ -100,7 +100,8 @@ export class PaymentController {
           pending: `/api/payments/pending?saleId=${saleId}`
         },
         // notificationUrl: `${host}/api/payments/webhook`,
-        notificationUrl: `https://f88d-186-153-210-117.ngrok-free.app/api/payments/webhook`,
+        // el envs le pone el / al final automaticamente
+        notificationUrl: `${envs.URL_RESPONSE_WEBHOOK_NGROK}api/payments/webhook`,
         idempotencyKey
       };
 

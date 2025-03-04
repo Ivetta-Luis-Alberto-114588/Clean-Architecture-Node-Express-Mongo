@@ -12,10 +12,19 @@ export const envs = {
 
     JWT_SEED: get('JWT_SEED').required().asString(),
 
+    // Mercado Pago
     MERCADO_PAGO_ACCESS_TOKEN: get('MERCADO_PAGO_ACCESS_TOKEN').required().asString(),
     MERCADO_PAGO_PUBLIC_KEY: get('MERCADO_PAGO_PUBLIC_KEY').required().asString(),
 
+    // Key de las APIs
+    ANTHROPIC_API_KEY: get('ANTHROPIC_API_KEY').required().asString(),
+    OPENAI_API_KEY: get('OPENAI_API_KEY').required().asString(),
+
+
     FRONTEND_URL: get('FRONTEND_URL').required().asString(),
+
+
+    // Webhooks de respuesta de MP
     URL_RESPONSE_WEBHOOK_NGROK : get('URL_RESPONSE_WEBHOOK_NGROK').required().asUrlString(),
 
     NODE_ENV: get('NODE_ENV').required().asString(),
