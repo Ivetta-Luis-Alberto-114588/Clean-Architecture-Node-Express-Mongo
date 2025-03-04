@@ -8,8 +8,11 @@
     "dev": "tsnd --respawn --clear src/app.ts",
     "build": "rimraf ./dist && tsc",
     "start": "npm run build && node dist/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-     "generate-embeddings": "node src/infrastructure/adapters/transformers-bridge.mjs"
+    "generate-embeddings": "node src/infrastructure/adapters/transformers-bridge.mjs",
+
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "",
@@ -23,7 +26,15 @@
     "@types/node": "^22.10.3",
     "rimraf": "^6.0.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "supertest": "^6.3.3",
+    "sinon": "^17.0.1",
+    "mongodb-memory-server": "^8.15.1",
+    "@types/jest": "^29.5.10",
+    "@types/supertest": "^2.0.16",
+    "ts-mockito": "^2.6.1"
   },
   "dependencies": {
     "@langchain/community": "^0.3.33",
