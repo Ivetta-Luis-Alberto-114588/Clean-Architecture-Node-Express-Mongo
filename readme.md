@@ -84,3 +84,8 @@ https://www.mercadopago.com.ar/developers/
 (en ventana incognito) Comprador1: TESTUSER1283783729, FBB90AC2#25c3#4199#, test_user_1283783729@testuser.com
 
 (en otro navegador ventana incognito) Vendedor1: TESTUSER174603780, 9325521F#e74e#4a37#
+
+
+TENER EN CUENTA LOS PLAZOS DE ACREDITACION DE MP	
+
+https://www.mercadopago.com.ar/costs-section  --> en esta parte se debe configurar los plazos de espera y las comisiones que nos va a cobrar mercado pago --> la seccion se llama "cconfigurar costos por cobro" de checkout . Al 2025-03-04 por cobro al instante es del 6.29%, a 10 dias es el 4.39%
