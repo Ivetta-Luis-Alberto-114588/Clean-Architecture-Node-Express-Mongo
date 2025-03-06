@@ -1,0 +1,264 @@
+<html><head><meta charset="utf-8"/><title>Test Report</title><style type="text/css">:root {
+  --text-primary: #111;
+  --text-secondary: #4F4F4F;
+  --success: #006633;
+  --success-bright: #80FFBF;
+  --danger: #CC071E;
+  --danger-bright: #FBDFE0;
+  --warning: #995C00;
+  --warning-bright: #FFEEA8;
+  --panel: #eee;
+  --border: #949494;
+  --disabled: #6B6B6B;
+}
+
+html,
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  color: var(--text-primary);
+}
+body {
+  padding: 2rem 1rem;
+}
+.jesthtml-content {
+  margin: 0 auto;
+  max-width: 70rem;
+}
+header {
+  display: flex;
+  align-items: center;
+}
+#title {
+  margin: 0;
+  flex-grow: 1;
+}
+#logo {
+  height: 4rem;
+}
+#timestamp {
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+/** SUMMARY */
+#summary {
+  color: var(--text-primary);
+  margin: 2rem 0;
+  display: flex;
+  font-family: monospace;
+  font-size: 1rem;
+}
+#summary > div {
+  margin-right: 0.5rem;
+  background: var(--panel);
+  padding: 1rem;
+  min-width: 15rem;
+}
+#summary > div:last-child {
+  margin-right: 0;
+}
+@media only screen and (max-width: 720px) {
+  #summary {
+    flex-direction: column;
+  }
+  #summary > div {
+    margin-right: 0;
+    margin-top: 1rem;
+  }
+  #summary > div:first-child {
+    margin-top: 0;
+  }
+}
+
+.summary-total {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.summary-passed {
+  color: var(--success);
+  border-left: 0.4rem solid var(--success);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-failed,
+.summary-obsolete-snapshots {
+  color: var(--danger);
+  border-left: 0.4rem solid var(--danger);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-pending {
+  color: var(--warning);
+  border-left: 0.4rem solid var(--warning);
+  padding-left: 0.5rem;
+  margin-bottom: 0.15rem;
+}
+.summary-empty {
+  color: var(--disabled);
+  border-left: 0.4rem solid var(--disabled);
+  margin-bottom: 0.15rem;
+}
+
+.test-result {
+  padding: 1rem;
+  margin-bottom: 0.25rem;
+}
+.test-result:last-child {
+  border: 0;
+}
+.test-result.passed {
+  background-color: var(--success-bright);
+  color: var(--success);
+}
+.test-result.failed {
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.test-result.pending {
+  background-color: var(--warning-bright);
+  color: var(--warning);
+}
+
+.test-info {
+  display: flex;
+  justify-content: space-between;
+}
+.test-suitename {
+  width: 20%;
+  text-align: left;
+  font-weight: bold;
+  word-break: break-word;
+}
+.test-title {
+  width: 40%;
+  text-align: left;
+  font-style: italic;
+}
+.test-status {
+  width: 20%;
+  text-align: right;
+}
+.test-duration {
+  width: 10%;
+  text-align: right;
+  font-size: 0.85rem;
+}
+
+.failureMessages {
+  padding: 0 1rem;
+  margin-top: 1rem;
+  border-top: 1px dashed var(--danger);
+}
+.failureMessages.suiteFailure {
+  border-top: none;
+}
+.failureMsg {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+
+.suite-container {
+  margin-bottom: 1rem;
+}
+.suite-info {
+  padding: 1rem;
+  background-color: var(--panel);
+  color: var(--text-secondary);
+  border: 0.15rem solid;
+  border-color: var(--panel);
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+.suite-info:hover {
+  border-color: var(--border);
+  cursor: pointer;
+}
+.suite-info .suite-path {
+  word-break: break-all;
+  flex-grow: 1;
+  font-family: monospace;
+  font-size: 1rem;
+}
+.suite-info .suite-time {
+  margin-left: 1rem;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.85rem;
+}
+.suite-info .suite-time.warn {
+  background-color: var(--danger);
+  color: #fff;
+}
+.suite-info:before {
+  content: "\2303";
+  display: inline-block;
+  margin-right: 1rem;
+  transform: rotate(180deg) translateY(0.15rem);
+}
+.suite-container[open] .suite-info:before {
+  transform: rotate(0deg) translateY(0.15rem);
+}
+
+/* CONSOLE LOGS */
+.suite-consolelog {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--panel);
+}
+.suite-consolelog-header {
+  font-weight: bold;
+}
+.suite-consolelog-item {
+  padding: 0.5rem;
+}
+.suite-consolelog-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-consolelog-item-origin {
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+.suite-consolelog-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+
+/* OBSOLETE SNAPSHOTS */
+.suite-obsolete-snapshots {
+  margin-bottom: 0.25rem;
+  padding: 1rem;
+  background-color: var(--danger-bright);
+  color: var(--danger);
+}
+.suite-obsolete-snapshots-header {
+  font-weight: bold;
+}
+.suite-obsolete-snapshots-item {
+  padding: 0.5rem;
+}
+.suite-obsolete-snapshots-item pre {
+  margin: 0.5rem 0;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
+}
+.suite-obsolete-snapshots-item-message {
+  color: var(--text-primary);
+  font-size: 1rem;
+  padding: 0 0.5rem;
+}
+</style></head><body><main class="jesthtml-content"><header><h1 id="title">Test Report</h1></header><section id="metadata-container"><div id="timestamp">Started: 2025-03-06 20:44:44</div><div id="summary"><div id="suite-summary"><div class="summary-total">Suites (18)</div><div class="summary-passed ">18 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div><div id="test-summary"><div class="summary-total">Tests (138)</div><div class="summary-passed ">138 passed</div><div class="summary-failed  summary-empty">0 failed</div><div class="summary-pending  summary-empty">0 pending</div></div></div></section><details id="suite-1" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\payment\verify-payment.dto.test.ts</div><div class="suite-time warn">6.557s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">VerifyPaymentDto</div><div class="test-title">should create a valid DTO with correct values</div><div class="test-status">passed</div><div class="test-duration">0.01s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">VerifyPaymentDto</div><div class="test-title">should return error if paymentId is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">VerifyPaymentDto</div><div class="test-title">should return error if providerPaymentId is not provided</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">VerifyPaymentDto</div><div class="test-title">should return error if paymentId is empty</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">VerifyPaymentDto</div><div class="test-title">should return error if providerPaymentId is empty</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">VerifyPaymentDto</div><div class="test-title">should accept different paymentId formats</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">VerifyPaymentDto</div><div class="test-title">should accept different providerPaymentId formats</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">VerifyPaymentDto</div><div class="test-title">should handle edge cases</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-2" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\customers\create-customer.dto.test.ts</div><div class="suite-time warn">6.976s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should create a valid DTO with correct values</div><div class="test-status">passed</div><div class="test-duration">0.01s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if name is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if name is too short</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if email is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if email format is invalid</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if phone is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if phone format is invalid</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if address is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if address is too short</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if neighborhoodId is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if neighborhoodId has invalid format</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should set isActive to true by default if not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCustomerDto</div><div class="test-title">should return error if isActive is not a boolean</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-3" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\auth\register-user.dto.test.ts</div><div class="suite-time warn">6.973s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserDto</div><div class="test-title">should create a valid DTO with correct values</div><div class="test-status">passed</div><div class="test-duration">0.012s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserDto</div><div class="test-title">should return error if name is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserDto</div><div class="test-title">should return error if email is not provided</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserDto</div><div class="test-title">should return error if email format is invalid</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserDto</div><div class="test-title">should return error if password is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserDto</div><div class="test-title">should return error if password is too short</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-4" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\customers\update-neighborhood.dto.test.ts</div><div class="suite-time warn">7.035s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateNeighborhoodDto</div><div class="test-title">should create a valid DTO with all fields</div><div class="test-status">passed</div><div class="test-duration">0.01s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateNeighborhoodDto</div><div class="test-title">should create a valid DTO with partial fields</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateNeighborhoodDto</div><div class="test-title">should return error if no update fields are provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateNeighborhoodDto</div><div class="test-title">should return error if name is too short</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateNeighborhoodDto</div><div class="test-title">should return error if cityId has invalid format</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateNeighborhoodDto</div><div class="test-title">should return error if isActive is not a boolean</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateNeighborhoodDto</div><div class="test-title">should validate all fields even when multiple are provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-5" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\customers\update-customer.dto.test.ts</div><div class="suite-time warn">7.094s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCustomerDto</div><div class="test-title">should create a valid DTO with all fields</div><div class="test-status">passed</div><div class="test-duration">0.01s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCustomerDto</div><div class="test-title">should return error if no update fields are provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCustomerDto</div><div class="test-title">should return error if name is too short</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCustomerDto</div><div class="test-title">should return error if email format is invalid</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCustomerDto</div><div class="test-title">should create a valid DTO with name only</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCustomerDto</div><div class="test-title">should create a valid DTO with email only</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-6" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\payment\create-payment.dto.test.ts</div><div class="suite-time warn">7.189s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should create a valid DTO with correct values</div><div class="test-status">passed</div><div class="test-duration">0.011s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if saleId is not provided</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if customerId is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if amount is not positive</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if items is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if items is empty array</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if payer is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if payer email is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if backUrls is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if backUrl success is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if backUrl failure is not provided</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if backUrl pending is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if notificationUrl is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if item id is not provided</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if item title is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if item quantity is not positive</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should return error if item unit_price is not positive</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should generate idempotencyKey if not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should use provided idempotencyKey</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should generate externalReference if not provided</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreatePaymentDto</div><div class="test-title">should use provided externalReference</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-7" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\presentation\products\controller.product.test.ts</div><div class="suite-time">0.577s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProductController &gt; createProduct</div><div class="test-title">should create a product successfully</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProductController &gt; createProduct</div><div class="test-title">should return 400 when product data is invalid</div><div class="test-status">passed</div><div class="test-duration">0.017s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProductController &gt; createProduct</div><div class="test-title">should handle use case errors during product creation</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProductController &gt; getAllProducts</div><div class="test-title">should get all products successfully</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProductController &gt; getAllProducts</div><div class="test-title">should use default pagination when no parameters are provided</div><div class="test-status">passed</div><div class="test-duration">0.006s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProductController &gt; getAllProducts</div><div class="test-title">should handle invalid pagination parameters gracefully</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProductController &gt; getAllProducts</div><div class="test-title">should handle use case errors when getting all products</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProductController &gt; getProductsByCategory</div><div class="test-title">should get products by category successfully</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProductController &gt; getProductsByCategory</div><div class="test-title">should handle use case errors when getting products by category</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div></div></details><details id="suite-8" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\customers\create-city.dto.test.ts</div><div class="suite-time warn">7.226s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCityDto</div><div class="test-title">should create a valid DTO with correct values</div><div class="test-status">passed</div><div class="test-duration">0.009s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCityDto</div><div class="test-title">should return error if name is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCityDto</div><div class="test-title">should return error if name is too short</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCityDto</div><div class="test-title">should return error if description is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCityDto</div><div class="test-title">should set isActive to true by default if not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateCityDto</div><div class="test-title">should return error if isActive is not a boolean</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-9" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\use-cases\auth\register-user.use-case.test.ts</div><div class="suite-time warn">7.227s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserUseCase</div><div class="test-title">should register a user and return user with token</div><div class="test-status">passed</div><div class="test-duration">0.012s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserUseCase</div><div class="test-title">should handle repository errors</div><div class="test-status">passed</div><div class="test-duration">0.011s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserUseCase</div><div class="test-title">should throw an error if token generation fails</div><div class="test-status">passed</div><div class="test-duration">0.009s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">RegisterUserUseCase</div><div class="test-title">should handle unexpected errors</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div></div></details><details id="suite-10" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\payment\process-webhook.dto.test.ts</div><div class="suite-time warn">7.285s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProcessWebhookDto</div><div class="test-title">should create a valid DTO with correct values</div><div class="test-status">passed</div><div class="test-duration">0.01s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProcessWebhookDto</div><div class="test-title">should return error if type is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProcessWebhookDto</div><div class="test-title">should return error if action is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProcessWebhookDto</div><div class="test-title">should return error if data is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProcessWebhookDto</div><div class="test-title">should return error if data.id is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProcessWebhookDto</div><div class="test-title">should accept different event types</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProcessWebhookDto</div><div class="test-title">should accept different actions</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">ProcessWebhookDto</div><div class="test-title">should accept different id formats</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div></div></details><details id="suite-11" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\shared\pagination.dto.test.ts</div><div class="suite-time warn">7.355s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">PaginationDto</div><div class="test-title">should create a valid DTO with provided values</div><div class="test-status">passed</div><div class="test-duration">0.012s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">PaginationDto</div><div class="test-title">should return error if page is less than 1</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">PaginationDto</div><div class="test-title">should return error if limit is less than 1</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">PaginationDto</div><div class="test-title">should handle non-numeric values appropriately</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">PaginationDto</div><div class="test-title">should handle negative values appropriately</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">PaginationDto</div><div class="test-title">should accept large valid values</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div></div></details><details id="suite-12" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\customers\update-city.dto.test.ts</div><div class="suite-time">0.342s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCityDto</div><div class="test-title">should create a valid DTO with all fields</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCityDto</div><div class="test-title">should create a valid DTO with partial fields</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCityDto</div><div class="test-title">should return error if no update fields are provided</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCityDto</div><div class="test-title">should return error if name is too short</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCityDto</div><div class="test-title">should return error if isActive is not a boolean</div><div class="test-status">passed</div><div class="test-duration"> </div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdateCityDto</div><div class="test-title">should validate all fields even when multiple are provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div></div></details><details id="suite-13" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\use-cases\product\create-product.use-case.test.ts</div><div class="suite-time">0.412s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateProductUseCase</div><div class="test-title">should create a product successfully</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateProductUseCase</div><div class="test-title">should throw an error if product already exists</div><div class="test-status">passed</div><div class="test-duration">0.008s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateProductUseCase</div><div class="test-title">should handle repository errors</div><div class="test-status">passed</div><div class="test-duration">0.005s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateProductUseCase</div><div class="test-title">should handle custom domain errors</div><div class="test-status">passed</div><div class="test-duration">0.005s</div></div></div></div></details><details id="suite-14" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\customers\create-neighborhood.dto.test.ts</div><div class="suite-time warn">7.456s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateNeighborhoodDto</div><div class="test-title">should create a valid DTO with correct values</div><div class="test-status">passed</div><div class="test-duration">0.01s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateNeighborhoodDto</div><div class="test-title">should return error if name is not provided</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateNeighborhoodDto</div><div class="test-title">should return error if name is too short</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateNeighborhoodDto</div><div class="test-title">should return error if description is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateNeighborhoodDto</div><div class="test-title">should return error if cityId is not provided</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateNeighborhoodDto</div><div class="test-title">should return error if cityId has invalid format</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateNeighborhoodDto</div><div class="test-title">should set isActive to true by default if not provided</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">CreateNeighborhoodDto</div><div class="test-title">should return error if isActive is not a boolean</div><div class="test-status">passed</div><div class="test-duration">0.003s</div></div></div></div></details><details id="suite-15" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\presentation\auth\controller.auth.test.ts</div><div class="suite-time warn">7.505s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthController &gt; registerUser</div><div class="test-title">should register a user successfully</div><div class="test-status">passed</div><div class="test-duration">0.043s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthController &gt; registerUser</div><div class="test-title">should return 400 when register data is invalid</div><div class="test-status">passed</div><div class="test-duration">0.022s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthController &gt; registerUser</div><div class="test-title">should handle use case errors</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthController &gt; loginUser</div><div class="test-title">should login a user successfully</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthController &gt; loginUser</div><div class="test-title">should return 400 when login data is invalid</div><div class="test-status">passed</div><div class="test-duration">0.004s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">AuthController &gt; loginUser</div><div class="test-title">should handle use case errors during login</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div></div></details><details id="suite-16" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\domain\dtos\payment\update-payment-status.dto.test.ts</div><div class="suite-time warn">7.585s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdatePaymentStatusDto</div><div class="test-title">should create a valid DTO with correct values</div><div class="test-status">passed</div><div class="test-duration">0.011s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdatePaymentStatusDto</div><div class="test-title">should accept additional metadata</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdatePaymentStatusDto</div><div class="test-title">should return error if paymentId is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdatePaymentStatusDto</div><div class="test-title">should return error if status is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdatePaymentStatusDto</div><div class="test-title">should return error if providerPaymentId is not provided</div><div class="test-status">passed</div><div class="test-duration">0.001s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdatePaymentStatusDto</div><div class="test-title">should return error if status is not valid</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdatePaymentStatusDto</div><div class="test-title">should accept all valid payment statuses</div><div class="test-status">passed</div><div class="test-duration">0.005s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">UpdatePaymentStatusDto</div><div class="test-title">should accept different providerPaymentId formats</div><div class="test-status">passed</div><div class="test-duration">0.002s</div></div></div></div></details><details id="suite-17" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\integration\auth\auth-routes.test.ts</div><div class="suite-time warn">8.645s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Routes Integration Tests</div><div class="test-title">should register a new user</div><div class="test-status">passed</div><div class="test-duration">0.122s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Auth Routes Integration Tests</div><div class="test-title">should login an existing user</div><div class="test-status">passed</div><div class="test-duration">0.192s</div></div></div></div></details><details id="suite-18" class="suite-container" open=""><summary class="suite-info"><div class="suite-path">C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\tests\integration\products\product-routes.test.ts</div><div class="suite-time warn">9.601s</div></summary><div class="suite-tests"><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; POST /api/products</div><div class="test-title">should create a new product</div><div class="test-status">passed</div><div class="test-duration">0.046s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; POST /api/products</div><div class="test-title">should return 400 when trying to create a product with invalid data</div><div class="test-status">passed</div><div class="test-duration">0.015s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; GET /api/products</div><div class="test-title">should get all products</div><div class="test-status">passed</div><div class="test-duration">0.027s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; GET /api/products</div><div class="test-title">should get products with pagination</div><div class="test-status">passed</div><div class="test-duration">0.015s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; GET /api/products/by-category/:categoryId</div><div class="test-title">should get products by category</div><div class="test-status">passed</div><div class="test-duration">0.014s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; GET /api/products/by-category/:categoryId</div><div class="test-title">should return 404 for non-existent category</div><div class="test-status">passed</div><div class="test-duration">0.011s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; PUT /api/products/:id</div><div class="test-title">should update a product</div><div class="test-status">passed</div><div class="test-duration">0.017s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; PUT /api/products/:id</div><div class="test-title">should return 400 when update data is invalid</div><div class="test-status">passed</div><div class="test-duration">0.01s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; DELETE /api/products/:id</div><div class="test-title">should delete a product</div><div class="test-status">passed</div><div class="test-duration">0.022s</div></div></div><div class="test-result passed"><div class="test-info"><div class="test-suitename">Product Routes Integration Tests &gt; DELETE /api/products/:id</div><div class="test-title">should return 404 when trying to delete non-existent product</div><div class="test-status">passed</div><div class="test-duration">0.015s</div></div></div></div></details></main></body></html>

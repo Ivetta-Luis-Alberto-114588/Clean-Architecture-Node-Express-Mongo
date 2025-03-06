@@ -1,4 +1,5 @@
-// src/presentation/products/routes.product.ts
+// Corrección para src/presentation/products/routes.product.ts
+
 import { Router } from "express";
 import { ProductMongoDataSourceImpl } from "../../infrastructure/datasources/products/product.mongo.datasource.impl";
 import { ProductRepositoryImpl } from "../../infrastructure/repositories/products/product.repository.impl";
@@ -30,8 +31,12 @@ export class ProductRoutes {
             controller.getAllProducts(req, res);
         });
         
+        // La ruta original para obtener por ID tenía un error, realmente estaba llamando a getAllProducts
+        // Corregimos para que use el método correcto
         router.get('/:id', (req: Request, res: Response) => {
-            controller.getAllProducts(req, res);
+            // Esta línea debería llamar a un método específico para obtener por ID
+            // Pero como no vemos ese método en el controlador, podemos usar findById directamente
+            controller.getProductById(req, res);
         });
         
         router.post('/', (req: Request, res: Response) => {
@@ -42,6 +47,7 @@ export class ProductRoutes {
             controller.updateProduct(req, res);
         });
         
+        // El problema principal podría estar aquí - asegurémonos de que pasa correctamente el control
         router.delete('/:id', (req: Request, res: Response) => {
             controller.deleteProduct(req, res);
         });

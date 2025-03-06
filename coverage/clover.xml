@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1741288220493" clover="3.2.0">
-  <project timestamp="1741288220493" name="All files">
-    <metrics statements="3533" coveredstatements="1141" conditionals="1075" coveredconditionals="78" methods="633" coveredmethods="133" elements="5241" coveredelements="1352" complexity="0" loc="3533" ncloc="3533" packages="56" files="157" classes="157"/>
+<coverage generated="1741304695113" clover="3.2.0">
+  <project timestamp="1741304695113" name="All files">
+    <metrics statements="3550" coveredstatements="1321" conditionals="1082" coveredconditionals="179" methods="635" coveredmethods="151" elements="5267" coveredelements="1651" complexity="0" loc="3550" ncloc="3550" packages="56" files="157" classes="157"/>
     <package name="configs">
       <metrics statements="24" coveredstatements="20" conditionals="3" coveredconditionals="1" methods="10" coveredmethods="7"/>
       <file name="bcrypt.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\configs\bcrypt.ts">
@@ -9,9 +9,9 @@
         <line num="2" count="2" type="stmt"/>
         <line num="4" count="2" type="stmt"/>
         <line num="7" count="3" type="stmt"/>
-        <line num="12" count="3" type="stmt"/>
-        <line num="13" count="3" type="stmt"/>
-        <line num="14" count="3" type="stmt"/>
+        <line num="12" count="2" type="stmt"/>
+        <line num="13" count="2" type="stmt"/>
+        <line num="14" count="2" type="stmt"/>
       </file>
       <file name="envs.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\configs\envs.ts">
         <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
@@ -37,8 +37,8 @@
       </file>
       <file name="validator.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\configs\validator.ts">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-        <line num="1" count="5" type="stmt"/>
-        <line num="6" count="11" type="stmt"/>
+        <line num="1" count="7" type="stmt"/>
+        <line num="6" count="24" type="stmt"/>
       </file>
     </package>
     <package name="data.mongodb.models">
@@ -205,219 +205,232 @@
       </file>
     </package>
     <package name="domain.dtos.customers">
-      <metrics statements="130" coveredstatements="8" conditionals="64" coveredconditionals="0" methods="12" coveredmethods="0"/>
+      <metrics statements="130" coveredstatements="126" conditionals="64" coveredconditionals="56" methods="12" coveredmethods="12"/>
       <file name="create-city.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\customers\create-city.dto.ts">
-        <metrics statements="11" coveredstatements="1" conditionals="8" coveredconditionals="0" methods="2" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="0" type="stmt"/>
-        <line num="4" count="0" type="stmt"/>
-        <line num="5" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="10" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="13" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="14" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="16" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="19" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="20" count="0" type="stmt"/>
-        <line num="24" count="0" type="stmt"/>
+        <metrics statements="11" coveredstatements="11" conditionals="8" coveredconditionals="7" methods="2" coveredmethods="2"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="5" count="2" type="cond" truecount="0" falsecount="1"/>
+        <line num="10" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="13" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="14" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="16" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="19" count="3" type="cond" truecount="3" falsecount="0"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="24" count="2" type="stmt"/>
       </file>
       <file name="create-customer.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\customers\create-customer.dto.ts">
-        <metrics statements="24" coveredstatements="2" conditionals="15" coveredconditionals="0" methods="2" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="5" count="0" type="stmt"/>
-        <line num="6" count="0" type="stmt"/>
-        <line num="7" count="0" type="stmt"/>
-        <line num="8" count="0" type="stmt"/>
-        <line num="9" count="0" type="stmt"/>
-        <line num="10" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="15" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="18" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="19" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="21" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="22" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="24" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="26" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="27" count="0" type="stmt"/>
-        <line num="30" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="31" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="33" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="35" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="36" count="0" type="stmt"/>
-        <line num="40" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="41" count="0" type="stmt"/>
-        <line num="45" count="0" type="stmt"/>
+        <metrics statements="24" coveredstatements="24" conditionals="15" coveredconditionals="14" methods="2" coveredmethods="2"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="6" count="2" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="8" count="2" type="stmt"/>
+        <line num="9" count="2" type="stmt"/>
+        <line num="10" count="2" type="cond" truecount="0" falsecount="1"/>
+        <line num="15" count="13" type="cond" truecount="1" falsecount="0"/>
+        <line num="18" count="13" type="cond" truecount="1" falsecount="0"/>
+        <line num="19" count="12" type="cond" truecount="1" falsecount="0"/>
+        <line num="21" count="11" type="cond" truecount="1" falsecount="0"/>
+        <line num="22" count="10" type="cond" truecount="1" falsecount="0"/>
+        <line num="24" count="9" type="cond" truecount="1" falsecount="0"/>
+        <line num="26" count="8" type="cond" truecount="1" falsecount="0"/>
+        <line num="27" count="1" type="stmt"/>
+        <line num="30" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="31" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="33" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="35" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="40" count="3" type="cond" truecount="3" falsecount="0"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="45" count="2" type="stmt"/>
       </file>
       <file name="create-neighborhood.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\customers\create-neighborhood.dto.ts">
-        <metrics statements="15" coveredstatements="1" conditionals="10" coveredconditionals="0" methods="2" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="0" type="stmt"/>
-        <line num="4" count="0" type="stmt"/>
-        <line num="5" count="0" type="stmt"/>
-        <line num="6" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="11" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="14" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="15" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="17" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="19" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="22" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="23" count="0" type="stmt"/>
-        <line num="27" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="28" count="0" type="stmt"/>
-        <line num="32" count="0" type="stmt"/>
+        <metrics statements="15" coveredstatements="15" conditionals="10" coveredconditionals="9" methods="2" coveredmethods="2"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="6" count="2" type="cond" truecount="0" falsecount="1"/>
+        <line num="11" count="8" type="cond" truecount="1" falsecount="0"/>
+        <line num="14" count="8" type="cond" truecount="1" falsecount="0"/>
+        <line num="15" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="17" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="19" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="22" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="27" count="3" type="cond" truecount="3" falsecount="0"/>
+        <line num="28" count="1" type="stmt"/>
+        <line num="32" count="2" type="stmt"/>
       </file>
       <file name="update-city.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\customers\update-city.dto.ts">
-        <metrics statements="19" coveredstatements="1" conditionals="10" coveredconditionals="0" methods="2" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="0" type="stmt"/>
-        <line num="4" count="0" type="stmt"/>
-        <line num="5" count="0" type="stmt"/>
-        <line num="10" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="11" count="0" type="stmt"/>
-        <line num="14" count="0" type="stmt"/>
-        <line num="15" count="0" type="stmt"/>
-        <line num="18" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="19" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="20" count="0" type="stmt"/>
-        <line num="22" count="0" type="stmt"/>
-        <line num="25" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="26" count="0" type="stmt"/>
-        <line num="29" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="30" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="31" count="0" type="stmt"/>
-        <line num="33" count="0" type="stmt"/>
-        <line num="37" count="0" type="stmt"/>
+        <metrics statements="19" coveredstatements="19" conditionals="10" coveredconditionals="9" methods="2" coveredmethods="2"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="10" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="14" count="5" type="stmt"/>
+        <line num="15" count="5" type="stmt"/>
+        <line num="18" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="19" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="20" count="1" type="stmt"/>
+        <line num="22" count="3" type="stmt"/>
+        <line num="25" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="26" count="2" type="stmt"/>
+        <line num="29" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="30" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="31" count="2" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="37" count="2" type="stmt"/>
       </file>
       <file name="update-customer.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\customers\update-customer.dto.ts">
-        <metrics statements="37" coveredstatements="2" conditionals="13" coveredconditionals="0" methods="2" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="5" count="0" type="stmt"/>
-        <line num="6" count="0" type="stmt"/>
-        <line num="7" count="0" type="stmt"/>
-        <line num="8" count="0" type="stmt"/>
-        <line num="9" count="0" type="stmt"/>
-        <line num="10" count="0" type="stmt"/>
-        <line num="15" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="16" count="0" type="stmt"/>
-        <line num="19" count="0" type="stmt"/>
-        <line num="20" count="0" type="stmt"/>
-        <line num="23" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="24" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="25" count="0" type="stmt"/>
-        <line num="27" count="0" type="stmt"/>
-        <line num="30" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="31" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="32" count="0" type="stmt"/>
-        <line num="34" count="0" type="stmt"/>
-        <line num="37" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="38" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="39" count="0" type="stmt"/>
-        <line num="41" count="0" type="stmt"/>
-        <line num="44" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="45" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="46" count="0" type="stmt"/>
-        <line num="48" count="0" type="stmt"/>
-        <line num="51" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="52" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="53" count="0" type="stmt"/>
-        <line num="55" count="0" type="stmt"/>
-        <line num="58" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="59" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="60" count="0" type="stmt"/>
-        <line num="62" count="0" type="stmt"/>
-        <line num="66" count="0" type="stmt"/>
+        <metrics statements="37" coveredstatements="33" conditionals="13" coveredconditionals="9" methods="2" coveredmethods="2"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="5" count="3" type="stmt"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="9" count="3" type="stmt"/>
+        <line num="10" count="3" type="stmt"/>
+        <line num="16" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="17" count="1" type="stmt"/>
+        <line num="20" count="5" type="stmt"/>
+        <line num="21" count="5" type="stmt"/>
+        <line num="24" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="25" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="28" count="2" type="stmt"/>
+        <line num="31" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="32" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="35" count="2" type="stmt"/>
+        <line num="38" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="39" count="1" type="cond" truecount="0" falsecount="1"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="42" count="1" type="stmt"/>
+        <line num="45" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="46" count="1" type="cond" truecount="0" falsecount="1"/>
+        <line num="47" count="0" type="stmt"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="52" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="53" count="1" type="cond" truecount="0" falsecount="1"/>
+        <line num="54" count="0" type="stmt"/>
+        <line num="56" count="1" type="stmt"/>
+        <line num="59" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="60" count="1" type="cond" truecount="0" falsecount="1"/>
+        <line num="61" count="0" type="stmt"/>
+        <line num="63" count="1" type="stmt"/>
+        <line num="67" count="3" type="stmt"/>
       </file>
       <file name="update-neighborhood.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\customers\update-neighborhood.dto.ts">
-        <metrics statements="24" coveredstatements="1" conditionals="8" coveredconditionals="0" methods="2" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="0" type="stmt"/>
-        <line num="4" count="0" type="stmt"/>
-        <line num="5" count="0" type="stmt"/>
-        <line num="6" count="0" type="stmt"/>
-        <line num="11" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="12" count="0" type="stmt"/>
-        <line num="15" count="0" type="stmt"/>
-        <line num="16" count="0" type="stmt"/>
-        <line num="19" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="20" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="21" count="0" type="stmt"/>
-        <line num="23" count="0" type="stmt"/>
-        <line num="26" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="27" count="0" type="stmt"/>
-        <line num="30" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="31" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="32" count="0" type="stmt"/>
-        <line num="34" count="0" type="stmt"/>
-        <line num="37" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="38" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="39" count="0" type="stmt"/>
-        <line num="41" count="0" type="stmt"/>
-        <line num="45" count="0" type="stmt"/>
+        <metrics statements="24" coveredstatements="24" conditionals="8" coveredconditionals="8" methods="2" coveredmethods="2"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="6" count="2" type="stmt"/>
+        <line num="11" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="15" count="6" type="stmt"/>
+        <line num="16" count="6" type="stmt"/>
+        <line num="19" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="20" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="23" count="3" type="stmt"/>
+        <line num="26" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="27" count="2" type="stmt"/>
+        <line num="30" count="5" type="cond" truecount="1" falsecount="0"/>
+        <line num="31" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="32" count="2" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
+        <line num="37" count="3" type="cond" truecount="1" falsecount="0"/>
+        <line num="38" count="2" type="cond" truecount="1" falsecount="0"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="45" count="2" type="stmt"/>
       </file>
     </package>
     <package name="domain.dtos.payment">
-      <metrics statements="53" coveredstatements="5" conditionals="35" coveredconditionals="0" methods="6" coveredmethods="0"/>
+      <metrics statements="63" coveredstatements="63" conditionals="39" coveredconditionals="38" methods="8" coveredmethods="8"/>
       <file name="create-payment.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\payment\create-payment.dto.ts">
-        <metrics statements="33" coveredstatements="2" conditionals="29" coveredconditionals="0" methods="2" coveredmethods="0"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="7" count="2" type="stmt"/>
-        <line num="9" count="0" type="stmt"/>
-        <line num="10" count="0" type="stmt"/>
-        <line num="11" count="0" type="stmt"/>
-        <line num="12" count="0" type="stmt"/>
-        <line num="13" count="0" type="stmt"/>
-        <line num="14" count="0" type="stmt"/>
-        <line num="15" count="0" type="stmt"/>
-        <line num="20" count="0" type="stmt"/>
-        <line num="21" count="0" type="stmt"/>
-        <line num="22" count="0" type="stmt"/>
-        <line num="23" count="0" type="stmt"/>
-        <line num="24" count="0" type="stmt"/>
-        <line num="41" count="0" type="stmt"/>
-        <line num="44" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="45" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="46" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="47" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="48" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="49" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="50" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="51" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="52" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="53" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="54" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="57" count="0" type="stmt"/>
-        <line num="58" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="59" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="60" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="61" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="65" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="67" count="0" type="stmt"/>
+        <metrics statements="33" coveredstatements="33" conditionals="29" coveredconditionals="28" methods="2" coveredmethods="2"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="9" count="5" type="stmt"/>
+        <line num="10" count="5" type="stmt"/>
+        <line num="11" count="5" type="stmt"/>
+        <line num="12" count="5" type="stmt"/>
+        <line num="13" count="5" type="stmt"/>
+        <line num="14" count="5" type="stmt"/>
+        <line num="15" count="5" type="stmt"/>
+        <line num="20" count="5" type="stmt"/>
+        <line num="21" count="5" type="stmt"/>
+        <line num="22" count="5" type="stmt"/>
+        <line num="23" count="5" type="stmt"/>
+        <line num="24" count="5" type="stmt"/>
+        <line num="41" count="21" type="stmt"/>
+        <line num="44" count="21" type="cond" truecount="1" falsecount="0"/>
+        <line num="45" count="20" type="cond" truecount="1" falsecount="0"/>
+        <line num="46" count="19" type="cond" truecount="3" falsecount="0"/>
+        <line num="47" count="18" type="cond" truecount="4" falsecount="0"/>
+        <line num="48" count="16" type="cond" truecount="1" falsecount="0"/>
+        <line num="49" count="15" type="cond" truecount="1" falsecount="0"/>
+        <line num="50" count="14" type="cond" truecount="1" falsecount="0"/>
+        <line num="51" count="13" type="cond" truecount="1" falsecount="0"/>
+        <line num="52" count="12" type="cond" truecount="1" falsecount="0"/>
+        <line num="53" count="11" type="cond" truecount="1" falsecount="0"/>
+        <line num="54" count="10" type="cond" truecount="1" falsecount="0"/>
+        <line num="57" count="9" type="stmt"/>
+        <line num="58" count="9" type="cond" truecount="1" falsecount="0"/>
+        <line num="59" count="8" type="cond" truecount="1" falsecount="0"/>
+        <line num="60" count="7" type="cond" truecount="3" falsecount="0"/>
+        <line num="61" count="6" type="cond" truecount="3" falsecount="0"/>
+        <line num="65" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="67" count="5" type="stmt"/>
+      </file>
+      <file name="process-webhook.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\payment\process-webhook.dto.ts">
+        <metrics statements="10" coveredstatements="10" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="3" count="12" type="stmt"/>
+        <line num="4" count="12" type="stmt"/>
+        <line num="5" count="12" type="stmt"/>
+        <line num="11" count="16" type="stmt"/>
+        <line num="14" count="16" type="cond" truecount="1" falsecount="0"/>
+        <line num="15" count="15" type="cond" truecount="1" falsecount="0"/>
+        <line num="16" count="14" type="cond" truecount="1" falsecount="0"/>
+        <line num="17" count="13" type="cond" truecount="1" falsecount="0"/>
+        <line num="19" count="12" type="stmt"/>
       </file>
       <file name="update-payment-status.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\payment\update-payment-status.dto.ts">
-        <metrics statements="13" coveredstatements="2" conditionals="4" coveredconditionals="0" methods="2" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="2" type="stmt"/>
-        <line num="5" count="0" type="stmt"/>
-        <line num="6" count="0" type="stmt"/>
-        <line num="7" count="0" type="stmt"/>
-        <line num="8" count="0" type="stmt"/>
-        <line num="12" count="0" type="stmt"/>
-        <line num="15" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="16" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="17" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="18" count="0" type="stmt"/>
-        <line num="20" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="22" count="0" type="stmt"/>
+        <metrics statements="13" coveredstatements="13" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="5" count="14" type="stmt"/>
+        <line num="6" count="14" type="stmt"/>
+        <line num="7" count="14" type="stmt"/>
+        <line num="8" count="14" type="stmt"/>
+        <line num="12" count="18" type="stmt"/>
+        <line num="15" count="18" type="cond" truecount="1" falsecount="0"/>
+        <line num="16" count="17" type="cond" truecount="1" falsecount="0"/>
+        <line num="17" count="16" type="cond" truecount="1" falsecount="0"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="20" count="15" type="cond" truecount="1" falsecount="0"/>
+        <line num="22" count="14" type="stmt"/>
       </file>
       <file name="verify-payment.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\payment\verify-payment.dto.ts">
-        <metrics statements="7" coveredstatements="1" conditionals="2" coveredconditionals="0" methods="2" coveredmethods="0"/>
-        <line num="1" count="2" type="stmt"/>
-        <line num="3" count="0" type="stmt"/>
-        <line num="4" count="0" type="stmt"/>
-        <line num="8" count="0" type="stmt"/>
-        <line num="11" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="12" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="14" count="0" type="stmt"/>
+        <metrics statements="7" coveredstatements="7" conditionals="2" coveredconditionals="2" methods="2" coveredmethods="2"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="3" count="9" type="stmt"/>
+        <line num="4" count="9" type="stmt"/>
+        <line num="8" count="13" type="stmt"/>
+        <line num="11" count="13" type="cond" truecount="1" falsecount="0"/>
+        <line num="12" count="11" type="cond" truecount="1" falsecount="0"/>
+        <line num="14" count="9" type="stmt"/>
       </file>
     </package>
     <package name="domain.dtos.products">
@@ -583,16 +596,18 @@
       </file>
     </package>
     <package name="domain.dtos.shared">
-      <metrics statements="7" coveredstatements="7" conditionals="7" coveredconditionals="2" methods="2" coveredmethods="2"/>
+      <metrics statements="9" coveredstatements="9" conditionals="11" coveredconditionals="8" methods="2" coveredmethods="2"/>
       <file name="pagination.dto.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\dtos\shared\pagination.dto.ts">
-        <metrics statements="7" coveredstatements="7" conditionals="7" coveredconditionals="2" methods="2" coveredmethods="2"/>
-        <line num="2" count="4" type="stmt"/>
-        <line num="7" count="11" type="stmt"/>
-        <line num="8" count="11" type="stmt"/>
-        <line num="17" count="11" type="cond" truecount="2" falsecount="1"/>
-        <line num="20" count="11" type="cond" truecount="0" falsecount="1"/>
-        <line num="21" count="11" type="cond" truecount="0" falsecount="1"/>
-        <line num="25" count="11" type="stmt"/>
+        <metrics statements="9" coveredstatements="9" conditionals="11" coveredconditionals="8" methods="2" coveredmethods="2"/>
+        <line num="2" count="5" type="stmt"/>
+        <line num="7" count="13" type="stmt"/>
+        <line num="8" count="13" type="stmt"/>
+        <line num="17" count="17" type="stmt"/>
+        <line num="18" count="17" type="stmt"/>
+        <line num="21" count="17" type="cond" truecount="3" falsecount="0"/>
+        <line num="24" count="15" type="cond" truecount="3" falsecount="0"/>
+        <line num="25" count="13" type="cond" truecount="2" falsecount="1"/>
+        <line num="28" count="13" type="stmt"/>
       </file>
     </package>
     <package name="domain.entities">
@@ -666,16 +681,16 @@
       <metrics statements="26" coveredstatements="10" conditionals="4" coveredconditionals="4" methods="3" coveredmethods="2"/>
       <file name="payment.entity.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\entities\payment\payment.entity.ts">
         <metrics statements="26" coveredstatements="10" conditionals="4" coveredconditionals="4" methods="3" coveredmethods="2"/>
-        <line num="7" count="2" type="cond" truecount="2" falsecount="0"/>
-        <line num="8" count="2" type="stmt"/>
-        <line num="12" count="2" type="cond" truecount="2" falsecount="0"/>
-        <line num="13" count="2" type="stmt"/>
-        <line num="14" count="2" type="stmt"/>
-        <line num="15" count="2" type="stmt"/>
-        <line num="16" count="2" type="stmt"/>
-        <line num="17" count="2" type="stmt"/>
-        <line num="18" count="2" type="stmt"/>
-        <line num="21" count="2" type="stmt"/>
+        <line num="7" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="12" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="13" count="3" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="16" count="3" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
         <line num="23" count="0" type="stmt"/>
         <line num="24" count="0" type="stmt"/>
         <line num="25" count="0" type="stmt"/>
@@ -750,13 +765,13 @@
       <file name="custom.error.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\errors\custom.error.ts">
         <metrics statements="11" coveredstatements="9" conditionals="1" coveredconditionals="0" methods="7" coveredmethods="5"/>
         <line num="2" count="6" type="stmt"/>
-        <line num="5" count="17" type="stmt"/>
-        <line num="6" count="17" type="stmt"/>
-        <line num="8" count="17" type="stmt"/>
+        <line num="5" count="18" type="stmt"/>
+        <line num="6" count="18" type="stmt"/>
+        <line num="8" count="18" type="stmt"/>
         <line num="12" count="5" type="stmt"/>
         <line num="16" count="1" type="stmt"/>
         <line num="20" count="0" type="stmt"/>
-        <line num="24" count="3" type="stmt"/>
+        <line num="24" count="4" type="stmt"/>
         <line num="28" count="0" type="stmt"/>
         <line num="32" count="7" type="stmt"/>
         <line num="33" count="7" type="stmt"/>
@@ -766,16 +781,16 @@
       <metrics statements="10" coveredstatements="10" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
       <file name="mercado-pago.interface.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\interfaces\payment\mercado-pago.interface.ts">
         <metrics statements="10" coveredstatements="10" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
-        <line num="78" count="2" type="cond" truecount="2" falsecount="0"/>
-        <line num="79" count="2" type="stmt"/>
-        <line num="80" count="2" type="stmt"/>
-        <line num="81" count="2" type="stmt"/>
-        <line num="82" count="2" type="stmt"/>
-        <line num="83" count="2" type="stmt"/>
-        <line num="84" count="2" type="stmt"/>
-        <line num="85" count="2" type="stmt"/>
-        <line num="86" count="2" type="stmt"/>
-        <line num="87" count="2" type="stmt"/>
+        <line num="78" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="79" count="3" type="stmt"/>
+        <line num="80" count="3" type="stmt"/>
+        <line num="81" count="3" type="stmt"/>
+        <line num="82" count="3" type="stmt"/>
+        <line num="83" count="3" type="stmt"/>
+        <line num="84" count="3" type="stmt"/>
+        <line num="85" count="3" type="stmt"/>
+        <line num="86" count="3" type="stmt"/>
+        <line num="87" count="3" type="stmt"/>
       </file>
     </package>
     <package name="domain.use-cases.auth">
@@ -1274,7 +1289,7 @@
       </file>
     </package>
     <package name="domain.use-cases.product">
-      <metrics statements="205" coveredstatements="78" conditionals="39" coveredconditionals="4" methods="30" coveredmethods="10"/>
+      <metrics statements="193" coveredstatements="68" conditionals="37" coveredconditionals="3" methods="28" coveredmethods="8"/>
       <file name="create-category.use-case.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\use-cases\product\create-category.use-case.ts">
         <metrics statements="18" coveredstatements="3" conditionals="4" coveredconditionals="0" methods="2" coveredmethods="0"/>
         <line num="2" count="2" type="stmt"/>
@@ -1349,21 +1364,6 @@
         <line num="31" count="0" type="cond" truecount="0" falsecount="1"/>
         <line num="32" count="0" type="stmt"/>
         <line num="34" count="0" type="stmt"/>
-      </file>
-      <file name="delete-product.use-case.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\use-cases\product\delete-product.use-case.ts">
-        <metrics statements="12" coveredstatements="10" conditionals="2" coveredconditionals="1" methods="2" coveredmethods="2"/>
-        <line num="2" count="2" type="stmt"/>
-        <line num="10" count="2" type="stmt"/>
-        <line num="12" count="2" type="stmt"/>
-        <line num="16" count="2" type="stmt"/>
-        <line num="18" count="2" type="stmt"/>
-        <line num="21" count="1" type="cond" truecount="0" falsecount="1"/>
-        <line num="22" count="0" type="stmt"/>
-        <line num="26" count="1" type="stmt"/>
-        <line num="29" count="1" type="stmt"/>
-        <line num="32" count="1" type="cond" truecount="1" falsecount="0"/>
-        <line num="33" count="1" type="stmt"/>
-        <line num="35" count="0" type="stmt"/>
       </file>
       <file name="delete-unit.use-case.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\domain\use-cases\product\delete-unit.use-case.ts">
         <metrics statements="12" coveredstatements="2" conditionals="2" coveredconditionals="0" methods="2" coveredmethods="0"/>
@@ -2359,7 +2359,7 @@
       </file>
     </package>
     <package name="infrastructure.datasources.products">
-      <metrics statements="176" coveredstatements="43" conditionals="40" coveredconditionals="5" methods="28" coveredmethods="7"/>
+      <metrics statements="185" coveredstatements="52" conditionals="41" coveredconditionals="7" methods="28" coveredmethods="7"/>
       <file name="category.mongo.datasource.impl.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\infrastructure\datasources\products\category.mongo.datasource.impl.ts">
         <metrics statements="52" coveredstatements="10" conditionals="12" coveredconditionals="2" methods="7" coveredmethods="1"/>
         <line num="1" count="2" type="stmt"/>
@@ -2416,7 +2416,7 @@
         <line num="159" count="0" type="stmt"/>
       </file>
       <file name="product.mongo.datasource.impl.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\infrastructure\datasources\products\product.mongo.datasource.impl.ts">
-        <metrics statements="70" coveredstatements="29" conditionals="16" coveredconditionals="3" methods="12" coveredmethods="6"/>
+        <metrics statements="79" coveredstatements="38" conditionals="17" coveredconditionals="5" methods="12" coveredmethods="6"/>
         <line num="1" count="2" type="stmt"/>
         <line num="2" count="2" type="stmt"/>
         <line num="7" count="2" type="stmt"/>
@@ -2456,37 +2456,46 @@
         <line num="118" count="0" type="cond" truecount="0" falsecount="1"/>
         <line num="120" count="0" type="stmt"/>
         <line num="121" count="0" type="stmt"/>
-        <line num="128" count="1" type="stmt"/>
-        <line num="131" count="1" type="stmt"/>
-        <line num="134" count="1" type="cond" truecount="0" falsecount="1"/>
-        <line num="137" count="1" type="stmt"/>
-        <line num="141" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="128" count="2" type="stmt"/>
+        <line num="129" count="2" type="stmt"/>
+        <line num="132" count="2" type="stmt"/>
+        <line num="133" count="2" type="cond" truecount="1" falsecount="0"/>
+        <line num="134" count="1" type="stmt"/>
+        <line num="135" count="1" type="stmt"/>
+        <line num="139" count="1" type="stmt"/>
+        <line num="142" count="1" type="cond" truecount="0" falsecount="1"/>
         <line num="143" count="0" type="stmt"/>
         <line num="144" count="0" type="stmt"/>
-        <line num="151" count="0" type="stmt"/>
-        <line num="153" count="0" type="stmt"/>
-        <line num="155" count="0" type="stmt"/>
-        <line num="161" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="164" count="0" type="stmt"/>
-        <line num="169" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="147" count="1" type="stmt"/>
+        <line num="150" count="1" type="stmt"/>
+        <line num="154" count="1" type="stmt"/>
+        <line num="157" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="158" count="1" type="stmt"/>
+        <line num="161" count="0" type="stmt"/>
+        <line num="167" count="0" type="stmt"/>
+        <line num="169" count="0" type="stmt"/>
         <line num="171" count="0" type="stmt"/>
-        <line num="172" count="0" type="stmt"/>
+        <line num="177" count="0" type="cond" truecount="0" falsecount="1"/>
         <line num="180" count="0" type="stmt"/>
-        <line num="182" count="0" type="stmt"/>
-        <line num="184" count="0" type="stmt"/>
-        <line num="190" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="193" count="0" type="stmt"/>
-        <line num="197" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="199" count="0" type="stmt"/>
+        <line num="185" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="187" count="0" type="stmt"/>
+        <line num="188" count="0" type="stmt"/>
+        <line num="196" count="0" type="stmt"/>
+        <line num="198" count="0" type="stmt"/>
         <line num="200" count="0" type="stmt"/>
-        <line num="208" count="0" type="stmt"/>
-        <line num="210" count="0" type="stmt"/>
-        <line num="212" count="0" type="stmt"/>
-        <line num="219" count="0" type="cond" truecount="0" falsecount="1"/>
-        <line num="222" count="0" type="stmt"/>
-        <line num="226" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="206" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="209" count="0" type="stmt"/>
+        <line num="213" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="215" count="0" type="stmt"/>
+        <line num="216" count="0" type="stmt"/>
+        <line num="224" count="0" type="stmt"/>
+        <line num="226" count="0" type="stmt"/>
         <line num="228" count="0" type="stmt"/>
-        <line num="229" count="0" type="stmt"/>
+        <line num="235" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="238" count="0" type="stmt"/>
+        <line num="242" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="244" count="0" type="stmt"/>
+        <line num="245" count="0" type="stmt"/>
       </file>
       <file name="unit.mongo.datasource.impl.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\infrastructure\datasources\products\unit.mongo.datasource.impl.ts">
         <metrics statements="54" coveredstatements="4" conditionals="12" coveredconditionals="0" methods="9" coveredmethods="0"/>
@@ -2991,7 +3000,7 @@
         <line num="20" count="3" type="stmt"/>
         <line num="24" count="3" type="stmt"/>
         <line num="28" count="1" type="stmt"/>
-        <line num="32" count="1" type="stmt"/>
+        <line num="32" count="2" type="stmt"/>
         <line num="36" count="0" type="stmt"/>
         <line num="40" count="0" type="stmt"/>
         <line num="44" count="0" type="stmt"/>
@@ -3806,7 +3815,7 @@
       </file>
     </package>
     <package name="presentation.products">
-      <metrics statements="229" coveredstatements="147" conditionals="21" coveredconditionals="8" methods="55" coveredmethods="22"/>
+      <metrics statements="237" coveredstatements="150" conditionals="21" coveredconditionals="8" methods="57" coveredmethods="22"/>
       <file name="controller.category.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\presentation\products\controller.category.ts">
         <metrics statements="55" coveredstatements="17" conditionals="6" coveredconditionals="0" methods="17" coveredmethods="1"/>
         <line num="2" count="2" type="stmt"/>
@@ -3866,13 +3875,12 @@
         <line num="120" count="0" type="stmt"/>
       </file>
       <file name="controller.product.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\presentation\products\controller.product.ts">
-        <metrics statements="63" coveredstatements="58" conditionals="9" coveredconditionals="8" methods="12" coveredmethods="12"/>
+        <metrics statements="71" coveredstatements="61" conditionals="9" coveredconditionals="8" methods="14" coveredmethods="12"/>
         <line num="5" count="3" type="stmt"/>
         <line num="6" count="3" type="stmt"/>
         <line num="7" count="3" type="stmt"/>
         <line num="8" count="3" type="stmt"/>
         <line num="9" count="3" type="stmt"/>
-        <line num="10" count="3" type="stmt"/>
         <line num="11" count="3" type="stmt"/>
         <line num="13" count="3" type="stmt"/>
         <line num="14" count="3" type="stmt"/>
@@ -3894,42 +3902,51 @@
         <line num="47" count="2" type="stmt"/>
         <line num="49" count="1" type="stmt"/>
         <line num="54" count="13" type="stmt"/>
-        <line num="55" count="6" type="stmt"/>
-        <line num="57" count="6" type="cond" truecount="2" falsecount="0"/>
-        <line num="60" count="6" type="stmt"/>
-        <line num="66" count="6" type="cond" truecount="1" falsecount="0"/>
-        <line num="67" count="1" type="stmt"/>
-        <line num="68" count="1" type="stmt"/>
-        <line num="71" count="5" type="stmt"/>
-        <line num="74" count="4" type="stmt"/>
-        <line num="76" count="1" type="stmt"/>
-        <line num="81" count="13" type="stmt"/>
-        <line num="82" count="2" type="stmt"/>
-        <line num="84" count="2" type="stmt"/>
-        <line num="86" count="2" type="stmt"/>
-        <line num="89" count="1" type="stmt"/>
-        <line num="91" count="1" type="stmt"/>
-        <line num="96" count="13" type="stmt"/>
-        <line num="97" count="4" type="stmt"/>
-        <line num="99" count="4" type="stmt"/>
-        <line num="102" count="4" type="cond" truecount="2" falsecount="0"/>
-        <line num="105" count="4" type="stmt"/>
-        <line num="111" count="4" type="cond" truecount="0" falsecount="1"/>
-        <line num="112" count="0" type="stmt"/>
-        <line num="113" count="0" type="stmt"/>
-        <line num="116" count="4" type="stmt"/>
-        <line num="121" count="2" type="stmt"/>
-        <line num="123" count="2" type="stmt"/>
-        <line num="128" count="13" type="stmt"/>
-        <line num="129" count="2" type="stmt"/>
-        <line num="131" count="2" type="stmt"/>
-        <line num="134" count="2" type="stmt"/>
-        <line num="137" count="2" type="cond" truecount="1" falsecount="0"/>
-        <line num="138" count="1" type="stmt"/>
-        <line num="139" count="1" type="stmt"/>
-        <line num="142" count="1" type="stmt"/>
-        <line num="145" count="1" type="stmt"/>
-        <line num="147" count="0" type="stmt"/>
+        <line num="55" count="0" type="stmt"/>
+        <line num="56" count="0" type="stmt"/>
+        <line num="58" count="0" type="stmt"/>
+        <line num="59" count="0" type="stmt"/>
+        <line num="61" count="0" type="stmt"/>
+        <line num="66" count="13" type="stmt"/>
+        <line num="67" count="6" type="stmt"/>
+        <line num="69" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="72" count="6" type="stmt"/>
+        <line num="78" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="79" count="1" type="stmt"/>
+        <line num="80" count="1" type="stmt"/>
+        <line num="83" count="5" type="stmt"/>
+        <line num="86" count="4" type="stmt"/>
+        <line num="88" count="1" type="stmt"/>
+        <line num="93" count="13" type="stmt"/>
+        <line num="94" count="2" type="stmt"/>
+        <line num="95" count="2" type="stmt"/>
+        <line num="99" count="2" type="stmt"/>
+        <line num="100" count="2" type="stmt"/>
+        <line num="103" count="1" type="stmt"/>
+        <line num="106" count="2" type="stmt"/>
+        <line num="107" count="1" type="stmt"/>
+        <line num="109" count="1" type="stmt"/>
+        <line num="114" count="13" type="stmt"/>
+        <line num="115" count="4" type="stmt"/>
+        <line num="117" count="4" type="stmt"/>
+        <line num="120" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="123" count="4" type="stmt"/>
+        <line num="129" count="4" type="cond" truecount="0" falsecount="1"/>
+        <line num="130" count="0" type="stmt"/>
+        <line num="131" count="0" type="stmt"/>
+        <line num="134" count="4" type="stmt"/>
+        <line num="139" count="2" type="stmt"/>
+        <line num="141" count="2" type="stmt"/>
+        <line num="146" count="13" type="stmt"/>
+        <line num="147" count="2" type="stmt"/>
+        <line num="149" count="2" type="stmt"/>
+        <line num="152" count="2" type="stmt"/>
+        <line num="155" count="2" type="cond" truecount="1" falsecount="0"/>
+        <line num="156" count="1" type="stmt"/>
+        <line num="157" count="1" type="stmt"/>
+        <line num="160" count="1" type="stmt"/>
+        <line num="163" count="1" type="stmt"/>
+        <line num="165" count="0" type="stmt"/>
       </file>
       <file name="controller.unit.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\presentation\products\controller.unit.ts">
         <metrics statements="55" coveredstatements="17" conditionals="6" coveredconditionals="0" methods="17" coveredmethods="1"/>
@@ -4009,32 +4026,32 @@
       </file>
       <file name="routes.product.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\presentation\products\routes.product.ts">
         <metrics statements="26" coveredstatements="25" conditionals="0" coveredconditionals="0" methods="7" coveredmethods="6"/>
-        <line num="2" count="2" type="stmt"/>
         <line num="3" count="2" type="stmt"/>
         <line num="4" count="2" type="stmt"/>
         <line num="5" count="2" type="stmt"/>
         <line num="6" count="2" type="stmt"/>
         <line num="7" count="2" type="stmt"/>
-        <line num="10" count="2" type="stmt"/>
-        <line num="12" count="4" type="stmt"/>
-        <line num="15" count="4" type="stmt"/>
+        <line num="8" count="2" type="stmt"/>
+        <line num="11" count="2" type="stmt"/>
+        <line num="13" count="4" type="stmt"/>
         <line num="16" count="4" type="stmt"/>
-        <line num="18" count="4" type="stmt"/>
+        <line num="17" count="4" type="stmt"/>
         <line num="19" count="4" type="stmt"/>
-        <line num="21" count="4" type="stmt"/>
-        <line num="24" count="4" type="stmt"/>
-        <line num="25" count="2" type="stmt"/>
-        <line num="29" count="4" type="stmt"/>
-        <line num="30" count="2" type="stmt"/>
-        <line num="33" count="4" type="stmt"/>
-        <line num="34" count="0" type="stmt"/>
-        <line num="37" count="4" type="stmt"/>
-        <line num="38" count="2" type="stmt"/>
-        <line num="41" count="4" type="stmt"/>
-        <line num="42" count="2" type="stmt"/>
-        <line num="45" count="4" type="stmt"/>
-        <line num="46" count="2" type="stmt"/>
-        <line num="49" count="4" type="stmt"/>
+        <line num="20" count="4" type="stmt"/>
+        <line num="22" count="4" type="stmt"/>
+        <line num="25" count="4" type="stmt"/>
+        <line num="26" count="2" type="stmt"/>
+        <line num="30" count="4" type="stmt"/>
+        <line num="31" count="2" type="stmt"/>
+        <line num="36" count="4" type="stmt"/>
+        <line num="39" count="0" type="stmt"/>
+        <line num="42" count="4" type="stmt"/>
+        <line num="43" count="2" type="stmt"/>
+        <line num="46" count="4" type="stmt"/>
+        <line num="47" count="2" type="stmt"/>
+        <line num="51" count="4" type="stmt"/>
+        <line num="52" count="2" type="stmt"/>
+        <line num="55" count="4" type="stmt"/>
       </file>
       <file name="routes.unit.ts" path="C:\Users\Usuario\Desktop\Practica Angular\14-Clean-Architecture-Node-Express-Mongo\src\presentation\products\routes.unit.ts">
         <metrics statements="15" coveredstatements="15" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>

@@ -23,5 +23,19 @@ module.exports = {
         statements: 70,
       },
     },
+    reporters: [
+      'default', // Para mostrar los resultados en la consola
+      [
+        'jest-html-reporter',
+        {
+          outputPath: './test-report.html', // Ruta del informe HTML
+          includeFailureMsg: true, // Incluir mensajes de error en el informe
+          includeSuiteFailure: true, // Incluir fallos en suites
+          // Opcional:
+          // pageTitle: 'Test Report',
+          // expand: false,
+        },
+      ],
+    ],
     testTimeout: 30000,
   };

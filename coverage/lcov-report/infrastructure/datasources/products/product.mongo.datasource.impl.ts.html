@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">35.95% </span>
+                <span class="strong">42.7% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>32/89</span>
+                <span class='fraction'>41/96</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">18.75% </span>
+                <span class="strong">29.41% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/16</span>
+                <span class='fraction'>5/17</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">41.42% </span>
+                <span class="strong">48.1% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>29/70</span>
+                <span class='fraction'>38/79</span>
             </div>
         
             
@@ -296,7 +296,23 @@
 <a name='L231'></a><a href='#L231'>231</a>
 <a name='L232'></a><a href='#L232'>232</a>
 <a name='L233'></a><a href='#L233'>233</a>
-<a name='L234'></a><a href='#L234'>234</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<a name='L234'></a><a href='#L234'>234</a>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a>
+<a name='L237'></a><a href='#L237'>237</a>
+<a name='L238'></a><a href='#L238'>238</a>
+<a name='L239'></a><a href='#L239'>239</a>
+<a name='L240'></a><a href='#L240'>240</a>
+<a name='L241'></a><a href='#L241'>241</a>
+<a name='L242'></a><a href='#L242'>242</a>
+<a name='L243'></a><a href='#L243'>243</a>
+<a name='L244'></a><a href='#L244'>244</a>
+<a name='L245'></a><a href='#L245'>245</a>
+<a name='L246'></a><a href='#L246'>246</a>
+<a name='L247'></a><a href='#L247'>247</a>
+<a name='L248'></a><a href='#L248'>248</a>
+<a name='L249'></a><a href='#L249'>249</a>
+<a name='L250'></a><a href='#L250'>250</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -423,24 +439,40 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -657,23 +689,39 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
 &nbsp;
     async delete(id: string): Promise&lt;ProductEntity&gt; {
         try {
+            console.log(`Intentando eliminar producto con ID: ${id}`);
             
-            // Buscamos el documento en la base de datos
-            const x = await ProductModel.findByIdAndDelete(id, {new: true})
-&nbsp;
-            // Si no existe, lanzamos un error
-            <span class="missing-if-branch" title="if path not taken" >I</span>if(!x) <span class="cstat-no" title="statement not covered" >throw CustomError.notFound("Product not found")</span>
-&nbsp;
+            // Primero verificamos si el producto existe
+            const existingProduct = await ProductModel.findById(id);
+            if (!existingProduct) {
+                console.log(`Producto con ID ${id} no encontrado - lanzando error`);
+                throw CustomError.notFound("Producto no encontrado");
+            }
+            
+            // Buscamos el documento y lo eliminamos
+            const deletedProduct = await ProductModel.findByIdAndDelete(id);
+            
+            // Verificación adicional por si acaso
+            <span class="missing-if-branch" title="if path not taken" >I</span>if (!deletedProduct) {
+<span class="cstat-no" title="statement not covered" >                console.log(`ProductModel.findByIdAndDelete no encontró el producto con ID ${id}`);</span>
+<span class="cstat-no" title="statement not covered" >                throw CustomError.notFound("Producto no encontrado durante la eliminación");</span>
+            }
+            
+            console.log(`Producto con ID ${id} eliminado correctamente`);
+            
             // Retornamos el objeto mapeado
-            return ProductMapper.fromObjectToProductEntity(x)
+            return ProductMapper.fromObjectToProductEntity(deletedProduct);
 &nbsp;
         } catch (error) {
-            // Si ya es un CustomError, lo propagamos
-<span class="cstat-no" title="statement not covered" >            <span class="missing-if-branch" title="if path not taken" >I</span>if(error instanceof CustomError) { <span class="cstat-no" title="statement not covered" >throw error }</span></span>
-    
-<span class="cstat-no" title="statement not covered" >            console.log(error)</span>
-<span class="cstat-no" title="statement not covered" >            throw CustomError.internalServerError("ProductMonogoDataSourceImpl, internal server error")</span>
+            // Log detallado para depuración
+            console.error(`Error al eliminar producto con ID ${id}:`, error);
             
+            // Si ya es un CustomError, lo propagamos
+            if (error instanceof CustomError) { 
+                throw error; 
+            }
+            
+<span class="cstat-no" title="statement not covered" >            throw CustomError.internalServerError("ProductMongoDataSourceImpl.delete, error interno del servidor");</span>
         }
     }
 &nbsp;
@@ -769,7 +817,7 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-03-06T19:10:20.215Z
+                at 2025-03-06T23:44:54.841Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

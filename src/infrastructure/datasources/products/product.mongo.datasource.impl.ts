@@ -126,23 +126,39 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
 
     async delete(id: string): Promise<ProductEntity> {
         try {
+            console.log(`Intentando eliminar producto con ID: ${id}`);
             
-            // Buscamos el documento en la base de datos
-            const x = await ProductModel.findByIdAndDelete(id, {new: true})
-
-            // Si no existe, lanzamos un error
-            if(!x) throw CustomError.notFound("Product not found")
-
+            // Primero verificamos si el producto existe
+            const existingProduct = await ProductModel.findById(id);
+            if (!existingProduct) {
+                console.log(`Producto con ID ${id} no encontrado - lanzando error`);
+                throw CustomError.notFound("Producto no encontrado");
+            }
+            
+            // Buscamos el documento y lo eliminamos
+            const deletedProduct = await ProductModel.findByIdAndDelete(id);
+            
+            // Verificación adicional por si acaso
+            if (!deletedProduct) {
+                console.log(`ProductModel.findByIdAndDelete no encontró el producto con ID ${id}`);
+                throw CustomError.notFound("Producto no encontrado durante la eliminación");
+            }
+            
+            console.log(`Producto con ID ${id} eliminado correctamente`);
+            
             // Retornamos el objeto mapeado
-            return ProductMapper.fromObjectToProductEntity(x)
+            return ProductMapper.fromObjectToProductEntity(deletedProduct);
 
         } catch (error) {
-            // Si ya es un CustomError, lo propagamos
-            if(error instanceof CustomError) { throw error }
-    
-            console.log(error)
-            throw CustomError.internalServerError("ProductMonogoDataSourceImpl, internal server error")
+            // Log detallado para depuración
+            console.error(`Error al eliminar producto con ID ${id}:`, error);
             
+            // Si ya es un CustomError, lo propagamos
+            if (error instanceof CustomError) { 
+                throw error; 
+            }
+            
+            throw CustomError.internalServerError("ProductMongoDataSourceImpl.delete, error interno del servidor");
         }
     }
 

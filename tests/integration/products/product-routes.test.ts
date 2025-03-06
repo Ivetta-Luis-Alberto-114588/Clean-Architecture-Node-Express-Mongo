@@ -323,9 +323,9 @@ describe('Product Routes Integration Tests', () => {
   });
   
   describe('DELETE /api/products/:id', () => {
-    // Crear un producto antes de las pruebas
+    // Crear un producto antes de cada prueba
     beforeEach(async () => {
-      // Crear producto de prueba
+      // Crear producto de prueba - asegurémonos de que realmente se crea
       const product = await ProductModel.create({
         name: testProduct.name.toLowerCase(),
         description: testProduct.description.toLowerCase(),
@@ -337,15 +337,34 @@ describe('Product Routes Integration Tests', () => {
         isActive: testProduct.isActive
       });
       
+      // Asignar el ID a la variable productId
       productId = product._id.toString();
+      
+      // Verificar que el producto se creó correctamente
+      console.log(`Producto de prueba creado con ID: ${productId}`);
+      const createdProduct = await ProductModel.findById(productId);
+      if (!createdProduct) {
+        console.error('Error: El producto no se encuentra inmediatamente después de crearlo');
+      }
     });
     
     test('should delete a product', async () => {
-      // Hacer la solicitud
+      // Verificación adicional antes de intentar eliminar
+      const productBeforeDelete = await ProductModel.findById(productId);
+      console.log(`Verificando producto antes de eliminar - Existe: ${!!productBeforeDelete}`);
+      
+      // Hacer la solicitud - añadimos manejadores adicionales en caso de error
       const response = await request(app)
         .delete(`/api/products/${productId}`)
         .set('Authorization', `Bearer ${authToken}`)
-        .expect(200);
+        .expect(200)
+        .catch(err => {
+          console.error(`Error al eliminar producto (ID: ${productId}):`, err.message);
+          if (err.response) {
+            console.error('Cuerpo de respuesta:', err.response.body);
+          }
+          throw err;
+        });
       
       // Verificar que el producto devuelto tiene el ID correcto
       expect(response.body).toHaveProperty('id', expect.any(String));
@@ -367,7 +386,7 @@ describe('Product Routes Integration Tests', () => {
       
       // Verificar el mensaje de error
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toContain('not found');
+      expect(response.body.error).toContain('Producto no encontrado');
     });
   });
 });

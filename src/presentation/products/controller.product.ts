@@ -50,6 +50,18 @@ export class ProductController {
         }
     }
 
+    // Método getProductById para manejar GET /api/products/:id
+    getProductById = async (req: Request, res: Response) => {
+        try {
+            const { id } = req.params;
+            // Aquí deberías usar un caso de uso apropiado si existe, o directamente el repositorio
+            const product = await this.productRepository.findById(id);
+            return res.json(product);
+        } catch (err) {
+            return this.handleError(err, res);
+        }
+    }
+
     // Método asincrónico para obtener todos los productos
     getAllProducts = async (req: Request, res: Response) => {
         try {
@@ -80,12 +92,18 @@ export class ProductController {
     // Método asincrónico para eliminar producto
     deleteProduct = async (req: Request, res: Response) => {
         try {
-            // Desestructuro el id de la request
             const { id } = req.params;
-
-            const product = await new DeleteProductUseCase(this.productRepository)
-                .execute(id);
-                
+            
+            // Verificar si el producto existe antes de intentar eliminarlo
+            // (esto es opcional pero útil para depuración)
+            try {
+                await this.productRepository.findById(id);
+            } catch (error) {
+                // Si el producto no existe, registramos para depuración
+                console.log(`Producto con ID ${id} no encontrado antes de eliminar`);
+            }
+            
+            const product = await this.productRepository.delete(id);
             return res.json(product);
         } catch (err) {
             return this.handleError(err, res);

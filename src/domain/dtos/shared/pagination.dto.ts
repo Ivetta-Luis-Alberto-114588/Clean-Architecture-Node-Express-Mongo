@@ -13,15 +13,18 @@ export class PaginationDto {
             // object("page": number, "limit": number)       [error, instancia del dto]
         
                
+        // Convertir a números
+        const pageNum = Number(page);
+        const limitNum = Number(limit);
+
         //aca verifico si el objeto esta vacio
         if (!page || !limit) return ["page and limit are required", undefined];
         
         //verifico que sean numeros mayores a cero
-        if(page < 1) return ["page must be greater than 0", undefined];
-        if(limit < 1) return ["limit must be greater than 0", undefined];
-        
+        if (isNaN(pageNum) || pageNum < 1) return ["page must be greater than 0", undefined];
+        if (isNaN(limitNum) || limitNum < 1) return ["limit must be greater than 0", undefined];
 
         //como no hay error devuelvo undefined y la instancia del dto (que es privada)
-        return [undefined, new PaginationDto(page, limit)];
+        return [undefined, new PaginationDto(pageNum, limitNum)];
     }
 }
