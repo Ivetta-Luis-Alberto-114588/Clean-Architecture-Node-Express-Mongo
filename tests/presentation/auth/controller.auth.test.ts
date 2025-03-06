@@ -6,11 +6,12 @@ import { UserEntity } from '../../../src/domain/entities/user.entity';
 import { CustomError } from '../../../src/domain/errors/custom.error';
 import { mockRequest, mockResponse } from '../../utils/test-utils';
 
-// Mock completo del módulo de los casos de uso para controlar su comportamiento
+// Mock manual de los casos de uso
+const mockExecute = jest.fn();
 jest.mock('../../../src/domain/use-cases/auth/register-user.use-case', () => {
   return {
     RegisterUserUseCase: jest.fn().mockImplementation(() => ({
-      execute: jest.fn()
+      execute: mockExecute
     }))
   };
 });
@@ -18,7 +19,7 @@ jest.mock('../../../src/domain/use-cases/auth/register-user.use-case', () => {
 jest.mock('../../../src/domain/use-cases/auth/login-user.use-case', () => {
   return {
     LoginUserUseCase: jest.fn().mockImplementation(() => ({
-      execute: jest.fn()
+      execute: mockExecute
     }))
   };
 });
@@ -64,16 +65,11 @@ describe('AuthController', () => {
   // Configuración previa a cada prueba
   beforeEach(() => {
     jest.clearAllMocks();
+    mockExecute.mockClear();
     authController = new AuthController(mockAuthRepository);
     
-    // Configurar el comportamiento por defecto de los casos de uso
-    (RegisterUserUseCase as jest.Mock).mockImplementation(() => ({
-      execute: jest.fn().mockResolvedValue(mockUserResponse)
-    }));
-    
-    (LoginUserUseCase as jest.Mock).mockImplementation(() => ({
-      execute: jest.fn().mockResolvedValue(mockUserResponse)
-    }));
+    // Configurar el comportamiento por defecto del mock execute
+    mockExecute.mockResolvedValue(mockUserResponse);
   });
   
   describe('registerUser', () => {
@@ -84,12 +80,20 @@ describe('AuthController', () => {
       const res = mockResponse();
       
       // Ejecutar el controlador
-      await authController.registerUser(req as any, res as any);
+      authController.registerUser(req as any, res as any);
       
-      // Verificaciones
+      // Verificar que se llamó RegisterUserUseCase correctamente
       expect(RegisterUserUseCase).toHaveBeenCalledWith(mockAuthRepository);
+      
+      // Esperar a que se complete la promesa
+      await new Promise(process.nextTick);
+      
+      // Verificar que se llamó al método execute con los datos correctos
+      expect(mockExecute).toHaveBeenCalled();
+      
+      // Verificar que se respondió correctamente
       expect(res.json).toHaveBeenCalledWith(mockUserResponse);
-      expect(res.status).not.toHaveBeenCalled(); // No se debe cambiar el status en caso de éxito
+      expect(res.status).not.toHaveBeenCalled();
     });
     
     // Prueba de datos de registro inválidos
@@ -105,10 +109,10 @@ describe('AuthController', () => {
       const res = mockResponse();
       
       // Ejecutar el controlador
-      await authController.registerUser(req as any, res as any);
+      authController.registerUser(req as any, res as any);
       
       // Verificaciones
-      expect(RegisterUserUseCase).not.toHaveBeenCalled(); // No debe llegar a crear el caso de uso
+      expect(RegisterUserUseCase).not.toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: expect.any(String) });
     });
@@ -117,16 +121,17 @@ describe('AuthController', () => {
     test('should handle use case errors', async () => {
       // Simular un error en el caso de uso
       const customError = CustomError.badRequest('Email already exists');
-      (RegisterUserUseCase as jest.Mock).mockImplementation(() => ({
-        execute: jest.fn().mockRejectedValue(customError)
-      }));
+      mockExecute.mockRejectedValueOnce(customError);
       
       // Preparar request y response
       const req = mockRequest({ body: validRegisterData });
       const res = mockResponse();
       
       // Ejecutar el controlador
-      await authController.registerUser(req as any, res as any);
+      authController.registerUser(req as any, res as any);
+      
+      // Esperar a que se complete la promesa
+      await new Promise(process.nextTick);
       
       // Verificaciones
       expect(res.status).toHaveBeenCalledWith(400);
@@ -142,12 +147,16 @@ describe('AuthController', () => {
       const res = mockResponse();
       
       // Ejecutar el controlador
-      await authController.loginUser(req as any, res as any);
+      authController.loginUser(req as any, res as any);
+      
+      // Esperar a que se complete la promesa
+      await new Promise(process.nextTick);
       
       // Verificaciones
       expect(LoginUserUseCase).toHaveBeenCalledWith(mockAuthRepository);
+      expect(mockExecute).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith(mockUserResponse);
-      expect(res.status).not.toHaveBeenCalled(); // No se debe cambiar el status en caso de éxito
+      expect(res.status).not.toHaveBeenCalled();
     });
     
     // Prueba de datos de login inválidos
@@ -162,10 +171,10 @@ describe('AuthController', () => {
       const res = mockResponse();
       
       // Ejecutar el controlador
-      await authController.loginUser(req as any, res as any);
+      authController.loginUser(req as any, res as any);
       
       // Verificaciones
-      expect(LoginUserUseCase).not.toHaveBeenCalled(); // No debe llegar a crear el caso de uso
+      expect(LoginUserUseCase).not.toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: expect.any(String) });
     });
@@ -174,16 +183,17 @@ describe('AuthController', () => {
     test('should handle use case errors during login', async () => {
       // Simular un error en el caso de uso
       const customError = CustomError.unauthorized('Invalid credentials');
-      (LoginUserUseCase as jest.Mock).mockImplementation(() => ({
-        execute: jest.fn().mockRejectedValue(customError)
-      }));
+      mockExecute.mockRejectedValueOnce(customError);
       
       // Preparar request y response
       const req = mockRequest({ body: validLoginData });
       const res = mockResponse();
       
       // Ejecutar el controlador
-      await authController.loginUser(req as any, res as any);
+      authController.loginUser(req as any, res as any);
+      
+      // Esperar a que se complete la promesa
+      await new Promise(process.nextTick);
       
       // Verificaciones
       expect(res.status).toHaveBeenCalledWith(401);

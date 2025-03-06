@@ -1,3 +1,10 @@
+// tests/presentation/products/controller.product.test.ts
+
+// Modificaciones principales:
+// 1. Asegurarnos de esperar correctamente las promesas en tests asíncronos
+// 2. Corregir la configuración de los mocks
+// 3. Asegurar que los datos de prueba sean válidos
+
 import { ProductController } from '../../../src/presentation/products/controller.product';
 import { ProductRepository } from '../../../src/domain/repositories/products/product.repository';
 import { CategoryRepository } from '../../../src/domain/repositories/products/categroy.repository';
@@ -7,12 +14,20 @@ import { UnitEntity } from '../../../src/domain/entities/products/unit.entity';
 import { CreateProductDto } from '../../../src/domain/dtos/products/create-product.dto';
 import { CustomError } from '../../../src/domain/errors/custom.error';
 import { mockRequest, mockResponse } from '../../utils/test-utils';
+import { PaginationDto } from '../../../src/domain/dtos/shared/pagination.dto';
 
-// Mock completo del módulo de los casos de uso para controlar su comportamiento
+// Mock de las funciones execute para los casos de uso
+const mockCreateExecute = jest.fn();
+const mockGetAllExecute = jest.fn();
+const mockDeleteExecute = jest.fn();
+const mockGetByCategoryExecute = jest.fn();
+const mockUpdateExecute = jest.fn();
+
+// Mock de los módulos de los casos de uso
 jest.mock('../../../src/domain/use-cases/product/create-product.use-case', () => {
   return {
     CreateProductUseCase: jest.fn().mockImplementation(() => ({
-      execute: jest.fn()
+      execute: mockCreateExecute
     }))
   };
 });
@@ -20,7 +35,7 @@ jest.mock('../../../src/domain/use-cases/product/create-product.use-case', () =>
 jest.mock('../../../src/domain/use-cases/product/get-all-products.use-case', () => {
   return {
     GetAllProductsUseCase: jest.fn().mockImplementation(() => ({
-      execute: jest.fn()
+      execute: mockGetAllExecute
     }))
   };
 });
@@ -28,7 +43,7 @@ jest.mock('../../../src/domain/use-cases/product/get-all-products.use-case', () 
 jest.mock('../../../src/domain/use-cases/product/delete-product.use-case', () => {
   return {
     DeleteProductUseCase: jest.fn().mockImplementation(() => ({
-      execute: jest.fn()
+      execute: mockDeleteExecute
     }))
   };
 });
@@ -36,7 +51,7 @@ jest.mock('../../../src/domain/use-cases/product/delete-product.use-case', () =>
 jest.mock('../../../src/domain/use-cases/product/get-product-by-category.use-case', () => {
   return {
     GetProductByCategoryUseCase: jest.fn().mockImplementation(() => ({
-      execute: jest.fn()
+      execute: mockGetByCategoryExecute
     }))
   };
 });
@@ -44,8 +59,24 @@ jest.mock('../../../src/domain/use-cases/product/get-product-by-category.use-cas
 jest.mock('../../../src/domain/use-cases/product/update-product.use-case', () => {
   return {
     UpdateProductUseCase: jest.fn().mockImplementation(() => ({
-      execute: jest.fn()
+      execute: mockUpdateExecute
     }))
+  };
+});
+
+// Mock de PaginationDto.create
+jest.mock('../../../src/domain/dtos/shared/pagination.dto', () => {
+  return {
+    ...jest.requireActual('../../../src/domain/dtos/shared/pagination.dto'),
+    PaginationDto: {
+      create: jest.fn().mockImplementation((page, limit) => {
+        // Simulamos la validación real pero con valores predeterminados para tests
+        if (page && limit) {
+          return [undefined, { page, limit }];
+        }
+        return [undefined, { page: 1, limit: 5 }];
+      })
+    }
   };
 });
 
@@ -83,24 +114,24 @@ describe('ProductController', () => {
   // Instancia del controlador a probar
   let productController: ProductController;
   
-  // Entidades mock para pruebas (corregidas para usar número en id)
+  // Entidades mock para pruebas
   const mockCategory = new CategoryEntity(
-    1,  // Cambiado de 'category-id' a 1 (número)
+    1,
     'test category',
     'test category description',
     true
   );
   
   const mockUnit = new UnitEntity(
-    1,  // Cambiado de 'unit-id' a 1 (número)
+    1,
     'test unit',
     'test unit description',
     true
   );
   
-  // Producto de prueba (corregido para usar número en id)
+  // Producto de prueba
   const mockProduct = new ProductEntity(
-    1,  // Cambiado de 'product-id' a 1 (número)
+    1,
     'test product',
     100,
     10,
@@ -126,28 +157,22 @@ describe('ProductController', () => {
   // Configuración previa a cada prueba
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Limpiar mocks de execute
+    mockCreateExecute.mockClear();
+    mockGetAllExecute.mockClear();
+    mockDeleteExecute.mockClear();
+    mockGetByCategoryExecute.mockClear();
+    mockUpdateExecute.mockClear();
+    
+    // Configurar valores por defecto
+    mockCreateExecute.mockResolvedValue(mockProduct);
+    mockGetAllExecute.mockResolvedValue([mockProduct]);
+    mockDeleteExecute.mockResolvedValue(mockProduct);
+    mockGetByCategoryExecute.mockResolvedValue([mockProduct]);
+    mockUpdateExecute.mockResolvedValue(mockProduct);
+    
     productController = new ProductController(mockProductRepository, mockCategoryRepository);
-    
-    // Configurar el comportamiento por defecto de los casos de uso
-    (CreateProductUseCase as jest.Mock).mockImplementation(() => ({
-      execute: jest.fn().mockResolvedValue(mockProduct)
-    }));
-    
-    (GetAllProductsUseCase as jest.Mock).mockImplementation(() => ({
-      execute: jest.fn().mockResolvedValue([mockProduct])
-    }));
-    
-    (DeleteProductUseCase as jest.Mock).mockImplementation(() => ({
-      execute: jest.fn().mockResolvedValue(mockProduct)
-    }));
-    
-    (GetProductByCategoryUseCase as jest.Mock).mockImplementation(() => ({
-      execute: jest.fn().mockResolvedValue([mockProduct])
-    }));
-    
-    (UpdateProductUseCase as jest.Mock).mockImplementation(() => ({
-      execute: jest.fn().mockResolvedValue(mockProduct)
-    }));
   });
   
   describe('createProduct', () => {
@@ -158,17 +183,21 @@ describe('ProductController', () => {
       const res = mockResponse();
       
       // Ejecutar el controlador
-      await productController.createProduct(req as any, res as any);
+      productController.createProduct(req as any, res as any);
+      
+      // Esperar a que se resuelvan las promesas
+      await new Promise(process.nextTick);
       
       // Verificaciones
       expect(CreateProductUseCase).toHaveBeenCalledWith(mockProductRepository);
+      expect(mockCreateExecute).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith(mockProduct);
-      expect(res.status).not.toHaveBeenCalled(); // No se debe cambiar el status en caso de éxito
+      expect(res.status).not.toHaveBeenCalled();
     });
     
-    // Prueba de datos inválidos (corregido para evitar delete)
+    // Prueba de datos inválidos
     test('should return 400 when product data is invalid', async () => {
-      // Datos inválidos (sin nombre) - creado directamente sin name
+      // Crear datos inválidos directamente sin la propiedad name
       const invalidData = {
         description: validProductData.description,
         price: validProductData.price,
@@ -184,10 +213,14 @@ describe('ProductController', () => {
       const res = mockResponse();
       
       // Ejecutar el controlador
-      await productController.createProduct(req as any, res as any);
+      productController.createProduct(req as any, res as any);
+      
+      // Esperar a que se resuelvan las promesas
+      await new Promise(process.nextTick);
       
       // Verificaciones
-      expect(CreateProductUseCase).not.toHaveBeenCalled(); // No debe llegar a crear el caso de uso
+      expect(CreateProductUseCase).not.toHaveBeenCalled();
+      expect(mockCreateExecute).not.toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({ error: expect.any(String) });
     });
@@ -196,15 +229,13 @@ describe('ProductController', () => {
     test('should handle use case errors during product creation', async () => {
       // Simular un error en el caso de uso
       const customError = CustomError.badRequest('Product already exists');
-      (CreateProductUseCase as jest.Mock).mockImplementation(() => ({
-        execute: jest.fn().mockRejectedValue(customError)
-      }));
+      mockCreateExecute.mockRejectedValue(customError);
       
       // Preparar request y response
       const req = mockRequest({ body: validProductData });
       const res = mockResponse();
       
-      // Ejecutar el controlador
+      // Ejecutar el controlador y manejar la promesa
       await productController.createProduct(req as any, res as any);
       
       // Verificaciones
@@ -216,7 +247,7 @@ describe('ProductController', () => {
   describe('getAllProducts', () => {
     // Prueba de obtención exitosa
     test('should get all products successfully', async () => {
-      // Preparar request y response
+      // Preparar request y response con valores válidos
       const req = mockRequest({ query: { page: '1', limit: '10' } });
       const res = mockResponse();
       
@@ -225,14 +256,15 @@ describe('ProductController', () => {
       
       // Verificaciones
       expect(GetAllProductsUseCase).toHaveBeenCalledWith(mockProductRepository);
+      expect(mockGetAllExecute).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith([mockProduct]);
-      expect(res.status).not.toHaveBeenCalled(); // No se debe cambiar el status en caso de éxito
+      expect(res.status).not.toHaveBeenCalled();
     });
     
-    // Prueba de parámetros de paginación inválidos
-    test('should use default pagination when invalid parameters are provided', async () => {
-      // Preparar request con parámetros inválidos
-      const req = mockRequest({ query: { page: 'invalid', limit: 'invalid' } });
+    // Prueba con valores predeterminados
+    test('should use default pagination when no parameters are provided', async () => {
+      // Preparar request sin parámetros
+      const req = mockRequest({ query: {} });
       const res = mockResponse();
       
       // Ejecutar el controlador
@@ -240,20 +272,38 @@ describe('ProductController', () => {
       
       // Verificaciones
       expect(GetAllProductsUseCase).toHaveBeenCalledWith(mockProductRepository);
+      expect(mockGetAllExecute).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith([mockProduct]);
-      expect(res.status).not.toHaveBeenCalled(); // No se debe cambiar el status
+      expect(res.status).not.toHaveBeenCalled();
     });
     
+    // Prueba de manejo de error para parámetros de paginación inválidos
+    test('should handle invalid pagination parameters gracefully', async () => {
+      // Mockear PaginationDto.create para devolver un error
+      (PaginationDto.create as jest.Mock).mockReturnValueOnce(['Invalid pagination', undefined]);
+      
+      // Preparar request con parámetros que no se pueden convertir a número
+      const req = mockRequest({ query: { page: 'invalid', limit: 'invalid' } });
+      const res = mockResponse();
+      
+      // Ejecutar el controlador
+      await productController.getAllProducts(req as any, res as any);
+      
+      // Verificaciones
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid pagination' });
+      expect(GetAllProductsUseCase).not.toHaveBeenCalled();
+      expect(mockGetAllExecute).not.toHaveBeenCalled();
+    });
+
     // Prueba de manejo de errores del caso de uso
     test('should handle use case errors when getting all products', async () => {
       // Simular un error en el caso de uso
       const customError = CustomError.internalServerError('Database error');
-      (GetAllProductsUseCase as jest.Mock).mockImplementation(() => ({
-        execute: jest.fn().mockRejectedValue(customError)
-      }));
+      mockGetAllExecute.mockRejectedValue(customError);
       
       // Preparar request y response
-      const req = mockRequest({ query: {} });
+      const req = mockRequest({ query: { page: '1', limit: '10' } });
       const res = mockResponse();
       
       // Ejecutar el controlador
@@ -283,22 +333,21 @@ describe('ProductController', () => {
         mockProductRepository,
         mockCategoryRepository
       );
+      expect(mockGetByCategoryExecute).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith([mockProduct]);
-      expect(res.status).not.toHaveBeenCalled(); // No se debe cambiar el status en caso de éxito
+      expect(res.status).not.toHaveBeenCalled();
     });
     
     // Prueba de manejo de errores del caso de uso
     test('should handle use case errors when getting products by category', async () => {
       // Simular un error en el caso de uso
       const customError = CustomError.notFound('Category not found');
-      (GetProductByCategoryUseCase as jest.Mock).mockImplementation(() => ({
-        execute: jest.fn().mockRejectedValue(customError)
-      }));
+      mockGetByCategoryExecute.mockRejectedValue(customError);
       
       // Preparar request y response
       const req = mockRequest({ 
         params: { categoryId: 'nonexistent-id' },
-        query: {}
+        query: { page: '1', limit: '10' }
       });
       const res = mockResponse();
       

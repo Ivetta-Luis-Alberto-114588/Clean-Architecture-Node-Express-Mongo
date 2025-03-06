@@ -19,6 +19,7 @@ export class MongoDatabase {
             })
 
             console.log("Mongo connected")
+            console.log("App using MongoDB connection:", mongoose.connection.id);
             return true
 
         } catch (error) {

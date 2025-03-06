@@ -1,46 +1,56 @@
-
+// src/domain/dtos/products/update-product.dto.ts
 
 export class UpdateProductDto {
-
     private constructor(
-        public name: string,
-        public description: string,
-        public price: number,
-        public stock: number,
-        public category: string, // CategoryEntity,
-        public unit: string, // UnitEntity,
-        public imgUrl: string,
-        public isActive: boolean = true,
+        public name?: string,
+        public description?: string,
+        public price?: number,
+        public stock?: number,
+        public category?: string, 
+        public unit?: string,
+        public imgUrl?: string,
+        public isActive?: boolean,
     ){}
 
-
-    static create( object: {[key: string]:any} ) : [string?, UpdateProductDto?] {
+    static create(object: {[key: string]: any}): [string?, UpdateProductDto?] {
         const { name, description, price, stock, category, unit, imgUrl, isActive } = object;
 
-        //aca verifico si el objeto esta vacio
-        if (Object.keys(object).length === 0) 
-            return ["at least one field is required", undefined];
-
-         // Validamos el tipo de isActive si está presente
-         if ('isActive' in object && typeof isActive !== 'boolean') {
-            return ["isActive debe ser un valor booleano", undefined];
+        // Verificamos que al menos un campo se proporcione para la actualización
+        if (Object.keys(object).length === 0) {
+            return ["At least one field is required for update", undefined];
         }
 
-        // Creamos un objeto solo con los campos proporcionados
-        const updateData: any = {};
+        // Validaciones para los campos proporcionados
+        if (price !== undefined && price < 0) {
+            return ["Price must be greater than or equal to 0", undefined];
+        }
 
+        if (stock !== undefined && stock < 0) {
+            return ["Stock must be greater than or equal to 0", undefined];
+        }
+
+        // Preparamos los valores a actualizar
+        const updateData: any = {};
+        
+        // Solo incluimos los campos que realmente se proporcionan para actualizar
         if (name !== undefined) updateData.name = name.toLowerCase();
         if (description !== undefined) updateData.description = description.toLowerCase();
+        if (price !== undefined) updateData.price = price;
+        if (stock !== undefined) updateData.stock = stock;
+        if (category !== undefined) updateData.category = category;
+        if (unit !== undefined) updateData.unit = unit;
+        if (imgUrl !== undefined) updateData.imgUrl = imgUrl;
         if (isActive !== undefined) updateData.isActive = isActive;
 
         return [undefined, new UpdateProductDto(
-            updateData.name.toLowerCase(), 
-            updateData.description.toLowerCase(), 
-            price,
-            stock,
-            category,
-            unit,
-            imgUrl, 
-            updateData.isActive)];
+            updateData.name,
+            updateData.description,
+            updateData.price,
+            updateData.stock,
+            updateData.category,
+            updateData.unit,
+            updateData.imgUrl,
+            updateData.isActive
+        )];
     }
 }

@@ -85,7 +85,16 @@ https://www.mercadopago.com.ar/developers/
 
 (en otro navegador ventana incognito) Vendedor1: TESTUSER174603780, 9325521F#e74e#4a37#
 
-
-TENER EN CUENTA LOS PLAZOS DE ACREDITACION DE MP	
+TENER EN CUENTA LOS PLAZOS DE ACREDITACION DE MP
 
 https://www.mercadopago.com.ar/costs-section  --> en esta parte se debe configurar los plazos de espera y las comisiones que nos va a cobrar mercado pago --> la seccion se llama "cconfigurar costos por cobro" de checkout . Al 2025-03-04 por cobro al instante es del 6.29%, a 10 dias es el 4.39%
+
+
+
+TESTING
+
+npm test
+
+npm test -- tests/presentation/auth/controller.auth.test.ts
+
+**npm** run test:coverage

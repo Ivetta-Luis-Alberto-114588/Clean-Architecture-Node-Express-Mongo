@@ -19,7 +19,6 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         trim: true,
-        lowercase: true,
         required: [true, "password is required"]  // digo si es requerido o no y el msj de error si no se cumple
     },
 

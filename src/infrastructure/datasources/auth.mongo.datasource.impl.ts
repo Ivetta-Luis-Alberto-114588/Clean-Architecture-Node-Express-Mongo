@@ -1,3 +1,4 @@
+// src/infrastructure/datasources/auth.mongo.datasource.impl.ts
 import { BcryptAdapter } from "../../configs/bcrypt";
 import { UserModel } from "../../data/mongodb/models/user.model";
 import { AuthDatasource } from "../../domain/datasources/auth.datasource";
@@ -7,100 +8,83 @@ import { UserEntity } from "../../domain/entities/user.entity";
 import { CustomError } from "../../domain/errors/custom.error";
 import { UserMapper } from "../mappers/user.mapper";
 
-
-//estoy creando como unas interfaces para tipar 
+// Tipos para las funciones de hash y compare
 type HashFunction = (password: string) => string
 type CompareFunction = (password: string, hashed: string) => boolean
 
-
-export class AuthDatasourceImpl implements AuthDatasource{
+export class AuthDatasourceImpl implements AuthDatasource {
     
     constructor(
-        // aca estoy inyectando las funciones que necesito para hashear y comparar contraseñas
-        // estoy poniendo los valores por defecto si es que no hago la inyeccion de dependencias
         private readonly hashPassword: HashFunction = BcryptAdapter.hash,
         private readonly comparePassword: CompareFunction = BcryptAdapter.compare
-    ){}
+    ) {}
 
     async login(loginUserDto: LoginUserDto): Promise<UserEntity> {
         const {email, password} = loginUserDto
 
-
         try {
+            // Buscar el usuario por email
+            const user = await UserModel.findOne({ email: email.toLowerCase() });
 
-            const user = await UserModel.findOne({email: email})
+            if (!user) {
+                throw CustomError.badRequest("User does not exist with this email");
+            }
 
-            if(!user) throw CustomError.badRequest("mongoAuthDataSourceImpl, user does not exists - email")
+            // Comparar la contraseña
+            const isPasswordMatching = this.comparePassword(password, user.password);
 
-            const isPasswordMatching = this.comparePassword(password, user.password)
+            if (!isPasswordMatching) {
+                throw CustomError.badRequest("Password is not valid");
+            }
 
-            if(!isPasswordMatching) throw CustomError.badRequest("mongoAuthDataSourceImpl, password is not valid")
-
-            return UserMapper.fromObjectToUserEntity(user)    
-            
+            return UserMapper.fromObjectToUserEntity(user);    
         } catch (error) {
-            
-            // Si ya es un CustomError, lo propagamos
-            if(error instanceof CustomError) {
+            // Propagamos los CustomError directamente
+            if (error instanceof CustomError) {
                 throw error;
             }
             
-            console.log(error)
-            throw CustomError.internalServerError("monogoAuthDataSourceImpl, internal server error")
+            console.log(error);
+            throw CustomError.internalServerError("Internal server error during login");
         }
-
-
     }
-
 
     async register(registerUserDto: RegisterUserDto): Promise<UserEntity> {
-    
-        const {name, email, password} = registerUserDto
+        const { name, email, password } = registerUserDto;
 
         try {
-
-            //1 verificar correo
-            const exists = await UserModel.findOne({email: email})
-            if(exists) throw CustomError.badRequest('mongoAuthDataSourceImpl, monogoAuthDataSourceImplUser already exists')
-
-            //2 encritar la contraseña
-            const passwordHashed = this.hashPassword(password)
-
-
-            //creo el usuario con el modelo
-            const user = await UserModel.create({
-                name: name,
-                email: email,
-                password: passwordHashed
-            })
-
-            //guardo el user en la bd
-            await user.save()
-
+            // Verificar si el correo ya existe
+            const exists = await UserModel.findOne({ email: email.toLowerCase() });
             
-            //aca estoy mapeando la respuesta de la bd a mi entidad en forma manual
-            // return new UserEntity(
-                //     user.id, 
-                //     user.name,
-                //      user.email,
-                //     user.password,
-                //     user.roles)    
-                
-                
-            //3 mapear a una entidad la respuesta de la base de datos
-            return UserMapper.fromObjectToUserEntity(user)
-            
-        } catch (error) {
-            
-            if(error instanceof CustomError){
-                console.log("mongoAuthDataSourceImpl, entro al throw error comun")
-                throw error
+            if (exists) {
+                throw CustomError.badRequest('User already exists with this email');
             }
 
-            console.log(error)
-            throw CustomError.internalServerError("monogoAuthDataSourceImpl, internal server error")
-        }
-    
-    }
+            // Encriptar la contraseña
+            const passwordHashed = this.hashPassword(password);
 
+            // Crear el usuario en la base de datos
+            const user = await UserModel.create({
+                name: name.toLowerCase(),
+                email: email.toLowerCase(),
+                password: passwordHashed,
+                roles: ['USER_ROLE'] // Asignar rol por defecto
+            });
+
+            // Guardar el usuario (esto puede ser redundante con create, pero lo dejamos por si acaso)
+            await user.save();
+
+            // Mapear a entidad y retornar
+            return UserMapper.fromObjectToUserEntity(user);
+        } catch (error) {
+            // Si es un error personalizado, lo propagamos directamente
+            if (error instanceof CustomError) {
+                console.log("mongoAuthDataSourceImpl, entro al throw error comun");
+                throw error;
+            }
+
+            console.log(error);
+            throw CustomError.internalServerError("Internal server error during registration");
+        }
+    }
 }
