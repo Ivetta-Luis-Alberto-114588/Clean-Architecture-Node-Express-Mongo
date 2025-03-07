@@ -42,16 +42,11 @@ describe('Auth Routes Integration Tests', () => {
     app.use(MainRoutes.getMainRoutes);
   });
   
-  // Limpiar la base de datos después de cada prueba
-  afterEach(async () => {
-    console.log("Cleaning up after test...");
-    await UserModel.deleteMany({});
-  });
-  
-  // Cerrar conexiones después de todas las pruebas
+  // Limpiar la base de datos después de todas las pruebas
   afterAll(async () => {
     console.log("Cleaning up after all tests...");
     if (mongoose.connection.readyState !== 0) {
+      await UserModel.deleteMany({});
       await mongoose.connection.close();
     }
   });
@@ -96,37 +91,133 @@ describe('Auth Routes Integration Tests', () => {
     expect(user.token.split('.').length).toBe(3); // Un JWT válido tiene 3 partes separadas por puntos
   });
   
-  // Test para login
+  // Test para login - MODIFICADO para mejorar la depuración
   test('should login an existing user', async () => {
-    console.log("Starting login test with registration approach...");
+    console.log("\n==== STARTING LOGIN TEST ====");
+    console.log("Cleaning up database before login test...");
     
-    // Primero registra el usuario usando la API
+    // Limpiar usuarios existentes para evitar conflictos
+    await UserModel.deleteMany({});
+    
+    // Crear un usuario directamente en la base de datos para el login
+    const hashedPassword = BcryptAdapter.hash(testUser.password);
+    console.log("Creating test user with hashed password:", hashedPassword);
+    
+    try {
+      const user = await UserModel.create({
+        name: testUser.name.toLowerCase(),
+        email: testUser.email.toLowerCase(),
+        password: hashedPassword,
+        roles: ['USER_ROLE']
+      });
+      
+      console.log("User created successfully with ID:", user._id);
+      console.log("User data:", {
+        name: user.name,
+        email: user.email,
+        passwordHash: user.password,
+        roles: user.roles
+      });
+      
+      // Verificar que el usuario existe antes de intentar el login
+      const userInDb = await UserModel.findOne({ email: testUser.email.toLowerCase() });
+      console.log("User found in DB:", userInDb ? "Yes" : "No");
+      if (userInDb) {
+        console.log("User DB details:", {
+          id: userInDb._id,
+          name: userInDb.name,
+          email: userInDb.email,
+          passwordHash: userInDb.password,
+          roles: userInDb.roles
+        });
+        
+        // Verificar que la contraseña hasheada coincide
+        const passwordMatches = BcryptAdapter.compare(testUser.password, userInDb.password);
+        console.log("Password match check:", passwordMatches);
+      } else {
+        console.error("ERROR: User not found in database after creation!");
+      }
+      
+      // Preparar los datos de login exactamente como espera la ruta
+      const loginData = {
+        email: testUser.email,
+        password: testUser.password
+      };
+      console.log("Attempting login with data:", loginData);
+      
+      // Intentar el login
+      const loginResponse = await request(app)
+        .post('/api/auth/login')
+        .send(loginData);
+      
+      console.log("Login response status:", loginResponse.status);
+      console.log("Login response body:", loginResponse.body);
+      
+      if (loginResponse.status !== 200) {
+        console.error("ERROR: Login failed with status", loginResponse.status);
+        console.error("Error details:", loginResponse.body);
+      }
+      
+      // Expectativas básicas
+      expect(loginResponse.status).toBe(200);
+      expect(loginResponse.body).toHaveProperty('user');
+      expect(loginResponse.body.user).toHaveProperty('token');
+      expect(loginResponse.body.user.email).toBe(testUser.email.toLowerCase());
+      
+    } catch (error) {
+      console.error("Error during login test:", error);
+      throw error; // Re-lanzar para que Jest lo capture
+    }
+  });
+  
+  // Test alternativo usando el enfoque de registro y luego login
+  test('should register then login with same credentials', async () => {
+    console.log("\n==== STARTING REGISTER-THEN-LOGIN TEST ====");
+    
+    // Limpiar usuarios existentes para evitar conflictos
+    await UserModel.deleteMany({});
+    
+    // Datos del usuario para esta prueba específica
+    const newUser = {
+      name: 'Another Test User',
+      email: 'another@example.com',
+      password: 'testpassword456'
+    };
+    
+    console.log("1. Registrando nuevo usuario:", newUser);
+    
+    // Paso 1: Registrar el usuario
     const registerResponse = await request(app)
       .post('/api/auth/register')
-      .send(testUser);
-  
+      .send(newUser);
+    
     console.log("Register response status:", registerResponse.status);
     console.log("Register response body:", registerResponse.body);
-  
+    
+    // Verificar que el registro fue exitoso
     expect(registerResponse.status).toBe(200);
     expect(registerResponse.body).toHaveProperty('user');
     expect(registerResponse.body.user).toHaveProperty('token');
-  
-    // Luego intenta el login
+    
+    console.log("2. Intentando login con las mismas credenciales");
+    
+    // Paso 2: Intentar login con las mismas credenciales
+    const loginData = {
+      email: newUser.email,
+      password: newUser.password
+    };
+    
     const loginResponse = await request(app)
       .post('/api/auth/login')
-      .send({
-        email: testUser.email,
-        password: testUser.password
-      });
-  
+      .send(loginData);
+    
     console.log("Login response status:", loginResponse.status);
     console.log("Login response body:", loginResponse.body);
     
-    // Expectativas básicas
+    // Verificar que el login fue exitoso
     expect(loginResponse.status).toBe(200);
     expect(loginResponse.body).toHaveProperty('user');
     expect(loginResponse.body.user).toHaveProperty('token');
-    expect(loginResponse.body.user.email).toBe(testUser.email.toLowerCase());
-  }); 
+    expect(loginResponse.body.user.email).toBe(newUser.email.toLowerCase());
+  });
 });
