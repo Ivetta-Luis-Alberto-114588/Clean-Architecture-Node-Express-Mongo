@@ -18,31 +18,20 @@ export class GetProductByCategoryUseCase implements IGetProductByCategoryUseCase
     ){}
     
     async execute(categoryId: string, paginationDto: PaginationDto): Promise<ProductEntity[]> {
-        
         try {
-
-            //verifico que exista la categoria
-            const category = await this.categoryRepository.findById(categoryId) 
-            if(!category) throw CustomError.badRequest("get-product-by-category-use-case, category not found")
-
-            //creo una paginacion 
-            if (!paginationDto) {
-                const [error, defaultPagination] = PaginationDto.create(1, 5);
-                if (error) throw CustomError.badRequest(error);
-                paginationDto = defaultPagination!;
-            }
-
-            //obtengo todos los productos
-            const products = await this.productRepository.getAll(paginationDto!)
+            // Verifico que exista la categoría
+            const category = await this.categoryRepository.findById(categoryId);
+            if (!category) throw CustomError.badRequest("get-product-by-category-use-case, category not found");
+    
+            // Modificar esta línea: en lugar de getAll, usar findByCategory
+            const products = await this.productRepository.findByCategory(categoryId, paginationDto);
             
-            //devuelvo los productos
             return products;
-            
         } catch (error) {
-           if (error instanceof CustomError) {
+            if (error instanceof CustomError) {
                 throw error;
             }
-            throw CustomError.internalServerError("get-product-by-category-use-case, internal server error")            
+            throw CustomError.internalServerError("get-product-by-category-use-case, internal server error");
         }
     }
 

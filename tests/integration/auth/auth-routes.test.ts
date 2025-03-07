@@ -98,55 +98,35 @@ describe('Auth Routes Integration Tests', () => {
   
   // Test para login
   test('should login an existing user', async () => {
-    console.log("Starting login test...");
+    console.log("Starting login test with registration approach...");
     
-    // Crear usuario directamente en la BD para el login
-    console.log("Creating test user for login...");
-    const hashedPassword = BcryptAdapter.hash(testUser.password);
-    console.log("Hashed password:", hashedPassword);
-    
-    const createdUser = await UserModel.create({
-      name: testUser.name.toLowerCase(),
-      email: testUser.email.toLowerCase(),
-      password: hashedPassword,
-      roles: ['USER_ROLE']
-    });
-    
-    console.log("Created user:", createdUser ? "Yes" : "No");
-    
-    // Verificar que el usuario se guardó
-    const userInDb = await UserModel.findOne({ email: testUser.email.toLowerCase() });
-    console.log("User found in DB:", userInDb ? "Yes" : "No");
-    
-    if (userInDb) {
-      console.log("User ID:", userInDb._id);
-      console.log("Password in DB:", userInDb.password);
-      
-      // Probar si la contraseña se puede verificar
-      const passwordOk = BcryptAdapter.compare(testUser.password, userInDb.password);
-      console.log("Password verification result:", passwordOk);
-    }
-    
-    // Datos de login
-    const loginData = {
-      email: testUser.email,
-      password: testUser.password
-    };
-    
-    console.log("Attempting login with:", loginData);
-    
-    // Hacer la solicitud de login
-    const response = await request(app)
+    // Primero registra el usuario usando la API
+    const registerResponse = await request(app)
+      .post('/api/auth/register')
+      .send(testUser);
+  
+    console.log("Register response status:", registerResponse.status);
+    console.log("Register response body:", registerResponse.body);
+  
+    expect(registerResponse.status).toBe(200);
+    expect(registerResponse.body).toHaveProperty('user');
+    expect(registerResponse.body.user).toHaveProperty('token');
+  
+    // Luego intenta el login
+    const loginResponse = await request(app)
       .post('/api/auth/login')
-      .send(loginData);
-    
-    console.log("Login response status:", response.status);
-    console.log("Login response body:", response.body);
+      .send({
+        email: testUser.email,
+        password: testUser.password
+      });
+  
+    console.log("Login response status:", loginResponse.status);
+    console.log("Login response body:", loginResponse.body);
     
     // Expectativas básicas
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('user');
-    expect(response.body.user).toHaveProperty('token');
-    expect(response.body.user.email).toBe(testUser.email.toLowerCase());
-  });
+    expect(loginResponse.status).toBe(200);
+    expect(loginResponse.body).toHaveProperty('user');
+    expect(loginResponse.body.user).toHaveProperty('token');
+    expect(loginResponse.body.user.email).toBe(testUser.email.toLowerCase());
+  }); 
 });

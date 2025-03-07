@@ -19,7 +19,10 @@ export class CreateUnitDto{
         //aca estan las validaciones necesarias y siempre debo devolver una tupla, 2 valores
         if(!name) return ["name is required", undefined]
         if(!description) return ["description is required", undefined]
-        if(!isActive) return ["isActive is required", undefined]
+        
+        // Validación mejorada para isActive
+        if(isActive === undefined) return ["isActive is required", undefined]
+        if(typeof isActive !== 'boolean') return ["isActive debe ser un valor booleano", undefined]
 
         //como no hay error devuelvo undefined y la instancia del dto (que es privada)
         return [undefined, new CreateUnitDto(name.toLowerCase(), description.toLowerCase(), isActive)]

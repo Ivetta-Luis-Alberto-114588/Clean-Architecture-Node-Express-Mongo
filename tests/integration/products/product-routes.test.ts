@@ -206,21 +206,24 @@ describe('Product Routes Integration Tests', () => {
   });
   
   describe('GET /api/products/by-category/:categoryId', () => {
-    // Crear un producto antes de las pruebas
+    // Añade este beforeEach justo aquí
     beforeEach(async () => {
-      // Crear producto de prueba
+      // Crear producto de prueba con la categoría correcta
       const product = await ProductModel.create({
         name: testProduct.name.toLowerCase(),
         description: testProduct.description.toLowerCase(),
         price: testProduct.price,
         stock: testProduct.stock,
-        category: categoryId,
+        category: categoryId,  // Asegúrate de que este sea el ID correcto
         unit: unitId,
         imgUrl: testProduct.imgUrl,
         isActive: testProduct.isActive
       });
       
       productId = product._id.toString();
+      
+      // Verificación opcional para debug
+      console.log(`Producto creado con ID: ${productId} y categoría: ${categoryId}`);
     });
     
     test('should get products by category', async () => {

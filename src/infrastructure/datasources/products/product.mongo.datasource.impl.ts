@@ -192,30 +192,25 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
 
 
     async findByCategory(idCategory: string, paginationDto: PaginationDto): Promise<ProductEntity[]> {
-       
-        const {limit, page} = paginationDto
-
+        const {limit, page} = paginationDto;
+    
         try {
             // Buscamos el documento en la base de datos
-            const x = await ProductModel.find({category: idCategory})
-                        .populate(["Category", "Unit"]) // populate para traer los datos de las relaciones
+            const products = await ProductModel.find({category: idCategory})
+                        .populate("category")  // Asegurarse de popular ambos
+                        .populate("unit")
                         .limit(limit)
-                        .skip((page - 1) * limit)
-
-            // Si no existe, lanzamos un error
-            if(!x) throw CustomError.notFound("Product not found")
-
+                        .skip((page - 1) * limit);
+    
+            // Si no hay productos, devolver array vacío en lugar de error
+            if (!products || products.length === 0) return [];
+    
             // Retornamos el objeto mapeado
-            return x.map(x => ProductMapper.fromObjectToProductEntity(x))
-        
-       } catch (error) {
-           // Si ya es un CustomError, lo propagamos
-           if(error instanceof CustomError) { throw error }
-
-           console.log(error)
-           throw CustomError.internalServerError("ProductMonogoDataSourceImpl, internal server error")
-        
-       }
+            return products.map(product => ProductMapper.fromObjectToProductEntity(product));
+        } catch (error) {
+            if (error instanceof CustomError) { throw error; }
+            throw CustomError.internalServerError("ProductMongoDataSourceImpl, internal server error");
+        }
     }
 
 
