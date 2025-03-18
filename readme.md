@@ -98,3 +98,18 @@ npm test -- tests/presentation/auth/controller.auth.test.ts
 jest tests/domain/use-cases/customers/get-city-by-id.use-case.test.ts
 
 **npm** run test:coverage
+
+K6 - test de carga
+
+deben estar en el directorio raiz, fuera del src los siguintes archivos:
+
+* generate-test-data.js
+* load-test.js
+
+despues se debe generar en mongo los datos para hacer las pruebas, y para esto hay que genera los datos de pruebas
+
+* node generate-test-data.js
+
+y por ultimo correr los test de carga con el comando: k6 run load-test.js
+
+k6 run load-test-complete.js

@@ -15,7 +15,11 @@ export class MongoDatabase {
         try {
             
             await mongoose.connect(p_mongoUrl, {
-                dbName: p_dbName
+                dbName: p_dbName,
+                maxPoolSize: 100,  // Aumenta este valor según tu carga
+                minPoolSize: 10,   // Mantén algunas conexiones abiertas
+                connectTimeoutMS: 30000,  // Aumenta el tiempo de espera para conexiones
+                socketTimeoutMS: 45000,   // Aumenta el tiempo de espera para operaciones
             })
 
             console.log("Mongo connected")
