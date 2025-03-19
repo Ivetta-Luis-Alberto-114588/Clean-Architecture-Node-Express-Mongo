@@ -1,4 +1,6 @@
 .env
+*.log
+*audit.json
 node_modules/
 dist/
 build/
