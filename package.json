@@ -5,8 +5,10 @@
   "type": "commonjs",
   "scripts": {
     "dev": "tsnd --respawn --clear src/app.ts",
-    "build": "rimraf ./dist && tsc",
-    "start": "npm run build && node dist/app.js",
+    "build1": "rimraf ./dist && tsc",
+    "build": "tsc",
+    "start1": "npm run build && node dist/app.js",
+    "start": "node --max-old-space-size=512 dist/app.js",
     "generate-embeddings": "node src/infrastructure/adapters/transformers-bridge.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
