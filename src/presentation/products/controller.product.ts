@@ -13,11 +13,20 @@ import { CategoryRepository } from "../../domain/repositories/products/categroy.
 import { UpdateProductUseCase } from "../../domain/use-cases/product/update-product.use-case";
 import { UpdateProductDto } from "../../domain/dtos/products/update-product.dto";
 
+
+import { CloudinaryAdapter } from "../../infrastructure/adapters/cloudinary.adapter";
+import fs from 'fs';
+
+
 export class ProductController {
+
+
+    private readonly cloudinaryAdapter = CloudinaryAdapter.getInstance();
+
     constructor(
         private readonly productRepository: ProductRepository,
         private readonly categoryRepository: CategoryRepository
-    ) {}
+    ) { }
 
     // Manejo de errores mejorado
     private handleError = (error: unknown, res: Response) => {
@@ -31,24 +40,40 @@ export class ProductController {
     // Método asincrónico para crear producto
     createProduct = async (req: Request, res: Response) => {
         try {
-            // Desestructuro el body para validar
-            const [error, createProductDto] = CreateProductDto.create(req.body);
+            let imgUrl = '';
 
-            // Si existe un error en el DTO lo capturo y envío como respuesta en el controller
+            // Si hay un archivo subido, guardarlo en Cloudinary
+            if ((req as any).file) {
+                imgUrl = await this.cloudinaryAdapter.uploadImage((req as any).file.path);
+
+                // Eliminar archivo temporal después de subirlo
+                fs.unlink((req as any).file.path, (err) => {
+                    if (err) console.error('Error eliminando archivo temporal:', err);
+                });
+            }
+
+            // Crear DTO con los datos del formulario y la URL de la imagen
+            const productData = {
+                ...req.body,
+                imgUrl: imgUrl || req.body.imgUrl || ''
+            };
+
+            const [error, createProductDto] = CreateProductDto.create(productData);
+
             if (error) {
                 console.log("error en controller.products.createProduct", error);
                 return res.status(400).json({ error });
             }
 
-            // Creo una instancia del caso de uso y le paso el repositorio
             const product = await new CreateProductUseCase(this.productRepository)
                 .execute(createProductDto!);
-                
+
             return res.json(product);
         } catch (err) {
             return this.handleError(err, res);
         }
     }
+
 
     // Método getProductById para manejar GET /api/products/:id
     getProductById = async (req: Request, res: Response) => {
@@ -70,7 +95,7 @@ export class ProductController {
 
             // Creo una instancia del dto de paginación
             const [error, paginationDto] = PaginationDto.create(
-                Number(page), 
+                Number(page),
                 Number(limit)
             );
 
@@ -82,7 +107,7 @@ export class ProductController {
 
             const products = await new GetAllProductsUseCase(this.productRepository)
                 .execute(paginationDto!);
-                
+
             return res.json(products);
         } catch (err) {
             return this.handleError(err, res);
@@ -93,18 +118,20 @@ export class ProductController {
     deleteProduct = async (req: Request, res: Response) => {
         try {
             const { id } = req.params;
-            
-            // Verificar si el producto existe antes de intentar eliminarlo
-            // (esto es opcional pero útil para depuración)
-            try {
-                await this.productRepository.findById(id);
-            } catch (error) {
-                // Si el producto no existe, registramos para depuración
-                console.log(`Producto con ID ${id} no encontrado antes de eliminar`);
+
+            // Obtener el producto para eliminar su imagen también
+            const product = await this.productRepository.findById(id);
+
+            // Eliminar la imagen de Cloudinary si existe
+            if (product.imgUrl) {
+                const publicId = this.cloudinaryAdapter.getPublicIdFromUrl(product.imgUrl);
+                if (publicId) {
+                    await this.cloudinaryAdapter.deleteImage(publicId);
+                }
             }
-            
-            const product = await this.productRepository.delete(id);
-            return res.json(product);
+
+            const deletedProduct = await this.productRepository.delete(id);
+            return res.json(deletedProduct);
         } catch (err) {
             return this.handleError(err, res);
         }
@@ -121,7 +148,7 @@ export class ProductController {
 
             // Creo una instancia del dto de paginación
             const [error, paginationDto] = PaginationDto.create(
-                Number(page), 
+                Number(page),
                 Number(limit)
             );
 
@@ -132,10 +159,10 @@ export class ProductController {
             }
 
             const products = await new GetProductByCategoryUseCase(
-                this.productRepository, 
+                this.productRepository,
                 this.categoryRepository
             ).execute(categoryId, paginationDto!);
-                
+
             return res.json(products);
         } catch (err) {
             return this.handleError(err, res);
@@ -143,15 +170,54 @@ export class ProductController {
     }
 
     // Método asincrónico para actualizar producto
+    // Actualiza el producto con una nueva imagen si se proporciona
     updateProduct = async (req: Request, res: Response) => {
         try {
-            // Desestructuro el id de la request
             const { id } = req.params;
 
-            // Desectructuro el error y el dto del request
-            const [error, updateProductDto] = UpdateProductDto.create(req.body);
+            // Obtener el producto existente para verificar si tiene imagen
+            const existingProduct = await this.productRepository.findById(id);
 
-            // Si existe un error en el DTO lo capturo y envío como respuesta
+            let imgUrl = existingProduct.imgUrl;
+
+            // Si hay un archivo subido, actualizar la imagen
+            if ((req as any).file) {
+                // Si ya existe una imagen, eliminarla primero
+                if (existingProduct.imgUrl) {
+                    try {
+                        // Extraer el public_id de la URL de Cloudinary
+                        const publicId = this.cloudinaryAdapter.getPublicIdFromUrl(existingProduct.imgUrl);
+                        if (publicId) {
+                            // Intentar eliminar la imagen antigua y manejar errores
+                            await this.cloudinaryAdapter.deleteImage(publicId);
+                            console.log(`Imagen anterior eliminada correctamente: ${publicId}`);
+                        } else {
+                            console.warn(`No se pudo extraer publicId de la URL: ${existingProduct.imgUrl}`);
+                        }
+                    } catch (deleteError) {
+                        // Solo logueamos el error pero continuamos con la actualización
+                        console.error('Error al eliminar imagen antigua de Cloudinary:', deleteError);
+                    }
+                }
+
+                // Subir la nueva imagen
+                imgUrl = await this.cloudinaryAdapter.uploadImage((req as any).file.path);
+                console.log(`Nueva imagen subida: ${imgUrl}`);
+
+                // Eliminar archivo temporal
+                fs.unlink((req as any).file.path, (err) => {
+                    if (err) console.error('Error eliminando archivo temporal:', err);
+                });
+            }
+
+            // Crear DTO con los datos actualizados y la URL de la imagen
+            const productData = {
+                ...req.body,
+                imgUrl: (req as any).file ? imgUrl : (req.body.imgUrl || imgUrl)
+            };
+
+            const [error, updateProductDto] = UpdateProductDto.create(productData);
+
             if (error) {
                 console.log("error en controller.products.updateProduct", error);
                 return res.status(400).json({ error });
@@ -159,7 +225,7 @@ export class ProductController {
 
             const product = await new UpdateProductUseCase(this.productRepository)
                 .execute(id, updateProductDto!);
-                
+
             return res.json(product);
         } catch (err) {
             return this.handleError(err, res);

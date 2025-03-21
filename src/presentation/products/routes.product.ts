@@ -7,11 +7,12 @@ import { ProductController } from "./controller.product";
 import { CategoryMongoDataSourceImpl } from "../../infrastructure/datasources/products/category.mongo.datasource.impl";
 import { CategoryRepositoryImpl } from "../../infrastructure/repositories/products/category.respository.impl";
 import { Request, Response } from "express";
+import { UploadMiddleware } from "../middlewares/upload.middleware";
 
 export class ProductRoutes {
     static get getProductRoutes(): Router {
         const router = Router();
-        
+
         // Inicializamos las dependencias
         const datasourceProduct = new ProductMongoDataSourceImpl();
         const datasourceCategory = new CategoryMongoDataSourceImpl();
@@ -30,7 +31,7 @@ export class ProductRoutes {
         router.get('/', (req: Request, res: Response) => {
             controller.getAllProducts(req, res);
         });
-        
+
         // La ruta original para obtener por ID tenía un error, realmente estaba llamando a getAllProducts
         // Corregimos para que use el método correcto
         router.get('/:id', (req: Request, res: Response) => {
@@ -38,20 +39,28 @@ export class ProductRoutes {
             // Pero como no vemos ese método en el controlador, podemos usar findById directamente
             controller.getProductById(req, res);
         });
-        
-        router.post('/', (req: Request, res: Response) => {
-            controller.createProduct(req, res);
-        });
-        
-        router.put('/:id', (req: Request, res: Response) => {
-            controller.updateProduct(req, res);
-        });
-        
+
+        // Rutas con soporte para subida de imágenes
+        router.post('/',
+            UploadMiddleware.single('image'), // 'image' es el nombre del campo del formulario
+            (req: Request, res: Response) => {
+                controller.createProduct(req, res);
+            }
+        );
+
+        router.put('/:id',
+            UploadMiddleware.single('image'),
+            (req: Request, res: Response) => {
+                controller.updateProduct(req, res);
+            }
+        );
+
+
         // El problema principal podría estar aquí - asegurémonos de que pasa correctamente el control
         router.delete('/:id', (req: Request, res: Response) => {
             controller.deleteProduct(req, res);
         });
-        
+
         return router;
     }
 }
