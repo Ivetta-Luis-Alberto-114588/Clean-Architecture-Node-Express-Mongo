@@ -38,12 +38,18 @@ export class PaymentRoutes {
 
     // Rutas protegidas (requieren autenticación)
     // Crear y gestionar pagos
-    router.post("/sale/:saleId",  controller.createPayment);
+    router.post("/sale/:saleId", controller.createPayment);
     router.get("/:id", controller.getPayment);
     router.get("/by-sale/:saleId", controller.getPaymentsBySale);
     router.get("/", controller.getAllPayments);
     router.post("/verify", controller.verifyPayment);
     router.get("/preference/:preferenceId", controller.verifyPreferenceStatus);
+
+    //estos son los pagos que he hecho en mercado pago del ultimo año
+    router.get("/mercadopago/payments", controller.getAllMercadoPagoPayments);
+
+    //estos son los cobros que he hecho en mercado pago del ultimo año
+    router.get("/mercadopago/charges", controller.getAllMercadoPagoCharges);
 
     // Ruta nueva usando el método simplificado
     router.post("/prueba/sale/:saleId", controller.createPaymentPrueba);

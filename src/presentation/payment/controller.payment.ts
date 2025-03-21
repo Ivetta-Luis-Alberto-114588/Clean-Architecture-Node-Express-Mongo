@@ -28,13 +28,13 @@ export class PaymentController {
     private readonly paymentRepository: PaymentRepository,
     private readonly saleRepository: SaleRepository,
     private readonly customerRepository: CustomerRepository
-  ) {}
+  ) { }
 
   private handleError = (error: unknown, res: Response) => {
     if (error instanceof CustomError) {
       return res.status(error.statusCode).json({ error: error.message });
     }
-    
+
     console.log("Error en PaymentController:", error);
     return res.status(500).json({ error: "Error interno del servidor" });
   };
@@ -316,165 +316,165 @@ export class PaymentController {
 
   // verificar el status de una preferencia
   verifyPreferenceStatus = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { preferenceId } = req.params;
-    
-    if (!preferenceId) {
-      res.status(400).json({ error: "El ID de preferencia es requerido" });
-      return;
-    }
-    
-    // Buscar el pago asociado a esta preferencia en nuestra base de datos
-    const payment = await this.paymentRepository.getPaymentByPreferenceId(preferenceId);
-    
-    if (!payment) {
-      res.status(404).json({ error: `No se encontró ningún pago con preferenceId: ${preferenceId}` });
-      return;
-    }
-    
-    // Obtener la instancia del adaptador de Mercado Pago
-    const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
-    
-    // Verificar el estado de la preferencia con Mercado Pago
-    const preferenceInfo = await mercadoPagoAdapter.getPreference(preferenceId);
-    
-    // Si hay un paymentId asociado, verificamos el estado del pago
-    let paymentInfo = null;
-    if (payment.providerPaymentId) {
-      paymentInfo = await mercadoPagoAdapter.getPayment(payment.providerPaymentId);
-    }
-    
-    // Devolver la información completa
-    res.json({
-      success: true,
-      payment: {
-        id: payment.id,
-        status: payment.status,
-        externalReference: payment.externalReference,
-        providerPaymentId: payment.providerPaymentId,
-        amount: payment.amount,
-        createdAt: payment.createdAt,
-        updatedAt: payment.updatedAt
-      },
-      preferenceInfo: {
-        id: preferenceInfo.id,
-        status: paymentInfo ? paymentInfo.status : 'unknown',
-        isPaid: paymentInfo ? paymentInfo.status === 'approved' : false,
-        paymentMethod: paymentInfo ? paymentInfo.payment_method_id : null,
-        paymentDate: paymentInfo ? paymentInfo.date_approved : null
-      }
-    });
-  } catch (error) {
-    this.handleError(error, res);
-  }
-};
+    try {
+      const { preferenceId } = req.params;
 
-
-
-processWebhook = async (req: Request, res: Response): Promise<void> => {
-
-  try {
-
-    // Loguea la información completa recibida para depuración
-    console.log('Webhook recibido:', { 
-      query: req.query, 
-      body: req.body,
-      headers: req.headers
-    });
-    
-    // Mercado Pago puede enviar notificaciones en diferentes formatos
-    // dependiendo del entorno y el tipo de notificación
-    let paymentId;
-    
-    // Formato 1: notificación tipo IPN
-    if (req.query.id && req.query.topic) {
-      const topic = req.query.topic as string;
-      paymentId = req.query.id as string;
-      
-      if (topic !== 'payment') {
-        // Solo procesamos notificaciones de pagos
-        console.log(`Ignorando notificación de tipo: ${topic}`);
-        res.status(200).json({ message: 'Notificación recibida pero ignorada (topic no relevante)' });
+      if (!preferenceId) {
+        res.status(400).json({ error: "El ID de preferencia es requerido" });
         return;
       }
-    } 
-    // Formato 2: notificación tipo Webhook
-    else if (req.body.data && req.body.type) {
-      const type = req.body.type as string;
-      paymentId = req.body.data.id as string;
-      
-      if (type !== 'payment') {
-        // Solo procesamos notificaciones de pagos
-        console.log(`Ignorando notificación de tipo: ${type}`);
-        res.status(200).json({ message: 'Notificación recibida pero ignorada (type no relevante)' });
+
+      // Buscar el pago asociado a esta preferencia en nuestra base de datos
+      const payment = await this.paymentRepository.getPaymentByPreferenceId(preferenceId);
+
+      if (!payment) {
+        res.status(404).json({ error: `No se encontró ningún pago con preferenceId: ${preferenceId}` });
         return;
       }
-    } else {
-      // Formato no reconocido
-      console.log('Formato de notificación no reconocido');
-      res.status(400).json({ message: 'Formato de notificación no reconocido' });
-      return;
-    }
-    
-    if (!paymentId) {
-      console.log('ID de pago no encontrado en la notificación');
-      res.status(400).json({ message: 'ID de pago no encontrado en la notificación' });
-      return;
-    }
-    
-    // Obtenemos los detalles del pago desde Mercado Pago
-    const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
-    const paymentInfo = await mercadoPagoAdapter.getPayment(paymentId);
-    
-    // Buscamos el pago en nuestra base de datos por externalReference
-    const payment = await this.paymentRepository.getPaymentByExternalReference(
-      paymentInfo.external_reference
-    );
-    
-    if (!payment) {
-      console.log(`Pago no encontrado para external_reference: ${paymentInfo.external_reference}`);
-      res.status(404).json({ message: 'Pago no encontrado' });
-      return;
-    }
-    
-    // Actualizamos el estado del pago en nuestra base de datos
-    const updatePaymentStatusDto = UpdatePaymentStatusDto.create({
-      paymentId: payment.id,
-      status: paymentInfo.status,
-      providerPaymentId: paymentInfo.id.toString(),
-      metadata: paymentInfo
-    });
-    
-    if (updatePaymentStatusDto[0]) {
-      console.error('Error creando DTO:', updatePaymentStatusDto[0]);
-      res.status(400).json({ error: updatePaymentStatusDto[0] });
-      return;
-    }
-    
-    // Actualizamos el pago
-    const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto[1]!);
-    
-    // Si el pago está aprobado, actualizamos el estado de la venta
-    if (paymentInfo.status === 'approved') {
-      await this.saleRepository.updateStatus(payment.saleId, {
-        status: 'completed',
-        notes: `Pago aprobado con ID ${paymentInfo.id}`
+
+      // Obtener la instancia del adaptador de Mercado Pago
+      const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
+
+      // Verificar el estado de la preferencia con Mercado Pago
+      const preferenceInfo = await mercadoPagoAdapter.getPreference(preferenceId);
+
+      // Si hay un paymentId asociado, verificamos el estado del pago
+      let paymentInfo = null;
+      if (payment.providerPaymentId) {
+        paymentInfo = await mercadoPagoAdapter.getPayment(payment.providerPaymentId);
+      }
+
+      // Devolver la información completa
+      res.json({
+        success: true,
+        payment: {
+          id: payment.id,
+          status: payment.status,
+          externalReference: payment.externalReference,
+          providerPaymentId: payment.providerPaymentId,
+          amount: payment.amount,
+          createdAt: payment.createdAt,
+          updatedAt: payment.updatedAt
+        },
+        preferenceInfo: {
+          id: preferenceInfo.id,
+          status: paymentInfo ? paymentInfo.status : 'unknown',
+          isPaid: paymentInfo ? paymentInfo.status === 'approved' : false,
+          paymentMethod: paymentInfo ? paymentInfo.payment_method_id : null,
+          paymentDate: paymentInfo ? paymentInfo.date_approved : null
+        }
       });
-      
-      // Aquí podrías enviar una notificación al cliente, generar factura, etc.
+    } catch (error) {
+      this.handleError(error, res);
     }
-    
-    // Siempre respondemos con 200 OK para que Mercado Pago no reintente
-    res.status(200).json({
-      message: 'Notificación procesada exitosamente',
-      paymentStatus: paymentInfo.status
-    });
-  } catch (error) {
-    console.error('Error procesando webhook:', error);
-    // Siempre respondemos con 200 OK para que Mercado Pago no reintente
-    res.status(200).json({ status: 'error', message: 'Error procesando webhook' });
-  }
-};
+  };
+
+
+
+  processWebhook = async (req: Request, res: Response): Promise<void> => {
+
+    try {
+
+      // Loguea la información completa recibida para depuración
+      console.log('Webhook recibido:', {
+        query: req.query,
+        body: req.body,
+        headers: req.headers
+      });
+
+      // Mercado Pago puede enviar notificaciones en diferentes formatos
+      // dependiendo del entorno y el tipo de notificación
+      let paymentId;
+
+      // Formato 1: notificación tipo IPN
+      if (req.query.id && req.query.topic) {
+        const topic = req.query.topic as string;
+        paymentId = req.query.id as string;
+
+        if (topic !== 'payment') {
+          // Solo procesamos notificaciones de pagos
+          console.log(`Ignorando notificación de tipo: ${topic}`);
+          res.status(200).json({ message: 'Notificación recibida pero ignorada (topic no relevante)' });
+          return;
+        }
+      }
+      // Formato 2: notificación tipo Webhook
+      else if (req.body.data && req.body.type) {
+        const type = req.body.type as string;
+        paymentId = req.body.data.id as string;
+
+        if (type !== 'payment') {
+          // Solo procesamos notificaciones de pagos
+          console.log(`Ignorando notificación de tipo: ${type}`);
+          res.status(200).json({ message: 'Notificación recibida pero ignorada (type no relevante)' });
+          return;
+        }
+      } else {
+        // Formato no reconocido
+        console.log('Formato de notificación no reconocido');
+        res.status(400).json({ message: 'Formato de notificación no reconocido' });
+        return;
+      }
+
+      if (!paymentId) {
+        console.log('ID de pago no encontrado en la notificación');
+        res.status(400).json({ message: 'ID de pago no encontrado en la notificación' });
+        return;
+      }
+
+      // Obtenemos los detalles del pago desde Mercado Pago
+      const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
+      const paymentInfo = await mercadoPagoAdapter.getPayment(paymentId);
+
+      // Buscamos el pago en nuestra base de datos por externalReference
+      const payment = await this.paymentRepository.getPaymentByExternalReference(
+        paymentInfo.external_reference
+      );
+
+      if (!payment) {
+        console.log(`Pago no encontrado para external_reference: ${paymentInfo.external_reference}`);
+        res.status(404).json({ message: 'Pago no encontrado' });
+        return;
+      }
+
+      // Actualizamos el estado del pago en nuestra base de datos
+      const updatePaymentStatusDto = UpdatePaymentStatusDto.create({
+        paymentId: payment.id,
+        status: paymentInfo.status,
+        providerPaymentId: paymentInfo.id.toString(),
+        metadata: paymentInfo
+      });
+
+      if (updatePaymentStatusDto[0]) {
+        console.error('Error creando DTO:', updatePaymentStatusDto[0]);
+        res.status(400).json({ error: updatePaymentStatusDto[0] });
+        return;
+      }
+
+      // Actualizamos el pago
+      const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto[1]!);
+
+      // Si el pago está aprobado, actualizamos el estado de la venta
+      if (paymentInfo.status === 'approved') {
+        await this.saleRepository.updateStatus(payment.saleId, {
+          status: 'completed',
+          notes: `Pago aprobado con ID ${paymentInfo.id}`
+        });
+
+        // Aquí podrías enviar una notificación al cliente, generar factura, etc.
+      }
+
+      // Siempre respondemos con 200 OK para que Mercado Pago no reintente
+      res.status(200).json({
+        message: 'Notificación procesada exitosamente',
+        paymentStatus: paymentInfo.status
+      });
+    } catch (error) {
+      console.error('Error procesando webhook:', error);
+      // Siempre respondemos con 200 OK para que Mercado Pago no reintente
+      res.status(200).json({ status: 'error', message: 'Error procesando webhook' });
+    }
+  };
 
 
   // Endpoints para las redirecciones de MercadoPago
@@ -513,7 +513,7 @@ processWebhook = async (req: Request, res: Response): Promise<void> => {
       res.redirect(redirectUrl);
     } catch (error) {
       console.error('Error en paymentSuccess:', error);
-      
+
       // Redirigir al frontend con error
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
       res.redirect(redirectUrl);
@@ -523,9 +523,9 @@ processWebhook = async (req: Request, res: Response): Promise<void> => {
   paymentFailure = async (req: Request, res: Response): Promise<void> => {
     try {
       const { saleId } = req.query;
-      
+
       console.log('Pago fallido:', req.query);
-      
+
       // Redirigir al frontend o mostrar página de error
       const redirectUrl = `${envs.FRONTEND_URL}/payment/failure?saleId=${saleId}`;
       res.redirect(redirectUrl);
@@ -539,9 +539,9 @@ processWebhook = async (req: Request, res: Response): Promise<void> => {
   paymentPending = async (req: Request, res: Response): Promise<void> => {
     try {
       const { saleId } = req.query;
-      
+
       console.log('Pago pendiente:', req.query);
-      
+
       // Redirigir al frontend o mostrar página de pendiente
       const redirectUrl = `${envs.FRONTEND_URL}/payment/pending?saleId=${saleId}`;
       res.redirect(redirectUrl);
@@ -549,6 +549,100 @@ processWebhook = async (req: Request, res: Response): Promise<void> => {
       console.error('Error en paymentPending:', error);
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
       res.redirect(redirectUrl);
+    }
+  };
+
+
+  //para obtener todos los pagos de MercadoPago
+  getAllMercadoPagoPayments = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { page = 1, limit = 10, status, startDate, endDate } = req.query;
+
+      // Preparar filtros para Mercado Pago
+      const filters: any = {};
+      if (status) filters.status = status;
+      if (startDate) filters.begin_date = startDate;
+      if (endDate) filters.end_date = endDate;
+
+      // Calcular offset para paginación
+      const offset = (Number(page) - 1) * Number(limit);
+
+      // Obtener pagos desde Mercado Pago
+      const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
+      const paymentsData = await mercadoPagoAdapter.getAllPayments(Number(limit), offset, filters);
+
+      // Procesar y enriquecer los resultados si es necesario
+      const enhancedPayments = await Promise.all(
+        paymentsData.results.map(async (payment) => {
+          // Buscar si tenemos este pago en nuestra base de datos
+          const localPayment = await this.paymentRepository.getPaymentByProviderPaymentId(
+            payment.id.toString()
+          );
+
+          return {
+            ...payment,
+            localPaymentInfo: localPayment || null
+          };
+        })
+      );
+
+      res.json({
+        total: paymentsData.paging.total,
+        offset: paymentsData.paging.offset,
+        limit: paymentsData.paging.limit,
+        payments: enhancedPayments
+      });
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  };
+
+
+
+  //para obtener todos los cobros de MercadoPago
+  getAllMercadoPagoCharges = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { page = 1, limit = 10, status, startDate, endDate } = req.query;
+
+      // Preparar filtros para Mercado Pago
+      const filters: any = {};
+      if (status) filters.status = status;
+      if (startDate) filters.begin_date = startDate;
+      if (endDate) filters.end_date = endDate;
+
+      // Añadir filtro para solo traer los cobros (pagos recibidos)
+      //filters.operation_type = 'regular_payment';
+
+      // Calcular offset para paginación
+      const offset = (Number(page) - 1) * Number(limit);
+
+      // Obtener cobros desde Mercado Pago
+      const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
+      const chargesData = await mercadoPagoAdapter.getAllPayments(Number(limit), offset, filters);
+
+      // Procesar y enriquecer los resultados si es necesario
+      const enhancedCharges = await Promise.all(
+        chargesData.results.map(async (charge) => {
+          // Buscar si tenemos este cobro en nuestra base de datos
+          const localPayment = await this.paymentRepository.getPaymentByProviderPaymentId(
+            charge.id.toString()
+          );
+
+          return {
+            ...charge,
+            localPaymentInfo: localPayment || null
+          };
+        })
+      );
+
+      res.json({
+        total: chargesData.paging.total,
+        offset: chargesData.paging.offset,
+        limit: chargesData.paging.limit,
+        charges: enhancedCharges
+      });
+    } catch (error) {
+      this.handleError(error, res);
     }
   };
 }

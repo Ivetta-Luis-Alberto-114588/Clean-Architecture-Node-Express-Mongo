@@ -11,7 +11,7 @@ import { MercadoPagoPayment, MercadoPagoPreferenceResponse } from "../../../doma
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
 
 export class PaymentRepositoryImpl implements PaymentRepository {
-  constructor(private readonly paymentDataSource: PaymentDataSource) {}
+  constructor(private readonly paymentDataSource: PaymentDataSource) { }
 
   async createPreference(createPaymentDto: CreatePaymentDto): Promise<MercadoPagoPreferenceResponse> {
     return this.paymentDataSource.createPreference(createPaymentDto);
@@ -60,4 +60,9 @@ export class PaymentRepositoryImpl implements PaymentRepository {
   async getPaymentByIdempotencyKey(idempotencyKey: string): Promise<PaymentEntity | null> {
     return this.paymentDataSource.getPaymentByIdempotencyKey(idempotencyKey);
   }
+
+  async getPaymentByProviderPaymentId(providerPaymentId: string): Promise<PaymentEntity | null> {
+    return this.paymentDataSource.getPaymentByProviderPaymentId(providerPaymentId);
+  }
+
 }

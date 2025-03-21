@@ -33,18 +33,18 @@ export class MercadoPagoAdapter {
         'Authorization': `Bearer ${this.accessToken}`,
         'Content-Type': 'application/json',
       };
-      
+
       if (config?.idempotencyKey) {
         headers['X-Idempotency-Key'] = config.idempotencyKey;
       }
-      
-            
+
+
       // Guardo la respuesta de axios de mercado pago
-      const response = await axios.post( `${this.baseUrl}/checkout/preferences`, preference, { headers }  ); 
+      const response = await axios.post(`${this.baseUrl}/checkout/preferences`, preference, { headers });
 
       // console.log('items:', {data: response.data.items});      
       // console.log('respuesta de axios a la url de mercado pago:', {data: response.data});      
-       
+
       return response.data;
 
     } catch (error) {
@@ -66,17 +66,17 @@ export class MercadoPagoAdapter {
         'Authorization': `Bearer ${this.accessToken}`,
         'Content-Type': 'application/json',
       };
-      
+
       if (config?.idempotencyKey) {
         headers['X-Idempotency-Key'] = config.idempotencyKey;
       }
-      
+
       // Estructura fija para la preferencia
       const body = {
         items: [
           {
-            id:  "1234",
-            title:  "title", 
+            id: "1234",
+            title: "title",
             quantity: 1,
             unit_price: 100
           }
@@ -91,14 +91,14 @@ export class MercadoPagoAdapter {
         "statement_descriptor": "Negocio startUp",
         "metadata": { uuid: uuidv4() }
       };
-      
+
       console.log('Enviando body a MercadoPago:', body);
-      
+
       // Guardo la respuesta de axios de mercado pago
-      const response = await axios.post(`${this.baseUrl}/checkout/preferences`, body, { headers }); 
+      const response = await axios.post(`${this.baseUrl}/checkout/preferences`, body, { headers });
 
       console.log('Preferencia creada con éxito:', response.data);
-      
+
       return response.data;
 
     } catch (error) {
@@ -112,14 +112,14 @@ export class MercadoPagoAdapter {
   async getPayment(id: string): Promise<MercadoPagoPayment> {
     try {
       const response = await axios.get(
-        `${this.baseUrl}/v1/payments/${id}`, 
+        `${this.baseUrl}/v1/payments/${id}`,
         {
           headers: {
             'Authorization': `Bearer ${this.accessToken}`
           }
         }
       );
-      
+
       return response.data;
     } catch (error) {
       console.error(`Error al obtener el pago con ID ${id} de Mercado Pago:`, error);
@@ -132,14 +132,14 @@ export class MercadoPagoAdapter {
   async getPreference(id: string): Promise<MercadoPagoPreferenceResponse> {
     try {
       const response = await axios.get(
-        `${this.baseUrl}/checkout/preferences/${id}`, 
+        `${this.baseUrl}/checkout/preferences/${id}`,
         {
           headers: {
             'Authorization': `Bearer ${this.accessToken}`
           }
         }
       );
-      
+
       return response.data;
     } catch (error) {
       console.error(`Error al obtener la preferencia con ID ${id} de Mercado Pago:`, error);
@@ -165,5 +165,33 @@ export class MercadoPagoAdapter {
   async setupWebhooks(notificationUrl: string): Promise<void> {
     console.log(`Se configuraría webhook en Mercado Pago para la URL: ${notificationUrl}`);
     // Implementa la configuración de webhooks si lo necesitas
+  }
+
+
+
+  //metodo para obtener todos los pagos de MP
+  async getAllPayments(limit = 50, offset = 0, filters = {}) {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/v1/payments/search`,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.accessToken}`
+          },
+          params: {
+            limit,
+            offset,
+            ...filters  // Para filtrar por fecha, estado, etc.
+          }
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error(`Error al obtener pagos de Mercado Pago:`, error);
+      throw CustomError.internalServerError(
+        `Error al obtener pagos de Mercado Pago: ${this.parseError(error)}`
+      );
+    }
   }
 }
