@@ -3,22 +3,22 @@ import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { PaymentEntity } from "../../entities/payment/payment.entity";
 import { CustomError } from "../../errors/custom.error";
 import { PaymentRepository } from "../../repositories/payment/payment.repository";
-import { SaleRepository } from "../../repositories/sales/sale.repository";
+import { OrderRepository } from "../../repositories/order/order.repository";
 
-interface IGetPaymentBySaleUseCase {
+interface IGetPaymentByOrderUseCase {
   execute(saleId: string, paginationDto: PaginationDto): Promise<PaymentEntity[]>;
 }
 
-export class GetPaymentBySaleUseCase implements IGetPaymentBySaleUseCase {
+export class GetPaymentByOrderUseCase implements IGetPaymentByOrderUseCase {
   constructor(
     private readonly paymentRepository: PaymentRepository,
-    private readonly saleRepository: SaleRepository
-  ) {}
+    private readonly orderRepository: OrderRepository
+  ) { }
 
   async execute(saleId: string, paginationDto: PaginationDto): Promise<PaymentEntity[]> {
     try {
       // Verificar que exista la venta
-      const sale = await this.saleRepository.findById(saleId);
+      const sale = await this.orderRepository.findById(saleId);
       if (!sale) {
         throw CustomError.notFound(`Venta con ID ${saleId} no encontrada`);
       }

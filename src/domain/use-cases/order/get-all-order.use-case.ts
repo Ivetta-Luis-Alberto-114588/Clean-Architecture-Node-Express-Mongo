@@ -1,15 +1,15 @@
 import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { OrderEntity } from "../../entities/order/order.entity";
 import { CustomError } from "../../errors/custom.error";
-import { SaleRepository } from "../../repositories/sales/sale.repository";
+import { OrderRepository } from "../../repositories/order/order.repository";
 
-interface IGetAllSalesUseCase {
+interface IGetAllOrderUseCase {
     execute(paginationDto: PaginationDto): Promise<OrderEntity[]>
 }
 
-export class GetAllSalesUseCase implements IGetAllSalesUseCase {
+export class GetAllOrderUseCase implements IGetAllOrderUseCase {
     constructor(
-        private readonly saleRepository: SaleRepository
+        private readonly orderRepository: OrderRepository
     ) { }
 
     async execute(paginationDto: PaginationDto): Promise<OrderEntity[]> {
@@ -22,10 +22,10 @@ export class GetAllSalesUseCase implements IGetAllSalesUseCase {
             }
 
             // Obtenemos todas las ventas
-            const sales = await this.saleRepository.getAll(paginationDto);
+            const orders = await this.orderRepository.getAll(paginationDto);
 
             // Devolvemos las ventas
-            return sales;
+            return orders;
         } catch (error) {
             if (error instanceof CustomError) {
                 throw error;

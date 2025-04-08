@@ -4,7 +4,7 @@ import { CustomError } from "../../errors/custom.error";
 import { MercadoPagoPreferenceResponse } from "../../interfaces/payment/mercado-pago.interface";
 import { PaymentRepository } from "../../repositories/payment/payment.repository";
 import { CustomerRepository } from "../../repositories/customers/customer.repository";
-import { SaleRepository } from "../../repositories/sales/sale.repository";
+import { OrderRepository } from "../../repositories/order/order.repository";
 
 interface ICreatePaymentUseCase {
   execute(createPaymentDto: CreatePaymentDto): Promise<{
@@ -17,8 +17,8 @@ export class CreatePaymentUseCase implements ICreatePaymentUseCase {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly customerRepository: CustomerRepository,
-    private readonly saleRepository: SaleRepository
-  ) {}
+    private readonly orderRepository: OrderRepository
+  ) { }
 
   async execute(createPaymentDto: CreatePaymentDto): Promise<{
     payment: PaymentEntity;
@@ -42,7 +42,7 @@ export class CreatePaymentUseCase implements ICreatePaymentUseCase {
       }
 
       // Verificar que exista la venta
-      const sale = await this.saleRepository.findById(createPaymentDto.saleId);
+      const sale = await this.orderRepository.findById(createPaymentDto.saleId);
       if (!sale) {
         throw CustomError.notFound(`Venta con ID ${createPaymentDto.saleId} no encontrada`);
       }

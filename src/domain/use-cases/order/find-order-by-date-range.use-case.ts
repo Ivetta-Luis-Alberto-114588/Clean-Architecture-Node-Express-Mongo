@@ -1,15 +1,15 @@
 import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { OrderEntity } from "../../entities/order/order.entity";
 import { CustomError } from "../../errors/custom.error";
-import { SaleRepository } from "../../repositories/sales/sale.repository";
+import { OrderRepository } from "../../repositories/order/order.repository";
 
-interface IFindSalesByDateRangeUseCase {
+interface IFindOrderByDateRangeUseCase {
     execute(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<OrderEntity[]>
 }
 
-export class FindSalesByDateRangeUseCase implements IFindSalesByDateRangeUseCase {
+export class FindOrderByDateRangeUseCase implements IFindOrderByDateRangeUseCase {
     constructor(
-        private readonly saleRepository: SaleRepository
+        private readonly orderRepository: OrderRepository
     ) { }
 
     async execute(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<OrderEntity[]> {
@@ -27,9 +27,9 @@ export class FindSalesByDateRangeUseCase implements IFindSalesByDateRangeUseCase
             }
 
             // Buscamos las ventas por rango de fechas
-            const sales = await this.saleRepository.findByDateRange(startDate, endDate, paginationDto);
+            const orders = await this.orderRepository.findByDateRange(startDate, endDate, paginationDto);
 
-            return sales;
+            return orders;
         } catch (error) {
             if (error instanceof CustomError) {
                 throw error;

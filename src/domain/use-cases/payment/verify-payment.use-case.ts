@@ -4,7 +4,7 @@ import { PaymentEntity } from "../../entities/payment/payment.entity";
 import { CustomError } from "../../errors/custom.error";
 import { MercadoPagoPayment, MercadoPagoPaymentStatus } from "../../interfaces/payment/mercado-pago.interface";
 import { PaymentRepository } from "../../repositories/payment/payment.repository";
-import { SaleRepository } from "../../repositories/sales/sale.repository";
+import { OrderRepository } from "../../repositories/order/order.repository";
 
 interface IVerifyPaymentUseCase {
   execute(verifyPaymentDto: VerifyPaymentDto): Promise<{
@@ -16,8 +16,8 @@ interface IVerifyPaymentUseCase {
 export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
   constructor(
     private readonly paymentRepository: PaymentRepository,
-    private readonly saleRepository: SaleRepository
-  ) {}
+    private readonly orderRepository: OrderRepository
+  ) { }
 
   async execute(verifyPaymentDto: VerifyPaymentDto): Promise<{
     payment: PaymentEntity;
@@ -52,7 +52,7 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
 
         // Si el pago está aprobado, actualizar el estado de la venta a 'completed'
         if (paymentInfo.status === MercadoPagoPaymentStatus.APPROVED) {
-          await this.saleRepository.updateStatus(payment.saleId, {
+          await this.orderRepository.updateStatus(payment.saleId, {
             status: 'completed',
             notes: `Pago aprobado con ID ${paymentInfo.id}`
           });

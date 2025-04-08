@@ -5,18 +5,18 @@ import { PaginationDto } from "../../domain/dtos/shared/pagination.dto";
 import { CustomError } from "../../domain/errors/custom.error";
 import { CustomerRepository } from "../../domain/repositories/customers/customer.repository";
 import { ProductRepository } from "../../domain/repositories/products/product.repository";
-import { SaleRepository } from "../../domain/repositories/sales/sale.repository";
-import { CreateSaleUseCase } from "../../domain/use-cases/sales/create-sale.use-case";
-import { FindSalesByCustomerUseCase } from "../../domain/use-cases/sales/find-sales-by-customer.use-case";
-import { FindSalesByDateRangeUseCase } from "../../domain/use-cases/sales/find-sales-by-date-range.use-case";
-import { GetAllSalesUseCase } from "../../domain/use-cases/sales/get-all-sales.use-case";
-import { GetSaleByIdUseCase } from "../../domain/use-cases/sales/get-sale-by-id.use-case";
-import { UpdateSaleStatusUseCase } from "../../domain/use-cases/sales/update-sale-status.use-case";
+import { OrderRepository } from "../../domain/repositories/order/order.repository";
+import { CreateOrderUseCase } from "../../domain/use-cases/order/create-order.use-case";
+import { FindOrderByCustomerUseCase } from "../../domain/use-cases/order/find-order-by-customer.use-case";
+import { FindOrderByDateRangeUseCase } from "../../domain/use-cases/order/find-order-by-date-range.use-case";
+import { GetAllOrderUseCase } from "../../domain/use-cases/order/get-all-order.use-case";
+import { GetOrderByIdUseCase } from "../../domain/use-cases/order/get-order-by-id.use-case";
+import { UpdateOrderStatusUseCase } from "../../domain/use-cases/order/update-order-status.use-case";
 
-export class SaleController {
+export class OrderController {
 
     constructor(
-        private readonly orderRepository: SaleRepository,
+        private readonly orderRepository: OrderRepository,
         private readonly customerRepository: CustomerRepository,
         private readonly productRepository: ProductRepository
     ) { }
@@ -39,7 +39,7 @@ export class SaleController {
             return;
         }
 
-        new CreateSaleUseCase(
+        new CreateOrderUseCase(
             this.orderRepository,
             this.customerRepository,
             this.productRepository
@@ -60,7 +60,7 @@ export class SaleController {
             return;
         }
 
-        new GetAllSalesUseCase(this.orderRepository)
+        new GetAllOrderUseCase(this.orderRepository)
             .execute(paginationDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
@@ -69,7 +69,7 @@ export class SaleController {
     getSaleById = (req: Request, res: Response): void => {
         const { id } = req.params;
 
-        new GetSaleByIdUseCase(this.orderRepository)
+        new GetOrderByIdUseCase(this.orderRepository)
             .execute(id)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
@@ -86,7 +86,7 @@ export class SaleController {
             return;
         }
 
-        new UpdateSaleStatusUseCase(this.orderRepository)
+        new UpdateOrderStatusUseCase(this.orderRepository)
             .execute(id, updateSaleStatusDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
@@ -104,7 +104,7 @@ export class SaleController {
             return;
         }
 
-        new FindSalesByCustomerUseCase(
+        new FindOrderByCustomerUseCase(
             this.orderRepository,
             this.customerRepository
         )
@@ -145,7 +145,7 @@ export class SaleController {
             }
 
             // Llama una sola vez al caso de uso
-            new FindSalesByDateRangeUseCase(this.orderRepository)
+            new FindOrderByDateRangeUseCase(this.orderRepository)
                 .execute(start, end, paginationDto!)
                 .then(data => {
                     console.log(`Se encontraron ${data.length} ventas.`);

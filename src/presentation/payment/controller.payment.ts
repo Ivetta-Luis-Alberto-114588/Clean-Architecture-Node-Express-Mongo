@@ -3,7 +3,7 @@
 import { Request, Response } from "express";
 import { CustomError } from "../../domain/errors/custom.error";
 import { PaymentRepository } from "../../domain/repositories/payment/payment.repository";
-import { SaleRepository } from "../../domain/repositories/sales/sale.repository";
+import { OrderRepository } from "../../domain/repositories/order/order.repository";
 import { CustomerRepository } from "../../domain/repositories/customers/customer.repository";
 import { CreatePaymentDto } from "../../domain/dtos/payment/create-payment.dto";
 import { ProcessWebhookDto } from "../../domain/dtos/payment/process-webhook.dto";
@@ -14,7 +14,7 @@ import { CreatePaymentUseCase } from "../../domain/use-cases/payment/create-paym
 import { GetPaymentUseCase } from "../../domain/use-cases/payment/get-payment.use-case";
 import { VerifyPaymentUseCase } from "../../domain/use-cases/payment/verify-payment.use-case";
 import { ProcessWebhookUseCase } from "../../domain/use-cases/payment/process-webhook.use-case";
-import { GetPaymentBySaleUseCase } from "../../domain/use-cases/payment/get-payment-by-sale.use-case";
+import { GetPaymentByOrderUseCase } from "../../domain/use-cases/payment/get-payment-by-order.use-case";
 import { GetAllPaymentsUseCase } from "../../domain/use-cases/payment/get-all-payments.use-case";
 import { PaymentProvider } from "../../domain/entities/payment/payment.entity";
 import { MercadoPagoItem, MercadoPagoPayer } from "../../domain/interfaces/payment/mercado-pago.interface";
@@ -26,7 +26,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class PaymentController {
   constructor(
     private readonly paymentRepository: PaymentRepository,
-    private readonly saleRepository: SaleRepository,
+    private readonly orderRepository: OrderRepository,
     private readonly customerRepository: CustomerRepository
   ) { }
 
@@ -46,7 +46,7 @@ export class PaymentController {
       const host = `${req.protocol}://${req.get('host')}`;
 
       // Obtener la venta
-      const sale = await this.saleRepository.findById(saleId);
+      const sale = await this.orderRepository.findById(saleId);
       if (!sale) {
         res.status(404).json({ error: `Venta con ID ${saleId} no encontrada` });
         return;
@@ -116,7 +116,7 @@ export class PaymentController {
       const createPaymentUseCase = new CreatePaymentUseCase(
         this.paymentRepository,
         this.customerRepository,
-        this.saleRepository
+        this.orderRepository
       );
 
       const result = await createPaymentUseCase.execute(createPaymentDto!);
@@ -142,7 +142,7 @@ export class PaymentController {
       const host = `${req.protocol}://${req.get('host')}`;
 
       // Obtener la venta
-      const sale = await this.saleRepository.findById(saleId);
+      const sale = await this.orderRepository.findById(saleId);
       if (!sale) {
         res.status(404).json({ error: `Venta con ID ${saleId} no encontrada` });
         return;
@@ -250,12 +250,12 @@ export class PaymentController {
         return;
       }
 
-      const getPaymentBySaleUseCase = new GetPaymentBySaleUseCase(
+      const getPaymentByOrderUseCase = new GetPaymentByOrderUseCase(
         this.paymentRepository,
-        this.saleRepository
+        this.orderRepository
       );
 
-      const payments = await getPaymentBySaleUseCase.execute(saleId, paginationDto!);
+      const payments = await getPaymentByOrderUseCase.execute(saleId, paginationDto!);
 
       res.json(payments);
     } catch (error) {
@@ -302,7 +302,7 @@ export class PaymentController {
 
       const verifyPaymentUseCase = new VerifyPaymentUseCase(
         this.paymentRepository,
-        this.saleRepository
+        this.orderRepository
       );
 
       const result = await verifyPaymentUseCase.execute(verifyPaymentDto!);
@@ -456,7 +456,7 @@ export class PaymentController {
 
       // Si el pago está aprobado, actualizamos el estado de la venta
       if (paymentInfo.status === 'approved') {
-        await this.saleRepository.updateStatus(payment.saleId, {
+        await this.orderRepository.updateStatus(payment.saleId, {
           status: 'completed',
           notes: `Pago aprobado con ID ${paymentInfo.id}`
         });
@@ -494,7 +494,7 @@ export class PaymentController {
         if (!error && verifyPaymentDto) {
           const verifyPaymentUseCase = new VerifyPaymentUseCase(
             this.paymentRepository,
-            this.saleRepository
+            this.orderRepository
           );
 
           // Verificar el pago de forma asíncrona para no hacer esperar al usuario

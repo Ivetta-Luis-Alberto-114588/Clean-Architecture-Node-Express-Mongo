@@ -4,9 +4,9 @@ import { CreateOrderDto } from "../../../domain/dtos/order/create-order.dto";
 import { UpdateOrderStatusDto } from "../../../domain/dtos/order/update-order-status.dto";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
 import { OrderEntity } from "../../../domain/entities/order/order.entity";
-import { SaleRepository } from "../../../domain/repositories/sales/sale.repository";
+import { OrderRepository } from "../../../domain/repositories/order/order.repository";
 
-export class SaleRepositoryImpl implements SaleRepository {
+export class OrderRepositoryImpl implements OrderRepository {
 
     constructor(private readonly orderDataSource: OrderDataSource) { }
 

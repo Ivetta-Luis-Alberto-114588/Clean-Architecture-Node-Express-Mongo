@@ -2,15 +2,15 @@ import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { OrderEntity } from "../../entities/order/order.entity";
 import { CustomError } from "../../errors/custom.error";
 import { CustomerRepository } from "../../repositories/customers/customer.repository";
-import { SaleRepository } from "../../repositories/sales/sale.repository";
+import { OrderRepository } from "../../repositories/order/order.repository";
 
-interface IFindSalesByCustomerUseCase {
+interface IFindOrderByCustomerUseCase {
     execute(customerId: string, paginationDto: PaginationDto): Promise<OrderEntity[]>
 }
 
-export class FindSalesByCustomerUseCase implements IFindSalesByCustomerUseCase {
+export class FindOrderByCustomerUseCase implements IFindOrderByCustomerUseCase {
     constructor(
-        private readonly saleRepository: SaleRepository,
+        private readonly orderRepository: OrderRepository,
         private readonly customerRepository: CustomerRepository
     ) { }
 
@@ -27,7 +27,7 @@ export class FindSalesByCustomerUseCase implements IFindSalesByCustomerUseCase {
             }
 
             // Buscamos las ventas por cliente
-            const sales = await this.saleRepository.findByCustomer(customerId, paginationDto);
+            const sales = await this.orderRepository.findByCustomer(customerId, paginationDto);
 
             return sales;
         } catch (error) {

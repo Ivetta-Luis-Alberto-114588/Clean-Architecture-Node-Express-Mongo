@@ -3,7 +3,7 @@ import { PaymentEntity } from "../../entities/payment/payment.entity";
 import { CustomError } from "../../errors/custom.error";
 import { MercadoPagoPaymentStatus } from "../../interfaces/payment/mercado-pago.interface";
 import { PaymentRepository } from "../../repositories/payment/payment.repository";
-import { SaleRepository } from "../../repositories/sales/sale.repository";
+import { OrderRepository } from "../../repositories/order/order.repository";
 
 interface IProcessWebhookUseCase {
   execute(processWebhookDto: ProcessWebhookDto): Promise<PaymentEntity>;
@@ -12,8 +12,8 @@ interface IProcessWebhookUseCase {
 export class ProcessWebhookUseCase implements IProcessWebhookUseCase {
   constructor(
     private readonly paymentRepository: PaymentRepository,
-    private readonly saleRepository: SaleRepository
-  ) {}
+    private readonly orderRepository: OrderRepository
+  ) { }
 
   async execute(processWebhookDto: ProcessWebhookDto): Promise<PaymentEntity> {
     try {
@@ -22,7 +22,7 @@ export class ProcessWebhookUseCase implements IProcessWebhookUseCase {
 
       // Si el pago está aprobado, actualizar el estado de la venta a 'completed'
       if (payment.status === MercadoPagoPaymentStatus.APPROVED) {
-        await this.saleRepository.updateStatus(payment.saleId, {
+        await this.orderRepository.updateStatus(payment.saleId, {
           status: 'completed',
           notes: `Pago aprobado mediante webhook con ID ${payment.providerPaymentId}`
         });

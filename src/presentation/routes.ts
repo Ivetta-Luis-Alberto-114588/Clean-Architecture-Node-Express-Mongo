@@ -7,7 +7,7 @@ import { UnitRoutes } from "./products/routes.unit";
 import { CityRoutes } from "./customers/routes.city";
 import { NeighborhoodRoutes } from "./customers/routes.neighborhood";
 import { CustomerRoutes } from "./customers/routes.customer";
-import { SaleRoutes } from "./sales/routes.sale";
+import { OrderRoutes } from "./order/routes.order";
 import { PaymentRoutes } from "./payment/routes.payment";
 import { ChatbotRoutes } from "./chatbot/routes.chatbot"; // Importamos las rutas del chatbot
 import { CartRoutes } from "./cart/routes.cart";
@@ -32,7 +32,7 @@ export class MainRoutes {
         router.use("/api/customers", CustomerRoutes.getCustomerRoutes);
 
         // Rutas de ventas
-        router.use("/api/sales", SaleRoutes.getSaleRoutes);
+        router.use("/api/sales", OrderRoutes.getSaleRoutes);
 
         // Rutas de pagos con Mercado Pago
         router.use("/api/payments", PaymentRoutes.getPaymentRoutes);

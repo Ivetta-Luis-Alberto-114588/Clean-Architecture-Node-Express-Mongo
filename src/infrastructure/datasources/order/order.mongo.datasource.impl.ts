@@ -8,10 +8,10 @@ import { UpdateOrderStatusDto } from "../../../domain/dtos/order/update-order-st
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
 import { OrderEntity } from "../../../domain/entities/order/order.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
-import { SaleMapper } from "../../mappers/sales/sale.mapper";
+import { OrderMapper } from "../../mappers/order/order.mapper";
 import logger from "../../../configs/logger"; // Importar Logger
 
-export class SaleMongoDataSourceImpl implements OrderDataSource {
+export class OrderMongoDataSourceImpl implements OrderDataSource {
     async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
         const session = await mongoose.startSession();
         session.startTransaction();
@@ -95,7 +95,7 @@ export class SaleMongoDataSourceImpl implements OrderDataSource {
             const completeSale = await this.findSaleByIdPopulated(saleDoc[0]._id.toString());
             if (!completeSale) throw CustomError.internalServerError("No se pudo recuperar la venta creada");
 
-            return SaleMapper.fromObjectToSaleEntity(completeSale); // Usar Mapper
+            return OrderMapper.fromObjectToSaleEntity(completeSale); // Usar Mapper
 
         } catch (error) {
             await session.abortTransaction();
@@ -139,7 +139,7 @@ export class SaleMongoDataSourceImpl implements OrderDataSource {
                 .sort({ date: -1 })
                 .lean(); // Usar lean para eficiencia
 
-            return salesDocs.map(doc => SaleMapper.fromObjectToSaleEntity(doc));
+            return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
         } catch (error) {
             logger.error("Error al obtener las ventas:", { error });
             if (error instanceof CustomError) throw error;
@@ -151,7 +151,7 @@ export class SaleMongoDataSourceImpl implements OrderDataSource {
         try {
             const saleDoc = await this.findSaleByIdPopulated(id);
             if (!saleDoc) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
-            return SaleMapper.fromObjectToSaleEntity(saleDoc);
+            return OrderMapper.fromObjectToSaleEntity(saleDoc);
         } catch (error) {
             logger.error(`Error al buscar la venta con ID ${id}:`, { error });
             if (error instanceof CustomError) throw error;
@@ -192,7 +192,7 @@ export class SaleMongoDataSourceImpl implements OrderDataSource {
 
             const updatedSaleDoc = await this.findSaleByIdPopulated(id);
             if (!updatedSaleDoc) throw CustomError.internalServerError("Error al recuperar la venta actualizada.");
-            return SaleMapper.fromObjectToSaleEntity(updatedSaleDoc);
+            return OrderMapper.fromObjectToSaleEntity(updatedSaleDoc);
 
         } catch (error) {
             await session.abortTransaction();
@@ -224,7 +224,7 @@ export class SaleMongoDataSourceImpl implements OrderDataSource {
                 .sort({ date: -1 })
                 .lean();
 
-            return salesDocs.map(doc => SaleMapper.fromObjectToSaleEntity(doc));
+            return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
         } catch (error) {
             logger.error(`Error al buscar ventas del cliente ${customerId}:`, { error });
             if (error instanceof CustomError) throw error;
@@ -251,7 +251,7 @@ export class SaleMongoDataSourceImpl implements OrderDataSource {
                 .sort({ date: -1 })
                 .lean();
 
-            return salesDocs.map(doc => SaleMapper.fromObjectToSaleEntity(doc));
+            return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
         } catch (error) {
             logger.error(`Error al buscar ventas por rango de fechas:`, { error });
             if (error instanceof CustomError) throw error;

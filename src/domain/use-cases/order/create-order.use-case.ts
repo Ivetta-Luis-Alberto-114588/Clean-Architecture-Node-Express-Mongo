@@ -3,15 +3,15 @@ import { OrderEntity } from "../../entities/order/order.entity";
 import { CustomError } from "../../errors/custom.error";
 import { CustomerRepository } from "../../repositories/customers/customer.repository";
 import { ProductRepository } from "../../repositories/products/product.repository";
-import { SaleRepository } from "../../repositories/sales/sale.repository";
+import { OrderRepository } from "../../repositories/order/order.repository";
 
-interface ICreateSaleUseCase {
+interface ICreateOrderUseCase {
     execute(createOrderDto: CreateOrderDto): Promise<OrderEntity>;
 }
 
-export class CreateSaleUseCase implements ICreateSaleUseCase {
+export class CreateOrderUseCase implements ICreateOrderUseCase {
     constructor(
-        private readonly saleRepository: SaleRepository,
+        private readonly orderRepository: OrderRepository,
         private readonly customerRepository: CustomerRepository,
         private readonly productRepository: ProductRepository
     ) { }
@@ -37,7 +37,7 @@ export class CreateSaleUseCase implements ICreateSaleUseCase {
             }
 
             // Crear la venta
-            return await this.saleRepository.create(createOrderDto);
+            return await this.orderRepository.create(createOrderDto);
         } catch (error) {
             if (error instanceof CustomError) {
                 throw error;

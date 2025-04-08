@@ -3,7 +3,7 @@ import { UpdateOrderStatusDto } from "../../dtos/order/update-order-status.dto";
 import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { OrderEntity } from "../../entities/order/order.entity";
 
-export abstract class SaleRepository {
+export abstract class OrderRepository {
     abstract create(createSaleDto: CreateOrderDto): Promise<OrderEntity>;
     abstract getAll(paginationDto: PaginationDto): Promise<OrderEntity[]>;
     abstract findById(id: string): Promise<OrderEntity>;

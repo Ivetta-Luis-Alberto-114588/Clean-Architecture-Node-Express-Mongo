@@ -4,9 +4,9 @@ import { Router } from "express";
 import { PaymentController } from "./controller.payment";
 import { PaymentMongoDataSourceImpl } from "../../infrastructure/datasources/payment/payment.mongo.datasource.impl";
 import { PaymentRepositoryImpl } from "../../infrastructure/repositories/payment/payment.repository.impl";
-import { SaleMongoDataSourceImpl } from "../../infrastructure/datasources/sales/sale.mongo.datasource.impl";
+import { OrderMongoDataSourceImpl } from "../../infrastructure/datasources/order/order.mongo.datasource.impl";
 import { CustomerMongoDataSourceImpl } from "../../infrastructure/datasources/customers/customer.mongo.datasource.impl";
-import { SaleRepositoryImpl } from "../../infrastructure/repositories/sales/sale.repository.impl";
+import { OrderRepositoryImpl } from "../../infrastructure/repositories/order/order.repository.impl";
 import { CustomerRepositoryImpl } from "../../infrastructure/repositories/customers/customer.repository.impl";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 
@@ -16,11 +16,11 @@ export class PaymentRoutes {
 
     // Inicializamos las dependencias
     const paymentDatasource = new PaymentMongoDataSourceImpl();
-    const saleDatasource = new SaleMongoDataSourceImpl();
+    const saleDatasource = new OrderMongoDataSourceImpl();
     const customerDatasource = new CustomerMongoDataSourceImpl();
 
     const paymentRepository = new PaymentRepositoryImpl(paymentDatasource);
-    const saleRepository = new SaleRepositoryImpl(saleDatasource);
+    const saleRepository = new OrderRepositoryImpl(saleDatasource);
     const customerRepository = new CustomerRepositoryImpl(customerDatasource);
 
     const controller = new PaymentController(

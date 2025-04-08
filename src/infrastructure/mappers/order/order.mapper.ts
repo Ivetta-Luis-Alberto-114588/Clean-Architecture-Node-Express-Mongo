@@ -6,7 +6,7 @@ import { CustomerMapper } from "../customers/customer.mapper";
 import { ProductMapper } from "../products/product.mapper";
 import logger from "../../../configs/logger"; // Importar logger
 
-export class SaleMapper {
+export class OrderMapper {
 
     static fromObjectToSaleEntity(object: any): OrderEntity {
         if (!object) throw CustomError.badRequest('SaleMapper: object is null or undefined');

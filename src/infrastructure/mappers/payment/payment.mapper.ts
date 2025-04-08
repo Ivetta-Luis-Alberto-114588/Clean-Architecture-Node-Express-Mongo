@@ -3,7 +3,7 @@ import { PaymentEntity, PaymentMethod, PaymentProvider } from "../../../domain/e
 import { MercadoPagoPaymentStatus } from "../../../domain/interfaces/payment/mercado-pago.interface";
 import { CustomError } from "../../../domain/errors/custom.error";
 import { CustomerMapper } from "../customers/customer.mapper";
-import { SaleMapper } from "../sales/sale.mapper";
+import { OrderMapper } from "../order/order.mapper";
 import { CustomerEntity } from "../../../domain/entities/customers/customer";
 import { OrderEntity } from "../../../domain/entities/order/order.entity";
 
@@ -65,7 +65,7 @@ export class PaymentMapper {
 
       // Mapeamos la venta si está poblada
       const sale = typeof saleId === 'object' && saleId !== null
-        ? SaleMapper.fromObjectToSaleEntity(saleId)
+        ? OrderMapper.fromObjectToSaleEntity(saleId)
         : new OrderEntity(
           saleId.toString(),
           customer,
