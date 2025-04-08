@@ -10,16 +10,17 @@ import { CustomerRoutes } from "./customers/routes.customer";
 import { SaleRoutes } from "./sales/routes.sale";
 import { PaymentRoutes } from "./payment/routes.payment";
 import { ChatbotRoutes } from "./chatbot/routes.chatbot"; // Importamos las rutas del chatbot
+import { CartRoutes } from "./cart/routes.cart";
 
-export class MainRoutes { 
+export class MainRoutes {
 
-    static get getMainRoutes() : Router {
-        
+    static get getMainRoutes(): Router {
+
         const router = Router()
 
-         // Rutas de usuarios y autenticación 
+        // Rutas de usuarios y autenticación 
         router.use("/api/auth", AuthRoutes.getAuthRoutes)
-        
+
         // Rutas de productos
         router.use("/api/products", ProductRoutes.getProductRoutes);
         router.use("/api/categories", CategoryRoutes.getCategoryRoutes);
@@ -35,10 +36,13 @@ export class MainRoutes {
 
         // Rutas de pagos con Mercado Pago
         router.use("/api/payments", PaymentRoutes.getPaymentRoutes);
-        
+
         // Rutas del chatbot
         router.use("/api/chatbot", ChatbotRoutes.getChatbotRoutes);
-        
+
+        // Rutas del carrito de compras
+        router.use("/api/cart", CartRoutes.getCartRoutes);
+
         return router
     }
 }
