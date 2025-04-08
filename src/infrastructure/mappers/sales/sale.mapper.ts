@@ -1,6 +1,6 @@
 import { CustomerEntity } from "../../../domain/entities/customers/customer";
 import { ProductEntity } from "../../../domain/entities/products/product.entity";
-import { SaleEntity, SaleItemEntity } from "../../../domain/entities/sales/sale.entity";
+import { OrderEntity, OrderItemEntity } from "../../../domain/entities/order/order.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
 import { CustomerMapper } from "../customers/customer.mapper";
 import { ProductMapper } from "../products/product.mapper";
@@ -8,7 +8,7 @@ import logger from "../../../configs/logger"; // Importar logger
 
 export class SaleMapper {
 
-    static fromObjectToSaleEntity(object: any): SaleEntity {
+    static fromObjectToSaleEntity(object: any): OrderEntity {
         if (!object) throw CustomError.badRequest('SaleMapper: object is null or undefined');
 
         const {
@@ -34,7 +34,7 @@ export class SaleMapper {
         }
 
 
-        const saleItems: SaleItemEntity[] = items.map((item: any) => {
+        const saleItems: OrderItemEntity[] = items.map((item: any) => {
             if (!item || !item.product) {
                 logger.warn('SaleMapper: Skipping invalid item in sale', { item });
                 return null; // O lanzar error si se prefiere
@@ -79,7 +79,7 @@ export class SaleMapper {
                 subtotal: Number(item.subtotal)   // Subtotal CON IVA
                 // taxRateApplied: item.taxRateApplied // Si lo guardaste
             };
-        }).filter((item: SaleItemEntity | null): item is SaleItemEntity => item !== null);
+        }).filter((item: OrderItemEntity | null): item is OrderItemEntity => item !== null);
 
         if (saleItems.length === 0 && items.length > 0) {
             logger.error('SaleMapper: No valid items could be mapped for sale', { saleId: _id || id });
@@ -88,7 +88,7 @@ export class SaleMapper {
         }
 
 
-        return new SaleEntity(
+        return new OrderEntity(
             _id?.toString() || id?.toString(),
             customerEntity,
             saleItems,
@@ -105,7 +105,7 @@ export class SaleMapper {
     }
 
     // fromSaleEntityToObject no necesita cambios si la entidad y el modelo coinciden en estructura
-    static fromSaleEntityToObject(entity: SaleEntity): any {
+    static fromSaleEntityToObject(entity: OrderEntity): any {
         return {
             customer: entity.customer.id, // Guardar solo el ID
             items: entity.items.map(item => ({

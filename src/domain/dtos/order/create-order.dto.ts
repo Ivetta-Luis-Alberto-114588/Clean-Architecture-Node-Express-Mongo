@@ -1,4 +1,4 @@
-export class CreateSaleDto {
+export class CreateOrderDto {
     private constructor(
         public customerId: string,
         public items: Array<{
@@ -12,7 +12,7 @@ export class CreateSaleDto {
         // taxRate ya no es necesario aquí si el IVA está en los items
     ) { }
 
-    static create(object: { [key: string]: any }): [string?, CreateSaleDto?] {
+    static create(object: { [key: string]: any }): [string?, CreateOrderDto?] {
         const { customerId, items, discountRate = 0, notes = "" } = object; // taxRate eliminado
 
         if (!customerId) return ["customerId es requerido", undefined];
@@ -44,7 +44,7 @@ export class CreateSaleDto {
 
         return [
             undefined,
-            new CreateSaleDto(
+            new CreateOrderDto(
                 customerId,
                 items, // Items ahora contienen precio CON IVA
                 discountRate,

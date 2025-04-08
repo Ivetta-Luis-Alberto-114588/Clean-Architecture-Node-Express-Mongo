@@ -11,7 +11,7 @@ import { PaymentEntity } from "../../../domain/entities/payment/payment.entity";
 import { MercadoPagoPayment, MercadoPagoPaymentStatus, MercadoPagoPreferenceResponse } from "../../../domain/interfaces/payment/mercado-pago.interface";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
 import { MercadoPagoAdapter } from "../../adapters/mercado-pago.adapter";
-import { SaleModel } from "../../../data/mongodb/models/sales/sale.model";
+import { OrderModel } from "../../../data/mongodb/models/order/order.model";
 import { CustomerModel } from "../../../data/mongodb/models/customers/customer.model";
 import { PaymentMapper } from "../../mappers/payment/payment.mapper";
 import { v4 } from 'uuid';

@@ -1,36 +1,36 @@
 // src/infrastructure/repositories/sales/sale.repository.impl.ts
-import { SaleDataSource } from "../../../domain/datasources/sales/sale.datasource";
-import { CreateSaleDto } from "../../../domain/dtos/sales/create-sale.dto";
-import { UpdateSaleStatusDto } from "../../../domain/dtos/sales/update-sale-status.dto";
+import { OrderDataSource } from "../../../domain/datasources/order/order.datasource";
+import { CreateOrderDto } from "../../../domain/dtos/order/create-order.dto";
+import { UpdateOrderStatusDto } from "../../../domain/dtos/order/update-order-status.dto";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
-import { SaleEntity } from "../../../domain/entities/sales/sale.entity";
+import { OrderEntity } from "../../../domain/entities/order/order.entity";
 import { SaleRepository } from "../../../domain/repositories/sales/sale.repository";
 
 export class SaleRepositoryImpl implements SaleRepository {
-    
-    constructor(private readonly saleDataSource: SaleDataSource) {}
-    
-    async create(createSaleDto: CreateSaleDto): Promise<SaleEntity> {
-        return await this.saleDataSource.create(createSaleDto);
+
+    constructor(private readonly orderDataSource: OrderDataSource) { }
+
+    async create(createSaleDto: CreateOrderDto): Promise<OrderEntity> {
+        return await this.orderDataSource.create(createSaleDto);
     }
-    
-    async getAll(paginationDto: PaginationDto): Promise<SaleEntity[]> {
-        return await this.saleDataSource.getAll(paginationDto);
+
+    async getAll(paginationDto: PaginationDto): Promise<OrderEntity[]> {
+        return await this.orderDataSource.getAll(paginationDto);
     }
-    
-    async findById(id: string): Promise<SaleEntity> {
-        return await this.saleDataSource.findById(id);
+
+    async findById(id: string): Promise<OrderEntity> {
+        return await this.orderDataSource.findById(id);
     }
-    
-    async updateStatus(id: string, updateSaleStatusDto: UpdateSaleStatusDto): Promise<SaleEntity> {
-        return await this.saleDataSource.updateStatus(id, updateSaleStatusDto);
+
+    async updateStatus(id: string, updateSaleStatusDto: UpdateOrderStatusDto): Promise<OrderEntity> {
+        return await this.orderDataSource.updateStatus(id, updateSaleStatusDto);
     }
-    
-    async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<SaleEntity[]> {
-        return await this.saleDataSource.findByCustomer(customerId, paginationDto);
+
+    async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<OrderEntity[]> {
+        return await this.orderDataSource.findByCustomer(customerId, paginationDto);
     }
-    
-    async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<SaleEntity[]> {
-        return await this.saleDataSource.findByDateRange(startDate, endDate, paginationDto);
+
+    async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<OrderEntity[]> {
+        return await this.orderDataSource.findByDateRange(startDate, endDate, paginationDto);
     }
 }

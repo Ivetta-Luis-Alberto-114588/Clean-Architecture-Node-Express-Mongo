@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const saleItemSchema = new mongoose.Schema({
+const orderItemSchema = new mongoose.Schema({
     product: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product",
@@ -24,14 +24,14 @@ const saleItemSchema = new mongoose.Schema({
     // taxRateApplied: { type: Number }
 });
 
-const saleSchema = new mongoose.Schema({
+const orderSchema = new mongoose.Schema({
     customer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Customer",
         required: [true, "Customer reference is required"]
     },
     items: {
-        type: [saleItemSchema],
+        type: [orderItemSchema],
         validate: [(items: any[]) => items.length > 0, "A sale must have at least one item"]
     },
     subtotal: { // Suma de subtotales de items (CON IVA)
@@ -69,4 +69,4 @@ const saleSchema = new mongoose.Schema({
     timestamps: true
 });
 
-export const SaleModel = mongoose.model("Sale", saleSchema);
+export const OrderModel = mongoose.model("Sale", orderSchema);

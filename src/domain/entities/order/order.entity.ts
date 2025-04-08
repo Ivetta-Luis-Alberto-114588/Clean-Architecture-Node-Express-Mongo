@@ -1,7 +1,7 @@
 import { CustomerEntity } from "../customers/customer";
 import { ProductEntity } from "../products/product.entity";
 
-export interface SaleItemEntity {
+export interface OrderItemEntity {
     product: ProductEntity; // Podría ser solo el ID si no necesitas toda la info aquí
     quantity: number;
     unitPrice: number; // <<<--- AHORA ES PRECIO UNITARIO CON IVA
@@ -10,11 +10,11 @@ export interface SaleItemEntity {
     // taxRateApplied?: number;
 }
 
-export class SaleEntity {
+export class OrderEntity {
     constructor(
         public id: string,
         public customer: CustomerEntity,
-        public items: SaleItemEntity[],
+        public items: OrderItemEntity[],
         public subtotal: number,    // Suma de subtotales de items (ya con IVA)
         public taxRate: number,     // Tasa general aplicada (¿quizás ya no tan útil o para impuestos adicionales?)
         public taxAmount: number,   // Suma del IVA de todos los items

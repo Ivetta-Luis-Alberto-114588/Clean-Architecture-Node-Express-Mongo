@@ -67,6 +67,8 @@ export class CartController {
                         updatedAt: new Date(),
                         total: 0,
                         totalItems: 0,
+                        totalTaxAmount: 0,
+                        subtotalWithoutTax: 0,
                     };
                     return res.status(200).json(emptyCart);
                 }

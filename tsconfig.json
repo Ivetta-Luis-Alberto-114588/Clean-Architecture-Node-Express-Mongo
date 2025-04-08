@@ -107,7 +107,8 @@
   },
   "include": [
     "src/**/*",
-    "tests/**/*"
+    "tests/**/*",
+    "src/types/**/*"
   ], /* Incluir archivos fuente y tests */
   "exclude": [
     "node_modules",

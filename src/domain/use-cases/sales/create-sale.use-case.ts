@@ -1,12 +1,12 @@
-import { CreateSaleDto } from "../../dtos/sales/create-sale.dto";
-import { SaleEntity } from "../../entities/sales/sale.entity";
+import { CreateOrderDto } from "../../dtos/order/create-order.dto";
+import { OrderEntity } from "../../entities/order/order.entity";
 import { CustomError } from "../../errors/custom.error";
 import { CustomerRepository } from "../../repositories/customers/customer.repository";
 import { ProductRepository } from "../../repositories/products/product.repository";
 import { SaleRepository } from "../../repositories/sales/sale.repository";
 
 interface ICreateSaleUseCase {
-    execute(createSaleDto: CreateSaleDto): Promise<SaleEntity>;
+    execute(createOrderDto: CreateOrderDto): Promise<OrderEntity>;
 }
 
 export class CreateSaleUseCase implements ICreateSaleUseCase {
@@ -14,30 +14,30 @@ export class CreateSaleUseCase implements ICreateSaleUseCase {
         private readonly saleRepository: SaleRepository,
         private readonly customerRepository: CustomerRepository,
         private readonly productRepository: ProductRepository
-    ) {}
-    
-    async execute(createSaleDto: CreateSaleDto): Promise<SaleEntity> {
+    ) { }
+
+    async execute(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
         try {
             // Verificar que el cliente exista
-            const customer = await this.customerRepository.findById(createSaleDto.customerId);
+            const customer = await this.customerRepository.findById(createOrderDto.customerId);
             if (!customer) {
-                throw CustomError.notFound(`Cliente con ID ${createSaleDto.customerId} no encontrado`);
+                throw CustomError.notFound(`Cliente con ID ${createOrderDto.customerId} no encontrado`);
             }
-            
+
             // Verificar cada producto y que tenga stock suficiente
-            for (const item of createSaleDto.items) {
+            for (const item of createOrderDto.items) {
                 const product = await this.productRepository.findById(item.productId);
                 if (!product) {
                     throw CustomError.notFound(`Producto con ID ${item.productId} no encontrado`);
                 }
-                
+
                 if (product.stock < item.quantity) {
                     throw CustomError.badRequest(`Stock insuficiente para el producto ${product.name}. Disponible: ${product.stock}, Solicitado: ${item.quantity}`);
                 }
             }
-            
+
             // Crear la venta
-            return await this.saleRepository.create(createSaleDto);
+            return await this.saleRepository.create(createOrderDto);
         } catch (error) {
             if (error instanceof CustomError) {
                 throw error;

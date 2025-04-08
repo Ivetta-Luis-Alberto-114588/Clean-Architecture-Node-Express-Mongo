@@ -1,10 +1,10 @@
-export class UpdateSaleStatusDto {
+export class UpdateOrderStatusDto {
     private constructor(
         public status: 'pending' | 'completed' | 'cancelled',
         public notes?: string
-    ) {}
+    ) { }
 
-    static update(object: {[key:string]:any}): [string?, UpdateSaleStatusDto?] {
+    static update(object: { [key: string]: any }): [string?, UpdateOrderStatusDto?] {
         const { status, notes } = object;
 
         // Validar que el estado sea válido
@@ -14,8 +14,8 @@ export class UpdateSaleStatusDto {
         }
 
         return [
-            undefined, 
-            new UpdateSaleStatusDto(
+            undefined,
+            new UpdateOrderStatusDto(
                 status as 'pending' | 'completed' | 'cancelled',
                 notes
             )

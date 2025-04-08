@@ -1,18 +1,18 @@
 import { PaginationDto } from "../../dtos/shared/pagination.dto";
-import { SaleEntity } from "../../entities/sales/sale.entity";
+import { OrderEntity } from "../../entities/order/order.entity";
 import { CustomError } from "../../errors/custom.error";
 import { SaleRepository } from "../../repositories/sales/sale.repository";
 
 interface IGetAllSalesUseCase {
-    execute(paginationDto: PaginationDto): Promise<SaleEntity[]>
+    execute(paginationDto: PaginationDto): Promise<OrderEntity[]>
 }
 
 export class GetAllSalesUseCase implements IGetAllSalesUseCase {
     constructor(
         private readonly saleRepository: SaleRepository
-    ){}
+    ) { }
 
-    async execute(paginationDto: PaginationDto): Promise<SaleEntity[]> {
+    async execute(paginationDto: PaginationDto): Promise<OrderEntity[]> {
         try {
             // Si no se proporciona paginación, creamos una por defecto
             if (!paginationDto) {

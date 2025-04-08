@@ -2,7 +2,7 @@
 
 import { MercadoPagoPaymentStatus } from '../../interfaces/payment/mercado-pago.interface';
 import { CustomerEntity } from '../customers/customer';
-import { SaleEntity } from '../sales/sale.entity';
+import { OrderEntity } from '../order/order.entity';
 
 export enum PaymentProvider {
   MERCADO_PAGO = 'mercado_pago',
@@ -22,7 +22,7 @@ export class PaymentEntity {
   constructor(
     public id: string,
     public saleId: string,
-    public sale: SaleEntity,
+    public sale: OrderEntity,
     public customerId: string,
     public customer: CustomerEntity,
     public amount: number,
@@ -36,5 +36,5 @@ export class PaymentEntity {
     public updatedAt: Date,
     public metadata?: any,
     public idempotencyKey?: string
-  ) {}
+  ) { }
 }

@@ -5,7 +5,7 @@ import { CustomError } from "../../../domain/errors/custom.error";
 import { CustomerMapper } from "../customers/customer.mapper";
 import { SaleMapper } from "../sales/sale.mapper";
 import { CustomerEntity } from "../../../domain/entities/customers/customer";
-import { SaleEntity } from "../../../domain/entities/sales/sale.entity";
+import { OrderEntity } from "../../../domain/entities/order/order.entity";
 
 export class PaymentMapper {
   static fromObjectToPaymentEntity(object: any): PaymentEntity {
@@ -66,20 +66,20 @@ export class PaymentMapper {
       // Mapeamos la venta si está poblada
       const sale = typeof saleId === 'object' && saleId !== null
         ? SaleMapper.fromObjectToSaleEntity(saleId)
-        : new SaleEntity(
-            saleId.toString(),
-            customer,
-            [], // items vacíos
-            0,  // subtotal
-            0,  // taxRate
-            0,  // taxAmount
-            0,  // discountRate
-            0,  // discountAmount
-            0,  // total
-            new Date(), // date
-            'pending', // status
-            '' // notes (opcional)
-          );
+        : new OrderEntity(
+          saleId.toString(),
+          customer,
+          [], // items vacíos
+          0,  // subtotal
+          0,  // taxRate
+          0,  // taxAmount
+          0,  // discountRate
+          0,  // discountAmount
+          0,  // total
+          new Date(), // date
+          'pending', // status
+          '' // notes (opcional)
+        );
 
       // Valores por defecto para campos opcionales
       const paymentStatus = status || MercadoPagoPaymentStatus.PENDING;

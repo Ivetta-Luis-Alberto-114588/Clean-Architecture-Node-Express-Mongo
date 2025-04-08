@@ -1,30 +1,30 @@
 import mongoose from "mongoose";
-import { SaleModel } from "../../../data/mongodb/models/sales/sale.model";
+import { OrderModel } from "../../../data/mongodb/models/order/order.model";
 import { ProductModel } from "../../../data/mongodb/models/products/product.model";
 import { CustomerModel } from "../../../data/mongodb/models/customers/customer.model";
-import { SaleDataSource } from "../../../domain/datasources/sales/sale.datasource";
-import { CreateSaleDto } from "../../../domain/dtos/sales/create-sale.dto";
-import { UpdateSaleStatusDto } from "../../../domain/dtos/sales/update-sale-status.dto";
+import { OrderDataSource } from "../../../domain/datasources/order/order.datasource";
+import { CreateOrderDto } from "../../../domain/dtos/order/create-order.dto";
+import { UpdateOrderStatusDto } from "../../../domain/dtos/order/update-order-status.dto";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
-import { SaleEntity } from "../../../domain/entities/sales/sale.entity";
+import { OrderEntity } from "../../../domain/entities/order/order.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
 import { SaleMapper } from "../../mappers/sales/sale.mapper";
 import logger from "../../../configs/logger"; // Importar Logger
 
-export class SaleMongoDataSourceImpl implements SaleDataSource {
-    async create(createSaleDto: CreateSaleDto): Promise<SaleEntity> {
+export class SaleMongoDataSourceImpl implements OrderDataSource {
+    async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
         const session = await mongoose.startSession();
         session.startTransaction();
 
         try {
-            const customer = await CustomerModel.findById(createSaleDto.customerId).session(session);
-            if (!customer) throw CustomError.notFound(`Cliente con ID ${createSaleDto.customerId} no encontrado`);
+            const customer = await CustomerModel.findById(createOrderDto.customerId).session(session);
+            if (!customer) throw CustomError.notFound(`Cliente con ID ${createOrderDto.customerId} no encontrado`);
 
             const saleItems = [];
             let subtotalWithTax = 0; // Subtotal acumulado CON IVA
             let totalTaxAmount = 0;  // IVA total acumulado
 
-            for (const itemDto of createSaleDto.items) {
+            for (const itemDto of createOrderDto.items) {
                 const product = await ProductModel.findById(itemDto.productId).session(session);
                 if (!product) throw CustomError.notFound(`Producto con ID ${itemDto.productId} no encontrado`);
                 if (!product.isActive) throw CustomError.badRequest(`Producto ${product.name} no disponible.`);
@@ -65,7 +65,7 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
             if (saleItems.length === 0) throw CustomError.badRequest('La venta debe tener al menos un producto');
 
             // Calcular descuento (sobre el subtotal CON IVA)
-            const discountRate = createSaleDto.discountRate ?? 0;
+            const discountRate = createOrderDto.discountRate ?? 0;
             const discountAmount = Math.round((subtotalWithTax * discountRate / 100) * 100) / 100;
             const finalTotal = Math.round((subtotalWithTax - discountAmount) * 100) / 100;
 
@@ -73,19 +73,19 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
 
             // Crear la venta
             const saleData = {
-                customer: createSaleDto.customerId,
+                customer: createOrderDto.customerId,
                 items: saleItems,
                 subtotal: subtotalWithTax, // Subtotal CON IVA
                 taxAmount: totalTaxAmount,   // IVA total calculado
                 discountRate: discountRate,
                 discountAmount: discountAmount,
                 total: finalTotal,
-                notes: createSaleDto.notes || "",
+                notes: createOrderDto.notes || "",
                 status: 'pending'
                 // taxRate global podría guardarse si se aplica un impuesto adicional general
             };
 
-            const saleDoc = await SaleModel.create([saleData], { session });
+            const saleDoc = await OrderModel.create([saleData], { session });
             await session.commitTransaction();
 
             // Log éxito
@@ -109,7 +109,7 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
 
     // Helper para poblar consistentemente
     private async findSaleByIdPopulated(id: string): Promise<any> { // Devuelve any para que el mapper trabaje
-        return SaleModel.findById(id)
+        return OrderModel.findById(id)
             .populate({
                 path: 'customer',
                 populate: { path: 'neighborhood', populate: { path: 'city' } }
@@ -122,10 +122,10 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
     }
 
 
-    async getAll(paginationDto: PaginationDto): Promise<SaleEntity[]> {
+    async getAll(paginationDto: PaginationDto): Promise<OrderEntity[]> {
         const { page, limit } = paginationDto;
         try {
-            const salesDocs = await SaleModel.find()
+            const salesDocs = await OrderModel.find()
                 .populate({
                     path: 'customer',
                     populate: { path: 'neighborhood', populate: { path: 'city' } }
@@ -147,7 +147,7 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
         }
     }
 
-    async findById(id: string): Promise<SaleEntity> {
+    async findById(id: string): Promise<OrderEntity> {
         try {
             const saleDoc = await this.findSaleByIdPopulated(id);
             if (!saleDoc) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
@@ -161,19 +161,19 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
 
     // --- updateStatus, findByCustomer, findByDateRange (requieren ajustes menores o usar el helper findSaleByIdPopulated) ---
 
-    async updateStatus(id: string, updateSaleStatusDto: UpdateSaleStatusDto): Promise<SaleEntity> {
+    async updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<OrderEntity> {
         const session = await mongoose.startSession();
         session.startTransaction();
 
         try {
-            const sale = await SaleModel.findById(id).session(session);
+            const sale = await OrderModel.findById(id).session(session);
             if (!sale) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
-            if (sale.status === updateSaleStatusDto.status) {
-                throw CustomError.badRequest(`La venta ya tiene el estado '${updateSaleStatusDto.status}'`);
+            if (sale.status === updateOrderStatusDto.status) {
+                throw CustomError.badRequest(`La venta ya tiene el estado '${updateOrderStatusDto.status}'`);
             }
 
             // Restaurar stock si se cancela
-            if (updateSaleStatusDto.status === 'cancelled' && (sale.status === 'pending' || sale.status === 'completed')) {
+            if (updateOrderStatusDto.status === 'cancelled' && (sale.status === 'pending' || sale.status === 'completed')) {
                 for (const item of sale.items) {
                     // Sumar de nuevo la cantidad al stock del producto
                     await ProductModel.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } }).session(session);
@@ -182,13 +182,13 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
             }
 
             // Actualizar venta
-            sale.status = updateSaleStatusDto.status;
-            if (updateSaleStatusDto.notes !== undefined) {
-                sale.notes = updateSaleStatusDto.notes;
+            sale.status = updateOrderStatusDto.status;
+            if (updateOrderStatusDto.notes !== undefined) {
+                sale.notes = updateOrderStatusDto.notes;
             }
             await sale.save({ session });
             await session.commitTransaction();
-            logger.info(`Estado de venta ${id} actualizado a ${updateSaleStatusDto.status}`);
+            logger.info(`Estado de venta ${id} actualizado a ${updateOrderStatusDto.status}`);
 
             const updatedSaleDoc = await this.findSaleByIdPopulated(id);
             if (!updatedSaleDoc) throw CustomError.internalServerError("Error al recuperar la venta actualizada.");
@@ -204,13 +204,13 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
         }
     }
 
-    async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<SaleEntity[]> {
+    async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<OrderEntity[]> {
         const { page, limit } = paginationDto;
         try {
             const customer = await CustomerModel.findById(customerId);
             if (!customer) throw CustomError.notFound(`Cliente con ID ${customerId} no encontrado`);
 
-            const salesDocs = await SaleModel.find({ customer: customerId })
+            const salesDocs = await OrderModel.find({ customer: customerId })
                 .populate({
                     path: 'customer',
                     populate: { path: 'neighborhood', populate: { path: 'city' } }
@@ -232,12 +232,12 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
         }
     }
 
-    async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<SaleEntity[]> {
+    async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<OrderEntity[]> {
         const { page, limit } = paginationDto;
         try {
             if (startDate > endDate) throw CustomError.badRequest("La fecha de inicio debe ser anterior a la fecha de fin");
 
-            const salesDocs = await SaleModel.find({ date: { $gte: startDate, $lte: endDate } })
+            const salesDocs = await OrderModel.find({ date: { $gte: startDate, $lte: endDate } })
                 .populate({
                     path: 'customer',
                     populate: { path: 'neighborhood', populate: { path: 'city' } }
