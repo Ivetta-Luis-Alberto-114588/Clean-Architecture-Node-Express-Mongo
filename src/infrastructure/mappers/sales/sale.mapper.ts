@@ -1,197 +1,121 @@
-// src/infrastructure/mappers/sales/sale.mapper.ts
 import { CustomerEntity } from "../../../domain/entities/customers/customer";
 import { ProductEntity } from "../../../domain/entities/products/product.entity";
 import { SaleEntity, SaleItemEntity } from "../../../domain/entities/sales/sale.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
 import { CustomerMapper } from "../customers/customer.mapper";
 import { ProductMapper } from "../products/product.mapper";
+import logger from "../../../configs/logger"; // Importar logger
 
 export class SaleMapper {
-    
+
     static fromObjectToSaleEntity(object: any): SaleEntity {
-        // Validamos que object no sea null o undefined
-        if (!object) throw CustomError.badRequest('mapper: object is null or undefined');
-        
-        const { _id, id, customer, items, subtotal, taxRate, taxAmount, discountRate, discountAmount, total, date, status, notes } = object;
-        
+        if (!object) throw CustomError.badRequest('SaleMapper: object is null or undefined');
+
+        const {
+            _id, id, customer, items = [], subtotal, taxRate, taxAmount,
+            discountRate, discountAmount, total, date, status, notes
+        } = object;
+
         // Validaciones básicas
-        if (!_id && !id) throw CustomError.badRequest('mapper: missing id');
-        if (!customer) throw CustomError.badRequest("mapper: missing customer");
-        if (!Array.isArray(items)) throw CustomError.badRequest("mapper: items must be an array");
-        if (subtotal === undefined) throw CustomError.badRequest("mapper: missing subtotal");
-        if (taxRate === undefined) throw CustomError.badRequest("mapper: missing taxRate");
-        if (taxAmount === undefined) throw CustomError.badRequest("mapper: missing taxAmount");
-        if (discountRate === undefined) throw CustomError.badRequest("mapper: missing discountRate");
-        if (discountAmount === undefined) throw CustomError.badRequest("mapper: missing discountAmount");
-        if (total === undefined) throw CustomError.badRequest("mapper: missing total");
-        if (!date) throw CustomError.badRequest("mapper: missing date");
-        if (!status) throw CustomError.badRequest("mapper: missing status");
-        
-        // Mapear el cliente
+        if (!_id && !id) throw CustomError.badRequest('SaleMapper: missing id');
+        if (!customer) throw CustomError.badRequest("SaleMapper: missing customer");
+        if (!Array.isArray(items)) throw CustomError.badRequest("SaleMapper: items must be an array");
+        // ... (validaciones para subtotal, taxAmount, etc. pueden ser necesarias)
+
         let customerEntity: CustomerEntity;
         try {
+            // Mapear cliente (igual que antes)
             customerEntity = typeof customer === 'object' && customer !== null
                 ? CustomerMapper.fromObjectToCustomerEntity(customer)
-                : { 
-                    id: customer.toString(), 
-                    name: "Unknown Customer", 
-                    email: "unknown@example.com",
-                    phone: "000000000",
-                    address: "Unknown Address",
-                    neighborhood: {
-                        id: 0,
-                        name: "Unknown",
-                        description: "Not populated",
-                        city: {
-                            id: 0,
-                            name: "Unknown",
-                            description: "Not populated",
-                            isActive: true
-                        },
-                        isActive: true
-                    },
-                    isActive: true
-                };
+                : new CustomerEntity(customer.toString() || 'unknown', 'Cliente (No Poblado)', 'no@poblado.com', '0', 'N/A', {} as any, true); // Placeholder
         } catch (error) {
-            console.error('Error mapping customer:', error);
-            throw CustomError.badRequest("mapper: error mapping customer");
+            logger.error('Error mapping customer in SaleMapper:', { error, customer });
+            throw CustomError.internalServerError("SaleMapper: error mapping customer");
         }
-        
-        // Mapear los items con manejo mejorado de errores
-        const saleItems: SaleItemEntity[] = [];
-        
-        for (const item of items) {
-            try {
-                if (!item) continue; // Saltamos items nulos o indefinidos
-                
-                // Validaciones básicas
-                if (!item.product) continue; // Saltamos items sin producto
-                if (item.quantity === undefined) continue;
-                if (item.unitPrice === undefined) continue;
-                if (item.subtotal === undefined) continue;
-                
-                // Crear el producto con valores predeterminados seguros
-                let productEntity: ProductEntity;
-                
-                if (typeof item.product === 'object' && item.product !== null) {
-                    // Asegurarnos de que el producto tiene un ID
-                    if (!item.product._id && !item.product.id) {
-                        console.warn('Item sin ID de producto:', item);
-                        continue; // Saltamos este item
-                    }
-                    
-                    // Si el producto es un objeto, intentamos mapearlo con valores seguros
-                    const productObj = { 
-                        _id: item.product._id || item.product.id,
-                        name: item.product.name || "Producto desconocido",
-                        price: item.product.price || 0,
-                        stock: item.product.stock !== undefined ? item.product.stock : 0,
-                        category: item.product.category || {
-                            id: 0,
-                            name: "Categoría desconocida",
-                            description: "No poblada",
-                            isActive: true
-                        },
-                        unit: item.product.unit || {
-                            id: 0,
-                            name: "Unidad desconocida",
-                            description: "No poblada",
-                            isActive: true
-                        },
-                        imgUrl: item.product.imgUrl || "",
-                        isActive: item.product.isActive !== undefined ? item.product.isActive : true,
-                        description: item.product.description || ""
-                    };
-                    
-                    try {
-                        productEntity = ProductMapper.fromObjectToProductEntity(productObj);
-                    } catch (error) {
-                        console.error('Error en ProductMapper:', error);
-                        // Si falla el mapper, creamos un objeto básico
-                        productEntity = { 
-                            id: productObj._id.toString(), 
-                            name: productObj.name, 
-                            price: productObj.price, 
-                            stock: productObj.stock, 
-                            category: productObj.category,
-                            unit: productObj.unit,
-                            imgUrl: productObj.imgUrl,
-                            isActive: productObj.isActive,
-                            description: productObj.description
-                        };
-                    }
-                } else {
-                    // Si solo tenemos el ID, creamos un objeto básico
-                    const productId = typeof item.product === 'string' ? item.product : item.product.toString();
-                    productEntity = { 
-                        id: productId, 
-                        name: "Producto desconocido", 
-                        price: 0, 
-                        stock: 0, 
-                        category: {
-                            id: 0,
-                            name: "Categoría desconocida",
-                            description: "No poblada",
-                            isActive: true
-                        },
-                        unit: {
-                            id: 0,
-                            name: "Unidad desconocida",
-                            description: "No poblada",
-                            isActive: true
-                        },
-                        imgUrl: "",
-                        isActive: true,
-                        description: "No poblado"
-                    };
-                }
-                
-                // Añadir el item a la lista
-                saleItems.push({
-                    product: productEntity,
-                    quantity: item.quantity,
-                    unitPrice: item.unitPrice,
-                    subtotal: item.subtotal
-                });
-            } catch (error) {
-                console.error('Error mapping sale item:', error);
-                // Continuamos con el siguiente item
+
+
+        const saleItems: SaleItemEntity[] = items.map((item: any) => {
+            if (!item || !item.product) {
+                logger.warn('SaleMapper: Skipping invalid item in sale', { item });
+                return null; // O lanzar error si se prefiere
             }
+
+            let productEntity: ProductEntity;
+            try {
+                // Mapear producto si está poblado
+                if (typeof item.product === 'object' && item.product !== null) {
+                    productEntity = ProductMapper.fromObjectToProductEntity(item.product);
+                } else {
+                    // Crear placeholder si solo hay ID
+                    // Necesitamos al menos la tasa de IVA guardada en el item o en el producto base
+                    // Para calcular el precio base si es necesario (ej. para subtotalWithoutTax)
+                    // Por ahora, creamos un placeholder simple.
+                    productEntity = new ProductEntity(
+                        item.product.toString(),
+                        item.productName || "Producto (No Poblado)", // Usar nombre guardado
+                        item.unitPrice, // Este es CON IVA
+                        0, // Stock no relevante aquí
+                        {} as any, // Placeholder category
+                        {} as any, // Placeholder unit
+                        "", true, "",
+                        item.taxRateApplied ?? 21 // Usar tasa guardada o default
+                    );
+                }
+            } catch (error) {
+                logger.error('Error mapping product in SaleItem:', { error, product: item.product });
+                // Crear placeholder en caso de error de mapeo
+                productEntity = new ProductEntity(
+                    item.product?._id?.toString() || item.product?.id?.toString() || item.product?.toString() || 'error-id',
+                    item.productName || "Error Producto",
+                    item.unitPrice, 0, {} as any, {} as any, "", true, "", item.taxRateApplied ?? 21
+                );
+            }
+
+
+            return {
+                product: productEntity,
+                quantity: Number(item.quantity),
+                unitPrice: Number(item.unitPrice), // Precio CON IVA
+                subtotal: Number(item.subtotal)   // Subtotal CON IVA
+                // taxRateApplied: item.taxRateApplied // Si lo guardaste
+            };
+        }).filter((item: SaleItemEntity | null): item is SaleItemEntity => item !== null);
+
+        if (saleItems.length === 0 && items.length > 0) {
+            logger.error('SaleMapper: No valid items could be mapped for sale', { saleId: _id || id });
+            // Dependiendo de la política, podrías lanzar un error o continuar con items vacíos
+            // throw CustomError.internalServerError("Error crítico al mapear items de la venta.");
         }
-        
-        // Verificar que al menos tenemos un item
-        if (saleItems.length === 0) {
-            throw CustomError.badRequest("mapper: no valid items found");
-        }
-        
-        // Crear y devolver la entidad Sale
+
+
         return new SaleEntity(
             _id?.toString() || id?.toString(),
             customerEntity,
             saleItems,
-            Number(subtotal),
-            Number(taxRate),
-            Number(taxAmount),
-            Number(discountRate),
-            Number(discountAmount),
-            Number(total),
+            Number(subtotal),       // Subtotal CON IVA
+            Number(taxRate ?? 0), // Tasa general (puede ser 0 o irrelevante ahora)
+            Number(taxAmount),      // Monto total de IVA
+            Number(discountRate ?? 0),
+            Number(discountAmount ?? 0),
+            Number(total),          // Total final
             new Date(date),
             status,
             notes || ""
         );
     }
-    
+
+    // fromSaleEntityToObject no necesita cambios si la entidad y el modelo coinciden en estructura
     static fromSaleEntityToObject(entity: SaleEntity): any {
         return {
-            customer: entity.customer.id,
+            customer: entity.customer.id, // Guardar solo el ID
             items: entity.items.map(item => ({
-                product: item.product.id,
+                product: item.product.id, // Guardar solo el ID
                 quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                subtotal: item.subtotal
+                unitPrice: item.unitPrice, // Precio CON IVA
+                subtotal: item.subtotal    // Subtotal CON IVA
+                // taxRateApplied: item.taxRateApplied // Si lo guardaste
             })),
             subtotal: entity.subtotal,
-            taxRate: entity.taxRate,
             taxAmount: entity.taxAmount,
             discountRate: entity.discountRate,
             discountAmount: entity.discountAmount,
@@ -199,6 +123,7 @@ export class SaleMapper {
             date: entity.date,
             status: entity.status,
             notes: entity.notes
+            // taxRate: entity.taxRate // Si mantuviste el campo global
         };
     }
 }

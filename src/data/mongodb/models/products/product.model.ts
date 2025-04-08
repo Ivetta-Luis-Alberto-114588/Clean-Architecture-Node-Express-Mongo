@@ -42,11 +42,28 @@ const productSchema = new mongoose.Schema({
         type: Boolean,
         required: false,
         default: true
+    },
+    taxRate: {
+        type: Number,
+        required: true,
+        default: 21,
+        min: 0,
+        max: 100
     }
 },
-{
-    timestamps: true // Esto añade automáticamente createdAt y updatedAt
-})
+    {
+        timestamps: true // Esto añade automáticamente createdAt y updatedAt
+    })
+
+// Opcional: Añadir un campo virtual para el precio con IVA (útil si se accede directamente al modelo a veces)
+productSchema.virtual('priceWithTax').get(function () {
+    if (this.price === undefined || this.taxRate === undefined) return 0;
+    return Math.round(this.price * (1 + this.taxRate / 100) * 100) / 100;
+});
+
+// Asegurarse de que los virtuales se incluyan en toJSON/toObject si se usan fuera de Mongoose
+productSchema.set('toJSON', { virtuals: true });
+productSchema.set('toObject', { virtuals: true });
 
 
 export const ProductModel = mongoose.model("Product", productSchema);

@@ -7,13 +7,14 @@ import logger from "../../../configs/logger"; // Importa tu logger
 export class CartItemMapper {
 
     static fromObjectToCartItemEntity(object: { [key: string]: any }): CartItemEntity {
-        const { productId, quantity, priceAtTime, productName } = object;
+        const { productId, quantity, priceAtTime, productName, taxRate } = object;
 
         // Validación básica
         if (!productId) throw CustomError.badRequest('CartItemMapper: missing productId');
         if (quantity === undefined) throw CustomError.badRequest('CartItemMapper: missing quantity');
         if (priceAtTime === undefined) throw CustomError.badRequest('CartItemMapper: missing priceAtTime');
         if (!productName) logger.warn(`CartItemMapper: missing productName for productId ${productId?._id || productId}`); // Advertencia si falta nombre
+        if (taxRate === undefined) throw CustomError.badRequest('CartItemMapper: missing taxRate'); // Hacerlo requerido
 
         let productEntity: ProductEntity;
 
@@ -30,7 +31,8 @@ export class CartItemMapper {
                     unit: productId.unit || { id: 'unknown', name: 'Desconocida' }, // Placeholder
                     imgUrl: productId.imgUrl || '',
                     isActive: productId.isActive ?? true,
-                    description: productId.description || ''
+                    description: productId.description || '',
+                    taxRate: productId.taxRate ?? taxRate ?? 21 // Prioridad: Producto > Item > Default
                 };
                 productEntity = ProductMapper.fromObjectToProductEntity(productData);
             } catch (error) {
@@ -43,7 +45,8 @@ export class CartItemMapper {
                     0, // stock
                     { id: 0, name: 'Desconocida', description: '', isActive: false }, // category placeholder
                     { id: 0, name: 'Desconocida', description: '', isActive: false }, // unit placeholder
-                    '', true, ''
+                    '', true, '',
+                    taxRate ?? 21 // <<<--- Usar el taxRate guardado o default
                 );
             }
 
@@ -57,14 +60,16 @@ export class CartItemMapper {
                 0, // stock
                 { id: 0, name: 'Desconocida', description: '', isActive: false }, // category placeholder
                 { id: 0, name: 'Desconocida', description: '', isActive: false }, // unit placeholder
-                '', true, ''
+                '', true, '',
+                taxRate ?? 21
             );
         }
 
         return new CartItemEntity(
             productEntity,
             Number(quantity),
-            Number(priceAtTime)
+            Number(priceAtTime),
+            Number(taxRate)      // <<<--- Tasa del item
         );
     }
 }

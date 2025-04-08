@@ -11,15 +11,17 @@ const saleItemSchema = new mongoose.Schema({
         required: [true, "Quantity is required"],
         min: [1, "Minimum quantity is 1"]
     },
-    unitPrice: {
+    unitPrice: { // <<<--- PRECIO CON IVA
         type: Number,
-        required: [true, "Unit price is required"],
+        required: [true, "Unit price (with tax) is required"],
         min: [0, "Price cannot be negative"]
     },
-    subtotal: {
+    subtotal: { // <<<--- SUBTOTAL CON IVA
         type: Number,
-        required: [true, "Subtotal is required"]
+        required: [true, "Subtotal (with tax) is required"]
     }
+    // Opcional: Guardar la tasa aplicada si puede variar por item/promoción
+    // taxRateApplied: { type: Number }
 });
 
 const saleSchema = new mongoose.Schema({
@@ -30,54 +32,39 @@ const saleSchema = new mongoose.Schema({
     },
     items: {
         type: [saleItemSchema],
-        validate: {
-            validator: function(items: any[]) {
-                return items.length > 0;
-            },
-            message: "A sale must have at least one item"
-        }
+        validate: [(items: any[]) => items.length > 0, "A sale must have at least one item"]
     },
-    subtotal: {
+    subtotal: { // Suma de subtotales de items (CON IVA)
         type: Number,
-        required: [true, "Subtotal is required"]
+        required: [true, "Subtotal (with tax) is required"]
     },
-    taxRate: {
+    taxAmount: { // Suma total del IVA de la venta
         type: Number,
-        default: 21, // 21% por defecto
+        required: [true, "Total tax amount is required"]
+    },
+    discountRate: { // Tasa de descuento sobre el subtotal CON IVA
+        type: Number,
+        default: 0,
         min: 0,
         max: 100
     },
-    taxAmount: {
-        type: Number,
-        required: [true, "Tax amount is required"]
-    },
-    discountRate: {
-        type: Number,
-        default: 0, // 0% por defecto
-        min: 0,
-        max: 100
-    },
-    discountAmount: {
+    discountAmount: { // Monto del descuento calculado
         type: Number,
         required: [true, "Discount amount is required"]
     },
-    total: {
+    total: { // Total final
         type: Number,
         required: [true, "Total is required"]
     },
-    date: {
-        type: Date,
-        default: Date.now
+    // Ya no necesitamos taxRate global obligatorio, pero podría mantenerse opcional
+    taxRate: {
+        type: Number,
+        min: 0,
+        max: 100
     },
-    status: {
-        type: String,
-        enum: ['pending', 'completed', 'cancelled'],
-        default: 'pending'
-    },
-    notes: {
-        type: String,
-        default: ""
-    }
+    date: { type: Date, default: Date.now },
+    status: { type: String, enum: ['pending', 'completed', 'cancelled'], default: 'pending' },
+    notes: { type: String, default: "" }
 }, {
     timestamps: true
 });

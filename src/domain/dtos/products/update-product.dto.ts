@@ -4,16 +4,17 @@ export class UpdateProductDto {
     private constructor(
         public name?: string,
         public description?: string,
-        public price?: number,
+        public price?: number,// Precio SIN IVA
         public stock?: number,
-        public category?: string, 
+        public category?: string,
         public unit?: string,
         public imgUrl?: string,
         public isActive?: boolean,
-    ){}
+        public taxRate?: number,
+    ) { }
 
-    static create(object: {[key: string]: any}): [string?, UpdateProductDto?] {
-        const { name, description, price, stock, category, unit, imgUrl, isActive } = object;
+    static create(object: { [key: string]: any }): [string?, UpdateProductDto?] {
+        const { name, description, price, stock, category, unit, imgUrl, isActive, taxRate } = object;
 
         // Verificamos que al menos un campo se proporcione para la actualización
         if (Object.keys(object).length === 0) {
@@ -29,9 +30,13 @@ export class UpdateProductDto {
             return ["Stock must be greater than or equal to 0", undefined];
         }
 
+        if (taxRate !== undefined && (typeof taxRate !== 'number' || taxRate < 0 || taxRate > 100)) {
+            return ["taxRate debe ser un número entre 0 y 100", undefined];
+        }
+
         // Preparamos los valores a actualizar
         const updateData: any = {};
-        
+
         // Solo incluimos los campos que realmente se proporcionan para actualizar
         if (name !== undefined) updateData.name = name.toLowerCase();
         if (description !== undefined) updateData.description = description.toLowerCase();
@@ -50,7 +55,8 @@ export class UpdateProductDto {
             updateData.category,
             updateData.unit,
             updateData.imgUrl,
-            updateData.isActive
+            updateData.isActive,
+            updateData.taxRate
         )];
     }
 }

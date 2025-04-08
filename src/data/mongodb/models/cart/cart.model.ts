@@ -4,7 +4,8 @@ import mongoose, { Schema, Document, Types } from "mongoose";
 interface ICartItem extends Document {
     productId: Types.ObjectId;
     quantity: number;
-    priceAtTime: number; // Precio del producto cuando se añadió
+    priceAtTime: number; // Precio SIN IVA del producto cuando se añadió
+    taxRate: number;     // Tasa de IVA del producto (%)
     productName: string; // Nombre para referencia rápida
     // Podríamos añadir imgUrl si fuera necesario mostrarla directamente desde el carrito
 }
@@ -17,6 +18,7 @@ export interface ICart extends Document {
         productId: mongoose.Types.ObjectId;
         quantity: number;
         priceAtTime: number;
+        taxRate: number;
         productName: string;
     }>;
 }
@@ -33,7 +35,7 @@ const cartItemSchema = new Schema<ICartItem>({
         required: [true, "Quantity is required"],
         min: [1, "Quantity must be at least 1"]
     },
-    priceAtTime: {
+    priceAtTime: { // Precio SIN IVA
         type: Number,
         required: [true, "Price at time of adding is required"],
         min: [0, "Price cannot be negative"]
@@ -41,6 +43,12 @@ const cartItemSchema = new Schema<ICartItem>({
     productName: { // Guardamos el nombre para evitar lookups constantes al mostrar el carrito
         type: String,
         required: [true, "Product name is required"]
+    },
+    taxRate: {
+        type: Number,
+        required: [true, "Tax rate is required"],
+        min: 0,
+        max: 100
     }
 }, { _id: false }); // No necesitamos un _id para los subdocumentos de items
 
