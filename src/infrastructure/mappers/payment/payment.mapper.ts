@@ -44,11 +44,11 @@ export class PaymentMapper {
         '000000000',
         'Dirección Desconocida',
         {
-          id: 0,
+          id: '',
           name: 'Barrio Desconocido',
           description: 'No poblado',
           city: {
-            id: 0,
+            id: '',
             name: 'Ciudad Desconocida',
             description: 'No poblada',
             isActive: true

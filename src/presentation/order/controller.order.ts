@@ -14,9 +14,10 @@ import { GetAllOrderUseCase } from "../../domain/use-cases/order/get-all-order.u
 import { GetOrderByIdUseCase } from "../../domain/use-cases/order/get-order-by-id.use-case";
 import { UpdateOrderStatusUseCase } from "../../domain/use-cases/order/update-order-status.use-case";
 import { CouponRepository } from "../../domain/repositories/coupon/coupon.repository";
-import logger from "../../configs/logger"; // Importar logger
-// <<<--- NUEVA IMPORTACIÓN --- >>>
+import logger from "../../configs/logger";
 import { GetMyOrdersUseCase } from "../../domain/use-cases/order/get-my-orders.use-case";
+import { NeighborhoodRepository } from "../../domain/repositories/customers/neighborhood.repository"; // <<<--- IMPORTAR
+import { CityRepository } from "../../domain/repositories/customers/city.repository";             // <<<--- IMPORTAR
 
 export class OrderController {
 
@@ -24,14 +25,18 @@ export class OrderController {
         private readonly orderRepository: OrderRepository,
         private readonly customerRepository: CustomerRepository,
         private readonly productRepository: ProductRepository,
-        private readonly couponRepository: CouponRepository
+        private readonly couponRepository: CouponRepository,
+        // <<<--- AÑADIR REPOS AL CONSTRUCTOR DEL CONTROLLER --- >>>
+        private readonly neighborhoodRepository: NeighborhoodRepository,
+        private readonly cityRepository: CityRepository,
     ) { }
 
     private handleError = (error: unknown, res: Response) => {
+        // ... (código sin cambios)
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ error: error.message });
         }
-        logger.error("Error en OrderController:", { error: error instanceof Error ? error.stack : error }); // Loguear stack si es Error
+        logger.error("Error en OrderController:", { error: error instanceof Error ? error.stack : error });
         return res.status(500).json({ error: "Error interno del servidor" });
     };
 
@@ -44,18 +49,23 @@ export class OrderController {
             logger.warn("Error en validación de CreateOrderDto", { error, body: req.body, userId });
             return;
         }
+
+        // <<<--- CORRECCIÓN AQUÍ: Pasar TODOS los repositorios --- >>>
         new CreateOrderUseCase(
             this.orderRepository,
             this.customerRepository,
             this.productRepository,
-            this.couponRepository
+            this.couponRepository,
+            this.neighborhoodRepository, // Añadido
+            this.cityRepository          // Añadido
         )
             .execute(createSaleDto!, userId)
             .then(data => res.status(201).json(data))
             .catch(err => this.handleError(err, res));
     };
 
-    getAllSales = (req: Request, res: Response): void => {
+    // ... (resto de los métodos getAllSales, getSaleById, etc. sin cambios necesarios aquí) ...
+    getAllSales = (req: Request, res: Response): void => { /* ...código existente... */
         const { page = 1, limit = 10 } = req.query;
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
         if (error) {
@@ -69,7 +79,7 @@ export class OrderController {
             .catch(err => this.handleError(err, res));
     };
 
-    getSaleById = (req: Request, res: Response): void => {
+    getSaleById = (req: Request, res: Response): void => { /* ...código existente... */
         const { id } = req.params;
         new GetOrderByIdUseCase(this.orderRepository)
             .execute(id)
@@ -77,7 +87,7 @@ export class OrderController {
             .catch(err => this.handleError(err, res));
     };
 
-    updateSaleStatus = (req: Request, res: Response): void => {
+    updateSaleStatus = (req: Request, res: Response): void => { /* ...código existente... */
         const { id } = req.params;
         const [error, updateSaleStatusDto] = UpdateOrderStatusDto.update(req.body);
         if (error) {
@@ -91,7 +101,7 @@ export class OrderController {
             .catch(err => this.handleError(err, res));
     };
 
-    getSalesByCustomer = (req: Request, res: Response): void => {
+    getSalesByCustomer = (req: Request, res: Response): void => { /* ...código existente... */
         const { customerId } = req.params;
         const { page = 1, limit = 10 } = req.query;
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
@@ -109,7 +119,7 @@ export class OrderController {
             .catch(err => this.handleError(err, res));
     };
 
-    getSalesByDateRange = (req: Request, res: Response): void => {
+    getSalesByDateRange = (req: Request, res: Response): void => { /* ...código existente... */
         const { startDate, endDate } = req.body;
         const { page = 1, limit = 10 } = req.query;
 
@@ -146,8 +156,7 @@ export class OrderController {
         }
     };
 
-    // <<<--- NUEVO MÉTODO --- >>>
-    getMyOrders = (req: Request, res: Response): void => {
+    getMyOrders = (req: Request, res: Response): void => { /* ...código existente... */
         const userId = req.body.user?.id; // Obtener ID del usuario autenticado
 
         if (!userId) {
@@ -169,5 +178,4 @@ export class OrderController {
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
     };
-    // <<<--- FIN NUEVO MÉTODO --- >>>
 }

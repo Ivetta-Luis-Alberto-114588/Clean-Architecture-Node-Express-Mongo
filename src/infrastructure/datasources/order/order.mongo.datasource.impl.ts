@@ -2,7 +2,7 @@
 import mongoose from "mongoose";
 import { OrderModel } from "../../../data/mongodb/models/order/order.model";
 import { ProductModel } from "../../../data/mongodb/models/products/product.model";
-import { CustomerModel } from "../../../data/mongodb/models/customers/customer.model"; // Asegúrate que esté importado
+import { CustomerModel } from "../../../data/mongodb/models/customers/customer.model";
 import { OrderDataSource } from "../../../domain/datasources/order/order.datasource";
 import { CreateOrderDto } from "../../../domain/dtos/order/create-order.dto";
 import { UpdateOrderStatusDto } from "../../../domain/dtos/order/update-order-status.dto";
@@ -14,6 +14,14 @@ import logger from "../../../configs/logger";
 import { CouponDataSource } from "../../../domain/datasources/coupon/coupon.datasource";
 import { CouponMongoDataSourceImpl } from "../coupon/coupon.mongo.datasource.impl";
 
+// <<<--- Interfaz para detalles resueltos (importar o definir) --- >>>
+interface ResolvedShippingDetails {
+    recipientName: string; phone: string; streetAddress: string; postalCode?: string;
+    neighborhoodName: string; cityName: string; additionalInfo?: string;
+    originalAddressId?: string; originalNeighborhoodId: string; originalCityId: string;
+}
+
+
 export class OrderMongoDataSourceImpl implements OrderDataSource {
 
     private readonly couponDataSource: CouponDataSource = new CouponMongoDataSourceImpl();
@@ -22,49 +30,37 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
         createOrderDto: CreateOrderDto,
         calculatedDiscountRate: number,
         couponIdToIncrement: string | null | undefined,
-        finalCustomerId: string // ID del cliente ya determinado
+        finalCustomerId: string,
+        shippingDetails: ResolvedShippingDetails // <<<--- RECIBIR DETALLES
     ): Promise<OrderEntity> {
         const session = await mongoose.startSession();
         session.startTransaction();
-        logger.info(`Iniciando transacción para crear pedido (Cliente: ${finalCustomerId})`); // Usar finalCustomerId
+        logger.info(`[OrderDS] Iniciando TX crear pedido (Cliente: ${finalCustomerId})`);
 
         try {
-            // <<<--- INICIALIZAR VARIABLES --- >>>
             const saleItems = [];
             let subtotalWithTax = 0;
             let totalTaxAmount = 0;
-            // <<<--- FIN INICIALIZAR VARIABLES --- >>>
 
-            // Validar que el cliente exista (opcional, pero buena práctica)
             const customerExists = await CustomerModel.findById(finalCustomerId).session(session).lean();
-            if (!customerExists) {
-                throw CustomError.notFound(`Cliente con ID ${finalCustomerId} no encontrado al crear el pedido.`);
-            }
-
+            if (!customerExists) throw CustomError.notFound(`Cliente ${finalCustomerId} no encontrado.`);
 
             for (const itemDto of createOrderDto.items) {
                 const product = await ProductModel.findById(itemDto.productId).session(session);
-                if (!product) throw CustomError.notFound(`Producto con ID ${itemDto.productId} no encontrado`);
+                if (!product) throw CustomError.notFound(`Producto ${itemDto.productId} no encontrado`);
                 if (!product.isActive) throw CustomError.badRequest(`Producto ${product.name} no disponible.`);
-
-                const productStock = product.stock ?? 0;
-                if (productStock < itemDto.quantity) {
-                    throw CustomError.badRequest(`Stock insuficiente para ${product.name}. Disp: ${productStock}, Sol: ${itemDto.quantity}`);
-                }
+                if (product.stock < itemDto.quantity) throw CustomError.badRequest(`Stock insuficiente para ${product.name}. Disp: ${product.stock}, Sol: ${itemDto.quantity}`);
 
                 const unitPriceWithTax = itemDto.unitPrice;
                 const itemSubtotalWithTax = Math.round(itemDto.quantity * unitPriceWithTax * 100) / 100;
                 const basePrice = product.price;
                 const itemTaxAmount = Math.round((itemDto.quantity * basePrice * (product.taxRate / 100)) * 100) / 100;
 
-                // <<<--- ACUMULAR VALORES --- >>>
                 subtotalWithTax += itemSubtotalWithTax;
                 totalTaxAmount += itemTaxAmount;
-                // <<<--- FIN ACUMULAR VALORES --- >>>
 
-                product.stock = productStock - itemDto.quantity;
+                product.stock -= itemDto.quantity;
                 await product.save({ session });
-                logger.debug(`Stock actualizado para producto ${itemDto.productId} (-${itemDto.quantity}) en sesión`, { session: session.id });
 
                 saleItems.push({
                     product: itemDto.productId,
@@ -73,20 +69,17 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                     subtotal: itemSubtotalWithTax
                 });
             }
+            if (saleItems.length === 0) throw CustomError.badRequest('La venta debe tener productos');
 
-            if (saleItems.length === 0) throw CustomError.badRequest('La venta debe tener al menos un producto');
-
-            // <<<--- CALCULAR DESCUENTO Y TOTAL --- >>>
             const discountRate = calculatedDiscountRate;
             const discountAmount = Math.round((subtotalWithTax * discountRate / 100) * 100) / 100;
             const finalTotal = Math.round((subtotalWithTax - discountAmount) * 100) / 100;
-            // <<<--- FIN CALCULAR DESCUENTO Y TOTAL --- >>>
+            if (finalTotal < 0) throw CustomError.badRequest('Total negativo.');
 
-            if (finalTotal < 0) throw CustomError.badRequest('El total de la venta no puede ser negativo.');
 
-            // <<<--- USAR LAS VARIABLES CALCULADAS --- >>>
+            // Crear el objeto para el modelo OrderModel, incluyendo shippingDetails
             const saleData = {
-                customer: finalCustomerId, // Usar el ID final
+                customer: finalCustomerId,
                 items: saleItems,
                 subtotal: subtotalWithTax,
                 taxAmount: totalTaxAmount,
@@ -94,216 +87,157 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 discountAmount: discountAmount,
                 total: finalTotal,
                 notes: createOrderDto.notes || "",
-                status: 'pending',
-                metadata: {
-                    couponCodeUsed: createOrderDto.couponCode || null
-                }
+                status: 'pending' as 'pending' | 'completed' | 'cancelled', // Asegurar tipo
+                // <<<--- MAPEAR DETALLES DE ENVÍO --- >>>
+                shippingDetails: {
+                    recipientName: shippingDetails.recipientName,
+                    phone: shippingDetails.phone,
+                    streetAddress: shippingDetails.streetAddress,
+                    postalCode: shippingDetails.postalCode,
+                    neighborhoodName: shippingDetails.neighborhoodName,
+                    cityName: shippingDetails.cityName,
+                    additionalInfo: shippingDetails.additionalInfo,
+                    originalAddressId: shippingDetails.originalAddressId ? new mongoose.Types.ObjectId(shippingDetails.originalAddressId) : undefined,
+                    originalNeighborhoodId: new mongoose.Types.ObjectId(shippingDetails.originalNeighborhoodId),
+                    originalCityId: new mongoose.Types.ObjectId(shippingDetails.originalCityId),
+                },
+                // <<<--- FIN MAPEO --- >>>
+                metadata: { couponCodeUsed: createOrderDto.couponCode || null }
             };
-            // <<<--- FIN USAR LAS VARIABLES CALCULADAS --- >>>
 
             const saleDocArray = await OrderModel.create([saleData], { session });
             const saleDoc = saleDocArray[0];
-            logger.info(`Pedido ${saleDoc._id} creado en sesión`, { session: session.id });
+            logger.info(`[OrderDS] Pedido ${saleDoc._id} creado en sesión`);
 
             if (couponIdToIncrement) {
-                logger.debug(`Intentando incrementar uso para cupón ID: ${couponIdToIncrement} en sesión`, { session: session.id });
                 await this.couponDataSource.incrementUsage(couponIdToIncrement, session);
-                logger.info(`Uso incrementado para cupón ID: ${couponIdToIncrement} en sesión`, { session: session.id });
+                logger.info(`[OrderDS] Uso cupón ${couponIdToIncrement} incrementado`);
             }
 
             await session.commitTransaction();
-            logger.info(`Transacción completada (commit) para pedido ${saleDoc._id}`);
+            logger.info(`[OrderDS] TX commit para pedido ${saleDoc._id}`);
 
             const completeSale = await this.findSaleByIdPopulated(saleDoc._id.toString());
-            if (!completeSale) throw CustomError.internalServerError("No se pudo recuperar la venta creada después del commit");
+            if (!completeSale) throw CustomError.internalServerError("Error recuperando venta creada");
 
             return OrderMapper.fromObjectToSaleEntity(completeSale);
 
         } catch (error) {
-            logger.error("Error durante la transacción de creación de pedido, realizando rollback...", { error, session: session?.id });
+            logger.error("[OrderDS] Error en TX crear pedido, rollback...", { error, session: session?.id });
             await session.abortTransaction();
-            logger.warn(`Transacción abortada (rollback) para cliente ${finalCustomerId}`, { session: session?.id });
+            logger.warn(`[OrderDS] TX abortada (rollback) para cliente ${finalCustomerId}`, { session: session?.id });
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError(`Error interno al crear la venta: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
-            logger.info(`Finalizando sesión de Mongoose`, { session: session?.id });
+            logger.info(`[OrderDS] Finalizando sesión Mongoose crear pedido`, { session: session?.id });
             session.endSession();
         }
     }
 
-    // Helper (sin cambios)
-    private async findSaleByIdPopulated(id: string): Promise<any> {
+    // ... (resto de métodos del datasource: getAll, findById, updateStatus, etc.) ...
+    private async findSaleByIdPopulated(id: string): Promise<any> { /* ... código existente ... */
+        if (!mongoose.Types.ObjectId.isValid(id)) return null; // Validar ID
         return OrderModel.findById(id)
-            .populate({
-                path: 'customer',
-                populate: { path: 'neighborhood', populate: { path: 'city' } }
-            })
-            .populate({
-                path: 'items.product',
-                populate: [{ path: 'category' }, { path: 'unit' }]
-            })
+            .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+            .populate({ path: 'items.product', populate: [{ path: 'category' }, { path: 'unit' }] })
             .lean();
     }
-
-    // ... (resto de los métodos: getAll, findById, updateStatus, etc. sin cambios) ...
-    async getAll(paginationDto: PaginationDto): Promise<OrderEntity[]> {
+    async getAll(paginationDto: PaginationDto): Promise<OrderEntity[]> { /* ... código existente ... */
         const { page, limit } = paginationDto;
         try {
             const salesDocs = await OrderModel.find()
-                .populate({
-                    path: 'customer',
-                    populate: { path: 'neighborhood', populate: { path: 'city' } }
-                })
-                .populate({
-                    path: 'items.product',
-                    populate: [{ path: 'category' }, { path: 'unit' }]
-                })
-                .limit(limit)
-                .skip((page - 1) * limit)
-                .sort({ date: -1 })
-                .lean(); // Usar lean para eficiencia
-
+                .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                .populate({ path: 'items.product', populate: [{ path: 'category' }, { path: 'unit' }] })
+                .limit(limit).skip((page - 1) * limit).sort({ date: -1 }).lean();
             return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
         } catch (error) {
-            logger.error("Error al obtener las ventas:", { error });
+            logger.error("[OrderDS] Error obteniendo ventas:", { error });
             if (error instanceof CustomError) throw error;
-            throw CustomError.internalServerError(`Error al obtener las ventas: ${error instanceof Error ? error.message : String(error)}`);
+            throw CustomError.internalServerError(`Error al obtener ventas: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-
-    async findById(id: string): Promise<OrderEntity> {
+    async findById(id: string): Promise<OrderEntity> { /* ... código existente ... */
         try {
             const saleDoc = await this.findSaleByIdPopulated(id);
             if (!saleDoc) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
             return OrderMapper.fromObjectToSaleEntity(saleDoc);
         } catch (error) {
-            logger.error(`Error al buscar la venta con ID ${id}:`, { error });
+            logger.error(`[OrderDS] Error buscando venta ID ${id}:`, { error });
+            if (error instanceof mongoose.Error.CastError) throw CustomError.badRequest(`ID venta inválido: ${id}`);
             if (error instanceof CustomError) throw error;
-            throw CustomError.internalServerError(`Error al buscar la venta: ${error instanceof Error ? error.message : String(error)}`);
+            throw CustomError.internalServerError(`Error buscando venta: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-
-    async updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<OrderEntity> {
+    async updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<OrderEntity> { /* ... código existente ... */
         const session = await mongoose.startSession();
         session.startTransaction();
-        logger.info(`Iniciando transacción para actualizar estado de pedido ${id}`, { session: session.id });
-
-
+        logger.info(`[OrderDS] Iniciando TX actualizar estado pedido ${id}`, { session: session.id });
         try {
+            if (!mongoose.Types.ObjectId.isValid(id)) throw CustomError.badRequest("ID de pedido inválido");
             const sale = await OrderModel.findById(id).session(session);
             if (!sale) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
             if (sale.status === updateOrderStatusDto.status) {
-                logger.info(`Pedido ${id} ya tiene el estado '${updateOrderStatusDto.status}'. No se requiere actualización.`);
-                await session.commitTransaction(); // Commit vacío
-                const currentSaleDoc = await this.findSaleByIdPopulated(id);
-                if (!currentSaleDoc) throw CustomError.internalServerError("Error al recuperar la venta sin cambios.");
+                logger.info(`[OrderDS] Pedido ${id} ya está ${updateOrderStatusDto.status}.`);
+                await session.commitTransaction();
+                const currentSaleDoc = await this.findSaleByIdPopulated(id); // Necesitas poblarlo
+                if (!currentSaleDoc) throw CustomError.internalServerError("Error al recuperar venta sin cambios.");
                 return OrderMapper.fromObjectToSaleEntity(currentSaleDoc);
             }
-
             if (updateOrderStatusDto.status === 'cancelled' && (sale.status === 'pending' || sale.status === 'completed')) {
-                logger.info(`Pedido ${id} cancelado. Intentando restaurar stock...`, { session: session.id });
+                logger.info(`[OrderDS] Cancelando pedido ${id}. Restaurando stock...`);
                 for (const item of sale.items) {
-                    const updateResult = await ProductModel.findByIdAndUpdate(
-                        item.product,
-                        { $inc: { stock: item.quantity } },
-                        { session }
-                    );
-                    if (!updateResult) {
-                        logger.warn(`Producto ${item.product} no encontrado durante restauración de stock para pedido ${id}. Continuando...`, { session: session.id });
-                    } else {
-                        logger.debug(`Stock restaurado para producto ${item.product} (+${item.quantity}) por cancelación de venta ${id}`, { session: session.id });
-                    }
+                    await ProductModel.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } }, { session });
+                    logger.debug(`[OrderDS] Stock restaurado para prod ${item.product} (+${item.quantity})`);
                 }
             }
-
             sale.status = updateOrderStatusDto.status;
-            if (updateOrderStatusDto.notes !== undefined) {
-                sale.notes = updateOrderStatusDto.notes;
-            }
+            if (updateOrderStatusDto.notes !== undefined) sale.notes = updateOrderStatusDto.notes;
             await sale.save({ session });
-            logger.info(`Estado de pedido ${id} actualizado a ${updateOrderStatusDto.status} en sesión`, { session: session.id });
-
+            logger.info(`[OrderDS] Estado pedido ${id} actualizado a ${updateOrderStatusDto.status}`);
             await session.commitTransaction();
-            logger.info(`Transacción completada (commit) para actualización de estado de pedido ${id}`);
-
-
+            logger.info(`[OrderDS] TX commit actualización estado pedido ${id}`);
             const updatedSaleDoc = await this.findSaleByIdPopulated(id);
-            if (!updatedSaleDoc) throw CustomError.internalServerError("Error al recuperar la venta actualizada.");
+            if (!updatedSaleDoc) throw CustomError.internalServerError("Error recuperando venta actualizada.");
             return OrderMapper.fromObjectToSaleEntity(updatedSaleDoc);
-
         } catch (error) {
-            logger.error(`Error al actualizar estado de pedido ${id}, realizando rollback...`, { error, session: session?.id });
+            logger.error(`[OrderDS] Error TX actualizar estado pedido ${id}, rollback...`, { error });
             await session.abortTransaction();
-            logger.warn(`Transacción abortada (rollback) para actualización de estado de pedido ${id}`, { session: session?.id });
             if (error instanceof CustomError) throw error;
-            throw CustomError.internalServerError(`Error al actualizar estado de venta: ${error instanceof Error ? error.message : String(error)}`);
+            throw CustomError.internalServerError(`Error actualizando estado venta: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
-            logger.info(`Finalizando sesión de Mongoose para actualización de estado`, { session: session?.id });
+            logger.info(`[OrderDS] Sesión finalizada actualización estado`, { session: session?.id });
             session.endSession();
         }
     }
-
-    async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<OrderEntity[]> {
+    async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<OrderEntity[]> { /* ... código existente ... */
         const { page, limit } = paginationDto;
         try {
-            // Es buena idea verificar si el cliente existe primero, aunque el use case ya lo hace.
-            const customer = await CustomerModel.findById(customerId);
-            if (!customer) throw CustomError.notFound(`Cliente con ID ${customerId} no encontrado`);
-
+            if (!mongoose.Types.ObjectId.isValid(customerId)) throw CustomError.badRequest("ID de cliente inválido");
             const salesDocs = await OrderModel.find({ customer: customerId })
-                .populate({
-                    path: 'customer',
-                    populate: { path: 'neighborhood', populate: { path: 'city' } }
-                })
-                .populate({
-                    path: 'items.product',
-                    populate: [{ path: 'category' }, { path: 'unit' }]
-                })
-                .limit(limit)
-                .skip((page - 1) * limit)
-                .sort({ date: -1 })
-                .lean();
-
+                .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                .populate({ path: 'items.product', populate: [{ path: 'category' }, { path: 'unit' }] })
+                .limit(limit).skip((page - 1) * limit).sort({ date: -1 }).lean();
             return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
         } catch (error) {
-            logger.error(`Error al buscar ventas del cliente ${customerId}:`, { error });
+            logger.error(`[OrderDS] Error buscando ventas cliente ${customerId}:`, { error });
             if (error instanceof CustomError) throw error;
-            throw CustomError.internalServerError(`Error al buscar ventas por cliente: ${error instanceof Error ? error.message : String(error)}`);
+            throw CustomError.internalServerError(`Error buscando ventas por cliente: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-
-    async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<OrderEntity[]> {
+    async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<OrderEntity[]> { /* ... código existente ... */
         const { page, limit } = paginationDto;
         try {
-            if (startDate > endDate) throw CustomError.badRequest("La fecha de inicio debe ser anterior a la fecha de fin");
-
-            const endOfDay = new Date(endDate);
-            endOfDay.setHours(23, 59, 59, 999);
-
-            const salesDocs = await OrderModel.find({
-                date: {
-                    $gte: startDate,
-                    $lte: endOfDay
-                }
-            })
-                .populate({
-                    path: 'customer',
-                    populate: { path: 'neighborhood', populate: { path: 'city' } }
-                })
-                .populate({
-                    path: 'items.product',
-                    populate: [{ path: 'category' }, { path: 'unit' }]
-                })
-                .limit(limit)
-                .skip((page - 1) * limit)
-                .sort({ date: -1 })
-                .lean();
-
+            if (startDate > endDate) throw CustomError.badRequest("Fecha inicio > fecha fin");
+            const endOfDay = new Date(endDate); endOfDay.setHours(23, 59, 59, 999);
+            const salesDocs = await OrderModel.find({ date: { $gte: startDate, $lte: endOfDay } })
+                .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                .populate({ path: 'items.product', populate: [{ path: 'category' }, { path: 'unit' }] })
+                .limit(limit).skip((page - 1) * limit).sort({ date: -1 }).lean();
             return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
         } catch (error) {
-            logger.error(`Error al buscar ventas por rango de fechas (${startDate.toISOString()} - ${endDate.toISOString()}):`, { error });
+            logger.error(`[OrderDS] Error buscando ventas por rango fecha:`, { error });
             if (error instanceof CustomError) throw error;
-            throw CustomError.internalServerError(`Error al buscar ventas por rango de fechas: ${error instanceof Error ? error.message : String(error)}`);
+            throw CustomError.internalServerError(`Error buscando ventas por rango fecha: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
 }

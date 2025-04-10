@@ -1,37 +1,53 @@
+// src/domain/entities/order/order.entity.ts
 import { CustomerEntity } from "../customers/customer";
 import { ProductEntity } from "../products/product.entity";
 
 export interface OrderItemEntity {
-    product: ProductEntity; // Podría ser solo el ID si no necesitas toda la info aquí
+    product: ProductEntity;
     quantity: number;
-    unitPrice: number; // <<<--- AHORA ES PRECIO UNITARIO CON IVA
-    subtotal: number;  // <<<--- AHORA ES SUBTOTAL CON IVA (quantity * unitPrice)
-    // Opcional: podrías guardar la tasa aplicada si varía mucho
-    // taxRateApplied?: number;
+    unitPrice: number; // CON IVA
+    subtotal: number;  // CON IVA
 }
+
+// <<<--- NUEVA INTERFAZ --- >>>
+export interface ShippingDetailsEntity {
+    recipientName: string;
+    phone: string;
+    streetAddress: string;
+    postalCode?: string;
+    neighborhoodName: string;
+    cityName: string;
+    additionalInfo?: string;
+    // Los IDs originales no son estrictamente necesarios en la entidad principal,
+    // pero podrías añadirlos si son útiles para la lógica de negocio posterior.
+    // originalAddressId?: string;
+    // originalNeighborhoodId?: string;
+    // originalCityId?: string;
+}
+// <<<--- FIN NUEVA INTERFAZ --- >>>
+
 
 export class OrderEntity {
     constructor(
         public id: string,
         public customer: CustomerEntity,
         public items: OrderItemEntity[],
-        public subtotal: number,    // Suma de subtotales de items (ya con IVA)
-        public taxRate: number,     // Tasa general aplicada (¿quizás ya no tan útil o para impuestos adicionales?)
-        public taxAmount: number,   // Suma del IVA de todos los items
-        public discountRate: number, // Descuento sobre el subtotal CON IVA
-        public discountAmount: number, // Monto del descuento
-        public total: number,        // Total final a pagar
+        public subtotal: number,
+        public taxRate: number, // Podría eliminarse
+        public taxAmount: number,
+        public discountRate: number,
+        public discountAmount: number,
+        public total: number,
         public date: Date,
         public status: 'pending' | 'completed' | 'cancelled',
         public notes?: string,
+        public shippingDetails?: ShippingDetailsEntity // <<<--- ACTUALIZADO
     ) { }
 
-    // Opcional: Calcular subtotal base (sin IVA) si es necesario mostrarlo
+    // ... (get subtotalWithoutTax existente) ...
     get subtotalWithoutTax(): number {
         return Math.round(this.items.reduce((sum, item) => {
-            // Necesitamos la tasa original del producto para revertir el cálculo
-            // Esto requiere que 'product' en SaleItemEntity esté poblado o guardar la tasa en el item
-            const originalTaxRate = item.product?.taxRate ?? 21; // Asumir 21 si no está poblado
+            const originalTaxRate = item.product?.taxRate ?? 21;
             const basePrice = item.unitPrice / (1 + originalTaxRate / 100);
             return sum + (item.quantity * basePrice);
         }, 0) * 100) / 100;
