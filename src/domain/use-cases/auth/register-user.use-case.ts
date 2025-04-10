@@ -1,36 +1,40 @@
 // src/domain/use-cases/auth/register-user.use-case.ts
 import { JwtAdapter } from "../../../configs/jwt";
+import { envs } from "../../../configs/envs"; // Importar envs
 import { RegisterUserDto } from "../../dtos/auth/register-user.dto";
 import { CustomError } from "../../errors/custom.error";
 import { AuthRepository } from "../../repositories/auth.repository";
-import { CustomerRepository } from "../../repositories/customers/customer.repository"; // <<<--- IMPORTAR
-import { CreateCustomerDto } from "../../dtos/customers/create-customer.dto"; // <<<--- IMPORTAR
-import logger from "../../../configs/logger"; // <<<--- IMPORTAR Logger
+import { CustomerRepository } from "../../repositories/customers/customer.repository"; // Importar CustomerRepository
+import { CreateCustomerDto } from "../../dtos/customers/create-customer.dto"; // Importar CreateCustomerDto
+import logger from "../../../configs/logger"; // Importar Logger
 
-// ... (interfaces IUserWithToken y SignToken sin cambios) ...
+// Interfaces (sin cambios)
 interface IRegisterUserUseCase {
     execute(registerUserDto: RegisterUserDto): Promise<IUserWithToken>
 }
+
 interface IUserWithToken {
     user: {
         id: string,
         name: string,
         email: string,
-        password: string,
+        // Considera NO devolver la contraseña, ni siquiera hasheada
+        // password?: string, // Comentado por seguridad
         role: string[],
         token: string,
     },
 }
-type SignToken = (payload: Object, duration?: "2h") => Promise<string | null>
 
+// Tipo de función para firmar token (sin cambios)
+type SignToken = (payload: Object, duration?: string) => Promise<string | null>
 
 export class RegisterUserUseCase implements IRegisterUserUseCase {
 
-    // <<<--- Inyectar CustomerRepository --- >>>
+    // Inyectar CustomerRepository
     constructor(
         private readonly authRepository: AuthRepository,
-        private readonly customerRepository: CustomerRepository, // <<<--- AÑADIR
-        private readonly signToken: SignToken = JwtAdapter.generateToken
+        private readonly customerRepository: CustomerRepository, // Añadir
+        private readonly signToken: SignToken = JwtAdapter.generateToken // Mantener la flexibilidad
     ) { }
 
     async execute(registerUserDto: RegisterUserDto): Promise<IUserWithToken> {
@@ -41,82 +45,93 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
 
         // 2. Crear el registro Customer asociado (con datos básicos)
         try {
-            // Verificar si ya existe un cliente con ese email (por si acaso, aunque register ya lo hace para User)
+            // Verificar si ya existe un cliente con ese email (importante para consistencia)
             const existingCustomer = await this.customerRepository.findByEmail(user.email);
             if (existingCustomer) {
-                // Esto podría pasar si un invitado compró antes y ahora se registra.
-                // Podríamos vincular el userId al cliente existente o lanzar error.
-                // Por ahora, lanzaremos un error para mantenerlo simple.
-                logger.warn(`Intento de registro para email ${user.email} que ya existe como Customer ${existingCustomer.id}`);
-                // Podrías actualizar el cliente existente con el userId aquí si esa es tu lógica de negocio
-                // await this.customerRepository.update(existingCustomer.id, { userId: user.id });
-                // O lanzar error:
-                throw CustomError.badRequest('El email ya está en uso por un cliente existente.');
+                // Escenario: Un invitado compró antes y ahora se registra.
+                // Acción: Vincular el userId al cliente existente.
+                // (Asegúrate que tu CustomerRepository.update puede manejar la actualización de userId)
+                logger.warn(`Cliente existente encontrado para email ${user.email} (ID: ${existingCustomer.id}). Vinculando con nuevo User ID: ${user.id}`);
+                // await this.customerRepository.update(existingCustomer.id.toString(), { userId: user.id });
+                // Nota: Si el cliente existente YA tiene un userId diferente, podrías lanzar un error o loguear una inconsistencia grave.
+                if (existingCustomer.userId && existingCustomer.userId !== user.id) {
+                    logger.error(`¡INCONSISTENCIA GRAVE! Cliente ${existingCustomer.id} con email ${user.email} ya está vinculado a OTRO usuario (${existingCustomer.userId}). No se vinculó al nuevo usuario ${user.id}.`);
+                    // Considera lanzar un error aquí si esto no debería ocurrir.
+                    // throw CustomError.internalServerError(`Conflicto de usuario para el email ${user.email}`);
+                } else if (!existingCustomer.userId) {
+                    // Solo actualiza si no tiene userId o si el ID coincide (caso raro)
+                    await this.customerRepository.update(existingCustomer.id.toString(), { userId: user.id });
+                    logger.info(`Cliente existente ${existingCustomer.id} vinculado exitosamente al usuario ${user.id}.`);
+                }
+
+            } else {
+                // No existe cliente previo, crear uno nuevo.
+                // ¡¡¡ IMPORTANTE: OBTENER ID DE BARRIO POR DEFECTO DESDE CONFIGURACIÓN !!!
+                const defaultNeighborhoodId = envs.DEFAULT_NEIGHBORHOOD_ID; // Asegúrate que esta variable exista en envs.ts y .env
+                if (!defaultNeighborhoodId) {
+                    logger.error("DEFAULT_NEIGHBORHOOD_ID no está configurado en las variables de entorno.");
+                    throw CustomError.internalServerError("Error de configuración interna del servidor [NEIGHBORHOOD].");
+                }
+                logger.info(`Usando ID de barrio por defecto '${defaultNeighborhoodId}' para nuevo cliente ${user.email}.`);
+
+
+                // Crear DTO para el nuevo cliente
+                const [errorDto, createCustomerDto] = CreateCustomerDto.create({
+                    name: user.name, // Usar nombre del usuario
+                    email: user.email, // Usar email del usuario
+                    phone: '0000000000', // Placeholder - El usuario debe actualizarlo después
+                    address: 'Dirección pendiente', // Placeholder
+                    neighborhoodId: defaultNeighborhoodId, // ID de barrio por defecto desde envs
+                    isActive: true,
+                    // userId se añadirá explícitamente antes de llamar al repositorio
+                });
+
+                if (errorDto) {
+                    // Si falla la creación del DTO del cliente, el usuario ya está creado.
+                    // Indica un problema (ej: ID de barrio por defecto inválido en .env).
+                    logger.error(`Error creando CreateCustomerDto para usuario ${user.id}: ${errorDto}. El usuario ${user.id} fue creado pero el cliente no.`);
+                    // Decisión: ¿Eliminar usuario? ¿Marcarlo? Por ahora, lanzar error interno.
+                    // Esto DEJA UN USUARIO SIN CLIENTE en la BD. Idealmente, usar transacciones.
+                    throw CustomError.internalServerError(`Error preparando datos del cliente: ${errorDto}`);
+                }
+
+                // Añadir el userId al DTO antes de pasarlo al repositorio
+                const customerDataWithUserId = {
+                    ...createCustomerDto!,
+                    userId: user.id // Vincular al crear
+                };
+
+                // Crear el cliente usando el repositorio (asumiendo que maneja el userId)
+                await this.customerRepository.create(customerDataWithUserId as CreateCustomerDto);
+                logger.info(`Nuevo Cliente creado y vinculado para usuario: ${user.email}`);
             }
-
-            // <<<--- ¡NECESITAS UN ID DE BARRIO VÁLIDO AQUÍ! --- >>>
-            const defaultNeighborhoodId = 'ID_BARRIO_POR_DEFECTO'; // ¡¡¡ REEMPLAZAR !!!
-            logger.warn(`Usando ID de barrio por defecto '${defaultNeighborhoodId}' para nuevo cliente ${user.email}. Implementar selección/obtención real.`);
-
-            const [errorDto, createCustomerDto] = CreateCustomerDto.create({
-                name: user.name, // Usar nombre del usuario
-                email: user.email, // Usar email del usuario
-                phone: '0000000000', // Placeholder - El usuario debe actualizarlo
-                address: 'Dirección pendiente', // Placeholder
-                neighborhoodId: defaultNeighborhoodId, // ¡¡¡ REEMPLAZAR !!!
-                isActive: true,
-                // No establecemos userId aquí, lo hacemos en el modelo al crear
-            });
-
-            if (errorDto) {
-                // Si falla la creación del DTO del cliente, el usuario ya está creado.
-                // Esto indica un problema de configuración (ej: ID de barrio inválido).
-                logger.error(`Error creando CreateCustomerDto para usuario ${user.id}: ${errorDto}`);
-                // Podrías intentar eliminar el usuario creado o marcarlo para revisión.
-                // Por simplicidad, lanzamos error interno.
-                throw CustomError.internalServerError(`Error preparando datos del cliente: ${errorDto}`);
-            }
-
-            // Crear el cliente y vincularlo al usuario
-            const customerData = {
-                ...createCustomerDto!,
-                userId: user.id // <<<--- Añadir el userId aquí para vincular
-            };
-            // Usamos directamente el modelo para asegurar que el userId se guarda
-            // ya que el método create del repositorio podría no manejarlo explícitamente aún.
-            // O mejor, modificamos el repositorio/datasource para aceptar userId opcionalmente.
-            // Por ahora, asumimos que el repositorio/datasource create puede manejarlo o lo hacemos directo:
-
-            // await CustomerModel.create(customerData); // Si se hace directo (menos ideal)
-            // O preferiblemente, modificar create en repo/datasource para aceptar userId
-            await this.customerRepository.create(customerData as CreateCustomerDto); // Asumimos que create lo maneja
-
-
-            logger.info(`Cliente creado y vinculado para usuario: ${user.email}`);
 
         } catch (customerError) {
-            // Si falla la creación del cliente, el usuario YA está creado en la BD.
-            // Esto es problemático. Debería idealmente hacerse en una transacción,
-            // pero Mongoose no soporta transacciones entre diferentes operaciones create fácilmente.
-            logger.error(`¡FALLO CRÍTICO! Usuario ${user.id} creado pero no se pudo crear/vincular Customer.`, { error: customerError });
-            // ¿Qué hacer? ¿Eliminar el usuario? ¿Marcarlo?
-            // Por ahora, lanzamos el error, pero esto deja un usuario sin cliente.
+            // Si falla la creación/vinculación del cliente, el usuario YA está creado en la BD.
+            // ¡Esto es un estado inconsistente! Idealmente, debería haber una transacción.
+            logger.error(`¡FALLO CRÍTICO! Usuario ${user.id} (${user.email}) creado, pero NO se pudo crear/vincular el perfil de Cliente. Revisión manual necesaria.`, { error: customerError instanceof Error ? { message: customerError.message, stack: customerError.stack } : customerError });
+            // Lanzamos el error para detener el proceso y que el usuario no reciba token.
             if (customerError instanceof CustomError) throw customerError;
-            throw CustomError.internalServerError('Error creando el perfil del cliente asociado al usuario.');
+            throw CustomError.internalServerError('Error crítico al configurar el perfil del cliente asociado al usuario.');
         }
 
         // 3. Generar Token (sin cambios)
-        const token = await this.signToken({ id: user.id }, '2h');
-        if (!token) throw CustomError.internalServerError("register-use-case, Error generating token");
+        const token = await this.signToken({ id: user.id }, '2h'); // Duración estándar para login/registro
+        if (!token) {
+            // Si falla la generación del token, el usuario y cliente (probablemente) están creados.
+            logger.error(`Fallo al generar token para usuario recién registrado ${user.id} (${user.email})`);
+            throw CustomError.internalServerError("Error al generar el token de autenticación.");
+        }
 
+        // 4. Devolver la respuesta
         return {
             user: {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                password: user.password, // Considera no devolver la contraseña hasheada
+                // password: user.password, // No devolver contraseña
                 role: user.role,
-                token: token
+                token: token // Devolver el token generado
             },
         };
     }

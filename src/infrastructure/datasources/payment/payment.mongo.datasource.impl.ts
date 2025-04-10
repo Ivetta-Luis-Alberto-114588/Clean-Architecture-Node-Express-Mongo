@@ -1,5 +1,8 @@
 // src/infrastructure/datasources/payment/payment.mongo.datasource.impl.ts
 
+import mongoose from "mongoose"; // Importar mongoose
+import { v4 as uuidv4 } from 'uuid'; // Asegurar importación
+
 import { CustomError } from "../../../domain/errors/custom.error";
 import { PaymentModel } from "../../../data/mongodb/models/payment/payment.model";
 import { PaymentDataSource } from "../../../domain/datasources/payment/payment.datasource";
@@ -7,22 +10,90 @@ import { CreatePaymentDto } from "../../../domain/dtos/payment/create-payment.dt
 import { ProcessWebhookDto } from "../../../domain/dtos/payment/process-webhook.dto";
 import { UpdatePaymentStatusDto } from "../../../domain/dtos/payment/update-payment-status.dto";
 import { VerifyPaymentDto } from "../../../domain/dtos/payment/verify-payment.dto";
-import { PaymentEntity } from "../../../domain/entities/payment/payment.entity";
+import { PaymentEntity, PaymentMethod, PaymentProvider } from "../../../domain/entities/payment/payment.entity";
 import { MercadoPagoPayment, MercadoPagoPaymentStatus, MercadoPagoPreferenceResponse } from "../../../domain/interfaces/payment/mercado-pago.interface";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
 import { MercadoPagoAdapter } from "../../adapters/mercado-pago.adapter";
-import { OrderModel } from "../../../data/mongodb/models/order/order.model";
-import { CustomerModel } from "../../../data/mongodb/models/customers/customer.model";
+import { OrderModel } from "../../../data/mongodb/models/order/order.model"; // Importar OrderModel
+import { CustomerModel } from "../../../data/mongodb/models/customers/customer.model"; // Importar CustomerModel
 import { PaymentMapper } from "../../mappers/payment/payment.mapper";
-import { v4 } from 'uuid';
+import logger from "../../../configs/logger"; // Importar logger
 
 export class PaymentMongoDataSourceImpl implements PaymentDataSource {
 
   private readonly mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
 
+  // --- Helper para poblar relaciones ---
+  private async getPopulatedPayment(query: mongoose.FilterQuery<any>): Promise<any> {
+    return PaymentModel.findOne(query)
+      .populate({
+        path: 'saleId',
+        model: 'Order', // <<<--- CORREGIDO: Usar 'Order'
+        populate: {
+          path: 'customer',
+          model: 'Customer',
+          populate: {
+            path: 'neighborhood',
+            model: 'Neighborhood', // Asegurar nombre correcto
+            populate: {
+              path: 'city',
+              model: 'City' // Asegurar nombre correcto
+            }
+          }
+        }
+      })
+      .populate({
+        path: 'customerId',
+        model: 'Customer', // Asegurar nombre correcto
+        populate: {
+          path: 'neighborhood',
+          model: 'Neighborhood', // Asegurar nombre correcto
+          populate: {
+            path: 'city',
+            model: 'City' // Asegurar nombre correcto
+          }
+        }
+      });
+  }
+
+  private async getPopulatedPayments(query: mongoose.FilterQuery<any>, pagination: { skip: number, limit: number }): Promise<any[]> {
+    return PaymentModel.find(query)
+      .populate({
+        path: 'saleId',
+        model: 'Order', // <<<--- CORREGIDO: Usar 'Order'
+        populate: {
+          path: 'customer',
+          model: 'Customer',
+          populate: {
+            path: 'neighborhood',
+            model: 'Neighborhood', // Asegurar nombre correcto
+            populate: {
+              path: 'city',
+              model: 'City' // Asegurar nombre correcto
+            }
+          }
+        }
+      })
+      .populate({
+        path: 'customerId',
+        model: 'Customer', // Asegurar nombre correcto
+        populate: {
+          path: 'neighborhood',
+          model: 'Neighborhood', // Asegurar nombre correcto
+          populate: {
+            path: 'city',
+            model: 'City' // Asegurar nombre correcto
+          }
+        }
+      })
+      .skip(pagination.skip)
+      .limit(pagination.limit)
+      .sort({ createdAt: -1 });
+  }
+
+
   async createPreference(createPaymentDto: CreatePaymentDto): Promise<MercadoPagoPreferenceResponse> {
     try {
-      // Crear la preferencia en Mercado Pago
       const preferenceRequest = {
         items: createPaymentDto.items,
         payer: createPaymentDto.payer,
@@ -30,17 +101,13 @@ export class PaymentMongoDataSourceImpl implements PaymentDataSource {
         auto_return: 'approved' as const,
         external_reference: createPaymentDto.externalReference || `sale-${createPaymentDto.saleId}`,
         notification_url: createPaymentDto.notificationUrl,
-        statement_descriptor: 'Tu Tienda Online',
-        metadata: createPaymentDto.metadata || { uuid: v4 },
+        statement_descriptor: 'Tu Tienda Online', // Puedes hacerlo configurable
+        metadata: createPaymentDto.metadata || { uuid: uuidv4() }, // Usar uuidv4 importado
         expires: true,
         expiration_date_from: new Date().toISOString(),
         expiration_date_to: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 horas
-        // expires: false,       
-        // expiration_date_from: undefined,        
-        // expiration_date_to: undefined 
       };
 
-      // Configuración de idempotencia si se proporciona una clave
       const idempotencyConfig = createPaymentDto.idempotencyKey
         ? { idempotencyKey: createPaymentDto.idempotencyKey }
         : undefined;
@@ -52,314 +119,144 @@ export class PaymentMongoDataSourceImpl implements PaymentDataSource {
 
       return preference;
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al crear preferencia de pago: ${error}`);
+      logger.error("Error creando preferencia de MP en datasource", { error, dto: createPaymentDto });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al crear preferencia de pago: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async savePayment(createPaymentDto: CreatePaymentDto, preferenceResponse: MercadoPagoPreferenceResponse): Promise<PaymentEntity> {
     try {
-      // Buscar si ya existe un pago con la misma clave de idempotencia
+      // Buscar por idempotencia primero
       if (createPaymentDto.idempotencyKey) {
-        const existingPayment = await PaymentModel.findOne({
+        const existingPaymentDoc = await PaymentModel.findOne({
           idempotencyKey: createPaymentDto.idempotencyKey
         });
-
-        if (existingPayment) {
-          // Actualizar la referencia a la nueva preferencia
-          existingPayment.preferenceId = preferenceResponse.id;
-          await existingPayment.save();
-          return PaymentMapper.fromObjectToPaymentEntity(existingPayment);
+        if (existingPaymentDoc) {
+          logger.warn(`Pago reutilizado por idempotencia: ${createPaymentDto.idempotencyKey}`);
+          // Actualizar la preferenceId si es diferente (poco probable pero posible)
+          if (existingPaymentDoc.preferenceId !== preferenceResponse.id) {
+            existingPaymentDoc.preferenceId = preferenceResponse.id;
+            await existingPaymentDoc.save();
+          }
+          const populated = await this.getPopulatedPayment({ _id: existingPaymentDoc._id });
+          if (!populated) throw CustomError.internalServerError("Error al recuperar pago existente por idempotencia");
+          return PaymentMapper.fromObjectToPaymentEntity(populated);
         }
       }
 
-      // Crear un nuevo pago
+      // Crear nuevo pago
       const paymentData = {
-        saleId: createPaymentDto.saleId,
-        customerId: createPaymentDto.customerId,
+        saleId: new mongoose.Types.ObjectId(createPaymentDto.saleId),
+        customerId: new mongoose.Types.ObjectId(createPaymentDto.customerId),
         amount: createPaymentDto.amount,
         provider: createPaymentDto.provider,
         status: MercadoPagoPaymentStatus.PENDING,
         externalReference: preferenceResponse.external_reference || `sale-${createPaymentDto.saleId}`,
-        providerPaymentId: '',
+        providerPaymentId: '', // Se actualiza con el webhook o verificación
         preferenceId: preferenceResponse.id,
-        paymentMethod: createPaymentDto.paymentMethod,
+        paymentMethod: createPaymentDto.paymentMethod || PaymentMethod.OTHER,
         idempotencyKey: createPaymentDto.idempotencyKey,
         metadata: {
-          createPaymentDto: createPaymentDto,
-          preferenceResponse: preferenceResponse
+          // Considera guardar solo datos esenciales para evitar documentos muy grandes
+          // createPaymentDto_itemsCount: createPaymentDto.items.length,
+          // payerEmail: createPaymentDto.payer.email,
+          preferenceResponseId: preferenceResponse.id,
+          uuid: (createPaymentDto.metadata as any)?.uuid || uuidv4()
         }
       };
 
       const payment = await PaymentModel.create(paymentData);
+      logger.info(`Nuevo pago guardado en DB: ${payment._id} para pref: ${preferenceResponse.id}`);
 
-      const populatedPayment = await PaymentModel.findById(payment._id)
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        });
-
-      if (!populatedPayment) {
-        throw CustomError.internalServerError('Error al guardar el pago en la base de datos');
-      }
+      const populatedPayment = await this.getPopulatedPayment({ _id: payment._id });
+      if (!populatedPayment) throw CustomError.internalServerError('Error al recuperar el pago recién guardado');
 
       return PaymentMapper.fromObjectToPaymentEntity(populatedPayment);
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al guardar pago: ${error}`);
+      logger.error("Error guardando pago en datasource", { error, dto: createPaymentDto, prefId: preferenceResponse?.id });
+      if (error instanceof mongoose.Error.ValidationError) throw CustomError.badRequest(`Error de validación al guardar pago: ${error.message}`);
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al guardar pago: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async getPaymentById(id: string): Promise<PaymentEntity> {
     try {
-      const payment = await PaymentModel.findById(id)
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        });
-
-      if (!payment) {
-        throw CustomError.notFound(`Pago con ID ${id} no encontrado`);
-      }
-
+      if (!mongoose.Types.ObjectId.isValid(id)) throw CustomError.badRequest("ID de pago inválido");
+      const payment = await this.getPopulatedPayment({ _id: id });
+      if (!payment) throw CustomError.notFound(`Pago con ID ${id} no encontrado`);
       return PaymentMapper.fromObjectToPaymentEntity(payment);
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al obtener pago: ${error}`);
+      logger.error(`Error obteniendo pago por ID ${id}`, { error });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al obtener pago: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async getPaymentByExternalReference(externalReference: string): Promise<PaymentEntity | null> {
     try {
-      const payment = await PaymentModel.findOne({ externalReference })
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        });
-
+      const payment = await this.getPopulatedPayment({ externalReference });
       if (!payment) return null;
-
       return PaymentMapper.fromObjectToPaymentEntity(payment);
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al obtener pago por referencia externa: ${error}`);
+      logger.error(`Error obteniendo pago por externalReference ${externalReference}`, { error });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al obtener pago por referencia externa: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async getPaymentByPreferenceId(preferenceId: string): Promise<PaymentEntity | null> {
     try {
-      const payment = await PaymentModel.findOne({ preferenceId })
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        });
-
+      const payment = await this.getPopulatedPayment({ preferenceId });
       if (!payment) return null;
-
       return PaymentMapper.fromObjectToPaymentEntity(payment);
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al obtener pago por ID de preferencia: ${error}`);
+      logger.error(`Error obteniendo pago por preferenceId ${preferenceId}`, { error });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al obtener pago por ID de preferencia: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async getPaymentsBySaleId(saleId: string, paginationDto: PaginationDto): Promise<PaymentEntity[]> {
     try {
+      if (!mongoose.Types.ObjectId.isValid(saleId)) throw CustomError.badRequest("ID de venta inválido");
       const { page, limit } = paginationDto;
-
-      const payments = await PaymentModel.find({ saleId })
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ createdAt: -1 });
-
+      const skip = (page - 1) * limit;
+      const payments = await this.getPopulatedPayments({ saleId: new mongoose.Types.ObjectId(saleId) }, { skip, limit });
       return payments.map(payment => PaymentMapper.fromObjectToPaymentEntity(payment));
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al obtener pagos por ID de venta: ${error}`);
+      logger.error(`Error obteniendo pagos por saleId ${saleId}`, { error });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al obtener pagos por ID de venta: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async getPaymentsByCustomerId(customerId: string, paginationDto: PaginationDto): Promise<PaymentEntity[]> {
     try {
+      if (!mongoose.Types.ObjectId.isValid(customerId)) throw CustomError.badRequest("ID de cliente inválido");
       const { page, limit } = paginationDto;
-
-      const payments = await PaymentModel.find({ customerId })
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ createdAt: -1 });
-
+      const skip = (page - 1) * limit;
+      const payments = await this.getPopulatedPayments({ customerId: new mongoose.Types.ObjectId(customerId) }, { skip, limit });
       return payments.map(payment => PaymentMapper.fromObjectToPaymentEntity(payment));
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al obtener pagos por ID de cliente: ${error}`);
+      logger.error(`Error obteniendo pagos por customerId ${customerId}`, { error });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al obtener pagos por ID de cliente: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async updatePaymentStatus(updatePaymentStatusDto: UpdatePaymentStatusDto): Promise<PaymentEntity> {
     try {
       const { paymentId, status, providerPaymentId, metadata } = updatePaymentStatusDto;
+      if (!mongoose.Types.ObjectId.isValid(paymentId)) throw CustomError.badRequest("ID de pago inválido");
 
-      // Creamos un objeto con los campos a actualizar
-      const updateData: any = {
-        status: status,
-        providerPaymentId: providerPaymentId
-      };
-
-      // Si hay metadata, la incluimos en la actualización
+      const updateData: any = { status, providerPaymentId };
       if (metadata) {
-        // Usamos $set para actualizar solo el campo paymentInfo dentro de metadata
-        // preservando el resto de los campos que pueda tener
-        updateData['$set'] = {
-          'metadata.paymentInfo': metadata
-        };
+        updateData['$set'] = { 'metadata.paymentInfo': metadata };
       }
 
-      // Realizamos la actualización atómica con condiciones
-      // La condición asegura que solo se actualizará si:
-      // 1. El documento existe
-      // 2. O bien el estado es diferente, o bien el providerPaymentId es diferente
+      // Solo actualiza si el estado o el providerPaymentId son diferentes
       const updatedPayment = await PaymentModel.findOneAndUpdate(
         {
           _id: paymentId,
@@ -369,305 +266,143 @@ export class PaymentMongoDataSourceImpl implements PaymentDataSource {
           ]
         },
         updateData,
-        {
-          new: true, // Para que devuelva el documento actualizado
-          runValidators: true // Para asegurar que se ejecutan las validaciones del esquema
-        }
+        { new: true, runValidators: true }
       );
 
-      // Si no se actualizó nada, verificamos si el pago existe
       if (!updatedPayment) {
-        // Comprobamos si el pago existe
         const existingPayment = await PaymentModel.findById(paymentId);
-        if (!existingPayment) {
-          throw CustomError.notFound(`Pago con ID ${paymentId} no encontrado`);
-        }
-
-        // Si existe pero no se actualizó, es porque ya tiene el mismo estado y providerPaymentId
-        console.log(`No fue necesario actualizar el pago ${paymentId}: mismo estado y providerPaymentId`);
-
-        // Devolvemos el pago existente sin cambios pero con las relaciones populadas
-        const currentPayment = await PaymentModel.findById(paymentId)
-          .populate({
-            path: 'saleId',
-            model: 'Sale',
-            populate: {
-              path: 'customer',
-              model: 'Customer',
-              populate: {
-                path: 'neighborhood',
-                populate: {
-                  path: 'city'
-                }
-              }
-            }
-          })
-          .populate({
-            path: 'customerId',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          });
-
-        return PaymentMapper.fromObjectToPaymentEntity(currentPayment);
+        if (!existingPayment) throw CustomError.notFound(`Pago con ID ${paymentId} no encontrado para actualizar`);
+        logger.info(`No fue necesario actualizar el pago ${paymentId} (mismo estado y providerId)`);
+        const currentPopulated = await this.getPopulatedPayment({ _id: paymentId });
+        if (!currentPopulated) throw CustomError.internalServerError("Error recuperando pago sin cambios");
+        return PaymentMapper.fromObjectToPaymentEntity(currentPopulated);
       }
 
-      // Si se realizó la actualización, populamos las relaciones
-      const populatedPayment = await PaymentModel.findById(updatedPayment._id)
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        });
-
-      if (!populatedPayment) {
-        throw CustomError.internalServerError('Error al obtener el pago actualizado de la base de datos');
-      }
+      logger.info(`Estado de pago ${paymentId} actualizado a ${status} con providerId ${providerPaymentId}`);
+      const populatedPayment = await this.getPopulatedPayment({ _id: updatedPayment._id });
+      if (!populatedPayment) throw CustomError.internalServerError('Error al obtener el pago actualizado');
 
       return PaymentMapper.fromObjectToPaymentEntity(populatedPayment);
 
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-
-      console.error(`Error al actualizar estado del pago:`, error);
-      throw CustomError.internalServerError(`Error al actualizar estado del pago: ${error}`);
+      logger.error(`Error actualizando estado de pago ${updatePaymentStatusDto.paymentId}`, { error, dto: updatePaymentStatusDto });
+      if (error instanceof mongoose.Error.ValidationError) throw CustomError.badRequest(`Error de validación al actualizar pago: ${error.message}`);
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al actualizar estado del pago: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async verifyPayment(verifyPaymentDto: VerifyPaymentDto): Promise<MercadoPagoPayment> {
     try {
       const { providerPaymentId } = verifyPaymentDto;
-
-      // Obtener el pago de Mercado Pago
+      // La lógica principal es llamar al adaptador de MP
       const paymentInfo = await this.mercadoPagoAdapter.getPayment(providerPaymentId);
-
       return paymentInfo;
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al verificar pago: ${error}`);
+      logger.error(`Error verificando pago con provider ${verifyPaymentDto.providerPaymentId}`, { error });
+      if (error instanceof CustomError) throw error;
+      // Podríamos intentar mapear errores específicos de MP aquí si es necesario
+      throw CustomError.internalServerError(`Error al verificar pago con proveedor: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async processWebhook(processWebhookDto: ProcessWebhookDto): Promise<PaymentEntity> {
     try {
-      const { type, action, data } = processWebhookDto;
-
-      // Solo procesamos notificaciones de pagos
+      const { type, data } = processWebhookDto;
       if (type !== 'payment') {
-        throw CustomError.badRequest('Tipo de notificación no soportado');
+        logger.warn(`Webhook ignorado: tipo ${type} no es 'payment'`);
+        throw CustomError.badRequest('Tipo de notificación no soportado'); // Lanzar error para que el Use Case lo maneje
       }
 
-      // Obtener el pago de Mercado Pago
-      const paymentInfo = await this.mercadoPagoAdapter.getPayment(data.id);
+      const providerPaymentId = data.id;
+      logger.info(`Procesando webhook para pago MP ID: ${providerPaymentId}`);
 
-      // Buscar el pago en nuestra base de datos por referencia externa
+      // 1. Obtener info del pago desde MP
+      const paymentInfo = await this.mercadoPagoAdapter.getPayment(providerPaymentId);
+      logger.debug(`Info de MP obtenida para ${providerPaymentId}`, { status: paymentInfo.status, ref: paymentInfo.external_reference });
+
+      // 2. Buscar nuestro pago usando la referencia externa
       const payment = await PaymentModel.findOne({
         externalReference: paymentInfo.external_reference
       });
 
       if (!payment) {
-        throw CustomError.notFound(`Pago con referencia externa ${paymentInfo.external_reference} no encontrado`);
+        logger.error(`Pago local no encontrado para external_reference: ${paymentInfo.external_reference} (Webhook para MP ID: ${providerPaymentId})`);
+        // Es importante NO lanzar un error 500 aquí, porque MP seguirá reintentando.
+        // Lanzar un error específico que el Use Case pueda interpretar como "ignorable".
+        throw CustomError.notFound(`Pago no encontrado para referencia ${paymentInfo.external_reference}, webhook ignorado.`);
       }
 
-      // Actualizar el estado del pago
-      payment.status = paymentInfo.status;
-      payment.providerPaymentId = paymentInfo.id.toString();
-      payment.metadata = {
-        ...payment.metadata,
-        paymentInfo
-      };
-
-      await payment.save();
-
-      const updatedPayment = await PaymentModel.findById(payment._id)
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        });
-
-      if (!updatedPayment) {
-        throw CustomError.internalServerError('Error al actualizar el pago en la base de datos');
+      // 3. Actualizar nuestro pago (usando el método ya existente)
+      const [dtoError, updateDto] = UpdatePaymentStatusDto.create({
+        paymentId: payment._id.toString(),
+        status: paymentInfo.status,
+        providerPaymentId: paymentInfo.id.toString(),
+        metadata: paymentInfo // Guardar toda la info de MP
+      });
+      if (dtoError) {
+        // Error creando el DTO, esto es un problema interno grave
+        logger.error("Error creando DTO de actualización desde webhook", { dtoError, paymentId: payment._id });
+        throw CustomError.internalServerError(`Error interno procesando datos de webhook: ${dtoError}`);
       }
 
-      return PaymentMapper.fromObjectToPaymentEntity(updatedPayment);
+      const updatedPayment = await this.updatePaymentStatus(updateDto!); // Reutiliza la lógica de actualización
+      logger.info(`Pago ${payment._id} actualizado vía webhook a estado ${paymentInfo.status}`);
+
+      return updatedPayment; // updatePaymentStatus ya devuelve la entidad poblada
+
     } catch (error) {
-      if (error instanceof CustomError) {
+      // No relanzar errores Not Found específicos del webhook para evitar reintentos
+      if (error instanceof CustomError && error.statusCode === 404 && error.message.includes('webhook ignorado')) {
+        logger.warn(error.message);
+        // Podríamos necesitar devolver algo o que el UseCase maneje este caso específico.
+        // Por ahora, simplemente no relanzamos el error para detener el procesamiento aquí.
+        // ¡OJO! Esto significa que el UseCase no recibirá error y podría continuar.
+        // Es mejor relanzar y que el Use Case decida.
         throw error;
       }
-      throw CustomError.internalServerError(`Error al procesar webhook: ${error}`);
+
+      logger.error(`Error procesando webhook en datasource`, { error, dto: processWebhookDto });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al procesar webhook: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async getAllPayments(paginationDto: PaginationDto): Promise<PaymentEntity[]> {
     try {
       const { page, limit } = paginationDto;
-
-      const payments = await PaymentModel.find()
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .sort({ createdAt: -1 });
-
+      const skip = (page - 1) * limit;
+      const payments = await this.getPopulatedPayments({}, { skip, limit });
       return payments.map(payment => PaymentMapper.fromObjectToPaymentEntity(payment));
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al obtener todos los pagos: ${error}`);
+      logger.error(`Error obteniendo todos los pagos`, { error });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al obtener todos los pagos: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async getPaymentByIdempotencyKey(idempotencyKey: string): Promise<PaymentEntity | null> {
     try {
-      const payment = await PaymentModel.findOne({ idempotencyKey })
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        });
-
+      const payment = await this.getPopulatedPayment({ idempotencyKey });
       if (!payment) return null;
-
       return PaymentMapper.fromObjectToPaymentEntity(payment);
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al obtener pago por clave de idempotencia: ${error}`);
+      logger.error(`Error obteniendo pago por idempotencyKey ${idempotencyKey}`, { error });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al obtener pago por clave de idempotencia: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
 
   async getPaymentByProviderPaymentId(providerPaymentId: string): Promise<PaymentEntity | null> {
     try {
-      const payment = await PaymentModel.findOne({ providerPaymentId })
-        .populate({
-          path: 'saleId',
-          model: 'Sale',
-          populate: {
-            path: 'customer',
-            model: 'Customer',
-            populate: {
-              path: 'neighborhood',
-              populate: {
-                path: 'city'
-              }
-            }
-          }
-        })
-        .populate({
-          path: 'customerId',
-          model: 'Customer',
-          populate: {
-            path: 'neighborhood',
-            populate: {
-              path: 'city'
-            }
-          }
-        });
-
+      const payment = await this.getPopulatedPayment({ providerPaymentId });
       if (!payment) return null;
-
       return PaymentMapper.fromObjectToPaymentEntity(payment);
     } catch (error) {
-      if (error instanceof CustomError) {
-        throw error;
-      }
-      throw CustomError.internalServerError(`Error al obtener pago por ID de proveedor: ${error}`);
+      logger.error(`Error obteniendo pago por providerPaymentId ${providerPaymentId}`, { error });
+      if (error instanceof CustomError) throw error;
+      throw CustomError.internalServerError(`Error al obtener pago por ID de proveedor: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
-
-}
-
-function uuidv4() {
-  throw new Error("Function not implemented.");
 }

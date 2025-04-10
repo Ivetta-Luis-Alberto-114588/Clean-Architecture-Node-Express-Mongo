@@ -5,6 +5,8 @@ import { get } from "env-var"
 
 export const envs = {
 
+    DEFAULT_NEIGHBORHOOD_ID: get('DEFAULT_NEIGHBORHOOD_ID').required().asString(), // ID de barrio por defecto para nuevos clientes
+
     PORT: get('PORT').required().asPortNumber(),
 
     MONGO_URL: get('MONGO_URL').required().asString(),
