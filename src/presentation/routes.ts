@@ -11,6 +11,7 @@ import { OrderRoutes } from "./order/routes.order";
 import { PaymentRoutes } from "./payment/routes.payment";
 import { ChatbotRoutes } from "./chatbot/routes.chatbot"; // Importamos las rutas del chatbot
 import { CartRoutes } from "./cart/routes.cart";
+import { CouponRoutes } from "./coupon/routes.coupon";
 
 export class MainRoutes {
 
@@ -42,6 +43,9 @@ export class MainRoutes {
 
         // Rutas del carrito de compras
         router.use("/api/cart", CartRoutes.getCartRoutes);
+
+        // Rutas de Cupones (para administración)
+        router.use("/api/coupons", CouponRoutes.getCouponRoutes);
 
         return router
     }

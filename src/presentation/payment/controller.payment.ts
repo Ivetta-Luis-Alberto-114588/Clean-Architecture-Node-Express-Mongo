@@ -1,6 +1,7 @@
 // src/presentation/payment/controller.payment.ts
 
-import { Request, Response } from "express";
+// <<<--- AÑADIR IMPORTACIONES --- >>>
+import { Request, Response } from "express"; // Importar tipos de Express
 import { CustomError } from "../../domain/errors/custom.error";
 import { PaymentRepository } from "../../domain/repositories/payment/payment.repository";
 import { OrderRepository } from "../../domain/repositories/order/order.repository";
@@ -16,12 +17,13 @@ import { VerifyPaymentUseCase } from "../../domain/use-cases/payment/verify-paym
 import { ProcessWebhookUseCase } from "../../domain/use-cases/payment/process-webhook.use-case";
 import { GetPaymentByOrderUseCase } from "../../domain/use-cases/payment/get-payment-by-order.use-case";
 import { GetAllPaymentsUseCase } from "../../domain/use-cases/payment/get-all-payments.use-case";
-import { PaymentProvider } from "../../domain/entities/payment/payment.entity";
-import { MercadoPagoItem, MercadoPagoPayer } from "../../domain/interfaces/payment/mercado-pago.interface";
+import { PaymentEntity, PaymentProvider } from "../../domain/entities/payment/payment.entity"; // Importar PaymentEntity y PaymentProvider
+import { MercadoPagoItem, MercadoPagoPayer, MercadoPagoPayment } from "../../domain/interfaces/payment/mercado-pago.interface"; // Importar interfaces de MP
 import { envs } from "../../configs/envs";
 import { MercadoPagoAdapter } from "../../infrastructure/adapters/mercado-pago.adapter";
 import { PaymentModel } from "../../data/mongodb/models/payment/payment.model";
 import { v4 as uuidv4 } from 'uuid';
+// <<<--- FIN IMPORTACIONES --- >>>
 
 export class PaymentController {
   constructor(
@@ -45,14 +47,17 @@ export class PaymentController {
       const { saleId } = req.params;
       const host = `${req.protocol}://${req.get('host')}`;
 
-      // Obtener la venta
       const sale = await this.orderRepository.findById(saleId);
       if (!sale) {
         res.status(404).json({ error: `Venta con ID ${saleId} no encontrada` });
         return;
       }
 
-      // Crear los items para Mercado Pago
+      const customer = sale.customer;
+      if (!customer) {
+        throw CustomError.internalServerError(`No se pudo encontrar el cliente asociado al pedido ${saleId}`);
+      }
+
       const items: MercadoPagoItem[] = sale.items.map(item => ({
         id: item.product.id.toString(),
         title: item.product.name,
@@ -61,46 +66,38 @@ export class PaymentController {
         category_id: item.product.category.id.toString(),
         quantity: item.quantity,
         unit_price: item.unitPrice,
-        currency_id: 'ARS' // Moneda Argentina por defecto, podría ser parametrizable
+        currency_id: 'ARS'
       }));
 
-      // Crear la información del pagador
       const payer: MercadoPagoPayer = {
-        name: sale.customer.name.split(' ')[0] || '', // Primer nombre
-        surname: sale.customer.name.split(' ').slice(1).join(' ') || '', // Apellido
-        email: sale.customer.email,
+        name: customer.name.split(' ')[0] || customer.name,
+        surname: customer.name.split(' ').slice(1).join(' ') || '',
+        email: customer.email,
         phone: {
-          area_code: sale.customer.phone.substring(0, 3) || '000',
-          number: sale.customer.phone.substring(3) || '00000000'
+          area_code: customer.phone.substring(0, 3) || '000',
+          number: customer.phone.substring(3) || '0000000'
         },
         address: {
-          zip_code: '0000', // Podría obtenerse del neighborhood
-          street_name: sale.customer.address.split(' ')[0] || '',
-          street_number: parseInt(sale.customer.address.split(' ')[1] || '0')
+          zip_code: '0000',
+          street_name: customer.address.split(' ').slice(0, -1).join(' ') || customer.address,
+          street_number: parseInt(customer.address.split(' ').pop() || '0') || 0
         }
       };
 
-      // Generar clave de idempotencia
       const idempotencyKey = `payment-${saleId}-${Date.now()}`;
 
-      // Crear DTO para el pago
       const createPaymentDtoData = {
         saleId: saleId,
-        customerId: sale.customer.id.toString(),
+        customerId: customer.id.toString(),
         amount: sale.total,
         provider: PaymentProvider.MERCADO_PAGO,
         items,
         payer,
         backUrls: {
-          // success: `${host}/api/payments/success?saleId=${saleId}`,
-          // failure: `${host}/api/payments/failure?saleId=${saleId}`,
-          // pending: `${host}/api/payments/pending?saleId=${saleId}`
-          success: `www.google.com.ar`,
-          failure: `/api/payments/failure?saleId=${saleId}`,
-          pending: `/api/payments/pending?saleId=${saleId}`
+          success: `${envs.FRONTEND_URL}/payment/success?saleId=${saleId}`, // Usar URL del frontend
+          failure: `${envs.FRONTEND_URL}/payment/failure?saleId=${saleId}`,
+          pending: `${envs.FRONTEND_URL}/payment/pending?saleId=${saleId}`
         },
-        // notificationUrl: `${host}/api/payments/webhook`,
-        // el envs le pone el / al final automaticamente
         notificationUrl: `${envs.URL_RESPONSE_WEBHOOK_NGROK}api/payments/webhook`,
         idempotencyKey
       };
@@ -112,7 +109,6 @@ export class PaymentController {
         return;
       }
 
-      // Crear el pago utilizando el caso de uso
       const createPaymentUseCase = new CreatePaymentUseCase(
         this.paymentRepository,
         this.customerRepository,
@@ -121,7 +117,6 @@ export class PaymentController {
 
       const result = await createPaymentUseCase.execute(createPaymentDto!);
 
-      // Responder con los datos necesarios para el frontend
       res.json({
         payment: result.payment,
         preference: {
@@ -131,6 +126,7 @@ export class PaymentController {
         }
       });
     } catch (error) {
+      // <<<--- Corregir llamada a handleError --- >>>
       this.handleError(error, res);
     }
   };
@@ -141,15 +137,14 @@ export class PaymentController {
       const { saleId } = req.params;
       const host = `${req.protocol}://${req.get('host')}`;
 
-      // Obtener la venta
       const sale = await this.orderRepository.findById(saleId);
       if (!sale) {
         res.status(404).json({ error: `Venta con ID ${saleId} no encontrada` });
         return;
       }
 
-      // Preparar datos para la preferencia
-      req.body = {
+      // <<<--- Crear variable separada en lugar de reasignar req.body --- >>>
+      const preferenceBody = {
         items: [
           {
             id: saleId,
@@ -160,13 +155,10 @@ export class PaymentController {
         ]
       };
 
-      // Obtengo la instancia del adaptador
       const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
+      // <<<--- Pasar preferenceBody al adaptador --- >>>
+      const preference = await mercadoPagoAdapter.preferencePrueba(preferenceBody); // Pasar el body correcto
 
-      // Crear la preferencia directamente con el adaptador
-      const preference = await mercadoPagoAdapter.preferencePrueba(req);
-
-      // Guardar el pago en la base de datos
       const newPayment = await PaymentModel.create({
         saleId: saleId,
         customerId: sale.customer.id.toString(),
@@ -179,12 +171,11 @@ export class PaymentController {
         paymentMethod: 'other',
         idempotencyKey: `payment-${saleId}-${Date.now()}`,
         metadata: {
-          createPaymentDto: req.body,
+          createPaymentDto: preferenceBody, // Guardar el body usado
           preferenceResponse: preference
         }
       });
 
-      // Cargar las relaciones
       const populatedPayment = await PaymentModel.findById(newPayment._id)
         .populate({
           path: 'saleId',
@@ -208,7 +199,6 @@ export class PaymentController {
           }
         });
 
-      // Responder con los datos necesarios para el frontend
       res.json({
         payment: populatedPayment,
         preference: {
@@ -218,6 +208,7 @@ export class PaymentController {
         }
       });
     } catch (error) {
+      // <<<--- Corregir llamada a handleError --- >>>
       this.handleError(error, res);
     }
   };
@@ -231,6 +222,7 @@ export class PaymentController {
 
       res.json(payment);
     } catch (error) {
+      // <<<--- Corregir llamada a handleError --- >>>
       this.handleError(error, res);
     }
   };
@@ -259,6 +251,7 @@ export class PaymentController {
 
       res.json(payments);
     } catch (error) {
+      // <<<--- Corregir llamada a handleError --- >>>
       this.handleError(error, res);
     }
   };
@@ -282,13 +275,15 @@ export class PaymentController {
 
       res.json(payments);
     } catch (error) {
+      // <<<--- Corregir llamada a handleError --- >>>
       this.handleError(error, res);
     }
   };
 
   verifyPayment = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { id: paymentId, providerPaymentId } = req.body;
+      // <<<--- Corregir desestructuración de req.body --- >>>
+      const { paymentId, providerPaymentId } = req.body; // Asumir que vienen así
 
       const [error, verifyPaymentDto] = VerifyPaymentDto.create({
         paymentId,
@@ -309,12 +304,12 @@ export class PaymentController {
 
       res.json(result);
     } catch (error) {
+      // <<<--- Corregir llamada a handleError --- >>>
       this.handleError(error, res);
     }
   };
 
 
-  // verificar el status de una preferencia
   verifyPreferenceStatus = async (req: Request, res: Response): Promise<void> => {
     try {
       const { preferenceId } = req.params;
@@ -324,7 +319,6 @@ export class PaymentController {
         return;
       }
 
-      // Buscar el pago asociado a esta preferencia en nuestra base de datos
       const payment = await this.paymentRepository.getPaymentByPreferenceId(preferenceId);
 
       if (!payment) {
@@ -332,19 +326,14 @@ export class PaymentController {
         return;
       }
 
-      // Obtener la instancia del adaptador de Mercado Pago
       const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
-
-      // Verificar el estado de la preferencia con Mercado Pago
       const preferenceInfo = await mercadoPagoAdapter.getPreference(preferenceId);
 
-      // Si hay un paymentId asociado, verificamos el estado del pago
-      let paymentInfo = null;
+      let paymentInfo: MercadoPagoPayment | null = null; // Definir tipo explícito
       if (payment.providerPaymentId) {
         paymentInfo = await mercadoPagoAdapter.getPayment(payment.providerPaymentId);
       }
 
-      // Devolver la información completa
       res.json({
         success: true,
         payment: {
@@ -365,6 +354,7 @@ export class PaymentController {
         }
       });
     } catch (error) {
+      // <<<--- Corregir llamada a handleError --- >>>
       this.handleError(error, res);
     }
   };
@@ -372,45 +362,29 @@ export class PaymentController {
 
 
   processWebhook = async (req: Request, res: Response): Promise<void> => {
-
     try {
+      console.log('Webhook recibido:', { query: req.query, body: req.body, headers: req.headers });
 
-      // Loguea la información completa recibida para depuración
-      console.log('Webhook recibido:', {
-        query: req.query,
-        body: req.body,
-        headers: req.headers
-      });
-
-      // Mercado Pago puede enviar notificaciones en diferentes formatos
-      // dependiendo del entorno y el tipo de notificación
       let paymentId;
 
-      // Formato 1: notificación tipo IPN
       if (req.query.id && req.query.topic) {
         const topic = req.query.topic as string;
         paymentId = req.query.id as string;
-
         if (topic !== 'payment') {
-          // Solo procesamos notificaciones de pagos
           console.log(`Ignorando notificación de tipo: ${topic}`);
           res.status(200).json({ message: 'Notificación recibida pero ignorada (topic no relevante)' });
           return;
         }
       }
-      // Formato 2: notificación tipo Webhook
       else if (req.body.data && req.body.type) {
         const type = req.body.type as string;
         paymentId = req.body.data.id as string;
-
         if (type !== 'payment') {
-          // Solo procesamos notificaciones de pagos
           console.log(`Ignorando notificación de tipo: ${type}`);
           res.status(200).json({ message: 'Notificación recibida pero ignorada (type no relevante)' });
           return;
         }
       } else {
-        // Formato no reconocido
         console.log('Formato de notificación no reconocido');
         res.status(400).json({ message: 'Formato de notificación no reconocido' });
         return;
@@ -422,167 +396,160 @@ export class PaymentController {
         return;
       }
 
-      // Obtenemos los detalles del pago desde Mercado Pago
       const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
       const paymentInfo = await mercadoPagoAdapter.getPayment(paymentId);
 
-      // Buscamos el pago en nuestra base de datos por externalReference
       const payment = await this.paymentRepository.getPaymentByExternalReference(
         paymentInfo.external_reference
       );
 
       if (!payment) {
         console.log(`Pago no encontrado para external_reference: ${paymentInfo.external_reference}`);
-        res.status(404).json({ message: 'Pago no encontrado' });
+        // Respondemos 200 OK aunque no lo encontremos para evitar reintentos de MP
+        res.status(200).json({ message: 'Pago no encontrado en DB, notificación ignorada.' });
         return;
       }
 
-      // Actualizamos el estado del pago en nuestra base de datos
-      const updatePaymentStatusDto = UpdatePaymentStatusDto.create({
+      const [dtoError, updatePaymentStatusDto] = UpdatePaymentStatusDto.create({ // <<<--- Capturar error del DTO --- >>>
         paymentId: payment.id,
         status: paymentInfo.status,
         providerPaymentId: paymentInfo.id.toString(),
         metadata: paymentInfo
       });
 
-      if (updatePaymentStatusDto[0]) {
-        console.error('Error creando DTO:', updatePaymentStatusDto[0]);
-        res.status(400).json({ error: updatePaymentStatusDto[0] });
+      // <<<--- Manejar error del DTO --- >>>
+      if (dtoError) {
+        console.error('Error creando DTO para actualizar estado:', dtoError);
+        // Respondemos 200 OK para evitar reintentos, pero logueamos el error
+        res.status(200).json({ status: 'error', message: `Error interno al procesar DTO: ${dtoError}` });
         return;
       }
 
-      // Actualizamos el pago
-      const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto[1]!);
+      const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto!); // Usar el DTO validado
 
-      // Si el pago está aprobado, actualizamos el estado de la venta
       if (paymentInfo.status === 'approved') {
         await this.orderRepository.updateStatus(payment.saleId, {
           status: 'completed',
           notes: `Pago aprobado con ID ${paymentInfo.id}`
         });
-
-        // Aquí podrías enviar una notificación al cliente, generar factura, etc.
       }
 
-      // Siempre respondemos con 200 OK para que Mercado Pago no reintente
       res.status(200).json({
         message: 'Notificación procesada exitosamente',
         paymentStatus: paymentInfo.status
       });
     } catch (error) {
       console.error('Error procesando webhook:', error);
-      // Siempre respondemos con 200 OK para que Mercado Pago no reintente
       res.status(200).json({ status: 'error', message: 'Error procesando webhook' });
     }
   };
 
 
-  // Endpoints para las redirecciones de MercadoPago
   paymentSuccess = async (req: Request, res: Response): Promise<void> => {
     try {
       const { saleId, payment_id, external_reference, status } = req.query;
-
       console.log('Pago exitoso:', { saleId, payment_id, external_reference, status });
 
-      if (payment_id) {
-        // Verificar el pago con MercadoPago
-        const [error, verifyPaymentDto] = VerifyPaymentDto.create({
-          paymentId: external_reference?.toString() || saleId?.toString() || '',
-          providerPaymentId: payment_id.toString()
-        });
+      if (payment_id && (external_reference || saleId)) { // Asegurar que tenemos una referencia
+        const paymentIdForVerification = external_reference?.toString() || saleId?.toString();
+        if (paymentIdForVerification) {
+          const [error, verifyPaymentDto] = VerifyPaymentDto.create({
+            // Necesitamos el ID de *nuestro* registro de pago, no el de MP.
+            // Asumimos que external_reference o saleId pueden mapear a nuestro paymentId.
+            // ¡ESTO PUEDE REQUERIR AJUSTES! Buscar el pago por external_reference primero.
+            paymentId: paymentIdForVerification, // ¡OJO! Esto podría no ser nuestro ID interno.
+            providerPaymentId: payment_id.toString()
+          });
 
-        if (!error && verifyPaymentDto) {
-          const verifyPaymentUseCase = new VerifyPaymentUseCase(
-            this.paymentRepository,
-            this.orderRepository
-          );
+          if (!error && verifyPaymentDto) {
+            // Buscar nuestro pago por external_reference para obtener el ID correcto
+            const localPayment = await this.paymentRepository.getPaymentByExternalReference(paymentIdForVerification);
+            if (localPayment) {
+              const [errorCorrected, verifyDtoCorrected] = VerifyPaymentDto.create({
+                paymentId: localPayment.id, // Usar el ID local correcto
+                providerPaymentId: payment_id.toString()
+              });
 
-          // Verificar el pago de forma asíncrona para no hacer esperar al usuario
-          verifyPaymentUseCase.execute(verifyPaymentDto)
-            .then(result => {
-              console.log('Pago verificado correctamente:', result.payment.id);
-            })
-            .catch(error => {
-              console.error('Error al verificar pago:', error);
-            });
+              if (!errorCorrected && verifyDtoCorrected) {
+                const verifyPaymentUseCase = new VerifyPaymentUseCase(
+                  this.paymentRepository,
+                  this.orderRepository
+                );
+                verifyPaymentUseCase.execute(verifyDtoCorrected)
+                  .then(result => console.log('Pago verificado correctamente en success:', result.payment.id))
+                  .catch(error => console.error('Error al verificar pago en success:', error));
+              } else {
+                console.error('Error creando DTO de verificación corregido:', errorCorrected);
+              }
+            } else {
+              console.warn(`No se encontró pago local para external_reference: ${paymentIdForVerification} en callback success`);
+            }
+          } else {
+            console.error('Error creando DTO de verificación inicial:', error);
+          }
+        } else {
+          console.warn('No se pudo determinar una referencia válida (external_reference o saleId) en callback success');
         }
       }
 
-      // Redirigir al frontend o mostrar página de éxito
-      const redirectUrl = `${envs.FRONTEND_URL}/payment/success?saleId=${saleId}`;
-      res.redirect(redirectUrl);
+      const redirectUrl = `${envs.FRONTEND_URL}/payment/success?saleId=${saleId || external_reference || ''}`;
+      res.redirect(302, redirectUrl); // Usar 302 para redirección temporal
     } catch (error) {
       console.error('Error en paymentSuccess:', error);
-
-      // Redirigir al frontend con error
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
-      res.redirect(redirectUrl);
+      res.redirect(302, redirectUrl);
     }
   };
 
   paymentFailure = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { saleId } = req.query;
-
+      const { saleId, external_reference } = req.query; // Capturar también external_reference
       console.log('Pago fallido:', req.query);
-
-      // Redirigir al frontend o mostrar página de error
-      const redirectUrl = `${envs.FRONTEND_URL}/payment/failure?saleId=${saleId}`;
-      res.redirect(redirectUrl);
+      const reference = saleId || external_reference || '';
+      const redirectUrl = `${envs.FRONTEND_URL}/payment/failure?saleId=${reference}`;
+      res.redirect(302, redirectUrl);
     } catch (error) {
       console.error('Error en paymentFailure:', error);
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
-      res.redirect(redirectUrl);
+      res.redirect(302, redirectUrl);
     }
   };
 
   paymentPending = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { saleId } = req.query;
-
+      const { saleId, external_reference } = req.query; // Capturar también external_reference
       console.log('Pago pendiente:', req.query);
-
-      // Redirigir al frontend o mostrar página de pendiente
-      const redirectUrl = `${envs.FRONTEND_URL}/payment/pending?saleId=${saleId}`;
-      res.redirect(redirectUrl);
+      const reference = saleId || external_reference || '';
+      const redirectUrl = `${envs.FRONTEND_URL}/payment/pending?saleId=${reference}`;
+      res.redirect(302, redirectUrl);
     } catch (error) {
       console.error('Error en paymentPending:', error);
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
-      res.redirect(redirectUrl);
+      res.redirect(302, redirectUrl);
     }
   };
 
 
-  //para obtener todos los pagos de MercadoPago
   getAllMercadoPagoPayments = async (req: Request, res: Response): Promise<void> => {
     try {
       const { page = 1, limit = 10, status, startDate, endDate } = req.query;
 
-      // Preparar filtros para Mercado Pago
       const filters: any = {};
       if (status) filters.status = status;
-      if (startDate) filters.begin_date = startDate;
-      if (endDate) filters.end_date = endDate;
+      if (startDate) filters.begin_date = new Date(startDate as string).toISOString(); // Asegurar formato ISO
+      if (endDate) filters.end_date = new Date(endDate as string).toISOString(); // Asegurar formato ISO
 
-      // Calcular offset para paginación
       const offset = (Number(page) - 1) * Number(limit);
 
-      // Obtener pagos desde Mercado Pago
       const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
       const paymentsData = await mercadoPagoAdapter.getAllPayments(Number(limit), offset, filters);
 
-      // Procesar y enriquecer los resultados si es necesario
       const enhancedPayments = await Promise.all(
-        paymentsData.results.map(async (payment) => {
-          // Buscar si tenemos este pago en nuestra base de datos
+        paymentsData.results.map(async (payment: any) => { // Tipar payment como any temporalmente
           const localPayment = await this.paymentRepository.getPaymentByProviderPaymentId(
             payment.id.toString()
           );
-
-          return {
-            ...payment,
-            localPaymentInfo: localPayment || null
-          };
+          return { ...payment, localPaymentInfo: localPayment || null };
         })
       );
 
@@ -593,45 +560,33 @@ export class PaymentController {
         payments: enhancedPayments
       });
     } catch (error) {
+      // <<<--- Corregir llamada a handleError --- >>>
       this.handleError(error, res);
     }
   };
 
 
-
-  //para obtener todos los cobros de MercadoPago
   getAllMercadoPagoCharges = async (req: Request, res: Response): Promise<void> => {
     try {
       const { page = 1, limit = 10, status, startDate, endDate } = req.query;
 
-      // Preparar filtros para Mercado Pago
       const filters: any = {};
       if (status) filters.status = status;
-      if (startDate) filters.begin_date = startDate;
-      if (endDate) filters.end_date = endDate;
+      if (startDate) filters.begin_date = new Date(startDate as string).toISOString(); // Asegurar formato ISO
+      if (endDate) filters.end_date = new Date(endDate as string).toISOString(); // Asegurar formato ISO
+      // filters.operation_type = 'regular_payment'; // Descomentar si solo quieres cobros
 
-      // Añadir filtro para solo traer los cobros (pagos recibidos)
-      //filters.operation_type = 'regular_payment';
-
-      // Calcular offset para paginación
       const offset = (Number(page) - 1) * Number(limit);
 
-      // Obtener cobros desde Mercado Pago
       const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
       const chargesData = await mercadoPagoAdapter.getAllPayments(Number(limit), offset, filters);
 
-      // Procesar y enriquecer los resultados si es necesario
       const enhancedCharges = await Promise.all(
-        chargesData.results.map(async (charge) => {
-          // Buscar si tenemos este cobro en nuestra base de datos
+        chargesData.results.map(async (charge: any) => { // Tipar charge como any temporalmente
           const localPayment = await this.paymentRepository.getPaymentByProviderPaymentId(
             charge.id.toString()
           );
-
-          return {
-            ...charge,
-            localPaymentInfo: localPayment || null
-          };
+          return { ...charge, localPaymentInfo: localPayment || null };
         })
       );
 
@@ -642,6 +597,7 @@ export class PaymentController {
         charges: enhancedCharges
       });
     } catch (error) {
+      // <<<--- Corregir llamada a handleError --- >>>
       this.handleError(error, res);
     }
   };

@@ -1,4 +1,4 @@
-// src/infrastructure/repositories/sales/sale.repository.impl.ts
+// src/infrastructure/repositories/order/order.repository.impl.ts
 import { OrderDataSource } from "../../../domain/datasources/order/order.datasource";
 import { CreateOrderDto } from "../../../domain/dtos/order/create-order.dto";
 import { UpdateOrderStatusDto } from "../../../domain/dtos/order/update-order-status.dto";
@@ -10,8 +10,19 @@ export class OrderRepositoryImpl implements OrderRepository {
 
     constructor(private readonly orderDataSource: OrderDataSource) { }
 
-    async create(createSaleDto: CreateOrderDto): Promise<OrderEntity> {
-        return await this.orderDataSource.create(createSaleDto);
+    // <<<--- Modificar firma de create --- >>>
+    async create(
+        createSaleDto: CreateOrderDto,
+        calculatedDiscountRate: number,
+        couponIdToIncrement: string | null | undefined,
+        finalCustomerId: string // Recibir el argumento
+    ): Promise<OrderEntity> {
+        return await this.orderDataSource.create(
+            createSaleDto,
+            calculatedDiscountRate,
+            couponIdToIncrement,
+            finalCustomerId // Pasar el argumento al datasource
+        );
     }
 
     async getAll(paginationDto: PaginationDto): Promise<OrderEntity[]> {

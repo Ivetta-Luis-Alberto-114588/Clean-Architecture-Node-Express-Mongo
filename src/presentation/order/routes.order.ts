@@ -1,3 +1,4 @@
+// src/presentation/order/routes.order.ts
 import { Router } from "express";
 import { OrderController } from "./controller.order";
 import { OrderMongoDataSourceImpl } from "../../infrastructure/datasources/order/order.mongo.datasource.impl";
@@ -7,35 +8,45 @@ import { CustomerRepositoryImpl } from "../../infrastructure/repositories/custom
 import { ProductMongoDataSourceImpl } from "../../infrastructure/datasources/products/product.mongo.datasource.impl";
 import { ProductRepositoryImpl } from "../../infrastructure/repositories/products/product.repository.impl";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { CouponMongoDataSourceImpl } from "../../infrastructure/datasources/coupon/coupon.mongo.datasource.impl";
+import { CouponRepositoryImpl } from "../../infrastructure/repositories/coupon/coupon.repository.impl";
 
 export class OrderRoutes {
-    static get getSaleRoutes(): Router {
+    static get getOrderRoutes(): Router { // Renombrado para consistencia
         const router = Router();
 
-        // Inicializamos las dependencias
-        const saleDatasource = new OrderMongoDataSourceImpl();
+        // Dependencias
+        const orderDatasource = new OrderMongoDataSourceImpl();
         const customerDatasource = new CustomerMongoDataSourceImpl();
         const productDatasource = new ProductMongoDataSourceImpl();
+        const couponDatasource = new CouponMongoDataSourceImpl();
 
-        const saleRepository = new OrderRepositoryImpl(saleDatasource);
+        const orderRepository = new OrderRepositoryImpl(orderDatasource);
         const customerRepository = new CustomerRepositoryImpl(customerDatasource);
         const productRepository = new ProductRepositoryImpl(productDatasource);
+        const couponRepository = new CouponRepositoryImpl(couponDatasource);
 
-        const controller = new OrderController(saleRepository, customerRepository, productRepository);
+        const controller = new OrderController(
+            orderRepository,
+            customerRepository,
+            productRepository,
+            couponRepository
+        );
 
-        // Definimos las rutas
-        // Podemos usar el middleware de autenticación para proteger estas rutas
-        // ya que generalmente las ventas solo pueden ser gestionadas por usuarios autenticados
+        // --- Rutas ---
 
-        // Rutas básicas CRUD
-        router.get('/', controller.getAllSales);
-        router.get('/:id', controller.getSaleById);
-        router.post('/', controller.createSale);
-        router.patch('/:id/status', controller.updateSaleStatus);
+        // <<<--- Ruta POST sin AuthMiddleware para permitir invitados --- >>>
+        router.post('/', controller.createSale); // Podría ser createOrder
 
-        // Rutas adicionales específicas
-        router.get('/by-customer/:customerId', controller.getSalesByCustomer);
-        router.post('/by-date-range', controller.getSalesByDateRange);
+        // <<<--- Rutas GET y PATCH podrían requerir autenticación (y rol admin?) --- >>>
+        // Ejemplo: router.get('/', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(['ADMIN_ROLE'])], controller.getAllSales);
+        router.get('/', controller.getAllSales); // Por ahora público o requiere auth general
+        router.get('/:id', controller.getSaleById); // Público o requiere auth general/admin
+        router.patch('/:id/status', controller.updateSaleStatus); // Probablemente requiere auth admin
+
+        // Rutas adicionales específicas (podrían requerir auth)
+        router.get('/by-customer/:customerId', controller.getSalesByCustomer); // Requiere auth (¿o admin?)
+        router.post('/by-date-range', controller.getSalesByDateRange); // Probablemente requiere auth admin
 
         return router;
     }

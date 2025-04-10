@@ -1,21 +1,27 @@
+// src/presentation/auth/routes.auth.ts
 import { Router, Request, Response } from "express";
 import { AuthController } from "./controller.auth";
 import { AuthRepositoryImpl } from "../../infrastructure/repositories/auth.repository.impl";
 import { AuthDatasourceImpl } from "../../infrastructure/datasources/auth.mongo.datasource.impl";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { RateLimitMiddleware } from "../middlewares/rate-limit.middleware";
+import { CustomerRepositoryImpl } from "../../infrastructure/repositories/customers/customer.repository.impl"; // <<<--- IMPORTAR Repo
+import { CustomerMongoDataSourceImpl } from "../../infrastructure/datasources/customers/customer.mongo.datasource.impl"; // <<<--- IMPORTAR DS
 
-export class AuthRoutes { 
+export class AuthRoutes {
 
-    static get getAuthRoutes() : Router {
-        
+    static get getAuthRoutes(): Router {
+
         const router = Router();
-        const database = new AuthDatasourceImpl();
-        const authRepository = new AuthRepositoryImpl(database);
-        const controller = new AuthController(authRepository);
+        const authDatasource = new AuthDatasourceImpl();
+        const customerDatasource = new CustomerMongoDataSourceImpl(); // <<<--- INSTANCIAR DS
+        const authRepository = new AuthRepositoryImpl(authDatasource);
+        const customerRepository = new CustomerRepositoryImpl(customerDatasource); // <<<--- INSTANCIAR Repo
 
-        // Corregimos cada ruta usando funciones de callback intermedias para evitar
-        // los errores de tipos con Express y los métodos asíncronos
+        // <<<--- Pasar customerRepository al Controller --- >>>
+        const controller = new AuthController(authRepository, customerRepository);
+
+        // ... (resto de las definiciones de rutas sin cambios) ...
         router.post("/register", (req: Request, res: Response) => {
             controller.registerUser(req, res);
         });
@@ -39,7 +45,7 @@ export class AuthRoutes {
         router.put("/:id", (req: Request, res: Response) => {
             controller.updateUser(req, res);
         });
-       
+
         return router;
     }
 }

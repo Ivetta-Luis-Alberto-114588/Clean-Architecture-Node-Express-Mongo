@@ -1,0 +1,357 @@
+Date : 2025-04-10 10:45:29
+Directory : c:\Users\Usuario\Desktop\Practica Angular\14-back\src
+Total : 225 files,  10505 codes, 1097 comments, 2356 blanks, all 13958 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| TypeScript |        225 |     10,505 |      1,097 |      2,356 |     13,958 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                             | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                                |        225 |     10,505 |      1,097 |      2,356 |     13,958 |
+| . (Files)                                                                                                                        |          1 |         16 |          3 |          4 |         23 |
+| configs                                                                                                                          |          7 |        217 |         42 |         60 |        319 |
+| data                                                                                                                             |         13 |        598 |         33 |         60 |        691 |
+| data\mongodb                                                                                                                     |         13 |        598 |         33 |         60 |        691 |
+| data\mongodb (Files)                                                                                                             |          1 |         25 |          0 |          9 |         34 |
+| data\mongodb\models                                                                                                              |         12 |        573 |         33 |         51 |        657 |
+| data\mongodb\models (Files)                                                                                                      |          1 |         33 |          3 |          7 |         43 |
+| data\mongodb\models\cart                                                                                                         |          1 |         59 |          6 |          5 |         70 |
+| data\mongodb\models\chatbot                                                                                                      |          1 |         74 |          7 |          5 |         86 |
+| data\mongodb\models\coupon                                                                                                       |          1 |         81 |          5 |          5 |         91 |
+| data\mongodb\models\customers                                                                                                    |          3 |         94 |          1 |          7 |        102 |
+| data\mongodb\models\order                                                                                                        |          1 |         66 |          3 |          3 |         72 |
+| data\mongodb\models\payment                                                                                                      |          1 |         65 |          6 |          3 |         74 |
+| data\mongodb\models\products                                                                                                     |          3 |        101 |          2 |         16 |        119 |
+| domain                                                                                                                           |        128 |      3,508 |        401 |        797 |      4,706 |
+| domain\datasources                                                                                                               |         12 |        161 |         27 |         52 |        240 |
+| domain\datasources (Files)                                                                                                       |          1 |          7 |          2 |          4 |         13 |
+| domain\datasources\cart                                                                                                          |          1 |         11 |          5 |          8 |         24 |
+| domain\datasources\chatbot                                                                                                       |          1 |         11 |          1 |          1 |         13 |
+| domain\datasources\coupon                                                                                                        |          1 |         13 |          3 |          3 |         19 |
+| domain\datasources\customers                                                                                                     |          3 |         40 |          0 |          3 |         43 |
+| domain\datasources\order                                                                                                         |          1 |         16 |          2 |          2 |         20 |
+| domain\datasources\payment                                                                                                       |          1 |         22 |         13 |         13 |         48 |
+| domain\datasources\products                                                                                                      |          3 |         41 |          1 |         18 |         60 |
+| domain\dtos                                                                                                                      |         26 |        916 |        106 |        200 |      1,222 |
+| domain\dtos\auth                                                                                                                 |          2 |         31 |         13 |         23 |         67 |
+| domain\dtos\cart                                                                                                                 |          2 |         36 |          3 |         10 |         49 |
+| domain\dtos\chatbot                                                                                                              |          1 |         24 |          3 |          5 |         32 |
+| domain\dtos\coupon                                                                                                               |          2 |        174 |          7 |         27 |        208 |
+| domain\dtos\customers                                                                                                            |          6 |        243 |         24 |         45 |        312 |
+| domain\dtos\order                                                                                                                |          2 |         69 |          9 |          6 |         84 |
+| domain\dtos\payment                                                                                                              |          4 |        143 |          7 |         19 |        169 |
+| domain\dtos\products                                                                                                             |          6 |        180 |         34 |         57 |        271 |
+| domain\dtos\shared                                                                                                               |          1 |         16 |          6 |          8 |         30 |
+| domain\entities                                                                                                                  |         13 |        241 |         23 |         38 |        302 |
+| domain\entities (Files)                                                                                                          |          1 |         10 |          3 |          4 |         17 |
+| domain\entities\cart                                                                                                             |          2 |         44 |          8 |          9 |         61 |
+| domain\entities\chatbot                                                                                                          |          1 |         24 |          1 |          2 |         27 |
+| domain\entities\coupon                                                                                                           |          1 |         32 |          3 |          3 |         38 |
+| domain\entities\customers                                                                                                        |          3 |         30 |          0 |          7 |         37 |
+| domain\entities\order                                                                                                            |          1 |         31 |          5 |          3 |         39 |
+| domain\entities\payment                                                                                                          |          1 |         34 |          2 |          4 |         40 |
+| domain\entities\products                                                                                                         |          3 |         36 |          1 |          6 |         43 |
+| domain\errors                                                                                                                    |          1 |         27 |          0 |          8 |         35 |
+| domain\interfaces                                                                                                                |          1 |        143 |         10 |          9 |        162 |
+| domain\interfaces\payment                                                                                                        |          1 |        143 |         10 |          9 |        162 |
+| domain\repositories                                                                                                              |         13 |        160 |         24 |         47 |        231 |
+| domain\repositories (Files)                                                                                                      |          1 |          7 |          2 |          4 |         13 |
+| domain\repositories\cart                                                                                                         |          1 |         10 |          2 |          6 |         18 |
+| domain\repositories\chatbot                                                                                                      |          1 |         11 |          1 |          1 |         13 |
+| domain\repositories\coupon                                                                                                       |          1 |         13 |          2 |          3 |         18 |
+| domain\repositories\customers                                                                                                    |          3 |         40 |          0 |          3 |         43 |
+| domain\repositories\order                                                                                                        |          1 |         16 |          2 |          2 |         20 |
+| domain\repositories\payment                                                                                                      |          1 |         22 |         14 |         15 |         51 |
+| domain\repositories\products                                                                                                     |          3 |         41 |          1 |         12 |         54 |
+| domain\repositories\sales                                                                                                        |          1 |          0 |          0 |          1 |          1 |
+| domain\use-cases                                                                                                                 |         62 |      1,860 |        211 |        443 |      2,514 |
+| domain\use-cases\auth                                                                                                            |          2 |         93 |         20 |         48 |        161 |
+| domain\use-cases\cart                                                                                                            |          5 |        141 |         23 |         28 |        192 |
+| domain\use-cases\chatbot                                                                                                         |          2 |         63 |          7 |         10 |         80 |
+| domain\use-cases\coupon                                                                                                          |          5 |        123 |         13 |         20 |        156 |
+| domain\use-cases\customers                                                                                                       |         19 |        554 |         57 |        108 |        719 |
+| domain\use-cases\order                                                                                                           |          6 |        241 |         22 |         44 |        307 |
+| domain\use-cases\payment                                                                                                         |          6 |        232 |         18 |         37 |        287 |
+| domain\use-cases\product                                                                                                         |         15 |        413 |         51 |        146 |        610 |
+| domain\use-cases\user                                                                                                            |          2 |          0 |          0 |          2 |          2 |
+| infrastructure                                                                                                                   |         42 |      3,796 |        333 |        834 |      4,963 |
+| infrastructure\adapters                                                                                                          |          5 |        497 |         38 |        103 |        638 |
+| infrastructure\datasources                                                                                                       |         12 |      2,372 |        226 |        522 |      3,120 |
+| infrastructure\datasources (Files)                                                                                               |          1 |         61 |         11 |         18 |         90 |
+| infrastructure\datasources\cart                                                                                                  |          1 |        181 |         16 |         32 |        229 |
+| infrastructure\datasources\chatbot                                                                                               |          1 |        458 |         53 |         91 |        602 |
+| infrastructure\datasources\coupon                                                                                                |          1 |        131 |         10 |         16 |        157 |
+| infrastructure\datasources\customers                                                                                             |          3 |        377 |         18 |         68 |        463 |
+| infrastructure\datasources\order                                                                                                 |          1 |        251 |          6 |         41 |        298 |
+| infrastructure\datasources\payment                                                                                               |          1 |        579 |         27 |         68 |        674 |
+| infrastructure\datasources\products                                                                                              |          3 |        334 |         85 |        188 |        607 |
+| infrastructure\mappers                                                                                                           |         12 |        547 |         60 |         92 |        699 |
+| infrastructure\mappers (Files)                                                                                                   |          1 |         19 |          3 |          7 |         29 |
+| infrastructure\mappers\cart                                                                                                      |          2 |        115 |         12 |         15 |        142 |
+| infrastructure\mappers\coupon                                                                                                    |          1 |         33 |          2 |          5 |         40 |
+| infrastructure\mappers\customers                                                                                                 |          3 |        102 |         12 |         22 |        136 |
+| infrastructure\mappers\order                                                                                                     |          1 |        100 |         15 |         14 |        129 |
+| infrastructure\mappers\payment                                                                                                   |          1 |        114 |          6 |          8 |        128 |
+| infrastructure\mappers\products                                                                                                  |          3 |         64 |         10 |         21 |         95 |
+| infrastructure\repositories                                                                                                      |         13 |        380 |          9 |        117 |        506 |
+| infrastructure\repositories (Files)                                                                                              |          1 |         16 |          0 |          7 |         23 |
+| infrastructure\repositories\cart                                                                                                 |          1 |         25 |          0 |          7 |         32 |
+| infrastructure\repositories\chatbot                                                                                              |          1 |         30 |          1 |          8 |         39 |
+| infrastructure\repositories\coupon                                                                                               |          1 |         32 |          1 |          9 |         42 |
+| infrastructure\repositories\customers                                                                                            |          3 |         93 |          3 |         28 |        124 |
+| infrastructure\repositories\order                                                                                                |          1 |         35 |          3 |          8 |         46 |
+| infrastructure\repositories\payment                                                                                              |          1 |         51 |          1 |         16 |         68 |
+| infrastructure\repositories\products                                                                                             |          3 |         98 |          0 |         33 |        131 |
+| infrastructure\repositories\sales                                                                                                |          1 |          0 |          0 |          1 |          1 |
+| presentation                                                                                                                     |         34 |      2,370 |        285 |        601 |      3,256 |
+| presentation (Files)                                                                                                             |          2 |        111 |         21 |         53 |        185 |
+| presentation\auth                                                                                                                |          2 |        124 |         16 |         31 |        171 |
+| presentation\cart                                                                                                                |          2 |        161 |         14 |         32 |        207 |
+| presentation\chatbot                                                                                                             |          2 |        120 |         14 |         27 |        161 |
+| presentation\coupon                                                                                                              |          2 |        100 |          8 |         22 |        130 |
+| presentation\customers                                                                                                           |          6 |        369 |          9 |         86 |        464 |
+| presentation\middlewares                                                                                                         |          4 |        316 |         39 |         68 |        423 |
+| presentation\order                                                                                                               |          2 |        165 |         20 |         36 |        221 |
+| presentation\payment                                                                                                             |          2 |        519 |         74 |        114 |        707 |
+| presentation\products                                                                                                            |          6 |        385 |         70 |        128 |        583 |
+| presentation\sales                                                                                                               |          2 |          0 |          0 |          2 |          2 |
+| presentation\user                                                                                                                |          2 |          0 |          0 |          2 |          2 |
++----------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                                                                         | language   | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\app.ts                                                                     | TypeScript |         16 |          3 |          4 |         23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\bcrypt.ts                                                          | TypeScript |         11 |          3 |          2 |         16 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\cloudinary.ts                                                      | TypeScript |          8 |          1 |          2 |         11 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\envs.ts                                                            | TypeScript |         19 |          4 |         15 |         38 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\jwt-personal.ts                                                    | TypeScript |         26 |          7 |          8 |         41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\jwt.ts                                                             | TypeScript |         31 |          5 |          7 |         43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\logger.ts                                                          | TypeScript |        117 |         21 |         22 |        160 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\validator.ts                                                       | TypeScript |          5 |          1 |          4 |         10 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\cart\cart.model.ts                                     | TypeScript |         59 |          6 |          5 |         70 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\chatbot\chat-models.ts                                 | TypeScript |         74 |          7 |          5 |         86 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\coupon\coupon.model.ts                                 | TypeScript |         81 |          5 |          5 |         91 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\customers\city.model.ts                                | TypeScript |         24 |          0 |          2 |         26 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\customers\customer.model.ts                            | TypeScript |         41 |          0 |          2 |         43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\customers\neighborhood.model.ts                        | TypeScript |         29 |          1 |          3 |         33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\order\order.model.ts                                   | TypeScript |         66 |          3 |          3 |         72 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\payment\payment.model.ts                               | TypeScript |         65 |          6 |          3 |         74 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\products\category.model.ts                             | TypeScript |         20 |          0 |          6 |         26 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\products\product.model.ts                              | TypeScript |         60 |          2 |          7 |         69 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\products\unit.model.ts                                 | TypeScript |         21 |          0 |          3 |         24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\user.model.ts                                          | TypeScript |         33 |          3 |          7 |         43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\mongo-database.ts                                             | TypeScript |         25 |          0 |          9 |         34 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\auth.datasource.ts                                      | TypeScript |          7 |          2 |          4 |         13 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\cart\cart.datasource.ts                                 | TypeScript |         11 |          5 |          8 |         24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\chatbot\chat.datasource.ts                              | TypeScript |         11 |          1 |          1 |         13 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\coupon\coupon.datasource.ts                             | TypeScript |         13 |          3 |          3 |         19 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\customers\city.datasource.ts                            | TypeScript |         13 |          0 |          1 |         14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\customers\customer.datasource.ts                        | TypeScript |         13 |          0 |          1 |         14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\customers\neighborhood.datasource.ts                    | TypeScript |         14 |          0 |          1 |         15 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\order\order.datasource.ts                               | TypeScript |         16 |          2 |          2 |         20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\payment\payment.datasource.ts                           | TypeScript |         22 |         13 |         13 |         48 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\products\category.datasource.ts                         | TypeScript |         13 |          0 |          6 |         19 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\products\product.datasource.ts                          | TypeScript |         15 |          1 |          8 |         24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\products\unit.datasource.ts                             | TypeScript |         13 |          0 |          4 |         17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\auth\login-user.dto.ts                                         | TypeScript |         14 |          1 |         10 |         25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\auth\register-user.dto.ts                                      | TypeScript |         17 |         12 |         13 |         42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\cart\add-item-to-cart.dto.ts                                   | TypeScript |         18 |          1 |          5 |         24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\cart\update-cart-item.dto.ts                                   | TypeScript |         18 |          2 |          5 |         25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\chatbot\chat-query.dto.ts                                      | TypeScript |         24 |          3 |          5 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\coupon\create-coupon.dto.ts                                    | TypeScript |         69 |          2 |         12 |         83 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\coupon\update-coupon.dto.ts                                    | TypeScript |        105 |          5 |         15 |        125 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\create-city.dto.ts                                   | TypeScript |         24 |          4 |          5 |         33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\create-customer.dto.ts                               | TypeScript |         42 |          6 |          9 |         57 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\create-neighborhood.dto.ts                           | TypeScript |         30 |          5 |          7 |         42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\update-city.dto.ts                                   | TypeScript |         37 |          3 |          6 |         46 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\update-customer.dto.ts                               | TypeScript |         65 |          3 |         11 |         79 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\update-neighborhood.dto.ts                           | TypeScript |         45 |          3 |          7 |         55 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\order\create-order.dto.ts                                      | TypeScript |         49 |          8 |          3 |         60 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\order\update-order-status.dto.ts                               | TypeScript |         20 |          1 |          3 |         24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\create-payment.dto.ts                                  | TypeScript |         74 |          4 |          9 |         87 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\process-webhook.dto.ts                                 | TypeScript |         24 |          1 |          3 |         28 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\update-payment-status.dto.ts                           | TypeScript |         27 |          1 |          4 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\verify-payment.dto.ts                                  | TypeScript |         18 |          1 |          3 |         22 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\create-category.ts                                    | TypeScript |         15 |          7 |          7 |         29 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\create-product.dto.ts                                 | TypeScript |         40 |          5 |         13 |         58 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\create-unit.dto.ts                                    | TypeScript |         15 |          6 |          9 |         30 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\udpate-unit.dto.ts                                    | TypeScript |         34 |          7 |         10 |         51 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\update-category.dto.ts                                | TypeScript |         28 |          4 |          9 |         41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\update-product.dto.ts                                 | TypeScript |         48 |          5 |          9 |         62 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\shared\pagination.dto.ts                                       | TypeScript |         16 |          6 |          8 |         30 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\cart\cart-item.entity.ts                                   | TypeScript |         18 |          4 |          4 |         26 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\cart\cart.entity.ts                                        | TypeScript |         26 |          4 |          5 |         35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\chatbot\chat-message.entity.ts                             | TypeScript |         24 |          1 |          2 |         27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\coupon\coupon.entity.ts                                    | TypeScript |         32 |          3 |          3 |         38 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\customers\citiy.ts                                         | TypeScript |          8 |          0 |          2 |         10 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\customers\customer.ts                                      | TypeScript |         12 |          0 |          2 |         14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\customers\neighborhood.ts                                  | TypeScript |         10 |          0 |          3 |         13 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\order\order.entity.ts                                      | TypeScript |         31 |          5 |          3 |         39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\payment\payment.entity.ts                                  | TypeScript |         34 |          2 |          4 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\products\category.entity.ts                                | TypeScript |          8 |          0 |          1 |          9 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\products\product.entity.ts                                 | TypeScript |         20 |          1 |          3 |         24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\products\unit.entity.ts                                    | TypeScript |          8 |          0 |          2 |         10 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\user.entity.ts                                             | TypeScript |         10 |          3 |          4 |         17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\errors\custom.error.ts                                              | TypeScript |         27 |          0 |          8 |         35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\payment\mercado-pago.interface.ts                        | TypeScript |        143 |         10 |          9 |        162 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\auth.repository.ts                                     | TypeScript |          7 |          2 |          4 |         13 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\cart\cart.repository.ts                                | TypeScript |         10 |          2 |          6 |         18 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\chatbot\chat.repository.ts                             | TypeScript |         11 |          1 |          1 |         13 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\coupon\coupon.repository.ts                            | TypeScript |         13 |          2 |          3 |         18 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\customers\city.repository.ts                           | TypeScript |         13 |          0 |          1 |         14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\customers\customer.repository.ts                       | TypeScript |         13 |          0 |          1 |         14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\customers\neighborhood.repository.ts                   | TypeScript |         14 |          0 |          1 |         15 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\order\order.repository.ts                              | TypeScript |         16 |          2 |          2 |         20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\payment\payment.repository.ts                          | TypeScript |         22 |         14 |         15 |         51 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\products\categroy.repository.ts                        | TypeScript |         13 |          0 |          4 |         17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\products\product.repository.ts                         | TypeScript |         15 |          1 |          6 |         22 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\products\unit.repository.ts                            | TypeScript |         13 |          0 |          2 |         15 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\sales\sale.repository.ts                               | TypeScript |          0 |          0 |          1 |          1 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\auth\login-user.use-case.ts                               | TypeScript |         47 |         10 |         25 |         82 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\auth\register-user.use-case.ts                            | TypeScript |         46 |         10 |         23 |         79 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\add-to-cart.use-case.ts                              | TypeScript |         40 |         13 |          8 |         61 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\clear-cart.use-case.ts                               | TypeScript |         19 |          0 |          4 |         23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\get-cart.use-case.ts                                 | TypeScript |         19 |          1 |          4 |         24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\remove-from-cart.use-case.ts                         | TypeScript |         22 |          0 |          5 |         27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\update-cart-item.use-case.ts                         | TypeScript |         41 |          9 |          7 |         57 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\chatbot\generate-embeddings.use-case.ts                   | TypeScript |         18 |          1 |          2 |         21 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\chatbot\query-chatbot.use-case.ts                         | TypeScript |         45 |          6 |          8 |         59 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\create-coupon.use-case.ts                          | TypeScript |         23 |          3 |          4 |         30 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\delete-coupon.use-case.ts                          | TypeScript |         21 |          3 |          3 |         27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\get-all-coupons.use-case.ts                        | TypeScript |         19 |          1 |          3 |         23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\get-coupon-by-id.use-case.ts                       | TypeScript |         21 |          1 |          3 |         25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\update-coupon.use-case.ts                          | TypeScript |         39 |          5 |          7 |         51 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\create-city.use-case.ts                         | TypeScript |         33 |          4 |          8 |         45 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\create-customer.use-case.ts                     | TypeScript |         32 |          4 |          6 |         42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\create-neighborhood.use-case.ts                 | TypeScript |         39 |          4 |          8 |         51 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\delete-city.use-case.ts                         | TypeScript |         26 |          3 |          6 |         35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\delete-customer.use-case.ts                     | TypeScript |         26 |          3 |          6 |         35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\delete-neighborhood.use-case.ts                 | TypeScript |         26 |          3 |          6 |         35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\find-city-by-name.use-case.ts                   | TypeScript |         28 |          3 |          6 |         37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\find-customers-by-neighborhood.use-case.ts      | TypeScript |         31 |          3 |          6 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\find-neighborhoods-by-city.use-case.ts          | TypeScript |         31 |          3 |          6 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-all-cities.use-case.ts                      | TypeScript |         28 |          3 |          5 |         36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-all-customers.use-case.ts                   | TypeScript |         28 |          3 |          5 |         36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-all-neighborhoods.use-case.ts               | TypeScript |         28 |          3 |          5 |         36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-city-by-id..use-case.ts                     | TypeScript |         25 |          2 |          5 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-customer-by-email.use-case.ts               | TypeScript |         26 |          3 |          5 |         34 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-customer-by-id.use-case.ts                  | TypeScript |         25 |          2 |          5 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-neighborhood-by-id.use-case.ts              | TypeScript |         25 |          2 |          5 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\update-city.use-case.ts                         | TypeScript |         27 |          2 |          4 |         33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\update-customer.use-case.ts                     | TypeScript |         38 |          4 |          6 |         48 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\update-neighborhood.use-case.ts                 | TypeScript |         32 |          3 |          5 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\create-order.use-case.ts                            | TypeScript |         96 |          8 |         16 |        120 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\find-order-by-customer.use-case.ts                  | TypeScript |         31 |          3 |          6 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\find-order-by-date-range.use-case.ts                | TypeScript |         31 |          3 |          6 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\get-all-order.use-case.ts                           | TypeScript |         28 |          3 |          5 |         36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\get-order-by-id.use-case.ts                         | TypeScript |         25 |          2 |          5 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\update-order-status.use-case.ts                     | TypeScript |         30 |          3 |          6 |         39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\create-payment.use-case.ts                        | TypeScript |         68 |          8 |         11 |         87 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-all-payments.use-case.ts                      | TypeScript |         21 |          0 |          3 |         24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-payment-by-order.use-case.ts                  | TypeScript |         29 |          2 |          5 |         36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-payment.use-case.ts                           | TypeScript |         20 |          0 |          3 |         23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\process-webhook.use-case.ts                       | TypeScript |         32 |          2 |          5 |         39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\verify-payment.use-case.ts                        | TypeScript |         62 |          6 |         10 |         78 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\create-category.use-case.ts                       | TypeScript |         33 |          4 |         15 |         52 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\create-product.use-case.ts                        | TypeScript |         29 |          6 |         17 |         52 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\create-unit.use-case.ts                           | TypeScript |         31 |          5 |         13 |         49 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\delete-category.use-case.ts                       | TypeScript |         26 |          3 |          9 |         38 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\delete-product.use-case.ts                        | TypeScript |         24 |          5 |         10 |         39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\delete-unit.use-case.ts                           | TypeScript |         26 |          4 |         10 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-all-category.use-case.ts                      | TypeScript |         28 |          3 |          9 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-all-products.use-case.ts                      | TypeScript |         28 |          3 |         13 |         44 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-all-unit.use-case.ts                          | TypeScript |         28 |          3 |          9 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-category-by-id.use-case.ts                    | TypeScript |         25 |          2 |          5 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-product-by-category.use-case.ts               | TypeScript |         27 |          2 |         10 |         39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-unit-by-id.use-case.ts                        | TypeScript |         26 |          2 |          5 |         33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\update-category.use-case.ts                       | TypeScript |         27 |          2 |          7 |         36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\update-product.use-case.ts                        | TypeScript |         28 |          5 |          8 |         41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\update-unit.use-case.ts                           | TypeScript |         27 |          2 |          6 |         35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\user\delete-user.use-case.ts                              | TypeScript |          0 |          0 |          1 |          1 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\user\update-user.use-case.ts                              | TypeScript |          0 |          0 |          1 |          1 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\cloudinary.adapter.ts                              | TypeScript |         50 |          6 |         10 |         66 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\langchain.adapter.ts                               | TypeScript |        130 |         12 |         33 |        175 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\llm.adapter.ts                                     | TypeScript |        100 |          6 |         17 |        123 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\mercado-pago.adapter.ts                            | TypeScript |        154 |         13 |         30 |        197 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\transformers.adapter.ts                            | TypeScript |         63 |          1 |         13 |         77 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\auth.mongo.datasource.impl.ts                   | TypeScript |         61 |         11 |         18 |         90 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\cart\cart.mongo.datasource.impl.ts              | TypeScript |        181 |         16 |         32 |        229 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\chatbot\chat.mongo.datasource.impl.ts           | TypeScript |        458 |         53 |         91 |        602 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\coupon\coupon.mongo.datasource.impl.ts          | TypeScript |        131 |         10 |         16 |        157 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\customers\city.mongo.datasource.impl.ts         | TypeScript |         97 |          5 |         17 |        119 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\customers\customer.mongo.datasource.impl.ts     | TypeScript |        154 |          6 |         25 |        185 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\customers\neighborhood.mongo.datasource.impl.ts | TypeScript |        126 |          7 |         26 |        159 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\order\order.mongo.datasource.impl.ts            | TypeScript |        251 |          6 |         41 |        298 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\payment\payment.mongo.datasource.impl.ts        | TypeScript |        579 |         27 |         68 |        674 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\products\category.mongo.datasource.impl.ts      | TypeScript |         88 |         22 |         54 |        164 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\products\product.mongo.datasource.impl.ts       | TypeScript |        151 |         39 |         82 |        272 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\products\unit.mongo.datasource.impl.ts          | TypeScript |         95 |         24 |         52 |        171 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\cart\cart-item.mapper.ts                            | TypeScript |         63 |          5 |          7 |         75 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\cart\cart.mapper.ts                                 | TypeScript |         52 |          7 |          8 |         67 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\coupon\coupon.mapper.ts                             | TypeScript |         33 |          2 |          5 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\customers\city.mapper.ts                            | TypeScript |         25 |          3 |          6 |         34 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\customers\customer.mapper.ts                        | TypeScript |         45 |          5 |          9 |         59 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\customers\neighborhood.mapper.ts                    | TypeScript |         32 |          4 |          7 |         43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\order\order.mapper.ts                               | TypeScript |        100 |         15 |         14 |        129 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\payment\payment.mapper.ts                           | TypeScript |        114 |          6 |          8 |        128 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\products\category.mapper.ts                         | TypeScript |         17 |          4 |          7 |         28 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\products\product.mapper.ts                          | TypeScript |         30 |          5 |          7 |         42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\products\unit.mapper.ts                             | TypeScript |         17 |          1 |          7 |         25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\user.mapper.ts                                      | TypeScript |         19 |          3 |          7 |         29 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\auth.repository.impl.ts                        | TypeScript |         16 |          0 |          7 |         23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\cart\cart.repository.impl.ts                   | TypeScript |         25 |          0 |          7 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\chatbot\chat.repository.impl.ts                | TypeScript |         30 |          1 |          8 |         39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\coupon\coupon.repository.impl.ts               | TypeScript |         32 |          1 |          9 |         42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\customers\city.repository.impl.ts              | TypeScript |         30 |          1 |          9 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\customers\customer.repository.impl.ts          | TypeScript |         30 |          1 |          9 |         40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\customers\neighborhood.repository.impl.ts      | TypeScript |         33 |          1 |         10 |         44 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\order\order.repository.impl.ts                 | TypeScript |         35 |          3 |          8 |         46 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\payment\payment.repository.impl.ts             | TypeScript |         51 |          1 |         16 |         68 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\products\category.respository.impl.ts          | TypeScript |         32 |          0 |         13 |         45 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\products\product.repository.impl.ts            | TypeScript |         36 |          0 |         11 |         47 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\products\unit.repository.impl.ts               | TypeScript |         30 |          0 |          9 |         39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\sales\sale.repository.impl.ts                  | TypeScript |          0 |          0 |          1 |          1 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\auth\controller.auth.ts                                       | TypeScript |         91 |         14 |         21 |        126 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\auth\routes.auth.ts                                           | TypeScript |         33 |          2 |         10 |         45 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\cart\controller.cart.ts                                       | TypeScript |        138 |          9 |         24 |        171 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\cart\routes.cart.ts                                           | TypeScript |         23 |          5 |          8 |         36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\chatbot\controller.chatbot.ts                                 | TypeScript |         98 |         10 |         21 |        129 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\chatbot\routes.chatbot.ts                                     | TypeScript |         22 |          4 |          6 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\coupon\controller.coupon.ts                                   | TypeScript |         80 |          2 |         16 |         98 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\coupon\routes.coupon.ts                                       | TypeScript |         20 |          6 |          6 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\controller.city.ts                                  | TypeScript |         88 |          0 |         23 |        111 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\controller.customer.ts                              | TypeScript |        114 |          0 |         25 |        139 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\controller.neighborhood.ts                          | TypeScript |        101 |          0 |         23 |        124 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\routes.city.ts                                      | TypeScript |         19 |          3 |          5 |         27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\routes.customer.ts                                  | TypeScript |         24 |          3 |          5 |         32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\routes.neighborhood.ts                              | TypeScript |         23 |          3 |          5 |         31 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\middlewares\auth.middleware.ts                                | TypeScript |         35 |          1 |         21 |         57 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\middlewares\logger.middleware.ts                              | TypeScript |        141 |         25 |         27 |        193 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\middlewares\rate-limit.middleware.ts                          | TypeScript |         95 |         10 |         15 |        120 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\middlewares\upload.middleware.ts                              | TypeScript |         45 |          3 |          5 |         53 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\order\controller.order.ts                                     | TypeScript |        128 |         10 |         28 |        166 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\order\routes.order.ts                                         | TypeScript |         37 |         10 |          8 |         55 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\payment\controller.payment.ts                                 | TypeScript |        480 |         65 |        103 |        648 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\payment\routes.payment.ts                                     | TypeScript |         39 |          9 |         11 |         59 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\controller.category.ts                               | TypeScript |         75 |         14 |         33 |        122 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\controller.product.ts                                | TypeScript |        158 |         31 |         45 |        234 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\controller.unit.ts                                   | TypeScript |         73 |         11 |         28 |        112 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\routes.category..ts                                  | TypeScript |         18 |          2 |          5 |         25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\routes.product.ts                                    | TypeScript |         43 |         10 |         13 |         66 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\routes.unit.ts                                       | TypeScript |         18 |          2 |          4 |         24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\routes.ts                                                     | TypeScript |         31 |          9 |         12 |         52 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\sales\controller.sale.ts                                      | TypeScript |          0 |          0 |          1 |          1 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\sales\routes.sale.ts                                          | TypeScript |          0 |          0 |          1 |          1 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\server.ts                                                     | TypeScript |         80 |         12 |         41 |        133 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\user\controller.user.ts                                       | TypeScript |          0 |          0 |          1 |          1 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\user\routes.user.ts                                           | TypeScript |          0 |          0 |          1 |          1 |
+| Total                                                                                                                            |            |     10,505 |      1,097 |      2,356 |     13,958 |
++----------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+

@@ -1,3 +1,4 @@
+// src/domain/datasources/customers/customer.datasource.ts
 import { CreateCustomerDto } from "../../dtos/customers/create-customer.dto";
 import { UpdateCustomerDto } from "../../dtos/customers/update-customer.dto";
 import { PaginationDto } from "../../dtos/shared/pagination.dto";
@@ -11,4 +12,6 @@ export abstract class CustomerDataSource {
     abstract delete(id: string): Promise<CustomerEntity>;
     abstract findByEmail(email: string): Promise<CustomerEntity | null>;
     abstract findByNeighborhood(neighborhoodId: string, paginationDto: PaginationDto): Promise<CustomerEntity[]>;
+    // <<<--- NUEVO MÉTODO --- >>>
+    abstract findByUserId(userId: string): Promise<CustomerEntity | null>;
 }
