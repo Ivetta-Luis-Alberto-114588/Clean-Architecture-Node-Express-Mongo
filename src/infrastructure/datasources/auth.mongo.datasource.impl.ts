@@ -7,84 +7,97 @@ import { RegisterUserDto } from "../../domain/dtos/auth/register-user.dto";
 import { UserEntity } from "../../domain/entities/user.entity";
 import { CustomError } from "../../domain/errors/custom.error";
 import { UserMapper } from "../mappers/user.mapper";
+import logger from "../../configs/logger"; // Importar logger
 
-// Tipos para las funciones de hash y compare
 type HashFunction = (password: string) => string
 type CompareFunction = (password: string, hashed: string) => boolean
 
 export class AuthDatasourceImpl implements AuthDatasource {
-    
+
     constructor(
         private readonly hashPassword: HashFunction = BcryptAdapter.hash,
         private readonly comparePassword: CompareFunction = BcryptAdapter.compare
-    ) {}
+    ) { }
 
     async login(loginUserDto: LoginUserDto): Promise<UserEntity> {
-        const {email, password} = loginUserDto
-
+        // ... (código existente sin cambios) ...
+        const { email, password } = loginUserDto
         try {
-            // Buscar el usuario por email
             const user = await UserModel.findOne({ email: email.toLowerCase() });
-
             if (!user) {
                 throw CustomError.badRequest("User does not exist with this email");
             }
-
-            // Comparar la contraseña
             const isPasswordMatching = this.comparePassword(password, user.password);
-
             if (!isPasswordMatching) {
                 throw CustomError.badRequest("Password is not valid");
             }
-
-            return UserMapper.fromObjectToUserEntity(user);    
+            return UserMapper.fromObjectToUserEntity(user);
         } catch (error) {
-            // Propagamos los CustomError directamente
-            if (error instanceof CustomError) {
-                throw error;
-            }
-            
-            console.log(error);
+            if (error instanceof CustomError) throw error;
+            logger.error("Error en login AuthDatasourceImpl", { error });
             throw CustomError.internalServerError("Internal server error during login");
         }
     }
 
     async register(registerUserDto: RegisterUserDto): Promise<UserEntity> {
+        // ... (código existente sin cambios) ...
         const { name, email, password } = registerUserDto;
-
         try {
-            // Verificar si el correo ya existe
             const exists = await UserModel.findOne({ email: email.toLowerCase() });
-            
             if (exists) {
                 throw CustomError.badRequest('User already exists with this email');
             }
-
-            // Encriptar la contraseña
             const passwordHashed = this.hashPassword(password);
-
-            // Crear el usuario en la base de datos
             const user = await UserModel.create({
                 name: name.toLowerCase(),
                 email: email.toLowerCase(),
                 password: passwordHashed,
-                roles: ['USER_ROLE'] // Asignar rol por defecto
+                roles: ['USER_ROLE']
             });
-
-            // Guardar el usuario (esto puede ser redundante con create, pero lo dejamos por si acaso)
-            await user.save();
-
-            // Mapear a entidad y retornar
+            await user.save(); // create ya guarda, pero save() no hace daño
             return UserMapper.fromObjectToUserEntity(user);
         } catch (error) {
-            // Si es un error personalizado, lo propagamos directamente
-            if (error instanceof CustomError) {
-                console.log("mongoAuthDataSourceImpl, entro al throw error comun");
-                throw error;
-            }
-
-            console.log(error);
+            if (error instanceof CustomError) throw error;
+            logger.error("Error en register AuthDatasourceImpl", { error });
             throw CustomError.internalServerError("Internal server error during registration");
         }
     }
+
+    // <<<--- IMPLEMENTACIÓN NUEVOS MÉTODOS --- >>>
+    async findByEmail(email: string): Promise<UserEntity | null> {
+        try {
+            const user = await UserModel.findOne({ email: email.toLowerCase() });
+            if (!user) return null;
+            return UserMapper.fromObjectToUserEntity(user);
+        } catch (error) {
+            logger.error(`Error buscando usuario por email ${email}`, { error });
+            // No lanzar error aquí, devolver null para que el UseCase decida
+            return null;
+        }
+    }
+
+    async updatePassword(userId: string, newHashedPassword: string): Promise<boolean> {
+        try {
+            const result = await UserModel.updateOne(
+                { _id: userId },
+                { $set: { password: newHashedPassword } }
+            );
+
+            if (result.matchedCount === 0) {
+                logger.warn(`Intento de actualizar contraseña para usuario no encontrado: ${userId}`);
+                return false; // Usuario no encontrado
+            }
+            if (result.modifiedCount === 0) {
+                logger.warn(`Contraseña no modificada para usuario ${userId} (posiblemente era la misma)`);
+                // Considerar esto como éxito o no dependiendo del caso. True es razonable.
+            }
+
+            logger.info(`Contraseña actualizada para usuario ${userId}`);
+            return true; // Actualización exitosa (o no necesaria)
+        } catch (error) {
+            logger.error(`Error actualizando contraseña para usuario ${userId}`, { error });
+            throw CustomError.internalServerError("Error al actualizar la contraseña.");
+        }
+    }
+    // <<<--- FIN IMPLEMENTACIÓN --- >>>
 }

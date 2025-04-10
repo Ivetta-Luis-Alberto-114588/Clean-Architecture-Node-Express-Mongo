@@ -1,12 +1,13 @@
 # Proyecto Backend API - StartUp E-commerce
 
-API backend robusta construida con Node.js, Express, MongoDB Atlas y TypeScript, siguiendo los principios de Arquitectura Limpia. Incluye funcionalidades de autenticación, gestión de productos, clientes, carrito de compras, pedidos (ventas), cupones de descuento, integración con MercadoPago y un chatbot inteligente con RAG.
+API backend robusta construida con Node.js, Express, MongoDB Atlas y TypeScript, siguiendo los principios de Arquitectura Limpia. Incluye funcionalidades de autenticación (con restablecimiento de contraseña), gestión de productos, clientes, carrito de compras, pedidos (ventas), cupones de descuento, integración con MercadoPago y un chatbot inteligente con RAG.
 
 ## ✨ Características Principales
 
 * **Arquitectura Limpia:** Separación clara de responsabilidades (Dominio, Infraestructura, Presentación).
 * **Autenticación y Usuarios:**
   * Registro y Login de usuarios con JWT y bcrypt.
+  * **Restablecimiento de contraseña** mediante token enviado por email (integración con Nodemailer).
   * Middleware de autenticación (`validateJwt`).
   * Creación automática de un registro `Customer` básico vinculado al registrar un `User`.
 * **Gestión de Productos:** CRUD completo para Productos, Categorías y Unidades de Medida.
@@ -38,6 +39,7 @@ API backend robusta construida con Node.js, Express, MongoDB Atlas y TypeScript,
   * Búsqueda semántica para encontrar información relevante.
   * Generación de respuestas contextualizadas usando LLMs (OpenAI/Anthropic).
   * Gestión de sesiones de chat.
+* **Servicio de Email (Nodemailer):** Envío de correos transaccionales (ej: restablecimiento de contraseña).
 * **Logging Robusto (Winston):** Logging detallado con rotación de archivos, niveles configurables por entorno e identificadores de solicitud únicos.
 * **Seguridad:** Rate limiting (configurable por entorno), CORS configurable, hashing de contraseñas (bcrypt). Middleware para manejo de errores.
 * **Validación:** DTOs con validaciones estrictas usando patrón Factory.
@@ -54,6 +56,7 @@ API backend robusta construida con Node.js, Express, MongoDB Atlas y TypeScript,
 * **Clean Architecture:** Patrón de diseño de software.
 * **JWT (jsonwebtoken):** Para autenticación basada en tokens.
 * **bcryptjs:** Para hashing de contraseñas.
+* **Nodemailer:** Para envío de emails.
 * **Winston & winston-daily-rotate-file:** Para logging.
 * **Axios:** Cliente HTTP (usado para adaptadores).
 * **MercadoPago SDK/API:** Integración de pagos (a través de un adaptador propio con Axios).
@@ -73,8 +76,8 @@ API backend robusta construida con Node.js, Express, MongoDB Atlas y TypeScript,
 
 El proyecto sigue los principios de la Arquitectura Limpia, separando el código en tres capas principales:
 
-1. **Dominio:** Contiene la lógica de negocio central, entidades (Producto, Pedido, Usuario, Cliente, Carrito, Cupón, etc.), casos de uso (AddToCart, CreateOrder, ApplyCoupon, etc.), interfaces de repositorios y fuentes de datos. Es independiente de frameworks y bases de datos.
-2. **Infraestructura:** Implementa las interfaces definidas en el dominio. Incluye los modelos de base de datos (Mongoose), implementaciones concretas de fuentes de datos (MongoDataSource) y repositorios (RepositoryImpl), y adaptadores para servicios externos (MercadoPago, Cloudinary, LLMs, Transformers).
+1. **Dominio:** Contiene la lógica de negocio central, entidades (Producto, Pedido, Usuario, Cliente, Carrito, Cupón, etc.), casos de uso (AddToCart, CreateOrder, ApplyCoupon, RequestPasswordReset, etc.), interfaces de repositorios, fuentes de datos y servicios (EmailService). Es independiente de frameworks y bases de datos.
+2. **Infraestructura:** Implementa las interfaces definidas en el dominio. Incluye los modelos de base de datos (Mongoose), implementaciones concretas de fuentes de datos (MongoDataSource) y repositorios (RepositoryImpl), y adaptadores para servicios externos (MercadoPago, Cloudinary, LLMs, Transformers, Nodemailer).
 3. **Presentación:** Expone la API REST usando Express. Contiene los controladores, rutas, middlewares (Auth, Logger, RateLimit, Upload) y la configuración del servidor. Interactúa con los casos de uso del dominio.
 
 ## ⚙️ Prerrequisitos
@@ -84,6 +87,7 @@ El proyecto sigue los principios de la Arquitectura Limpia, separando el código
 * Cuenta de MongoDB Atlas
 * Cuenta de Cloudinary
 * Cuenta de MercadoPago (con credenciales de API)
+* **Credenciales de un servicio de Email** (ej: Gmail con contraseña de aplicación, SendGrid, Mailgun) para configurar en `.env`.
 * (Opcional) Claves API para OpenAI y/o Anthropic si se desea usar esos LLMs para el chatbot.
 * NGrok o similar (si se prueban los webhooks de MercadoPago localmente).
 * **Importante:** Puede requerir herramientas de compilación (como `python`, `make`, `g++` o Visual Studio Build Tools en Windows) para `onnxruntime-node` si no se encuentra un binario precompilado para tu sistema.
@@ -104,9 +108,9 @@ El proyecto sigue los principios de la Arquitectura Limpia, separando el código
 
    *(Nota: La instalación de `onnxruntime-node` puede tardar y requerir compilación nativa)*.
 3. **Crear el archivo `.env`:**
-   Crea un archivo `.env` en la raíz del proyecto basándote en la plantilla de la sección `.env.example` abajo y rellena tus credenciales. **Asegúrate de tener un ID de barrio válido para usar como default en `RegisterUserUseCase`**.
+   Crea un archivo `.env` en la raíz del proyecto basándote en la plantilla de la sección `.env.example` abajo y rellena tus credenciales. **Asegúrate de configurar las variables de EMAIL y de tener un ID de barrio válido para usar como default en `RegisterUserUseCase`**.
 4. **Descarga del Modelo de Embeddings:**
-   La librería `@xenova/transformers` descargará automáticamente el modelo `Xenova/all-MiniLM-L6-v2` la primera vez que se use (ej., al generar embeddings). Asegúrate de tener conexión a internet. El modelo se guardará en el directorio `models/` dentro del proyecto (según `EMBEDDING_MODEL_PATH` en `.env` si se usa, o el default del adapter).
+   La librería `@xenova/transformers` descargará automáticamente el modelo `Xenova/all-MiniLM-L6-v2` la primera vez que se use (ej., al generar embeddings). Asegúrate de tener conexión a internet. El modelo se guardará en el directorio `models/` dentro del proyecto.
 5. **Generar Embeddings Iniciales (para el Chatbot):**
    Para que el chatbot funcione correctamente con tus datos, necesitas generar los embeddings iniciales. Ejecuta el script dedicado:
    ```bash
@@ -194,7 +198,7 @@ OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
 #-------------------------------------
 # Frontend & Webhook Configuration
 #-------------------------------------
-# URL de tu aplicación frontend (para CORS y redirecciones de pago)
+# URL de tu aplicación frontend (para CORS y redirecciones de pago/reseteo)
 FRONTEND_URL=http://localhost:5173
 
 # URL pública para recibir webhooks de MercadoPago durante el desarrollo local (usando ngrok o similar)
@@ -209,6 +213,15 @@ CLOUDINARY_API_KEY=<your_cloudinary_api_key>
 CLOUDINARY_API_SECRET=<your_cloudinary_api_secret>
 # La URL completa generalmente se obtiene del dashboard de Cloudinary
 CLOUDINARY_URL=cloudinary://<key>:<secret>@<cloud_name>
+
+#-------------------------------------
+# Email Service Configuration (Ejemplo Gmail)
+#-------------------------------------
+EMAIL_SERVICE=gmail
+EMAIL_USER=<tu_correo_gmail>@gmail.com
+# Para Gmail, usa una "Contraseña de aplicación" si tienes 2FA activada
+EMAIL_PASS=<tu_contraseña_o_contraseña_de_aplicacion>
+EMAIL_SENDER_NAME="Tu Tienda Online" # Nombre que verá el destinatario
 
 #-------------------------------------
 # Logger Configuration (Opcional)
@@ -228,6 +241,8 @@ CLOUDINARY_URL=cloudinary://<key>:<secret>@<cloud_name>
   * **POST /register**: Registro de nuevo usuario (crea **User** **y** **Customer** **vinculado).**
   * **POST /login**: Inicio de sesión.
   * **GET /**: Obtener datos del usuario autenticado (requiere token).
+  * **POST /forgot-password**: Iniciar el proceso de restablecimiento de contraseña (envía email).
+  * **POST /reset-password**: Establecer una nueva contraseña usando el token del email.
   * **(Otros endpoints de gestión de usuarios si existen)**
 * **/api/products**
 
@@ -315,31 +330,10 @@ CLOUDINARY_URL=cloudinary://<key>:<secret>@<cloud_name>
 ## 💡 Puntos a Considerar
 
 * **Seguridad:** **Revisa y ajusta la configuración de** **cors**, **rate-limit** **y** **JWT_SEED** **para producción. Asegúrate de que las variables sensibles no se expongan en el control de versiones.**
-* **Vinculación User-Customer:** **La vinculación básica está implementada (se crea** **Customer** **al registrar** **User** **y se usa** **findByUserId** **al crear pedido autenticado).** **Revisa la lógica de creación inicial del** **Customer** **en** **RegisterUserUseCase**, especialmente el **defaultNeighborhoodId** **y los datos placeholder (teléfono, dirección). Considera implementar endpoints para que el usuario actualice su perfil/cliente.**
+* **Vinculación User-Customer:** **La vinculación básica está implementada. Revisa la lógica de creación inicial del** **Customer** **en** **RegisterUserUseCase** **(placeholders de teléfono/dirección,** **defaultNeighborhoodId**). **Implementa endpoints para que el usuario actualice su perfil/cliente.**
 * **Roles (RBAC):** **Implementa y aplica un middleware** **checkRole(['ADMIN_ROLE'])** **para proteger adecuadamente los endpoints administrativos marcados.**
+* **Configuración Email:** **Asegúrate de configurar correctamente las variables de entorno** **EMAIL_SERVICE**, **EMAIL_USER**, **EMAIL_PASS** **y** **EMAIL_SENDER_NAME** **para que el restablecimiento de contraseña funcione.**
 * **Webhooks:** **Para probar los webhooks de MercadoPago localmente, necesitarás una herramienta como NGrok para exponer tu endpoint local (**/api/payments/webhook**) a internet y configurar esa URL (**URL_RESPONSE_WEBHOOK_NGROK**) en el archivo** **.env** **y en la configuración de webhooks de MercadoPago.**
 * **Errores:** **Revisa la implementación del manejo de errores para asegurar que se capturen y logueen adecuadamente todos los casos.**
 * **Optimización:** **Revisa los índices de MongoDB para asegurar un rendimiento óptimo de las consultas, especialmente en colecciones grandes como** **products**, **orders**, **customers**, **payments**, **coupons** **y** **embeddings**.
-* **Funcionalidades Pendientes:** **Gestión de perfil de usuario, historial de pedidos (**/my-orders**), restablecimiento de contraseña, reembolsos de MercadoPago.**
-
-<pre _ngcontent-ng-c3995996630=""><br class="Apple-interchange-newline"/>
-
-</pre>
-
-
-**Resumen de los Cambios en este README:**
-
-1. **Características Principales:**
-   * Actualizada la descripción de "Autenticación y Usuarios" para incluir la creación automática de `Customer`.
-   * Actualizada la descripción de "Gestión de Clientes" para incluir la búsqueda por `userId` y el soporte a invitados/registrados.
-   * Actualizada la descripción de "Gestión de Pedidos" para reflejar el soporte a invitados y autenticados.
-2. **Instalación y Setup:**
-   * Añadida una nota sobre la necesidad de configurar un `defaultNeighborhoodId` válido en `RegisterUserUseCase`.
-3. **Endpoints Principales:**
-   * Aclarado el `body` esperado para `POST /api/sales` en ambos escenarios (invitado/autenticado).
-   * Marcado explícitamente qué endpoints requieren rol de Admin (aunque el middleware aún esté pendiente).
-   * Se mantuvo `/api/sales/my-orders` como pendiente.
-4. **Puntos a Considerar:**
-   * Actualizada la nota sobre la vinculación User-Customer para reflejar que la base está implementada, pero necesita refinamiento (datos iniciales, actualización de perfil).
-   * Se mantuvo la nota sobre la necesidad de implementar el middleware RBAC.
-   * Se añadió una lista explícita de funcionalidades pendientes importantes.
+* **Funcionalidades Pendientes:** **Gestión de perfil de usuario, historial de pedidos (**/my-orders**), reembolsos de MercadoPago.**

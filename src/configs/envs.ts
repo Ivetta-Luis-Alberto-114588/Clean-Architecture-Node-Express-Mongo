@@ -35,4 +35,11 @@ export const envs = {
     CLOUDINARY_API_KEY: get('CLOUDINARY_API_KEY').required().asString(),
     CLOUDINARY_API_SECRET: get('CLOUDINARY_API_SECRET').required().asString(),
     CLOUDINARY_URL: get('CLOUDINARY_URL').required().asString(),
+
+
+
+    EMAIL_SERVICE: get('EMAIL_SERVICE').required().asString(), // ej: 'gmail', 'sendgrid', etc.
+    EMAIL_USER: get('EMAIL_USER').required().asString(),     // Correo desde el que se envía
+    EMAIL_PASS: get('EMAIL_PASS').required().asString(),     // Contraseña del correo o API Key
+    EMAIL_SENDER_NAME: get('EMAIL_SENDER_NAME').default('StartUp E-commerce').asString(), // Nombre del remitente
 }
