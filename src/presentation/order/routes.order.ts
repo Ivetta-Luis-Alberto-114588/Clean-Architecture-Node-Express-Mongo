@@ -7,7 +7,7 @@ import { CustomerMongoDataSourceImpl } from "../../infrastructure/datasources/cu
 import { CustomerRepositoryImpl } from "../../infrastructure/repositories/customers/customer.repository.impl";
 import { ProductMongoDataSourceImpl } from "../../infrastructure/datasources/products/product.mongo.datasource.impl";
 import { ProductRepositoryImpl } from "../../infrastructure/repositories/products/product.repository.impl";
-import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { AuthMiddleware } from "../middlewares/auth.middleware"; // <<<--- ASEGURAR IMPORTACIÓN
 import { CouponMongoDataSourceImpl } from "../../infrastructure/datasources/coupon/coupon.mongo.datasource.impl";
 import { CouponRepositoryImpl } from "../../infrastructure/repositories/coupon/coupon.repository.impl";
 
@@ -35,10 +35,15 @@ export class OrderRoutes {
 
         // --- Rutas ---
 
-        // <<<--- Ruta POST sin AuthMiddleware para permitir invitados --- >>>
-        router.post('/', controller.createSale); // Podría ser createOrder
+        // Ruta POST sin AuthMiddleware explícito aquí, pero createSale puede verificar req.body.user
+        router.post('/', controller.createSale);
 
-        // <<<--- Rutas GET y PATCH podrían requerir autenticación (y rol admin?) --- >>>
+        // <<<--- NUEVA RUTA PROTEGIDA --- >>>
+        // Obtener los pedidos del usuario autenticado
+        router.get('/my-orders', [AuthMiddleware.validateJwt], controller.getMyOrders);
+        // <<<--- FIN NUEVA RUTA --- >>>
+
+        // Rutas GET y PATCH podrían requerir autenticación (y rol admin?)
         // Ejemplo: router.get('/', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(['ADMIN_ROLE'])], controller.getAllSales);
         router.get('/', controller.getAllSales); // Por ahora público o requiere auth general
         router.get('/:id', controller.getSaleById); // Público o requiere auth general/admin

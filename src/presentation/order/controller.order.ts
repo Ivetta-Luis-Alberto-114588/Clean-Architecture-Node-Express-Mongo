@@ -15,6 +15,8 @@ import { GetOrderByIdUseCase } from "../../domain/use-cases/order/get-order-by-i
 import { UpdateOrderStatusUseCase } from "../../domain/use-cases/order/update-order-status.use-case";
 import { CouponRepository } from "../../domain/repositories/coupon/coupon.repository";
 import logger from "../../configs/logger"; // Importar logger
+// <<<--- NUEVA IMPORTACIÓN --- >>>
+import { GetMyOrdersUseCase } from "../../domain/use-cases/order/get-my-orders.use-case";
 
 export class OrderController {
 
@@ -34,10 +36,7 @@ export class OrderController {
     };
 
     createSale = (req: Request, res: Response): void => {
-        // <<<--- Obtener userId si el usuario está autenticado --- >>>
-        const userId = req.body.user?.id; // Viene del AuthMiddleware (si se usa)
-
-        // <<<--- Pasar userId opcional al DTO.create --- >>>
+        const userId = req.body.user?.id;
         const [error, createSaleDto] = CreateOrderDto.create(req.body, userId);
 
         if (error) {
@@ -45,20 +44,17 @@ export class OrderController {
             logger.warn("Error en validación de CreateOrderDto", { error, body: req.body, userId });
             return;
         }
-
-        // <<<--- Pasar userId opcional al UseCase.execute --- >>>
         new CreateOrderUseCase(
             this.orderRepository,
             this.customerRepository,
             this.productRepository,
             this.couponRepository
         )
-            .execute(createSaleDto!, userId) // Pasar userId aquí
+            .execute(createSaleDto!, userId)
             .then(data => res.status(201).json(data))
             .catch(err => this.handleError(err, res));
     };
 
-    // ... (resto de los métodos sin cambios necesarios para esta feature) ...
     getAllSales = (req: Request, res: Response): void => {
         const { page = 1, limit = 10 } = req.query;
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
@@ -119,6 +115,7 @@ export class OrderController {
 
         if (!startDate || !endDate) {
             res.status(400).json({ error: "Debe proporcionar fechas de inicio y fin" });
+            return; // Añadir return para evitar ejecución posterior
         }
 
         try {
@@ -127,13 +124,14 @@ export class OrderController {
 
             if (isNaN(start.getTime()) || isNaN(end.getTime())) {
                 res.status(400).json({ error: "Formato de fecha inválido" });
+                return; // Añadir return
             }
 
             const [error, paginationDto] = PaginationDto.create(+page, +limit);
             if (error) {
                 res.status(400).json({ error });
                 logger.warn(`Error en paginación para getSalesByDateRange`, { error, query: req.query });
-                return;
+                return; // Añadir return
             }
 
             new FindOrderByDateRangeUseCase(this.orderRepository)
@@ -147,4 +145,29 @@ export class OrderController {
             this.handleError(error, res);
         }
     };
+
+    // <<<--- NUEVO MÉTODO --- >>>
+    getMyOrders = (req: Request, res: Response): void => {
+        const userId = req.body.user?.id; // Obtener ID del usuario autenticado
+
+        if (!userId) {
+            this.handleError(CustomError.unauthorized('Usuario no autenticado'), res);
+            return;
+        }
+
+        const { page = 1, limit = 10 } = req.query;
+        const [error, paginationDto] = PaginationDto.create(+page, +limit);
+
+        if (error) {
+            res.status(400).json({ error });
+            logger.warn(`Error en paginación para getMyOrders (User: ${userId})`, { error, query: req.query });
+            return;
+        }
+
+        new GetMyOrdersUseCase(this.orderRepository, this.customerRepository)
+            .execute(userId, paginationDto!)
+            .then(data => res.json(data))
+            .catch(err => this.handleError(err, res));
+    };
+    // <<<--- FIN NUEVO MÉTODO --- >>>
 }

@@ -145,16 +145,14 @@ export class CustomerMongoDataSourceImpl extends CustomerDataSource {
                 .populate({
                     path: 'neighborhood',
                     populate: { path: 'city' }
-                }); // Poblar barrio y ciudad anidada
+                });
 
             if (!customer) return null;
 
             return CustomerMapper.fromObjectToCustomerEntity(customer);
         } catch (error) {
             logger.error(`Error buscando cliente por userId ${userId}:`, { error });
-            // No lanzar CustomError aquí directamente, devolver null o dejar que el UseCase maneje
-            // throw CustomError.internalServerError("Error al buscar cliente por ID de usuario.");
-            return null; // Opcional: podrías lanzar un error si prefieres
+            return null;
         }
     }
     // <<<--- FIN IMPLEMENTACIÓN --- >>>

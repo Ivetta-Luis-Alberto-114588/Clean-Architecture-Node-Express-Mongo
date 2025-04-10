@@ -1,339 +1,375 @@
-# Proyecto Backend API - StartUp E-commerce
+# StartUp E-commerce API (Backend)
 
-API backend robusta construida con Node.js, Express, MongoDB Atlas y TypeScript, siguiendo los principios de Arquitectura Limpia. Incluye funcionalidades de autenticación (con restablecimiento de contraseña), gestión de productos, clientes, carrito de compras, pedidos (ventas), cupones de descuento, integración con MercadoPago y un chatbot inteligente con RAG.
+Este es el backend para una aplicación de E-commerce completa, construida con Node.js, TypeScript, Express y MongoDB. Incorpora características modernas como autenticación JWT, integración con pasarelas de pago, gestión de productos/clientes (con **búsqueda y filtrado avanzados**), un carrito de compras, sistema de cupones y un chatbot inteligente basado en RAG (Retrieval-Augmented Generation).
 
 ## ✨ Características Principales
 
-* **Arquitectura Limpia:** Separación clara de responsabilidades (Dominio, Infraestructura, Presentación).
-* **Autenticación y Usuarios:**
-  * Registro y Login de usuarios con JWT y bcrypt.
-  * **Restablecimiento de contraseña** mediante token enviado por email (integración con Nodemailer).
-  * Middleware de autenticación (`validateJwt`).
-  * Creación automática de un registro `Customer` básico vinculado al registrar un `User`.
-* **Gestión de Productos:** CRUD completo para Productos, Categorías y Unidades de Medida.
+* **Autenticación:**
+  * Registro de usuarios (con creación automática de perfil de cliente).
+  * Inicio de sesión con JWT (JSON Web Tokens).
+  * Recuperación de contraseña (solicitud y reseteo por email).
+  * Middleware para proteger rutas.
+* **Gestión de Productos:**
+  * CRUD completo para Productos.
+  * CRUD completo para Categorías.
+  * CRUD completo para Unidades de medida.
+  * **Búsqueda y Filtrado Avanzado:** Búsqueda por texto (nombre, descripción), filtrado por categoría(s), rango de precios y ordenamiento configurable (precio, nombre, relevancia, fecha).
+  * Asociación de productos con categorías y unidades.
+  * Cálculo de precios con IVA.
+  * Gestión de stock.
 * **Gestión de Clientes:**
-  * CRUD completo para Clientes, Ciudades y Barrios.
-  * Búsqueda de clientes por email y por ID de usuario (`userId`).
-  * Soporte para clientes registrados (vinculados a `User`) e invitados.
-* **Gestión de Carrito de Compras:** Añadir, actualizar, eliminar y listar ítems del carrito por usuario autenticado.
+  * CRUD completo para Clientes (con soporte para invitados).
+  * CRUD completo para Ciudades.
+  * CRUD completo para Barrios (asociados a ciudades).
+  * Vinculación de Usuarios registrados con perfiles de Cliente.
+* **Carrito de Compras:**
+  * Añadir/actualizar/eliminar ítems.
+  * Obtener el carrito del usuario actual.
+  * Vaciar carrito.
+  * Almacena precios y tasas de IVA al momento de agregar el ítem.
 * **Gestión de Pedidos (Ventas):**
-  * Creación de pedidos para **usuarios autenticados** (usando su `Customer` vinculado) y para **invitados** (creando/reutilizando `Customer` basado en email).
+  * Creación de pedidos desde el carrito o datos directos.
   * Cálculo automático de subtotales, impuestos, descuentos y total.
-  * Actualización de stock de productos (transaccional).
-  * Consulta de pedidos por ID, cliente y rango de fechas.
-  * Actualización de estado de pedidos (ej: pendiente, completado, cancelado) con restauración de stock en cancelaciones (transaccional).
-* **Gestión de Cupones:**
-  * CRUD completo para cupones de descuento (porcentaje o monto fijo).
-  * Validaciones de activación, fechas de validez, monto mínimo de compra y límite de uso total.
-  * Aplicación automática en la creación de pedidos con incremento de uso transaccional.
-* **Integración de Pagos (MercadoPago):**
+  * Aplicación de cupones de descuento (porcentual o fijo).
+  * Actualización de estado del pedido (pendiente, completado, cancelado).
+  * Restauración de stock al cancelar un pedido.
+  * Historial de pedidos por cliente (/my-orders para usuarios autenticados).
+  * Búsqueda de pedidos por cliente y rango de fechas.
+* **Integración de Pagos (Mercado Pago):**
   * Creación de preferencias de pago.
-  * Manejo de webhooks para actualizar estado de pagos y pedidos.
-  * Verificación de estado de pagos y preferencias.
-  * Callbacks para redirección (éxito, fallo, pendiente).
+  * Manejo de callbacks (success, failure, pending).
+  * Procesamiento de webhooks para actualizar el estado del pago y del pedido.
+  * Verificación del estado del pago.
+  * Almacenamiento de información de pago en la base de datos.
   * Soporte para claves de idempotencia.
-* **Subida de Imágenes (Cloudinary):** Almacenamiento y gestión de imágenes de productos.
+* **Sistema de Cupones:**
+  * CRUD completo para Cupones.
+  * Tipos de descuento: Porcentual y Fijo.
+  * Validaciones: Fechas de validez, monto mínimo de compra, límite de uso.
+  * Incremento automático del contador de uso.
 * **Chatbot Inteligente (RAG):**
-  * Procesamiento de lenguaje natural para consultas de clientes y análisis para dueños.
-  * Generación y almacenamiento de embeddings para datos relevantes (Productos, Pedidos, Clientes, etc.).
-  * Búsqueda semántica para encontrar información relevante.
-  * Generación de respuestas contextualizadas usando LLMs (OpenAI/Anthropic).
+  * Modelo basado en Retrieval-Augmented Generation.
+  * Generación de embeddings para Productos, Categorías, Ventas, Clientes, etc., usando `Transformers.js`.
+  * Búsqueda semántica de información relevante para responder consultas.
+  * Integración con LLMs (OpenAI GPT y Anthropic Claude Haiku/Sonnet/Opus) a través de Langchain.
+  * Modos de operación: Asistente para clientes y Asistente de análisis para dueños.
   * Gestión de sesiones de chat.
-* **Servicio de Email (Nodemailer):** Envío de correos transaccionales (ej: restablecimiento de contraseña).
-* **Logging Robusto (Winston):** Logging detallado con rotación de archivos, niveles configurables por entorno e identificadores de solicitud únicos.
-* **Seguridad:** Rate limiting (configurable por entorno), CORS configurable, hashing de contraseñas (bcrypt). Middleware para manejo de errores.
-* **Validación:** DTOs con validaciones estrictas usando patrón Factory.
-* **TypeScript:** Totalmente escrito en TypeScript para mayor seguridad y mantenibilidad.
-* **Testing:** Configuración para pruebas unitarias y de integración con Jest y `mongodb-memory-server`.
+  * Comandos para generar/validar embeddings y cambiar el LLM activo.
+* **Subida de Imágenes (Cloudinary):**
+  * Integración para subir imágenes de productos.
+  * Eliminación automática de imágenes antiguas al actualizar.
+* **Notificaciones por Email (Nodemailer):**
+  * Envío de correos para restablecimiento de contraseña.
+  * Infraestructura preparada para otros tipos de notificaciones.
+* **Infraestructura y Calidad:**
+  * Arquitectura en capas (similar a Clean Architecture): Presentation, Domain, Infrastructure.
+  * Uso de DataSources, Repositories y Casos de Uso.
+  * Mapeo de datos entre capas (Mappers).
+  * Validación de datos de entrada (DTOs - Data Transfer Objects).
+  * Manejo centralizado de errores (CustomError).
+  * Logging avanzado con Winston (logs diarios rotativos, diferentes niveles, formato JSON y consola).
+  * Middleware de Rate Limiting para proteger contra ataques de fuerza bruta.
+  * Variables de entorno centralizadas y validadas (`dotenv`, `env-var`).
+  * Configuración de CORS.
 
-## 🚀 Tecnologías Utilizadas
+## 🛠️ Tecnologías Utilizadas
 
-* **Node.js:** Entorno de ejecución de JavaScript.
-* **Express:** Framework web para Node.js.
-* **TypeScript:** Superset de JavaScript con tipado estático.
-* **MongoDB Atlas:** Base de datos NoSQL en la nube.
-* **Mongoose:** ODM para MongoDB.
-* **Clean Architecture:** Patrón de diseño de software.
-* **JWT (jsonwebtoken):** Para autenticación basada en tokens.
-* **bcryptjs:** Para hashing de contraseñas.
-* **Nodemailer:** Para envío de emails.
-* **Winston & winston-daily-rotate-file:** Para logging.
-* **Axios:** Cliente HTTP (usado para adaptadores).
-* **MercadoPago SDK/API:** Integración de pagos (a través de un adaptador propio con Axios).
-* **Cloudinary:** Para almacenamiento de imágenes.
-* **Langchain & @langchain/*:** Framework para construir aplicaciones con LLMs.
-* **@xenova/transformers:** Para generación de embeddings localmente.
-* **onnxruntime-node:** Motor de inferencia requerido por `@xenova/transformers`.
-* **OpenAI / Anthropic:** APIs de Modelos de Lenguaje Grande (LLM) (opcional).
-* **dotenv, env-var:** Para manejo de variables de entorno.
-* **Multer:** Para manejo de subida de archivos.
-* **express-rate-limit:** Para limitar peticiones.
-* **cors:** Para habilitar Cross-Origin Resource Sharing.
-* **Jest, ts-jest, supertest, mongodb-memory-server, sinon, ts-mockito:** Para testing.
-* **uuid:** Para generar identificadores únicos (ej. para logs).
+* **Backend:** Node.js, Express.js
+* **Lenguaje:** TypeScript
+* **Base de Datos:** MongoDB con Mongoose (**incluye Índices de Texto y Aggregation Pipeline para búsqueda**)
+* **Autenticación:** JWT (jsonwebtoken), bcryptjs
+* **Pagos:** Mercado Pago SDK (vía API REST con Axios)
+* **Chatbot:**
+  * Langchain.js (@langchain/core, @langchain/openai, @langchain/mongodb)
+  * Transformers.js (@xenova/transformers)
+  * OpenAI API / Anthropic API
+* **Subida de Imágenes:** Cloudinary
+* **Emails:** Nodemailer
+* **Logging:** Winston, winston-daily-rotate-file
+* **Variables de Entorno:** dotenv, env-var
+* **Rate Limiting:** express-rate-limit
+* **Otros:** CORS, uuid
 
 ## 🏗️ Arquitectura
 
-El proyecto sigue los principios de la Arquitectura Limpia, separando el código en tres capas principales:
+El proyecto sigue una arquitectura en capas inspirada en principios de Clean Architecture:
 
-1. **Dominio:** Contiene la lógica de negocio central, entidades (Producto, Pedido, Usuario, Cliente, Carrito, Cupón, etc.), casos de uso (AddToCart, CreateOrder, ApplyCoupon, RequestPasswordReset, etc.), interfaces de repositorios, fuentes de datos y servicios (EmailService). Es independiente de frameworks y bases de datos.
-2. **Infraestructura:** Implementa las interfaces definidas en el dominio. Incluye los modelos de base de datos (Mongoose), implementaciones concretas de fuentes de datos (MongoDataSource) y repositorios (RepositoryImpl), y adaptadores para servicios externos (MercadoPago, Cloudinary, LLMs, Transformers, Nodemailer).
-3. **Presentación:** Expone la API REST usando Express. Contiene los controladores, rutas, middlewares (Auth, Logger, RateLimit, Upload) y la configuración del servidor. Interactúa con los casos de uso del dominio.
+1. **Domain:** Contiene la lógica de negocio central, entidades, casos de uso, interfaces de repositorios y datasources, DTOs y errores personalizados. No depende de ninguna otra capa.
+2. **Infrastructure:** Implementa las interfaces definidas en el dominio. Contiene los adaptadores para servicios externos (BD, APIs), implementaciones de datasources y repositorios, y mappers para convertir datos entre capas. Depende del Dominio.
+3. **Presentation:** Expone la API REST. Contiene los controladores, rutas y middlewares. Es responsable de recibir las solicitudes, validarlas (usando DTOs), llamar a los casos de uso y devolver las respuestas. Depende del Dominio.
 
-## ⚙️ Prerrequisitos
+## 📋 Prerrequisitos
 
 * Node.js (v18 o superior recomendado)
 * npm o yarn
-* Cuenta de MongoDB Atlas
+* MongoDB (v4.2+ para text search optimizado, v5+ recomendado) (local o Atlas)
 * Cuenta de Cloudinary
-* Cuenta de MercadoPago (con credenciales de API)
-* **Credenciales de un servicio de Email** (ej: Gmail con contraseña de aplicación, SendGrid, Mailgun) para configurar en `.env`.
-* (Opcional) Claves API para OpenAI y/o Anthropic si se desea usar esos LLMs para el chatbot.
-* NGrok o similar (si se prueban los webhooks de MercadoPago localmente).
-* **Importante:** Puede requerir herramientas de compilación (como `python`, `make`, `g++` o Visual Studio Build Tools en Windows) para `onnxruntime-node` si no se encuentra un binario precompilado para tu sistema.
+* Cuenta de Mercado Pago
+* Claves API para OpenAI y/o Anthropic
+* Credenciales de un servicio de email
 
-## 🛠️ Instalación y Setup
+## 🚀 Instalación
 
-1. **Clonar el repositorio:**
+1. **Clona el repositorio:**
+
    ```bash
-   git clone https://[URL-DEL-REPOSITORIO]
-   cd [NOMBRE-DEL-DIRECTORIO]
+   git clone <tu-repositorio-url>
+   cd <nombre-del-directorio>
    ```
-2. **Instalar dependencias:**
+2. **Instala las dependencias:**
+
    ```bash
    npm install
    # o
    yarn install
    ```
+3. **Configura las variables de entorno (`.env`):** (Mismas variables que antes)
 
-   *(Nota: La instalación de `onnxruntime-node` puede tardar y requerir compilación nativa)*.
-3. **Crear el archivo `.env`:**
-   Crea un archivo `.env` en la raíz del proyecto basándote en la plantilla de la sección `.env.example` abajo y rellena tus credenciales. **Asegúrate de configurar las variables de EMAIL y de tener un ID de barrio válido para usar como default en `RegisterUserUseCase`**.
-4. **Descarga del Modelo de Embeddings:**
-   La librería `@xenova/transformers` descargará automáticamente el modelo `Xenova/all-MiniLM-L6-v2` la primera vez que se use (ej., al generar embeddings). Asegúrate de tener conexión a internet. El modelo se guardará en el directorio `models/` dentro del proyecto.
-5. **Generar Embeddings Iniciales (para el Chatbot):**
-   Para que el chatbot funcione correctamente con tus datos, necesitas generar los embeddings iniciales. Ejecuta el script dedicado:
+   ```env
+   # Server
+   PORT=3000
+   NODE_ENV=development # development | production | test
+   FRONTEND_URL=http://localhost:5173 # URL de tu frontend para redirecciones
+
+   # MongoDB
+   MONGO_URL=mongodb://localhost:27017 # O tu URL de Atlas
+   MONGO_DB_NAME=ecommerce_db
+
+   # JWT
+   JWT_SEED=ESTE_ES_MI_SEED_SECRETO_CAMBIAME
+
+   # Mercado Pago
+   MERCADO_PAGO_ACCESS_TOKEN=TEST-xxxxxxxxxxxx
+   MERCADO_PAGO_PUBLIC_KEY=TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+   # LLM APIs (Chatbot)
+   ANTHROPIC_API_KEY=sk-ant-api03-xxxxxxxxxxxx
+   OPENAI_API_KEY=sk-xxxxxxxxxxxx
+
+   # Webhook (Usa ngrok o similar en desarrollo)
+   URL_RESPONSE_WEBHOOK_NGROK=https://tu-dominio-o-ngrok.com/
+
+   # Cloudinary
+   CLOUDINARY_CLOUD_NAME=tu_cloud_name
+   CLOUDINARY_API_KEY=tu_api_key
+   CLOUDINARY_API_SECRET=tu_api_secret
+   CLOUDINARY_URL=cloudinary://tu_api_key:tu_api_secret@tu_cloud_name
+
+   # Email Service (ej. Gmail)
+   EMAIL_SERVICE=gmail
+   EMAIL_USER=tu_correo@gmail.com
+   EMAIL_PASS=tu_contraseña_de_aplicacion
+   EMAIL_SENDER_NAME="Tu Tienda Online"
+   ```
+4. **(Importante) Crear índices de MongoDB:** Al iniciar la aplicación por primera vez después de añadir el índice de texto en `product.model.ts`, asegúrate de que Mongoose lo cree. Si no, conéctate a tu base de datos con `mongosh` y ejecuta:
+
    ```bash
-   npm run generate-embeddings
+   use ecommerce_db  # O el nombre de tu BD
+   db.products.createIndexes()
    ```
 
-   *Nota: Este script utiliza `transformers-bridge.mjs` probablemente para manejar diferencias entre CommonJS y ES Modules requeridas por `@xenova/transformers`. Este proceso puede tardar dependiendo de la cantidad de datos.*
+## ▶️ Ejecutar la Aplicación
 
-## 🏃 Ejecución
+1. **Modo Desarrollo:**
+   ```bash
+   npm run dev
+   ```
+2. **Compilar y Ejecutar en Producción:**
+   ```bash
+   npm run build
+   npm start
+   ```
 
-* **Modo Desarrollo (con recarga automática):**
-  ```bash
-  npm run dev
-  ```
-* **Construir para Producción:**
-  ```bash
-  npm run build
-  ```
-* **Ejecutar en Producción:**
-  *(Ajusta `--max-old-space-size` en el script `start` del `package.json` según la memoria disponible en tu servidor)*.
-  ```bash
-  npm start
-  ```
+La API estará en `http://localhost:PORT`.
 
-## 🧪 Pruebas
+## 🧪 Ejecutar Tests (Pendiente)
 
-El proyecto utiliza Jest para las pruebas unitarias y de integración. `mongodb-memory-server` se usa para simular una base de datos MongoDB en memoria durante las pruebas.
-
-* **Ejecutar todas las pruebas:**
-  ```bash
-  npm test
-  ```
-* **Ejecutar pruebas en modo "watch":**
-  ```bash
-  npm run test:watch
-  ```
-* **Generar reporte de cobertura:**
-  ```bash
-  npm run test:coverage
-  ```
-
-## 📄 Archivo `.env.example` (Plantilla)
-
-Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido, **reemplazando los valores entre `<...>` con tus propias credenciales y configuraciones**:
-
-```env
-#-------------------------------------
-# Server Configuration
-#-------------------------------------
-PORT=3000
-NODE_ENV=development # Opciones: development, production, test
-
-#-------------------------------------
-# MongoDB Configuration
-#-------------------------------------
-# Ejemplo Atlas: mongodb+srv://<user>:<password>@<cluster-url>/<database>?retryWrites=true&w=majority
-# Ejemplo Local: mongodb://mongo-user:123456@localhost:27017/admin?authSource=admin&directConnection=true
-MONGO_URL=<YOUR_MONGODB_CONNECTION_STRING>
-MONGO_DB_NAME=<YOUR_DATABASE_NAME>
-
-#-------------------------------------
-# JWT Configuration
-#-------------------------------------
-# IMPORTANTE: Cambia esto por una cadena secreta fuerte y aleatoria. Usa un generador si es posible.
-JWT_SEED="<YOUR_VERY_STRONG_AND_SECRET_JWT_SEED>"
-
-#-------------------------------------
-# Mercado Pago Configuration
-#-------------------------------------
-MERCADO_PAGO_PUBLIC_KEY=APP_USR-<your_public_key>
-MERCADO_PAGO_ACCESS_TOKEN=APP_USR-<your_access_token>
-
-#-------------------------------------
-# ChatBot LLM API Keys (Opcionales)
-#-------------------------------------
-ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
-OPENAI_API_KEY=<YOUR_OPENAI_API_KEY>
-
-#-------------------------------------
-# Embeddings Configuration (Opcional)
-#-------------------------------------
-# Ruta donde se guardarán/buscarán los modelos de embedding descargados
-# EMBEDDING_MODEL_PATH='./models' # (Si se omite, usará el default de la librería o del adapter)
-
-#-------------------------------------
-# Frontend & Webhook Configuration
-#-------------------------------------
-# URL de tu aplicación frontend (para CORS y redirecciones de pago/reseteo)
-FRONTEND_URL=http://localhost:5173
-
-# URL pública para recibir webhooks de MercadoPago durante el desarrollo local (usando ngrok o similar)
-# Asegúrate de que termine SIN barra diagonal (/)
-URL_RESPONSE_WEBHOOK_NGROK=https://<your-ngrok-subdomain>.ngrok.io
-
-#-------------------------------------
-# Cloudinary Configuration
-#-------------------------------------
-CLOUDINARY_CLOUD_NAME=<your_cloudinary_cloud_name>
-CLOUDINARY_API_KEY=<your_cloudinary_api_key>
-CLOUDINARY_API_SECRET=<your_cloudinary_api_secret>
-# La URL completa generalmente se obtiene del dashboard de Cloudinary
-CLOUDINARY_URL=cloudinary://<key>:<secret>@<cloud_name>
-
-#-------------------------------------
-# Email Service Configuration (Ejemplo Gmail)
-#-------------------------------------
-EMAIL_SERVICE=gmail
-EMAIL_USER=<tu_correo_gmail>@gmail.com
-# Para Gmail, usa una "Contraseña de aplicación" si tienes 2FA activada
-EMAIL_PASS=<tu_contraseña_o_contraseña_de_aplicacion>
-EMAIL_SENDER_NAME="Tu Tienda Online" # Nombre que verá el destinatario
-
-#-------------------------------------
-# Logger Configuration (Opcional)
-#-------------------------------------
-# Para sobrescribir el nivel de log predeterminado según NODE_ENV
-# LOG_LEVEL=debug # Opciones: error, warn, info, http, debug
+```bash
+npm test
 ```
 
 
 
-## 🗺️ Endpoints Principales
+## 🌐 API Endpoints Principales
 
-**La API sigue el prefijo** **/api**.
+* **Autenticación (`/api/auth`)**
 
-* **/api/auth**
+  * `POST /register`: Registro de nuevo usuario.
+  * `POST /login`: Inicio de sesión (protegido por Rate Limit).
+  * `GET /`: Obtener datos del usuario autenticado (requiere JWT).
+  * `GET /all`: Obtener lista de todos los usuarios (puede requerir auth/admin).
+  * `PUT /:id`: Actualizar datos de un usuario (puede requerir auth/admin).
+  * `DELETE /:id`: Eliminar un usuario (puede requerir auth/admin).
+  * `POST /forgot-password`: Solicitar reseteo de contraseña (protegido por Rate Limit).
+  * `POST /reset-password`: Resetear contraseña con token (protegido por Rate Limit).
+* **Productos (`/api/products`)**
 
-  * **POST /register**: Registro de nuevo usuario (crea **User** **y** **Customer** **vinculado).**
-  * **POST /login**: Inicio de sesión.
-  * **GET /**: Obtener datos del usuario autenticado (requiere token).
-  * **POST /forgot-password**: Iniciar el proceso de restablecimiento de contraseña (envía email).
-  * **POST /reset-password**: Establecer una nueva contraseña usando el token del email.
-  * **(Otros endpoints de gestión de usuarios si existen)**
-* **/api/products**
+  * `GET /search`: Realiza búsquedas avanzadas y filtrado. **Parámetros Query:**
+    * `q` (string): Término de búsqueda (nombre, descripción).
+    * `categories` (string): IDs de categorías separadas por comas (ej: `id1,id2`).
+    * `minPrice` (number): Precio mínimo.
+    * `maxPrice` (number): Precio máximo.
+    * `sortBy` (string): Campo para ordenar (`relevance`, `price`, `createdAt`, `name`). Default: `relevance` si hay `q`, sino `createdAt`.
+    * `sortOrder` (string): Dirección de orden (`asc`, `desc`). Default: `desc`.
+    * `page` (number): Número de página. Default: `1`.
+    * `limit` (number): Resultados por página. Default: `10`.
+  * `GET /by-category/:categoryId`: Listar productos por categoría (paginado).
+  * `GET /`: Listar todos los productos (paginado).
+  * `GET /:id`: Obtener un producto por ID.
+  * `POST /`: Crear un nuevo producto (requiere auth, subida de imagen opcional vía `multipart/form-data` con campo `image`).
+  * `PUT /:id`: Actualizar un producto (requiere auth, subida de imagen opcional vía `multipart/form-data` con campo `image`).
+  * `DELETE /:id`: Eliminar un producto (requiere auth).
+* **Categorías (`/api/categories`)**
 
-  * **GET /**: Obtener lista paginada de productos.
-  * **GET /:id**: Obtener un producto por su ID.
-  * **POST /**: Crear un nuevo producto (incluye subida de imagen, **requiere rol Admin**).
-  * **PUT /:id**: Actualizar un producto (incluye subida de imagen opcional, **requiere rol Admin**).
-  * **DELETE /:id**: Eliminar un producto (**requiere rol Admin**).
-  * **GET /by-category/:categoryId**: Obtener productos por categoría.
-* **/api/categories**
+  * `GET /`: Listar categorías (paginado).
+  * `GET /:id`: Obtener categoría por ID.
+  * `POST /`: Crear categoría (requiere auth).
+  * `PUT /:id`: Actualizar categoría (requiere auth).
+  * `DELETE /:id`: Eliminar categoría (requiere auth).
+* **Unidades (`/api/units`)**
 
-  * **GET /**: Obtener lista paginada de categorías.
-  * **GET /:id**: Obtener una categoría por su ID.
-  * **POST /**: Crear una nueva categoría (**requiere rol Admin**).
-  * **PUT /:id**: Actualizar una categoría (**requiere rol Admin**).
-  * **DELETE /:id**: Eliminar una categoría (**requiere rol Admin**).
-* **/api/units**
+  * `GET /`: Listar unidades (paginado).
+  * `GET /:id`: Obtener unidad por ID.
+  * `POST /`: Crear unidad (requiere auth).
+  * `PUT /:id`: Actualizar unidad (requiere auth).
+  * `DELETE /:id`: Eliminar unidad (requiere auth).
+* **Ciudades (`/api/cities`)**
 
-  * **GET /**: Obtener lista paginada de unidades de medida.
-  * **GET /:id**: Obtener una unidad por su ID.
-  * **POST /**: Crear una nueva unidad (**requiere rol Admin**).
-  * **PUT /:id**: Actualizar una unidad (**requiere rol Admin**).
-  * **DELETE /:id**: Eliminar una unidad (**requiere rol Admin**).
-* **/api/cities**
+  * `GET /`: Listar ciudades (paginado).
+  * `GET /:id`: Obtener ciudad por ID.
+  * `GET /by-name/:name`: Buscar ciudad por nombre exacto.
+  * `POST /`: Crear ciudad (requiere auth).
+  * `PUT /:id`: Actualizar ciudad (requiere auth).
+  * `DELETE /:id`: Eliminar ciudad (requiere auth).
+* **Barrios (`/api/neighborhoods`)**
 
-  * **(CRUD similar a Categorías/Unidades,** **requiere rol Admin** **para modificar)**
-* **/api/neighborhoods**
+  * `GET /`: Listar barrios (paginado).
+  * `GET /:id`: Obtener barrio por ID.
+  * `GET /by-city/:cityId`: Listar barrios por ciudad (paginado).
+  * `POST /`: Crear barrio (requiere auth).
+  * `PUT /:id`: Actualizar barrio (requiere auth).
+  * `DELETE /:id`: Eliminar barrio (requiere auth).
+* **Clientes (`/api/customers`)**
 
-  * **(CRUD similar a Categorías/Unidades, con búsqueda por ciudad,** **requiere rol Admin** **para modificar)**
-* **/api/customers**
+  * `GET /`: Listar clientes (paginado, requiere auth/admin).
+  * `GET /:id`: Obtener cliente por ID (requiere auth/admin).
+  * `GET /by-neighborhood/:neighborhoodId`: Listar clientes por barrio (paginado, requiere auth/admin).
+  * `GET /by-email/:email`: Buscar cliente por email (requiere auth/admin).
+  * `POST /`: Crear cliente (puede ser usado por admin o internamente por registro).
+  * `PUT /:id`: Actualizar cliente (requiere auth/admin).
+  * `DELETE /:id`: Eliminar cliente (requiere auth/admin).
+* **Carrito (`/api/cart`)** (Requieren JWT)
 
-  * **(CRUD similar a Categorías/Unidades, con búsqueda por barrio/email,** **requiere rol Admin** **para modificar)**
-* **/api/cart** **(Requiere autenticación de usuario)**
+  * `GET /`: Obtener el carrito del usuario autenticado.
+  * `POST /items`: Añadir un item al carrito.
+  * `PUT /items/:productId`: Actualizar cantidad de un item en el carrito.
+  * `DELETE /items/:productId`: Eliminar un item específico del carrito.
+  * `DELETE /`: Vaciar todo el carrito del usuario.
+* **Pedidos/Ventas (`/api/sales`)**
 
-  * **GET /**: Obtener el carrito del usuario actual.
-  * **POST /items**: Añadir un producto o incrementar su cantidad.
+  * `POST /`: Crear un nuevo pedido (puede requerir JWT o permitir datos de invitado).
+  * `GET /`: Listar todos los pedidos (paginado, requiere auth/admin).
+  * `GET /my-orders`: Listar los pedidos del usuario autenticado (paginado, requiere JWT).
+  * `GET /:id`: Obtener un pedido por ID (requiere auth/admin o ser el dueño del pedido).
+  * `PATCH /:id/status`: Actualizar estado de un pedido (requiere auth/admin).
+  * `GET /by-customer/:customerId`: Listar pedidos de un cliente específico (paginado, requiere auth/admin).
+  * `POST /by-date-range`: Listar pedidos por rango de fechas (paginado, requiere auth/admin).
+* **Pagos (`/api/payments`)**
 
-    * **Body:** **{ "productId": "...", "quantity": ... }**
-  * **PUT /items/:productId**: Establecer la cantidad exacta de un producto.
+  * `POST /sale/:saleId`: Iniciar proceso de pago para una venta (puede requerir auth).
+  * `POST /prueba/sale/:saleId`: Iniciar proceso de pago de prueba (puede requerir auth).
+  * `GET /`: Listar todos los pagos de la BD local (paginado, requiere auth/admin).
+  * `GET /:id`: Obtener información de un pago local por ID (requiere auth/admin).
+  * `GET /by-sale/:saleId`: Listar pagos locales asociados a una venta (paginado, requiere auth/admin).
+  * `POST /verify`: Verificar el estado de un pago con el proveedor (requiere auth).
+  * `GET /preference/:preferenceId`: Verificar estado de una preferencia y pago asociado (puede requerir auth).
+  * `GET /mercadopago/payments`: Consultar directamente a Mercado Pago los pagos *realizados* por la cuenta (requiere auth/admin).
+  * `GET /mercadopago/charges`: Consultar directamente a Mercado Pago los *cobros recibidos* por la cuenta (requiere auth/admin).
+  * `POST /webhook`: Endpoint público para recibir notificaciones de Mercado Pago.
+  * `GET /success`: Callback de Mercado Pago para pagos exitosos (redirecciona al frontend).
+  * `GET /failure`: Callback de Mercado Pago para pagos fallidos (redirecciona al frontend).
+  * `GET /pending`: Callback de Mercado Pago para pagos pendientes (redirecciona al frontend).
+* **Cupones (`/api/coupons`)** (Requieren JWT y rol Admin)
 
-    * **Body:** **{ "quantity": ... }**
-  * **DELETE /items/:productId**: Eliminar un producto del carrito.
-  * **DELETE /**: Vaciar todo el carrito.
-* **/api/sales** **(Pedidos/Ventas)**
+  * `GET /`: Listar cupones (paginado).
+  * `GET /:id`: Obtener cupón por ID.
+  * `POST /`: Crear cupón.
+  * `PUT /:id`: Actualizar cupón.
+  * `DELETE /:id`: Eliminar (o desactivar) cupón.
+* **Chatbot (`/api/chatbot`)**
 
-  * **POST /**: Crear un nuevo pedido (**abierto para invitados y usuarios autenticados**).
+  * `POST /query`: Enviar consulta al chatbot (público).
+  * `GET /session/:sessionId`: Obtener historial de una sesión (público).
+  * `POST /session`: Crear una nueva sesión (público).
+  * `GET /sessions`: Listar todas las sesiones (requiere auth/admin).
+  * `POST /generate-embeddings`: (Admin) Generar/regenerar embeddings.
+  * `POST /change-llm`: (Admin) Cambiar el modelo LLM activo.
+  * `GET /current-llm`: (Admin) Obtener el modelo LLM actual.
+  * `GET /validate-embeddings`: (Admin) Validar la consistencia de los embeddings.
 
-    * **Body (Invitado):** **{ "items": [...], "customerName": "...", "customerEmail": "...", ... }**
-  * **Body (Autenticado):** **{ "items": [...], "couponCode": "..." (opcional) }** **(El cliente se obtiene del** **userId** **del token).**
-  * **GET /**: Obtener lista paginada de todos los pedidos (**requiere rol Admin**).
-  * **GET /:id**: Obtener un pedido por su ID (**requiere rol Admin** **o ser el dueño del pedido -** **lógica de dueño pendiente**).
-  * **PATCH /:id/status**: Actualizar el estado de un pedido (**requiere rol Admin**).
+---
 
-    * **Body:** **{ "status": "...", "notes": "..." (opcional) }**
-  * **GET /by-customer/:customerId**: Obtener pedidos de un cliente específico (**requiere rol Admin**).
-  * **GET /my-orders**: Obtener el historial de pedidos del usuario autenticado (**requiere autenticación** **-** **Implementación Pendiente**).
-  * **POST /by-date-range**: Obtener pedidos dentro de un rango de fechas (**requiere rol Admin**).
+**(Nota:** La necesidad exacta de autenticación y roles (`requiere auth`, `requiere JWT`, `requiere auth/admin`) debe ser implementada y verificada con los middlewares correspondientes en las rutas. Esta lista asume los casos de uso más comunes.)
 
-    * **Body:** **{ "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" }**
-* **/api/coupons** **(**Requiere autenticación y rol Admin**)**
 
-  * **POST /**: Crear un nuevo cupón.
-* **GET /**: Obtener lista paginada de cupones.
-* **GET /:id**: Obtener un cupón por su ID.
-* **PUT /:id**: Actualizar un cupón.
-* **DELETE /:id**: Eliminar (o desactivar) un cupón.
-* **/api/payments**
+💡 Decisiones Arquitectónicas y Destacados
 
-  * **POST /sale/:saleId**: Crear preferencia de pago para un pedido (requiere autenticación del dueño del pedido o rol Admin).
-  * **POST /webhook**: Endpoint para recibir notificaciones de MercadoPago (público).
-  * **GET /success**: Callback de éxito de MercadoPago (público).
-  * **GET /failure**: Callback de fallo de MercadoPago (público).
-  * **GET /pending**: Callback de pendiente de MercadoPago (público).
-  * **POST /verify**: Verificar el estado de un pago (requiere autenticación Admin o dueño).
-  * **GET /:id**: Obtener detalles de un pago registrado (requiere autenticación Admin o dueño).
-  * **(Otros endpoints para listar pagos, etc.)**
-* **/api/chatbot**
+* **TypeScript, Arquitectura en Capas, Inyección de Dependencias Manual, DTOs, Mappers, Logging Detallado, Chatbot RAG, Integración con Servicios Externos.**
+* **Búsqueda eficiente:** **Uso de Índices de Texto y Aggregation Pipeline de MongoDB para búsqueda y filtrado sin añadir servicios externos inicialmente.**
 
-  * **POST /query**: Enviar una consulta al chatbot.
-  * **POST /session**: Crear una nueva sesión de chat.
-  * **GET /session/:sessionId**: Obtener detalles y mensajes de una sesión.
-  * **POST /generate-embeddings**: (**Admin**) Disparar la generación/actualización de embeddings.
-  * **(Otros endpoints para gestión de sesiones, cambio de LLM, etc.)**
+## 🚧 Mejoras Futuras / TODO
 
-## 💡 Puntos a Considerar
+* **Implementar Pruebas .**
+* **Roles y Permisos detallados (RBAC).**
+* **Refinar Middleware** **AuthMiddleware.checkRole**.
+* **Mejorar gestión de errores y validaciones.**
+* **Añadir Swagger/OpenAPI.**
+* **Optimizar consultas.**
+* **Refinar lógica del chatbot.**
+* **Añadir más proveedores de pago.**
+* **Sistema de reviews.**
+* **Scripts de despliegue (Docker).**
+* **Gestión de Variaciones de Producto.**
+* **Lógica de Envío y Cálculo de Costos.**
+* **Panel de Administración.**
+* **Wishlist.**
+* **Recomendaciones de Productos.**
 
-* **Seguridad:** **Revisa y ajusta la configuración de** **cors**, **rate-limit** **y** **JWT_SEED** **para producción. Asegúrate de que las variables sensibles no se expongan en el control de versiones.**
-* **Vinculación User-Customer:** **La vinculación básica está implementada. Revisa la lógica de creación inicial del** **Customer** **en** **RegisterUserUseCase** **(placeholders de teléfono/dirección,** **defaultNeighborhoodId**). **Implementa endpoints para que el usuario actualice su perfil/cliente.**
-* **Roles (RBAC):** **Implementa y aplica un middleware** **checkRole(['ADMIN_ROLE'])** **para proteger adecuadamente los endpoints administrativos marcados.**
-* **Configuración Email:** **Asegúrate de configurar correctamente las variables de entorno** **EMAIL_SERVICE**, **EMAIL_USER**, **EMAIL_PASS** **y** **EMAIL_SENDER_NAME** **para que el restablecimiento de contraseña funcione.**
-* **Webhooks:** **Para probar los webhooks de MercadoPago localmente, necesitarás una herramienta como NGrok para exponer tu endpoint local (**/api/payments/webhook**) a internet y configurar esa URL (**URL_RESPONSE_WEBHOOK_NGROK**) en el archivo** **.env** **y en la configuración de webhooks de MercadoPago.**
-* **Errores:** **Revisa la implementación del manejo de errores para asegurar que se capturen y logueen adecuadamente todos los casos.**
-* **Optimización:** **Revisa los índices de MongoDB para asegurar un rendimiento óptimo de las consultas, especialmente en colecciones grandes como** **products**, **orders**, **customers**, **payments**, **coupons** **y** **embeddings**.
-* **Funcionalidades Pendientes:** **Gestión de perfil de usuario, historial de pedidos (**/my-orders**), reembolsos de MercadoPago.**
+## 🤝 Contribuciones
+
+**Las contribuciones son bienvenidas. Por favor, abre un issue o un Pull Request.**
+
+## 📄 Licencia
+
+...
+
+
+## 💡 Decisiones Arquitectónicas y Destacados
+
+* **TypeScript, Arquitectura en Capas, Inyección de Dependencias Manual, DTOs, Mappers, Logging Detallado, Chatbot RAG, Integración con Servicios Externos.**
+* **Búsqueda eficiente:** **Uso de Índices de Texto y Aggregation Pipeline de MongoDB para búsqueda y filtrado sin añadir servicios externos inicialmente.**
+
+## 🚧 Mejoras Futuras / TODO
+
+* **Roles y Permisos detallados (RBAC).**
+* **Refinar Middleware** **AuthMiddleware.checkRole**.
+* **Mejorar gestión de errores y validaciones.**
+* **Añadir Swagger/OpenAPI.**
+* **Optimizar consultas.**
+* **Refinar lógica del chatbot.**
+* **Añadir más proveedores de pago.**
+* **Sistema de reviews.**
+* **Scripts de despliegue (Docker).**
+* **Gestión de Variaciones de Producto.**
+* **Lógica de Envío y Cálculo de Costos.**
+* **Panel de Administración.**
+* **Wishlist.**
+* **Recomendaciones de Productos.**
+
+## 🤝 Contribuciones
+
+**Las contribuciones son bienvenidas. Por favor, abre un issue o un Pull Request.**
+
+## 📄 Licencia
+
+**(Opcional: Especifica tu licencia, ej. MIT)**

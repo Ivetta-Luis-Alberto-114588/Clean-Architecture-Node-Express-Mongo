@@ -246,6 +246,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
     async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<OrderEntity[]> {
         const { page, limit } = paginationDto;
         try {
+            // Es buena idea verificar si el cliente existe primero, aunque el use case ya lo hace.
             const customer = await CustomerModel.findById(customerId);
             if (!customer) throw CustomError.notFound(`Cliente con ID ${customerId} no encontrado`);
 

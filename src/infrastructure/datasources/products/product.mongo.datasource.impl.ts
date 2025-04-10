@@ -1,9 +1,12 @@
+// src/infrastructure/datasources/products/product.mongo.datasource.impl.ts
+import mongoose from "mongoose"; // <<<--- AÑADIR IMPORTACIÓN
 import logger from "../../../configs/logger";
 import { CategoryModel } from "../../../data/mongodb/models/products/category.model";
 import { ProductModel } from "../../../data/mongodb/models/products/product.model";
 import { UnitModel } from "../../../data/mongodb/models/products/unit.model";
 import { ProductDataSource } from "../../../domain/datasources/products/product.datasource";
 import { CreateProductDto } from "../../../domain/dtos/products/create-product.dto";
+import { SearchProductsDto } from "../../../domain/dtos/products/search-product.dto"; // <<<--- AÑADIR
 import { UpdateProductDto } from "../../../domain/dtos/products/update-product.dto";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
 import { ProductEntity } from "../../../domain/entities/products/product.entity";
@@ -13,183 +16,121 @@ import { ProductMapper } from "../../mappers/products/product.mapper";
 
 export class ProductMongoDataSourceImpl extends ProductDataSource {
 
-    async findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<ProductEntity | null> {
-        const { limit, page } = paginationDto
+    // ... (métodos create, getAll, findById, etc. sin cambios) ...
+
+    // <<<--- IMPLEMENTACIÓN NUEVO MÉTODO --- >>>
+    async search(searchDto: SearchProductsDto): Promise<{ total: number; products: ProductEntity[] }> {
+        const { pagination, query, categories, minPrice, maxPrice, sortBy, sortOrder } = searchDto;
+        const { page, limit } = pagination;
 
         try {
+            // 1. Construir el pipeline de agregación
+            const pipeline: mongoose.PipelineStage[] = [];
 
-            // Buscamos el documento en la base de datos
-            const product = await ProductModel.findOne({ name: name })
-                .populate(["category", "unit"])
-                .limit(limit)
-                .skip((page - 1) * limit)
+            // 2. Etapa $match: Filtrado inicial
+            const matchStage: mongoose.FilterQuery<any> = {
+                isActive: true // Siempre buscar solo productos activos
+            };
 
-            // Si no existe, retornamos null para poder crearlo
-            if (!product) return null
-
-
-            // Retornamos el objeto mapeado
-            return ProductMapper.fromObjectToProductEntity(product)
-
-        } catch (error) {
-
-            //muestro el error completo
-            console.log(error)
-
-            if (error instanceof CustomError) { throw error }
-
-            throw CustomError.internalServerError("ProductMonogoDataSourceImpl findByNameForCreate, internal server error")
-        }
-    }
-
-    async create(createProductDto: CreateProductDto): Promise<ProductEntity> {
-
-        try {
-
-            // Verificar que la categoría existe
-            const categoryExists = await CategoryModel.findById(createProductDto.category);
-            if (!categoryExists) {
-                throw new Error(`La categoría con ID ${createProductDto.category} no existe`);
+            // 2.1. Filtrado por texto (si hay query)
+            if (query) {
+                // $text debe ser la primera condición en $match si se usa
+                matchStage.$text = { $search: query };
             }
 
-            // Verificar que la unidad existe
-            const unitExists = await UnitModel.findById(createProductDto.unit);
-            if (!unitExists) {
-                throw new Error(`La unidad con ID ${createProductDto.unit} no existe`);
+            // 2.2. Filtrado por categoría
+            if (categories && categories.length > 0) {
+                matchStage.category = { $in: categories.map(id => new mongoose.Types.ObjectId(id)) };
             }
 
-            //creamos el documento en la base de datos
-            const x = await ProductModel.create(createProductDto)
-
-            // Retornamos el objeto mapeado y populado
-            return ProductMapper.fromObjectToProductEntity(x)
-
-
-        } catch (error) {
-
-            //muestro el error completo en la consola
-
-            logger.error("Error al crear producto:", { error: error.message, stack: error.stack });
-            console.log(error)
-
-            // Si ya es un CustomError, lo propagamos
-            if (error instanceof CustomError) { throw error }
-
-            throw CustomError.internalServerError(`ProductMonogoDataSourceImpl create, internal server error Error al crear producto: ${error.message || JSON.stringify(error)}`);
-        }
-    }
-
-
-    async getAll(paginationDto: PaginationDto): Promise<ProductEntity[]> {
-
-        // Extraemos los valores de la paginacion
-        const { limit, page } = paginationDto
-
-        try {
-            // Buscamos todos los documentos en la base de datos
-            const x = await ProductModel.find()
-                .limit(limit)
-                .skip((page - 1) * limit)
-                .exec()
-
-            // Retornamos el objeto mapeado, pero lo tengo que aplicar de a uno en uno
-            return x.map(ProductMapper.fromObjectToProductEntity)
-
-        } catch (error) {
-            // Si ya es un CustomError, lo propagamos
-            if (error instanceof CustomError) { throw error }
-
-            console.log(error)
-            throw CustomError.internalServerError("ProductMonogoDataSourceImpl getAll, internal server error")
-        }
-    }
-
-
-    async findById(id: string): Promise<ProductEntity> {
-        try {
-
-            // Buscamos el documento en la base de datos
-            const x = await ProductModel.findById(id)
-
-            // Si no existe, lanzamos un error
-            if (!x) throw CustomError.notFound("Product not found")
-
-            // Retornamos el objeto mapeado
-            return ProductMapper.fromObjectToProductEntity(x)
-
-        } catch (error) {
-            // Si ya es un CustomError, lo propagamos
-            if (error instanceof CustomError) { throw error }
-
-            console.log(error)
-            throw CustomError.internalServerError("ProductMonogoDataSourceImpl findById, internal server error")
-
-        }
-    }
-
-
-    async update(id: string, updateProductDto: UpdateProductDto): Promise<ProductEntity> {
-        try {
-
-            // Buscamos el documento en la base de datos
-            const x = await ProductModel.findByIdAndUpdate(id, updateProductDto, { new: true })
-
-            //
-            if (!x) throw CustomError.notFound("Product not found")
-
-            // Retornamos el objeto mapeado
-            return ProductMapper.fromObjectToProductEntity(x)
-
-        } catch (error) {
-            // Si ya es un CustomError, lo propagamos
-            if (error instanceof CustomError) { throw error }
-
-            console.log(error)
-            throw CustomError.internalServerError("ProductMonogoDataSourceImpl update, internal server error")
-
-        }
-    }
-
-
-    async delete(id: string): Promise<ProductEntity> {
-        try {
-            console.log(`Intentando eliminar producto con ID: ${id}`);
-
-            // Primero verificamos si el producto existe
-            const existingProduct = await ProductModel.findById(id);
-            if (!existingProduct) {
-                console.log(`Producto con ID ${id} no encontrado - lanzando error`);
-                throw CustomError.notFound("Producto no encontrado");
+            // 2.3. Filtrado por precio
+            const priceFilter: any = {};
+            if (minPrice !== undefined) {
+                priceFilter.$gte = minPrice;
+            }
+            if (maxPrice !== undefined) {
+                priceFilter.$lte = maxPrice;
+            }
+            if (Object.keys(priceFilter).length > 0) {
+                matchStage.price = priceFilter;
             }
 
-            // Buscamos el documento y lo eliminamos
-            const deletedProduct = await ProductModel.findByIdAndDelete(id);
+            // Añadir la etapa $match
+            pipeline.push({ $match: matchStage });
 
-            // Verificación adicional por si acaso
-            if (!deletedProduct) {
-                console.log(`ProductModel.findByIdAndDelete no encontró el producto con ID ${id}`);
-                throw CustomError.notFound("Producto no encontrado durante la eliminación");
+            // 3. Etapa $sort: Ordenamiento
+            const sortStage: Record<string, any> = {};
+            if (query && sortBy === 'relevance') {
+                // Añadir campo de score y ordenar por él si hay búsqueda de texto
+                pipeline.push({ $addFields: { score: { $meta: 'textScore' } } });
+                sortStage.score = { $meta: 'textScore' };
+            } else if (sortBy) {
+                sortStage[sortBy] = sortOrder === 'asc' ? 1 : -1;
+            }
+            // Añadir ordenamiento secundario por defecto (ej: por fecha creación)
+            if (sortBy !== 'createdAt') {
+                sortStage.createdAt = -1; // Más nuevos primero como secundario
+            }
+            if (Object.keys(sortStage).length > 0) {
+                pipeline.push({ $sort: sortStage });
             }
 
-            console.log(`Producto con ID ${id} eliminado correctamente`);
+            // 4. Etapa $facet: Para obtener resultados paginados Y conteo total en una sola query
+            pipeline.push({
+                $facet: {
+                    // Rama para obtener los documentos paginados
+                    paginatedResults: [
+                        { $skip: (page - 1) * limit },
+                        { $limit: limit }
+                    ],
+                    // Rama para obtener el conteo total de documentos que coinciden con $match
+                    totalCount: [
+                        { $count: 'count' }
+                    ]
+                }
+            });
 
-            // Retornamos el objeto mapeado
-            return ProductMapper.fromObjectToProductEntity(deletedProduct);
+            // 5. Ejecutar la agregación
+            const aggregationResult = await ProductModel.aggregate(pipeline).exec();
+
+            // 6. Procesar resultados
+            const results = aggregationResult[0]; // $facet devuelve un array con un objeto
+            const productsData = results.paginatedResults;
+            const totalProducts = results.totalCount.length > 0 ? results.totalCount[0].count : 0;
+
+            // 7. Popular manualmente las referencias (category, unit) después de la agregación
+            // Mongoose populate no funciona directamente con aggregate results si no son Mongoose Documents
+            const productIds = productsData.map((p: any) => p._id);
+            const populatedProducts = await ProductModel.find({ _id: { $in: productIds } })
+                .populate('category')
+                .populate('unit')
+                .exec();
+
+            // Mapear los documentos populados al orden original de productsData (importante para mantener el sort)
+            const productMap = new Map(populatedProducts.map(p => [p._id.toString(), p]));
+            const finalProductsData = productsData.map((p: any) => productMap.get(p._id.toString()));
+
+
+            // 8. Mapear a entidades
+            const productEntities = finalProductsData
+                .filter(p => p) // Filtrar por si algún ID no se encontró al popular (raro)
+                .map(doc => ProductMapper.fromObjectToProductEntity(doc!)); // Usar '!' porque filtramos nulos
+
+            logger.info(`Búsqueda de productos realizada. Query: "${query}", Filtros: ${JSON.stringify({ categories, minPrice, maxPrice })}, Total encontrados: ${totalProducts}`);
+
+            return {
+                total: totalProducts,
+                products: productEntities
+            };
 
         } catch (error) {
-            // Log detallado para depuración
-            console.error(`Error al eliminar producto con ID ${id}:`, error);
-
-            // Si ya es un CustomError, lo propagamos
-            if (error instanceof CustomError) {
-                throw error;
-            }
-
-            throw CustomError.internalServerError("ProductMongoDataSourceImpl delete, error interno del servidor");
+            logger.error("Error en search ProductMongoDataSourceImpl:", { error, searchDto });
+            if (error instanceof CustomError) { throw error; }
+            throw CustomError.internalServerError("Error al buscar productos");
         }
     }
-
-
+    // <<<--- FIN NUEVO MÉTODO --- >>>
+    // ... resto de métodos (findByName, findByCategory, etc.) ...
     async findByName(nameProduct: string, paginationDto: PaginationDto): Promise<ProductEntity[]> {
         const { limit, page } = paginationDto
 
@@ -200,8 +141,9 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
                 .limit(limit)
                 .skip((page - 1) * limit)
 
-            // Si no existe, lanzamos un error 
-            if (!x) throw CustomError.notFound("Product not found")
+            // Si no existe, lanzamos un error
+            // <<<--- CORRECCIÓN: Devolver array vacío si no se encuentra --- >>>
+            if (!x || x.length === 0) return [];
 
             // Retornamos el objeto mapeado
             return x.map(x => ProductMapper.fromObjectToProductEntity(x))
@@ -253,8 +195,8 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
                 .skip((page - 1) * limit)
 
 
-            // Si no existe, lanzamos un error
-            if (!x) throw CustomError.notFound("Product not found")
+            // <<<--- CORRECCIÓN: Devolver array vacío si no se encuentra --- >>>
+            if (!x || x.length === 0) return [];
 
             // Retornamos el objeto mapeado
             return x.map(x => ProductMapper.fromObjectToProductEntity(x))
@@ -268,5 +210,229 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
 
         }
     }
+    // --- Métodos Create, Update, Delete, findById, findByNameForCreate ---
+    // ... (código existente sin cambios) ...
+    // ...
+    // ... (Asegúrate de que estos métodos sigan aquí) ...
+    // ...
+    async findByNameForCreate(name: string, paginationDto: PaginationDto): Promise<ProductEntity | null> {
+        const { limit, page } = paginationDto
 
+        try {
+
+            // Buscamos el documento en la base de datos
+            const product = await ProductModel.findOne({ name: name })
+                .populate(["category", "unit"])
+                .limit(limit)
+                .skip((page - 1) * limit)
+
+            // Si no existe, retornamos null para poder crearlo
+            if (!product) return null
+
+
+            // Retornamos el objeto mapeado
+            return ProductMapper.fromObjectToProductEntity(product)
+
+        } catch (error) {
+
+            //muestro el error completo
+            console.log(error)
+
+            if (error instanceof CustomError) { throw error }
+
+            throw CustomError.internalServerError("ProductMonogoDataSourceImpl findByNameForCreate, internal server error")
+        }
+    }
+
+    async create(createProductDto: CreateProductDto): Promise<ProductEntity> {
+
+        try {
+
+            // Verificar que la categoría existe
+            const categoryExists = await CategoryModel.findById(createProductDto.category);
+            if (!categoryExists) {
+                throw CustomError.badRequest(`La categoría con ID ${createProductDto.category} no existe`); // Usar CustomError
+            }
+
+            // Verificar que la unidad existe
+            const unitExists = await UnitModel.findById(createProductDto.unit);
+            if (!unitExists) {
+                throw CustomError.badRequest(`La unidad con ID ${createProductDto.unit} no existe`); // Usar CustomError
+            }
+
+            //creamos el documento en la base de datos
+            const productDoc = await ProductModel.create(createProductDto);
+
+            // Populamos DESPUÉS de crear
+            const populatedProduct = await ProductModel.findById(productDoc._id)
+                .populate('category')
+                .populate('unit');
+
+            if (!populatedProduct) { // Verificación extra
+                throw CustomError.internalServerError("Error al recuperar el producto recién creado");
+            }
+
+            // Retornamos el objeto mapeado y populado
+            return ProductMapper.fromObjectToProductEntity(populatedProduct);
+
+
+        } catch (error: any) { // Tipar error como any para acceder a 'code'
+
+            logger.error("Error al crear producto:", { error: error.message, stack: error.stack });
+
+            // Manejar error de duplicado específico de Mongoose
+            if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {
+                throw CustomError.badRequest(`El nombre de producto '${createProductDto.name}' ya existe.`);
+            }
+
+            // Si ya es un CustomError, lo propagamos
+            if (error instanceof CustomError) { throw error }
+
+            throw CustomError.internalServerError(`ProductMonogoDataSourceImpl create, internal server error. ${error.message || JSON.stringify(error)}`); // Incluir mensaje original
+        }
+    }
+
+
+    async getAll(paginationDto: PaginationDto): Promise<ProductEntity[]> {
+
+        // Extraemos los valores de la paginacion
+        const { limit, page } = paginationDto
+
+        try {
+            // Buscamos todos los documentos en la base de datos Y POPULAMOS
+            const products = await ProductModel.find()
+                .populate('category')
+                .populate('unit')
+                .limit(limit)
+                .skip((page - 1) * limit)
+                .sort({ createdAt: -1 }) // Ordenar por defecto
+                .exec();
+
+            // Retornamos el objeto mapeado, pero lo tengo que aplicar de a uno en uno
+            return products.map(ProductMapper.fromObjectToProductEntity);
+
+        } catch (error) {
+            // Si ya es un CustomError, lo propagamos
+            if (error instanceof CustomError) { throw error }
+
+            console.log(error)
+            throw CustomError.internalServerError("ProductMonogoDataSourceImpl getAll, internal server error")
+        }
+    }
+
+
+    async findById(id: string): Promise<ProductEntity> {
+        try {
+
+            // Buscamos el documento en la base de datos Y POPULAMOS
+            const product = await ProductModel.findById(id)
+                .populate('category')
+                .populate('unit');
+
+            // Si no existe, lanzamos un error
+            if (!product) throw CustomError.notFound("Product not found");
+
+            // Retornamos el objeto mapeado
+            return ProductMapper.fromObjectToProductEntity(product);
+
+        } catch (error) {
+            // Verificar si el error es por un ID inválido de Mongoose
+            if (error instanceof mongoose.Error.CastError && error.path === '_id') {
+                throw CustomError.badRequest(`ID de producto inválido: ${id}`);
+            }
+            // Si ya es un CustomError, lo propagamos
+            if (error instanceof CustomError) { throw error }
+
+            console.log(error)
+            throw CustomError.internalServerError("ProductMonogoDataSourceImpl findById, internal server error");
+
+        }
+    }
+
+
+    async update(id: string, updateProductDto: UpdateProductDto): Promise<ProductEntity> {
+        try {
+            // Verificar si se intenta actualizar categoría o unidad y si existen
+            if (updateProductDto.category) {
+                const categoryExists = await CategoryModel.findById(updateProductDto.category);
+                if (!categoryExists) throw CustomError.badRequest(`La categoría con ID ${updateProductDto.category} no existe`);
+            }
+            if (updateProductDto.unit) {
+                const unitExists = await UnitModel.findById(updateProductDto.unit);
+                if (!unitExists) throw CustomError.badRequest(`La unidad con ID ${updateProductDto.unit} no existe`);
+            }
+
+
+            // Buscamos el documento en la base de datos y actualizamos
+            const updatedProduct = await ProductModel.findByIdAndUpdate(id, updateProductDto, { new: true })
+                .populate('category') // Populamos después de actualizar
+                .populate('unit');
+
+
+            if (!updatedProduct) throw CustomError.notFound("Product not found");
+
+            // Retornamos el objeto mapeado
+            return ProductMapper.fromObjectToProductEntity(updatedProduct);
+
+        } catch (error: any) {
+            // Manejar error de duplicado específico de Mongoose
+            if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {
+                throw CustomError.badRequest(`El nombre de producto '${updateProductDto.name}' ya existe.`);
+            }
+            // Verificar si el error es por un ID inválido de Mongoose
+            if (error instanceof mongoose.Error.CastError && error.path === '_id') {
+                throw CustomError.badRequest(`ID de producto inválido: ${id}`);
+            }
+            // Si ya es un CustomError, lo propagamos
+            if (error instanceof CustomError) { throw error }
+
+            console.log(error)
+            throw CustomError.internalServerError("ProductMonogoDataSourceImpl update, internal server error");
+
+        }
+    }
+
+
+    async delete(id: string): Promise<ProductEntity> {
+        try {
+            console.log(`Intentando eliminar producto con ID: ${id}`);
+
+            // Buscamos el documento y lo eliminamos, POPULANDO antes de eliminar (opcional, si necesitas los datos relacionados)
+            // O puedes buscarlo primero, guardar la info, y luego eliminar
+            const deletedProduct = await ProductModel.findByIdAndDelete(id)
+                .populate('category')
+                .populate('unit');
+
+
+            // Verificación adicional por si acaso
+            if (!deletedProduct) {
+                console.log(`Producto con ID ${id} no encontrado - lanzando error`);
+                // Verificar si el ID era inválido
+                if (!mongoose.Types.ObjectId.isValid(id)) {
+                    throw CustomError.badRequest(`ID de producto inválido: ${id}`);
+                }
+                throw CustomError.notFound("Producto no encontrado");
+            }
+
+            console.log(`Producto con ID ${id} eliminado correctamente`);
+
+            // Retornamos el objeto mapeado
+            return ProductMapper.fromObjectToProductEntity(deletedProduct);
+
+        } catch (error) {
+            // Log detallado para depuración
+            console.error(`Error al eliminar producto con ID ${id}:`, error);
+            // Verificar si el error es por un ID inválido de Mongoose
+            if (error instanceof mongoose.Error.CastError && error.path === '_id') {
+                throw CustomError.badRequest(`ID de producto inválido: ${id}`);
+            }
+
+            // Si ya es un CustomError, lo propagamos
+            if (error instanceof CustomError) {
+                throw error;
+            }
+
+            throw CustomError.internalServerError("ProductMongoDataSourceImpl delete, error interno del servidor");
+        }
+    }
 }
