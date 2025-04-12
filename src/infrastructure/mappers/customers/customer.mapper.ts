@@ -32,7 +32,7 @@ export class CustomerMapper {
             // Crear un placeholder o lanzar error si se espera que siempre esté poblado
             neighborhoodEntity = {
                 id: neighborhood.toString(), name: 'Barrio (No Poblado)', description: '',
-                city: { id: 0, name: 'Ciudad (No Poblada)', description: '', isActive: true },
+                city: { id: '', name: 'Ciudad (No Poblada)', description: '', isActive: true },
                 isActive: true
             };
         } else {
