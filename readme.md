@@ -363,19 +363,19 @@ npm test
 
 ### Pagos (`/api/payments`)
 
-* **`POST /sale/:saleId`**: Inicia el proceso de pago para una venta específica, creando una preferencia en Mercado Pago y un registro de pago local. (Puede requerir JWT).
-* **`POST /prueba/sale/:saleId`**: Endpoint de prueba simplificado para crear preferencias.
-* **`GET /`**: (Admin) Lista todos los registros de pago guardados localmente (paginado). (Requiere JWT + Admin Role).
-* **`GET /:id`**: (Admin) Obtiene información de un registro de pago local por su ID. (Requiere JWT + Admin Role).
-* **`GET /by-sale/:saleId`**: (Admin) Lista los registros de pago locales asociados a una venta (paginado). (Requiere JWT + Admin Role).
-* **`POST /verify`**: Verifica el estado actual de un pago con Mercado Pago usando el ID local y el ID del proveedor. (Puede requerir JWT).
-* **`GET /preference/:preferenceId`**: Obtiene el estado de una preferencia de Mercado Pago y del pago asociado (si existe). (Puede requerir JWT).
-* **`GET /mercadopago/payments`**: (Admin) Consulta directamente a Mercado Pago los pagos *realizados* desde la cuenta asociada al Access Token (paginado, filtros opcionales). (Requiere JWT + Admin Role).
-* **`GET /mercadopago/charges`**: (Admin) Consulta directamente a Mercado Pago los *cobros recibidos* en la cuenta asociada al Access Token (paginado, filtros opcionales). (Requiere JWT + Admin Role).
-* **`POST /webhook`**: **Endpoint Público.** Recibe notificaciones (webhooks) de Mercado Pago sobre cambios en el estado de los pagos.
-* **`GET /success`**: **Endpoint Público.** Callback de Mercado Pago al que se redirige tras un pago exitoso. Redirecciona al frontend.
-* **`GET /failure`**: **Endpoint Público.** Callback de Mercado Pago al que se redirige tras un pago fallido. Redirecciona al frontend.
-* **`GET /pending`**: **Endpoint Público.** Callback de Mercado Pago al que se redirige para pagos pendientes. Redirecciona al frontend.
+1. **`POST /sale/:saleId`**: Inicia el proceso de pago para una venta específica, creando una preferencia en Mercado Pago y un registro de pago local. (Puede requerir JWT).
+1. **`POST /prueba/sale/:saleId`**: Endpoint de prueba simplificado para crear preferencias.
+1. **`GET /`**: (Admin) Lista todos los registros de pago guardados localmente (paginado). (Requiere JWT + Admin Role).
+1. **`GET /:id`**: (Admin) Obtiene información de un registro de pago local por su ID. (Requiere JWT + Admin Role).
+1. **`GET /by-sale/:saleId`**: (Admin) Lista los registros de pago locales asociados a una venta (paginado). (Requiere JWT + Admin Role).
+1. **`POST /verify`**: Verifica el estado actual de un pago con Mercado Pago usando el ID local y el ID del proveedor. (Puede requerir JWT).
+1. **`GET /preference/:preferenceId`**: Obtiene el estado de una preferencia de Mercado Pago y del pago asociado (si existe). (Puede requerir JWT).
+1. **`GET /mercadopago/payments`**: (Admin) Consulta directamente a Mercado Pago los pagos *realizados* desde la cuenta asociada al Access Token (paginado, filtros opcionales). (Requiere JWT + Admin Role).
+1. **`GET /mercadopago/charges`**: (Admin) Consulta directamente a Mercado Pago los *cobros recibidos* en la cuenta asociada al Access Token (paginado, filtros opcionales). (Requiere JWT + Admin Role).
+1. **`POST /webhook`**: **Endpoint Público.** Recibe notificaciones (webhooks) de Mercado Pago sobre cambios en el estado de los pagos.
+1. **`GET /success`**: **Endpoint Público.** Callback de Mercado Pago al que se redirige tras un pago exitoso. Redirecciona al frontend.
+1. **`GET /failure`**: **Endpoint Público.** Callback de Mercado Pago al que se redirige tras un pago fallido. Redirecciona al frontend.
+1. **`GET /pending`**: **Endpoint Público.** Callback de Mercado Pago al que se redirige para pagos pendientes. Redirecciona al frontend.
 
 ---
 

@@ -22,7 +22,7 @@ export class CartRoutes {
 
         // --- Middleware ---
         // Aplicar autenticación a todas las rutas del carrito
-        // router.use(AuthMiddleware.validateJwt);
+        router.use(AuthMiddleware.validateJwt);
 
         // --- Rutas ---
         router.get('/', (req, res, next) => { controller.getCart(req, res) });
