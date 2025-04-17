@@ -205,11 +205,16 @@ export class ProductController {
                 logger.warn("Error en paginación para getProductsByCategory:", { error, query: req.query });
                 return res.status(400).json({ error });
             }
-            const products = await new GetProductByCategoryUseCase(
+
+            // <<<--- LLAMADA AL CASO DE USO ACTUALIZADO --- >>>
+            const result = await new GetProductByCategoryUseCase(
                 this.productRepository,
                 this.categoryRepository
             ).execute(categoryId, paginationDto!);
-            return res.json(products);
+
+            // <<<--- DEVOLVER LA ESTRUCTURA COMPLETA --- >>>
+            return res.json(result); // Devuelve { total: number, products: ProductEntity[] }
+
         } catch (err) {
             return this.handleError(err, res);
         }
