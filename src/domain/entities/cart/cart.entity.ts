@@ -4,11 +4,12 @@ import { CartItemEntity } from "./cart-item.entity";
 export class CartEntity {
     constructor(
         public id: string,
-        public userId: string, // ID del usuario dueño del carrito
-        public user: UserEntity, // Opcional: entidad de usuario poblada
+        public userId: string,
+        public user: UserEntity,
         public items: CartItemEntity[],
         public createdAt: Date,
-        public updatedAt: Date, public totalItems: number,
+        public updatedAt: Date,
+        public totalItems: number,
         public subtotalWithoutTax: number,
         public totalTaxAmount: number,
         public total: number,
