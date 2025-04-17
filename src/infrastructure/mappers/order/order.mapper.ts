@@ -63,14 +63,17 @@ export class OrderMapper {
                         // Placeholders usan string ID
                         { id: 0, name: 'Categoría Desconocida', description: '', isActive: true },
                         { id: 0, name: 'Unidad Desconocida', description: '', isActive: true },
-                        item.productImgUrl || "", true, "", item.taxRateApplied ?? 21
+                        item.productImgUrl || "", true, "", item.taxRateApplied ?? 21,
+                        item.priceWithTax || 0, // Add missing priceWithTax argument
                     );
                 }
             } catch (error) {
                 logger.error('Error mapping product in SaleItem:', { error, product: item.product, saleId: _id || id });
                 productEntity = new ProductEntity(0, "Error Producto", item.unitPrice || 0, 0,
                     { id: 0, name: 'Error', description: '', isActive: true },
-                    { id: 0, name: 'Error', description: '', isActive: true }, "", true, "", 21);
+                    { id: 0, name: 'Error', description: '', isActive: true }, "", true, "", 21,
+                    Math.round((item.unitPrice || 0) * (1 + 21 / 100) * 100) / 100 // Añadir el priceWithTax calculado
+                );
             }
             return { product: productEntity, quantity: Number(item.quantity) || 0, unitPrice: Number(item.unitPrice) || 0, subtotal: Number(item.subtotal) || 0 };
         }).filter((item): item is OrderItemEntity => item !== null);
