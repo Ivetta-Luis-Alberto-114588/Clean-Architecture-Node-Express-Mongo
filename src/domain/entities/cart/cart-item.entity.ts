@@ -6,7 +6,9 @@ export class CartItemEntity {
         public product: ProductEntity, // Usamos la entidad completa para tener toda la info
         public quantity: number,
         public priceAtTime: number,
-        public taxRate: number // Precio al momento de agregar al carrito
+        public taxRate: number, // Precio al momento de agregar al carrito
+        public unitPriceWithTax: number, // Precio unitario CON IVA (calculado)
+        public subtotalWithTax: number   // Subtotal CON IVA (calculado)
     ) { }
 
     // Calculamos el subtotal del item
@@ -15,12 +17,12 @@ export class CartItemEntity {
     }
 
     // Precio unitario CON IVA
-    get unitPriceWithTax(): number {
-        return Math.round(this.priceAtTime * (1 + this.taxRate / 100) * 100) / 100;
-    }
+    // get unitPriceWithTax(): number {
+    //     return Math.round(this.priceAtTime * (1 + this.taxRate / 100) * 100) / 100;
+    // }
 
     // Subtotal CON IVA para este item
-    get subtotalWithTax(): number {
-        return Math.round(this.quantity * this.unitPriceWithTax * 100) / 100;
-    }
+    // get subtotalWithTax(): number {
+    //     return Math.round(this.quantity * this.unitPriceWithTax * 100) / 100;
+    // }
 }
