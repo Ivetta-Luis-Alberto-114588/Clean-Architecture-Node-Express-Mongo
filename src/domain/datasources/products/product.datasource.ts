@@ -18,7 +18,6 @@ export abstract class ProductDataSource {
   abstract findByCategory(idCategory: string, paginationDto: PaginationDto): Promise<{ total: number; products: ProductEntity[] }>;
   abstract findByUnit(idUnit: string, paginationDto: PaginationDto): Promise<ProductEntity[]>;
 
-  // <<<--- NUEVO MÉTODO --- >>>
-  // Devolverá también el conteo total para la paginación del frontend
+
   abstract search(searchDto: SearchProductsDto): Promise<{ total: number; products: ProductEntity[] }>;
 }

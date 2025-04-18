@@ -19,7 +19,7 @@ export class AddressRoutes {
         const controller = new AddressController(customerRepository, neighborhoodRepository); // <<<--- Pasar repo
 
         // Middleware: TODAS las rutas de direcciones requieren autenticación
-        router.use(AuthMiddleware.validateJwt);
+        // router.use(AuthMiddleware.validateJwt);
 
         // Rutas CRUD para las direcciones del usuario autenticado
         router.post('/', (req, res, next) => { controller.createAddress(req, res); });
