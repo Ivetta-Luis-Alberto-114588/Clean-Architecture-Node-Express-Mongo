@@ -30,6 +30,7 @@ export class CustomerMongoDataSourceImpl extends CustomerDataSource {
                 address: createCustomerDto.address.toLowerCase(),
                 neighborhood: createCustomerDto.neighborhoodId,
                 isActive: createCustomerDto.isActive,
+                userId: createCustomerDto.userId
             });
             const populatedCustomer = await customer.populate({ path: 'neighborhood', populate: { path: 'city' } });
             return CustomerMapper.fromObjectToCustomerEntity(populatedCustomer);

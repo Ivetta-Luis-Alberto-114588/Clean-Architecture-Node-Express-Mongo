@@ -83,6 +83,7 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
                     address: 'Dirección pendiente', // Placeholder
                     neighborhoodId: defaultNeighborhoodId, // ID de barrio por defecto desde envs
                     isActive: true,
+                    userId: user.id
                     // userId se añadirá explícitamente antes de llamar al repositorio
                 });
 
@@ -102,7 +103,7 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
                 };
 
                 // Crear el cliente usando el repositorio (asumiendo que maneja el userId)
-                await this.customerRepository.create(customerDataWithUserId as CreateCustomerDto);
+                await this.customerRepository.create(createCustomerDto!);
                 logger.info(`Nuevo Cliente creado y vinculado para usuario: ${user.email}`);
             }
 
