@@ -139,7 +139,14 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
         if (!mongoose.Types.ObjectId.isValid(id)) return null; // Validar ID
         return OrderModel.findById(id)
             .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-            .populate({ path: 'items.product', populate: [{ path: 'category' }, { path: 'unit' }] })
+            .populate({
+                path: 'items.product', // La ruta al campo a poblar dentro del array
+                model: 'Product',      // El modelo a usar
+                populate: [            // Poblar anidado dentro del producto
+                    { path: 'category', model: 'Category' },
+                    { path: 'unit', model: 'Unit' }
+                ]
+            })
             .lean();
     }
     async getAll(paginationDto: PaginationDto): Promise<OrderEntity[]> { /* ... código existente ... */
@@ -147,7 +154,11 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
         try {
             const salesDocs = await OrderModel.find()
                 .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-                .populate({ path: 'items.product', populate: [{ path: 'category' }, { path: 'unit' }] })
+                .populate({ // <<<--- AÑADIR POPULATE AQUÍ TAMBIÉN
+                    path: 'items.product',
+                    model: 'Product',
+                    populate: [{ path: 'category' }, { path: 'unit' }]
+                })
                 .limit(limit).skip((page - 1) * limit).sort({ date: -1 }).lean();
             return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
         } catch (error) {
@@ -168,54 +179,113 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             throw CustomError.internalServerError(`Error buscando venta: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-    async updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<OrderEntity> { /* ... código existente ... */
-        const session = await mongoose.startSession();
-        session.startTransaction();
-        logger.info(`[OrderDS] Iniciando TX actualizar estado pedido ${id}`, { session: session.id });
-        try {
-            if (!mongoose.Types.ObjectId.isValid(id)) throw CustomError.badRequest("ID de pedido inválido");
-            const sale = await OrderModel.findById(id).session(session);
-            if (!sale) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
-            if (sale.status === updateOrderStatusDto.status) {
-                logger.info(`[OrderDS] Pedido ${id} ya está ${updateOrderStatusDto.status}.`);
+
+
+    async updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<OrderEntity> {
+        let retries = 3; // Número máximo de reintentos
+        let lastError: any = null; // Almacenar el último error para el throw final
+
+        while (retries > 0) {
+            const session = await mongoose.startSession();
+            session.startTransaction();
+            logger.info(`[OrderDS] Iniciando TX (Intento ${4 - retries}) actualizar estado pedido ${id}`, { session: session.id });
+
+            try {
+                if (!mongoose.Types.ObjectId.isValid(id)) throw CustomError.badRequest("ID de pedido inválido");
+
+                const sale = await OrderModel.findById(id).session(session);
+                if (!sale) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
+
+                if (sale.status === updateOrderStatusDto.status) {
+                    logger.info(`[OrderDS] Pedido ${id} ya está ${updateOrderStatusDto.status}.`);
+                    await session.commitTransaction(); // Commit vacío para cerrar TX
+                    session.endSession(); // Terminar sesión
+                    const currentSaleDoc = await this.findSaleByIdPopulated(id);
+                    if (!currentSaleDoc) throw CustomError.internalServerError("Error al recuperar venta sin cambios.");
+                    return OrderMapper.fromObjectToSaleEntity(currentSaleDoc); // Devolver estado actual
+                }
+
+                // Lógica para restaurar stock si se cancela
+                if (updateOrderStatusDto.status === 'cancelled' && (sale.status === 'pending' || sale.status === 'completed')) {
+                    logger.info(`[OrderDS] Cancelando pedido ${id}. Restaurando stock...`);
+                    for (const item of sale.items) {
+                        // Usar updateOne para mayor seguridad en concurrencia (opcional pero bueno)
+                        const stockUpdateResult = await ProductModel.updateOne(
+                            { _id: item.product, stock: { $gte: 0 } }, // Condición opcional para evitar stock negativo
+                            { $inc: { stock: item.quantity } },
+                            { session }
+                        );
+                        if (stockUpdateResult.modifiedCount > 0) {
+                            logger.debug(`[OrderDS] Stock restaurado para prod ${item.product} (+${item.quantity})`);
+                        } else {
+                            logger.warn(`[OrderDS] No se pudo restaurar stock para prod ${item.product} (posiblemente no encontrado o stock ya restaurado)`);
+                        }
+                    }
+                }
+
+                // Actualizar estado y notas
+                sale.status = updateOrderStatusDto.status;
+                if (updateOrderStatusDto.notes !== undefined) sale.notes = updateOrderStatusDto.notes;
+
+                // Guardar los cambios en el pedido
+                await sale.save({ session });
+                logger.info(`[OrderDS] Estado pedido ${id} actualizado a ${updateOrderStatusDto.status}`);
+
+                // Si todo fue bien, hacer commit
                 await session.commitTransaction();
-                const currentSaleDoc = await this.findSaleByIdPopulated(id); // Necesitas poblarlo
-                if (!currentSaleDoc) throw CustomError.internalServerError("Error al recuperar venta sin cambios.");
-                return OrderMapper.fromObjectToSaleEntity(currentSaleDoc);
-            }
-            if (updateOrderStatusDto.status === 'cancelled' && (sale.status === 'pending' || sale.status === 'completed')) {
-                logger.info(`[OrderDS] Cancelando pedido ${id}. Restaurando stock...`);
-                for (const item of sale.items) {
-                    await ProductModel.findByIdAndUpdate(item.product, { $inc: { stock: item.quantity } }, { session });
-                    logger.debug(`[OrderDS] Stock restaurado para prod ${item.product} (+${item.quantity})`);
+                logger.info(`[OrderDS] TX commit (Intento ${4 - retries}) actualización estado pedido ${id}`);
+                session.endSession(); // Terminar sesión después de commit exitoso
+
+                // Obtener y devolver la venta actualizada y poblada
+                const updatedSaleDoc = await this.findSaleByIdPopulated(id);
+                if (!updatedSaleDoc) throw CustomError.internalServerError("Error recuperando venta actualizada post-commit.");
+                return OrderMapper.fromObjectToSaleEntity(updatedSaleDoc); // ÉXITO: Salir de la función
+
+            } catch (error: any) {
+                lastError = error; // Guardar el error de este intento
+                await session.abortTransaction();
+                logger.warn(`[OrderDS] TX abortada (Intento ${4 - retries}) para pedido ${id}`, { session: session.id, error: error.message });
+                session.endSession(); // Terminar sesión después de abortar
+
+                // Verificar si es un WriteConflict y quedan reintentos
+                if (error.code === 112 && retries > 1) { // Código 112 es WriteConflict
+                    retries--;
+                    const delay = Math.pow(2, 3 - retries) * 100; // Backoff exponencial (100ms, 200ms, 400ms)
+                    logger.warn(`WriteConflict detectado para pedido ${id}. Reintentando en ${delay}ms... (${retries} intentos restantes)`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue; // Saltar a la siguiente iteración del bucle while
+                } else {
+                    // Si no es WriteConflict o se acabaron los reintentos, salir del bucle para lanzar error
+                    break;
                 }
             }
-            sale.status = updateOrderStatusDto.status;
-            if (updateOrderStatusDto.notes !== undefined) sale.notes = updateOrderStatusDto.notes;
-            await sale.save({ session });
-            logger.info(`[OrderDS] Estado pedido ${id} actualizado a ${updateOrderStatusDto.status}`);
-            await session.commitTransaction();
-            logger.info(`[OrderDS] TX commit actualización estado pedido ${id}`);
-            const updatedSaleDoc = await this.findSaleByIdPopulated(id);
-            if (!updatedSaleDoc) throw CustomError.internalServerError("Error recuperando venta actualizada.");
-            return OrderMapper.fromObjectToSaleEntity(updatedSaleDoc);
-        } catch (error) {
-            logger.error(`[OrderDS] Error TX actualizar estado pedido ${id}, rollback...`, { error });
-            await session.abortTransaction();
-            if (error instanceof CustomError) throw error;
-            throw CustomError.internalServerError(`Error actualizando estado venta: ${error instanceof Error ? error.message : String(error)}`);
-        } finally {
-            logger.info(`[OrderDS] Sesión finalizada actualización estado`, { session: session?.id });
-            session.endSession();
+        } // Fin del while
+
+        // Si el bucle terminó debido a un error final o por agotar reintentos
+        logger.error(`[OrderDS] Error final TX actualizar estado pedido ${id}`, { error: lastError });
+        if (lastError instanceof CustomError) throw lastError; // Relanzar si ya es CustomError
+
+        // Verificar si el último error fue WriteConflict después de agotar reintentos
+        if (lastError && lastError.code === 112) {
+            throw CustomError.internalServerError(`No se pudo actualizar el estado del pedido ${id} después de varios intentos debido a conflictos de escritura.`);
         }
+
+        // Lanzar un error genérico para otros casos
+        throw CustomError.internalServerError(`Error actualizando estado venta: ${lastError?.message || String(lastError)}`);
     }
+
+
     async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<OrderEntity[]> { /* ... código existente ... */
         const { page, limit } = paginationDto;
         try {
             if (!mongoose.Types.ObjectId.isValid(customerId)) throw CustomError.badRequest("ID de cliente inválido");
             const salesDocs = await OrderModel.find({ customer: customerId })
                 .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-                .populate({ path: 'items.product', populate: [{ path: 'category' }, { path: 'unit' }] })
+                .populate({ // <<<--- AÑADIR POPULATE AQUÍ TAMBIÉN
+                    path: 'items.product',
+                    model: 'Product',
+                    populate: [{ path: 'category' }, { path: 'unit' }]
+                })
                 .limit(limit).skip((page - 1) * limit).sort({ date: -1 }).lean();
             return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
         } catch (error) {
@@ -231,7 +301,11 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             const endOfDay = new Date(endDate); endOfDay.setHours(23, 59, 59, 999);
             const salesDocs = await OrderModel.find({ date: { $gte: startDate, $lte: endOfDay } })
                 .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-                .populate({ path: 'items.product', populate: [{ path: 'category' }, { path: 'unit' }] })
+                .populate({ // <<<--- AÑADIR POPULATE AQUÍ TAMBIÉN
+                    path: 'items.product',
+                    model: 'Product',
+                    populate: [{ path: 'category' }, { path: 'unit' }]
+                })
                 .limit(limit).skip((page - 1) * limit).sort({ date: -1 }).lean();
             return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
         } catch (error) {
