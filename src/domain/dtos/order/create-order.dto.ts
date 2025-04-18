@@ -27,6 +27,10 @@ export class CreateOrderDto {
     ) { }
 
     static create(object: { [key: string]: any }, userId?: string): [string?, CreateOrderDto?] {
+
+        console.log('CreateOrderDto - Received userId:', userId); // <-- AÑADIR LOG
+        console.log('CreateOrderDto - Received object keys:', Object.keys(object))
+
         const {
             items, notes = "", couponCode,
             selectedAddressId,

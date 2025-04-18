@@ -42,6 +42,7 @@ export class OrderController {
 
     createSale = (req: Request, res: Response): void => {
         const userId = req.body.user?.id;
+        console.log('OrderController - User ID:', userId)
         const [error, createSaleDto] = CreateOrderDto.create(req.body, userId);
 
         if (error) {
