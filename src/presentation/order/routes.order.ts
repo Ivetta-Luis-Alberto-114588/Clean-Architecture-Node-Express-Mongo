@@ -10,7 +10,6 @@ import { ProductRepositoryImpl } from "../../infrastructure/repositories/product
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { CouponMongoDataSourceImpl } from "../../infrastructure/datasources/coupon/coupon.mongo.datasource.impl";
 import { CouponRepositoryImpl } from "../../infrastructure/repositories/coupon/coupon.repository.impl";
-// <<<--- IMPORTAR REPOS FALTANTES --- >>>
 import { NeighborhoodMongoDataSourceImpl } from "../../infrastructure/datasources/customers/neighborhood.mongo.datasource.impl";
 import { NeighborhoodRepositoryImpl } from "../../infrastructure/repositories/customers/neighborhood.repository.impl";
 import { CityMongoDataSourceImpl } from "../../infrastructure/datasources/customers/city.mongo.datasource.impl";
@@ -46,7 +45,7 @@ export class OrderRoutes {
         );
 
         // --- Rutas (sin cambios aquí) ---
-        router.post('/', controller.createSale);
+        router.post('/', [AuthMiddleware.validateJwt], controller.createSale);
         router.get('/my-orders', [AuthMiddleware.validateJwt], controller.getMyOrders);
         router.get('/', controller.getAllSales);
         router.get('/:id', controller.getSaleById);
