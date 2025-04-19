@@ -2,27 +2,30 @@ import { CategoryEntity } from "../../../domain/entities/products/category.entit
 import { CustomError } from "../../../domain/errors/custom.error"
 
 export class CategoryMapper {
-    
-    
-    static fromObjectToCategoryEntity(object: {[key: string]: any}){
-        
+
+
+    static fromObjectToCategoryEntity(object: { [key: string]: any }) {
+
         //desestructuramos el objeto
-        const {_id, id, name, description, isActive} = object
-        
-        //validamos que los campos no esten vacios
-        if(!_id || !id) throw CustomError.badRequest('mapper missing id')
-        if(!name) throw CustomError.badRequest("mapper missing name")
-        if(!description) throw CustomError.badRequest("mapper missing description")
-        // if(!isActive) throw CustomError.badRequest("mapper missing password")
-        if(typeof isActive !== 'boolean') throw CustomError.badRequest("mapper isActive must be a boolean")
-        
-        
-        //retornamos la entidad
+        const { _id, id, name, description, isActive } = object
+
+        // --- VALIDACIONES ---
+        // ID: Correcto.
+        if (!_id && !id) throw CustomError.badRequest('CategoryMapper: missing id')
+        // Name: Correcto.
+        if (!name) throw CustomError.badRequest("CategoryMapper: missing name")
+        // Description: Correcto.
+        if (!description) throw CustomError.badRequest("CategoryMapper: missing description")
+        // isActive (Type Check): Correcto.
+        if (isActive !== undefined && typeof isActive !== 'boolean') throw CustomError.badRequest("CategoryMapper: isActive must be a boolean") // Modificado
+
+
+        // --- INSTANCIACIÓN ---
         return new CategoryEntity(
-            _id || id,
+            _id?.toString() || id?.toString(), // Mejor asegurar que sea string
             name,
             description,
-            isActive 
+            isActive ?? true // Usar ?? true para asignar explícitamente el default
         )
     }
 }

@@ -79,11 +79,31 @@ MERCADO PAGO
 
 hay que usar ngrok para poder recibir los webhook de mercado pago
 
-https://www.mercadopago.com.ar/developers/
 
-(en ventana incognito) Comprador1: TESTUSER1283783729, FBB90AC2#25c3#4199#, test_user_1283783729@testuser.com
+(en navegador ventana incognito, funciona mejor con chrome, tengo que iniciar como si yo fuese un comprador corriendo en mi maquina)
 
-(en otro navegador ventana incognito) Vendedor1: TESTUSER174603780, 9325521F#e74e#4a37#
+1) debo entrar con estas credenciales Comprador1:
+   url: https://www.mercadopago.com.ar/developers/ 
+   usuario: TESTUSER1283783729,
+   contraseña: FBB90AC2#25c3#4199#
+   mail: test_user_1283783729@testuser.com
+2) abrir en el mismo modo incognito el front para probar comosi fuese el Comprador1
+3) pagar con tarjeta de debito con estos datos en 1 sola cuota
+   tarjeta: 5031 7557 3453 0604
+   nombre: APRO
+   vencimiento:11/30
+   codigo seguridad: 123
+   dni: 12345678
+
+mi backend debe estar corriendo con los datos del vendedor
+Vendedor1:
+	(estas son las variables de entorno)
+	public key: APP_USR-e3edd4b6-8e44-42b4-b2d4-999d3c855fd9
+	access token: APP_USR-3328213698076160-102119-335770b2644c50b25c25652c527d7ce5-2036389505
+
+    (esto no se pone en ningun lado)
+	usuario: TESTUSER174603780,
+	contraseña: 9325521F#e74e#4a37#
 
 TENER EN CUENTA LOS PLAZOS DE ACREDITACION DE MP
 
