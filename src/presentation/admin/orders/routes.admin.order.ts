@@ -9,7 +9,6 @@ import { ProductMongoDataSourceImpl } from "../../../infrastructure/datasources/
 import { ProductRepositoryImpl } from "../../../infrastructure/repositories/products/product.repository.impl";
 import { CouponMongoDataSourceImpl } from "../../../infrastructure/datasources/coupon/coupon.mongo.datasource.impl";
 import { CouponRepositoryImpl } from "../../../infrastructure/repositories/coupon/coupon.repository.impl";
-// <<<--- IMPORTAR REPOS FALTANTES --- >>>
 import { NeighborhoodMongoDataSourceImpl } from "../../../infrastructure/datasources/customers/neighborhood.mongo.datasource.impl";
 import { NeighborhoodRepositoryImpl } from "../../../infrastructure/repositories/customers/neighborhood.repository.impl";
 import { CityMongoDataSourceImpl } from "../../../infrastructure/datasources/customers/city.mongo.datasource.impl";

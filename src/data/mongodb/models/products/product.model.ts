@@ -52,13 +52,15 @@ const productSchema = new Schema({ // Usar new Schema(...)
         default: 21,
         min: 0,
         max: 100
+    },
+    tags: {
+        type: [String], // Array de strings
+        index: true,   // Indexar para búsquedas eficientes
+        default: [],   // Valor por defecto array vacío
+        // Opcional: validación para asegurar que sean lowercase o existan en TagModel
+        // validate: { validator: async function(tags: string[]) { ... } }
     }
-    // <<<--- (Opcional) Añadir campo brand si se quiere filtrar por marca --- >>>
-    // brand: {
-    //     type: String,
-    //     index: true,
-    //     trim: true
-    // }
+
 },
     {
         timestamps: true
@@ -70,7 +72,7 @@ const productSchema = new Schema({ // Usar new Schema(...)
 productSchema.index(
     { name: 'text', description: 'text' },
     { weights: { name: 10, description: 5 }, name: 'ProductTextIndex' }
-);
+)
 // <<<--- FIN ÍNDICE DE TEXTO --- >>>
 
 // --- Virtuals y toJSON/toObject sin cambios ---

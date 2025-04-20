@@ -14,7 +14,8 @@ export class ProductEntity {
         public isActive: boolean = true,
         public description: string = "",
         public taxRate: number = 21,
-        public priceWithTax: number
+        public priceWithTax: number,
+        public tags: string[] = []
     ) { }
 
     // Propiedad calculada para obtener el precio CON IVA

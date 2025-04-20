@@ -11,7 +11,8 @@ export class CreateProductDto {
         public unit: string, // UnitEntity,
         public imgUrl: string,
         public isActive: boolean = true,
-        public taxRate: number = 21
+        public taxRate: number = 21,
+        public tags?: string[]
     ) { }
 
 
@@ -21,7 +22,7 @@ export class CreateProductDto {
 
 
         // desestructo el objeto que estoy esperando
-        const { name, description, price, stock, category, unit, imgUrl, isActive, taxRate = 21 } = object;
+        const { name, description, price, stock, category, unit, imgUrl, isActive, taxRate = 21, tags = [] } = object;
 
 
         //aca estan las validaciones necesarias y siempre debo devolver una tupla, 2 valores
@@ -35,7 +36,28 @@ export class CreateProductDto {
         if (!isActive) return ["isActive is required"];
         if (typeof taxRate !== 'number' || taxRate < 0 || taxRate > 100) {
             return ["taxRate debe ser un número entre 0 y 100", undefined];
+        };
+        // <<<--- VALIDACIÓN PARA TAGS --- >>>
+        let processedTags: string[] = [];
+        if (tags) {
+            if (!Array.isArray(tags)) {
+                // Si viene como string separado por comas (desde form-data por ej.)
+                if (typeof tags === 'string') {
+                    processedTags = tags.split(',')
+                        .map(tag => tag.trim().toLowerCase())
+                        .filter(tag => tag.length > 0);
+                } else {
+                    return ["tags debe ser un array de strings o un string separado por comas", undefined];
+                }
+            } else {
+                // Si ya es un array, validar que todos sean strings
+                if (!tags.every(tag => typeof tag === 'string')) {
+                    return ["Todos los elementos en tags deben ser strings", undefined];
+                }
+                processedTags = tags.map(tag => tag.trim().toLowerCase()).filter(tag => tag.length > 0);
+            }
         }
+        // <<<--- FIN VALIDACIÓN TAGS --- >>>
 
 
 
@@ -46,13 +68,14 @@ export class CreateProductDto {
             new CreateProductDto(
                 name.toLowerCase(),
                 description.toLowerCase(),
-                price,
-                stock,
+                Number(price), // Asegurar que price sea número
+                Number(stock ?? 0), // Asegurar que stock sea número o 0
                 category,
                 unit,
                 imgUrl || '',
                 isActive,
-                taxRate
+                taxRate,
+                processedTags
             )];
     }
 }

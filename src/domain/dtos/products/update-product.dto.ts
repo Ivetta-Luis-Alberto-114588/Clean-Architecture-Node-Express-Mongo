@@ -11,10 +11,11 @@ export class UpdateProductDto {
         public imgUrl?: string,
         public isActive?: boolean,
         public taxRate?: number,
+        public tags?: string[]
     ) { }
 
     static create(object: { [key: string]: any }): [string?, UpdateProductDto?] {
-        const { name, description, price, stock, category, unit, imgUrl, isActive, taxRate } = object;
+        const { name, description, price, stock, category, unit, imgUrl, isActive, taxRate, tags } = object;
 
         // Verificamos que al menos un campo se proporcione para la actualización
         if (Object.keys(object).length === 0) {
@@ -33,6 +34,28 @@ export class UpdateProductDto {
         if (taxRate !== undefined && (typeof taxRate !== 'number' || taxRate < 0 || taxRate > 100)) {
             return ["taxRate debe ser un número entre 0 y 100", undefined];
         }
+
+
+        // <<<--- VALIDACIÓN PARA TAGS  --- >>>
+        let processedTags: string[] | undefined = undefined;
+        if ('tags' in object) { // Verificar si la clave 'tags' está presente (incluso si es null/undefined)
+            const tagsValue = object.tags;
+            if (tagsValue === null || tagsValue === undefined || (Array.isArray(tagsValue) && tagsValue.length === 0)) {
+                processedTags = []; // Permitir borrar tags enviando null, undefined o []
+            } else if (Array.isArray(tagsValue)) {
+                if (!tagsValue.every(tag => typeof tag === 'string')) {
+                    return ["Todos los elementos en tags deben ser strings", undefined];
+                }
+                processedTags = tagsValue.map(tag => tag.trim().toLowerCase()).filter(tag => tag.length > 0);
+            } else if (typeof tagsValue === 'string') {
+                processedTags = tagsValue.split(',')
+                    .map(tag => tag.trim().toLowerCase())
+                    .filter(tag => tag.length > 0);
+            } else {
+                return ["tags debe ser un array de strings, un string separado por comas, o null/undefined para borrar", undefined];
+            }
+        }
+        // <<<--- FIN VALIDACIÓN TAGS --- >>>
 
         // Preparamos los valores a actualizar
         const updateData: any = {};
@@ -56,7 +79,8 @@ export class UpdateProductDto {
             updateData.unit,
             updateData.imgUrl,
             updateData.isActive,
-            updateData.taxRate
+            updateData.taxRate,
+            updateData.processedTags
         )];
     }
 }

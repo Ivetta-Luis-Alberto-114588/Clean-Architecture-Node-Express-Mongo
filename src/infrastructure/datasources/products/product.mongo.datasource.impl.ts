@@ -372,7 +372,7 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
     }
 
     async search(searchDto: SearchProductsDto): Promise<{ total: number; products: ProductEntity[] }> {
-        const { pagination, query, categories, minPrice, maxPrice, sortBy, sortOrder } = searchDto;
+        const { pagination, query, categories, minPrice, maxPrice, sortBy, sortOrder, tags } = searchDto;
         const { page, limit } = pagination;
 
         try {
@@ -427,6 +427,15 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
                 pipeline.push({ $sort: sortStage });
             }
 
+            // <<<--- AÑADIR FILTRO TAGS --- >>>
+            if (tags && tags.length > 0) {
+                // $all asegura que el producto tenga TODAS las etiquetas especificadas
+                // Si quieres que tenga CUALQUIERA, usa $in
+                matchStage.tags = { $all: tags }; // O $in: tags si es cualquiera
+                logger.debug(`Filtrando productos por tags: ${tags.join(', ')} usando $all`);
+            }
+            // <<<--- FIN FILTRO TAGS --- >>>
+
             // 4. Etapa $facet: Para obtener resultados paginados Y conteo total en una sola query
             pipeline.push({
                 $facet: {
@@ -468,7 +477,7 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
                 .filter(p => p) // Filtrar por si algún ID no se encontró al popular (raro)
                 .map(doc => ProductMapper.fromObjectToProductEntity(doc!)); // Usar '!' porque filtramos nulos
 
-            logger.info(`Búsqueda de productos realizada. Query: "${query}", Filtros: ${JSON.stringify({ categories, minPrice, maxPrice })}, Total encontrados: ${totalProducts}`);
+            logger.info(`Búsqueda de productos realizada. Query: "${query}", Filtros: ${JSON.stringify({ categories, minPrice, maxPrice, tags })}, Total encontrados: ${totalProducts}`);
 
             return {
                 total: totalProducts,

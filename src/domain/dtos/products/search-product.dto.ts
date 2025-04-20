@@ -10,6 +10,7 @@ export class SearchProductsDto {
     public readonly maxPrice?: number;
     public readonly sortBy?: 'price' | 'createdAt' | 'name' | 'relevance'; // Campos por los que ordenar
     public readonly sortOrder?: 'asc' | 'desc'; // Dirección de ordenamiento
+    public readonly tags?: string[]
 
     private constructor(props: {
         pagination: PaginationDto;
@@ -19,6 +20,7 @@ export class SearchProductsDto {
         maxPrice?: number;
         sortBy?: 'price' | 'createdAt' | 'name' | 'relevance';
         sortOrder?: 'asc' | 'desc';
+        tags?: string[];
     }) {
         this.pagination = props.pagination;
         this.query = props.query;
@@ -27,6 +29,7 @@ export class SearchProductsDto {
         this.maxPrice = props.maxPrice;
         this.sortBy = props.sortBy;
         this.sortOrder = props.sortOrder;
+        this.tags = props.tags;
     }
 
     static create(props: { [key: string]: any }): [string?, SearchProductsDto?] {
@@ -38,7 +41,8 @@ export class SearchProductsDto {
             minPrice,
             maxPrice,
             sortBy = 'relevance', // Default a relevancia si hay query, sino a createdAt
-            sortOrder = 'desc'
+            sortOrder = 'desc',
+            tags,
         } = props;
 
         // 1. Validar paginación
@@ -89,6 +93,22 @@ export class SearchProductsDto {
         }
 
 
+        // <<<--- PROCESAR TAGS --- >>>
+        let tagList: string[] | undefined;
+        if (tags) {
+            if (typeof tags === 'string') {
+                tagList = tags.split(',')
+                    .map(tag => tag.trim().toLowerCase())
+                    .filter(tag => tag.length > 0);
+            } else if (Array.isArray(tags) && tags.every(t => typeof t === 'string')) {
+                tagList = tags.map(tag => tag.trim().toLowerCase()).filter(tag => tag.length > 0);
+            } else {
+                return ['tags debe ser un string separado por comas o un array de strings', undefined];
+            }
+            if (tagList.length === 0) tagList = undefined; // Si queda vacío, tratar como no enviado
+        }
+        // <<<--- FIN PROCESAR TAGS --- >>>
+
         return [undefined, new SearchProductsDto({
             pagination: paginationDto!,
             query,
@@ -97,6 +117,7 @@ export class SearchProductsDto {
             maxPrice: parsedMaxPrice,
             sortBy: finalSortBy as any,
             sortOrder: sortOrder as any,
+            tags: tagList
         })];
     }
 }

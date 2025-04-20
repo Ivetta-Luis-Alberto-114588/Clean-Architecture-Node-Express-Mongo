@@ -5,12 +5,13 @@ import { CategoryEntity } from "../../../domain/entities/products/category.entit
 import { UnitEntity } from "../../../domain/entities/products/unit.entity";
 import { CategoryMapper } from "./category.mapper";
 import { UnitMapper } from "./unit.mapper";
+import { TagEntity } from "../../../domain/entities/products/tag.entity"
 import logger from "../../../configs/logger"; // Importar logger
 
 export class ProductMapper {
     static fromObjectToProductEntity(object: { [key: string]: any }): ProductEntity {
 
-        const { _id, id, name, price, stock = 0, category, unit, imgUrl, isActive, description = "", taxRate = 21 } = object;
+        const { _id, id, name, price, stock = 0, category, unit, imgUrl, isActive, description = "", taxRate = 21, tags = [] } = object;
 
         const productId = _id || id;
         // Validaciones básicas (mantenerlas)
@@ -29,16 +30,14 @@ export class ProductMapper {
 
         // --- Mapeo ROBUSTO de Category y Unit ---
         let categoryEntity: CategoryEntity;
-        try {
+        // ... (lógica robusta de mapeo/placeholder para category) ...
+        try { // Mapeo robusto de category
             if (category && typeof category === 'object' && (category._id || category.id)) {
-                // Intentar mapear si es un objeto poblado
                 categoryEntity = CategoryMapper.fromObjectToCategoryEntity(category);
             } else if (category) {
-                // Si es solo un ID (string o ObjectId), crear placeholder
                 logger.warn(`ProductMapper: Category data for product ${productId} seems not populated. Creating placeholder.`);
                 categoryEntity = { id: category.toString(), name: 'Categoría (No Poblada)', description: '', isActive: true };
             } else {
-                // Si category es null o undefined, crear placeholder con ID 'unknown'
                 logger.warn(`ProductMapper: Missing category data for product ${productId}. Creating placeholder.`);
                 categoryEntity = { id: 0, name: 'Categoría Desconocida', description: '', isActive: true };
             }
@@ -49,16 +48,13 @@ export class ProductMapper {
 
 
         let unitEntity: UnitEntity;
-        try {
+        try { // Mapeo robusto de unit
             if (unit && typeof unit === 'object' && (unit._id || unit.id)) {
-                // Intentar mapear si es un objeto poblado
                 unitEntity = UnitMapper.fromObjectToUnitEntity(unit);
             } else if (unit) {
-                // Si es solo un ID (string o ObjectId), crear placeholder
                 logger.warn(`ProductMapper: Unit data for product ${productId} seems not populated. Creating placeholder.`);
                 unitEntity = { id: unit.toString(), name: 'Unidad (No Poblada)', description: '', isActive: true };
             } else {
-                // Si unit es null o undefined, crear placeholder con ID 'unknown'
                 logger.warn(`ProductMapper: Missing unit data for product ${productId}. Creating placeholder.`);
                 unitEntity = { id: 0, name: 'Unidad Desconocida', description: '', isActive: true };
             }
@@ -74,6 +70,14 @@ export class ProductMapper {
         const priceWithTax = Math.round(basePrice * (1 + rate / 100) * 100) / 100;
         // --- FIN CÁLCULO ---
 
+
+        // <<<--- MAPEO DE TAGS --- >>>
+        // Asegurarse que tags sea un array de strings
+        const productTags: string[] = Array.isArray(tags)
+            ? tags.filter(tag => typeof tag === 'string') // Filtrar elementos que no sean string
+            : [];
+        // <<<--- FIN MAPEO TAGS --- >>>
+
         return new ProductEntity(
             productId.toString(),
             name,
@@ -85,7 +89,8 @@ export class ProductMapper {
             productIsActive,
             description,
             rate,
-            priceWithTax
+            priceWithTax,
+            productTags
         );
     }
 }
