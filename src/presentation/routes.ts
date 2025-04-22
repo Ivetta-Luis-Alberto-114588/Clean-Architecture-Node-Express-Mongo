@@ -14,6 +14,7 @@ import { ChatbotRoutes } from "./chatbot/routes.chatbot";
 import { CartRoutes } from "./cart/routes.cart";
 import { CouponRoutes } from "./coupon/routes.coupon";
 import { AdminRoutes } from "./admin/routes.admin";
+import { TagRoutes } from "./products/routes.tag";
 
 export class MainRoutes {
 
@@ -26,10 +27,11 @@ export class MainRoutes {
         router.use("/api/products", ProductRoutes.getProductRoutes);
         router.use("/api/categories", CategoryRoutes.getCategoryRoutes);
         router.use("/api/units", UnitRoutes.getUnitRoutes);
+        router.use("/api/tags", TagRoutes.getRoutes); // <<<--- Rutas de Tags (si las necesitas)
         router.use("/api/cities", CityRoutes.getCityRoutes);
         router.use("/api/neighborhoods", NeighborhoodRoutes.getNeighborhoodRoutes);
         router.use("/api/customers", CustomerRoutes.getCustomerRoutes);
-        router.use("/api/addresses", AddressRoutes.getRoutes); // <<<--- AÑADIDO
+        router.use("/api/addresses", AddressRoutes.getRoutes);
         router.use("/api/sales", OrderRoutes.getOrderRoutes);
         router.use("/api/payments", PaymentRoutes.getPaymentRoutes);
         router.use("/api/chatbot", ChatbotRoutes.getChatbotRoutes);
