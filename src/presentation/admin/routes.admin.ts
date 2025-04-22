@@ -32,7 +32,7 @@ export class AdminRoutes {
         router.use('/coupons', AdminCouponRoutes.getRoutes());
         router.use('/cities', AdminCityRoutes.getRoutes());
         router.use('/neighborhoods', AdminNeighborhoodRoutes.getRoutes());
-        // router.use('/addresses', AdminAddressRoutes.getRoutes()); // Considera si necesitas una ruta admin para ver/gestionar *todas* las direcciones
+        // router.use('/addresses', AdminAddressRoutes.getRoutes()); // Considera si necesitas esta ruta
 
         return router;
     }
