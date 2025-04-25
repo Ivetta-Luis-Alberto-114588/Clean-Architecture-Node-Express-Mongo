@@ -5,7 +5,7 @@ import { ProductRepositoryImpl } from "../../../infrastructure/repositories/prod
 import { CategoryMongoDataSourceImpl } from "../../../infrastructure/datasources/products/category.mongo.datasource.impl";
 import { CategoryRepositoryImpl } from "../../../infrastructure/repositories/products/category.respository.impl";
 import { ProductController } from "../../products/controller.product";
-import { UploadMiddleware } from "../../middlewares/upload.middleware";
+import { UploadMiddleware } from "../../middlewares/upload.middleware"; // Importar el middleware modificado
 
 export class AdminProductRoutes {
     static getRoutes(): Router {
@@ -17,31 +17,24 @@ export class AdminProductRoutes {
         const categoryRepository = new CategoryRepositoryImpl(datasourceCategory);
         const controller = new ProductController(productRepository, categoryRepository);
 
-        // GET /api/admin/products/ - Listar productos (AHORA DEVUELVE { total, products })
         router.get('/', (req, res, next) => { controller.getAllProducts(req, res) });
-
-        // GET /api/admin/products/search - Búsqueda específica para admin
         router.get('/search', (req, res, next) => { controller.searchProducts(req, res) });
-
-        // GET /api/admin/products/:id - Obtener detalle de producto
         router.get('/:id', (req, res, next) => { controller.getProductById(req, res) });
 
-        // POST /api/admin/products/ - Crear producto (con middleware de subida)
+        // --- USAR singleRequired para POST ---
         router.post('/',
-            UploadMiddleware.single('image'),
+            UploadMiddleware.singleRequired('image'), // Ahora requiere imagen al crear
             (req, res, next) => { controller.createProduct(req, res) }
         );
 
-        // PUT /api/admin/products/:id - Actualizar producto (con middleware de subida)
+        // --- USAR singleOptional para PUT ---
         router.put('/:id',
-            UploadMiddleware.single('image'),
+            UploadMiddleware.singleOptional('image'), // Ahora la imagen es opcional al actualizar
             (req, res, next) => { controller.updateProduct(req, res) }
         );
+        // --- FIN CAMBIO ---
 
-        // DELETE /api/admin/products/:id - Eliminar producto
         router.delete('/:id', (req, res, next) => { controller.deleteProduct(req, res) });
-
-        // GET /api/admin/products/by-category/:categoryId - Ver productos por categoría
         router.get('/by-category/:categoryId', (req, res, next) => { controller.getProductsByCategory(req, res) });
 
         return router;
