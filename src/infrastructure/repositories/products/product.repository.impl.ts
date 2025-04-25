@@ -21,10 +21,11 @@ export class ProductRepositoryImpl implements ProductRepository {
     create(createProductDto: CreateProductDto): Promise<ProductEntity> {
         return this.productDatasource.create(createProductDto);
     }
-    getAll(paginationDto: PaginationDto): Promise<ProductEntity[]> {
-        // Nota: getAll no devuelve el total, si lo necesitas, debes modificarlo también
+    // --- MÉTODO getAll MODIFICADO ---
+    getAll(paginationDto: PaginationDto): Promise<{ total: number; products: ProductEntity[] }> {
         return this.productDatasource.getAll(paginationDto);
     }
+    // --- FIN MÉTODO getAll MODIFICADO ---
     findById(id: string): Promise<ProductEntity> {
         return this.productDatasource.findById(id);
     }
@@ -37,11 +38,9 @@ export class ProductRepositoryImpl implements ProductRepository {
     findByName(nameProduct: string, paginationDto: PaginationDto): Promise<ProductEntity[]> {
         return this.productDatasource.findByName(nameProduct, paginationDto);
     }
-    // <<<--- FIRMA ACTUALIZADA --- >>>
     findByCategory(idCategory: string, paginationDto: PaginationDto): Promise<{ total: number; products: ProductEntity[] }> {
         return this.productDatasource.findByCategory(idCategory, paginationDto);
     }
-    // <<<--- FIN FIRMA ACTUALIZADA --- >>>
     findByUnit(idUnit: string, paginationDto: PaginationDto): Promise<ProductEntity[]> {
         return this.productDatasource.findByUnit(idUnit, paginationDto);
     }
