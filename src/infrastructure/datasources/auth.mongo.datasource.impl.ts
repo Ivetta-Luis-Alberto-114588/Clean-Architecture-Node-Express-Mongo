@@ -98,7 +98,6 @@ export class AuthDatasourceImpl implements AuthDatasource {
     }
 
 
-    // --- IMPLEMENTACIÓN NUEVO MÉTODO PAGINADO ---
     async getAllPaginated(paginationDto: PaginationDto): Promise<{ total: number; users: UserEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
@@ -150,5 +149,19 @@ export class AuthDatasourceImpl implements AuthDatasource {
             throw CustomError.internalServerError("Error al obtener usuarios paginados.");
         }
     }
-    // --- FIN IMPLEMENTACIÓN ---
+
+    async findById(id: string): Promise<UserEntity | null> {
+        try {
+            //Validar que el ID sea un ObjectId válido de MongoDB
+            if (!id.match(/^[0-9a-fA-F]{24}$/)) return
+
+            const user = await UserModel.findById(id);
+            if (!user) return null;
+            return UserMapper.fromObjectToUserEntity(user);
+        } catch (error) {
+            logger.error(`Error buscando usuario por ID ${id}`, { error });
+            // Devuelve null o lanza un error interno según prefieras
+            return null; // Devolver null suele ser más seguro que lanzar 500 aquí
+        }
+    }
 }

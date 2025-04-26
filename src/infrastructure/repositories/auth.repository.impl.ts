@@ -25,6 +25,10 @@ export class AuthRepositoryImpl implements AuthRepository {
         return this.authDatasource.findByEmail(email);
     }
 
+    findById(id: string): Promise<UserEntity | null> {
+        return this.authDatasource.findById(id);
+    }
+
     updatePassword(userId: string, newHashedPassword: string): Promise<boolean> {
         return this.authDatasource.updatePassword(userId, newHashedPassword);
     }

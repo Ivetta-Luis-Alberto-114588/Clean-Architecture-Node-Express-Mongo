@@ -151,4 +151,31 @@ export class AuthController {
             return this.handleError(err, res);
         }
     }
+
+    getUserByIdAdmin = async (req: Request, res: Response) => {
+        const { id } = req.params;
+
+        // Validar que el ID sea un ObjectId válido de MongoDB
+        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({ error: 'ID de usuario inválido.' });
+        }
+
+        try {
+            // Llama a un método del repositorio para buscar por ID
+            // Asume que tienes findById en tu AuthRepository/AuthDatasource
+            const user = await this.authRepository.findById(id); // <-- NECESITAS IMPLEMENTAR findById
+
+            if (!user) {
+                return res.status(404).json({ error: 'Usuario no encontrado.' });
+            }
+
+            // Omitir contraseña antes de enviar
+            const { password, ...userWithoutPassword } = user;
+            return res.json(userWithoutPassword);
+
+        } catch (err) {
+            // Usa tu manejador de errores
+            return this.handleError(err, res);
+        }
+    }
 }

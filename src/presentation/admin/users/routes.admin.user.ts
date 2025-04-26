@@ -22,7 +22,7 @@ export class AdminUserRoutes {
 
         // Rutas de gestión de usuarios para Admin
         router.get('/', (req, res, next) => { controller.getAllUsers(req, res) });
-        // GET /:id podría necesitar un método específico si quieres ver detalles de un usuario por ID
+        router.get('/:id', (req, res, next) => { controller.getUserByIdAdmin(req, res) })
         router.put('/:id', (req, res, next) => { controller.updateUser(req, res) }); // Permite actualizar (ej. roles)
         router.delete('/:id', (req, res, next) => { controller.deleteUser(req, res) });
 
