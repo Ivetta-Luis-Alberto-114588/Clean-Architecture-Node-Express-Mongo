@@ -16,8 +16,8 @@ import { UpdateOrderStatusUseCase } from "../../domain/use-cases/order/update-or
 import { CouponRepository } from "../../domain/repositories/coupon/coupon.repository";
 import logger from "../../configs/logger";
 import { GetMyOrdersUseCase } from "../../domain/use-cases/order/get-my-orders.use-case";
-import { NeighborhoodRepository } from "../../domain/repositories/customers/neighborhood.repository"; // <<<--- IMPORTAR
-import { CityRepository } from "../../domain/repositories/customers/city.repository";             // <<<--- IMPORTAR
+import { NeighborhoodRepository } from "../../domain/repositories/customers/neighborhood.repository";
+import { CityRepository } from "../../domain/repositories/customers/city.repository";
 
 export class OrderController {
 
@@ -26,13 +26,11 @@ export class OrderController {
         private readonly customerRepository: CustomerRepository,
         private readonly productRepository: ProductRepository,
         private readonly couponRepository: CouponRepository,
-        // <<<--- AÑADIR REPOS AL CONSTRUCTOR DEL CONTROLLER --- >>>
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
     ) { }
 
     private handleError = (error: unknown, res: Response) => {
-        // ... (código sin cambios)
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ error: error.message });
         }
@@ -40,33 +38,8 @@ export class OrderController {
         return res.status(500).json({ error: "Error interno del servidor" });
     };
 
-    createSale = (req: Request, res: Response): void => {
-        const userId = req.body.user?.id;
-        console.log('OrderController - User ID:', userId)
-        const [error, createSaleDto] = CreateOrderDto.create(req.body, userId);
-
-        if (error) {
-            res.status(400).json({ error });
-            logger.warn("Error en validación de CreateOrderDto", { error, body: req.body, userId });
-            return;
-        }
-
-        // <<<--- CORRECCIÓN AQUÍ: Pasar TODOS los repositorios --- >>>
-        new CreateOrderUseCase(
-            this.orderRepository,
-            this.customerRepository,
-            this.productRepository,
-            this.couponRepository,
-            this.neighborhoodRepository, // Añadido
-            this.cityRepository          // Añadido
-        )
-            .execute(createSaleDto!, userId)
-            .then(data => res.status(201).json(data))
-            .catch(err => this.handleError(err, res));
-    };
-
-    // ... (resto de los métodos getAllSales, getSaleById, etc. sin cambios necesarios aquí) ...
-    getAllSales = (req: Request, res: Response): void => { /* ...código existente... */
+    // --- MÉTODO getAllSales MODIFICADO ---
+    getAllSales = (req: Request, res: Response): void => {
         const { page = 1, limit = 10 } = req.query;
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
         if (error) {
@@ -76,33 +49,13 @@ export class OrderController {
         }
         new GetAllOrderUseCase(this.orderRepository)
             .execute(paginationDto!)
-            .then(data => res.json(data))
+            .then(data => res.json(data)) // Devuelve directamente el objeto { total, orders }
             .catch(err => this.handleError(err, res));
     };
+    // --- FIN MÉTODO getAllSales MODIFICADO ---
 
-    getSaleById = (req: Request, res: Response): void => { /* ...código existente... */
-        const { id } = req.params;
-        new GetOrderByIdUseCase(this.orderRepository)
-            .execute(id)
-            .then(data => res.json(data))
-            .catch(err => this.handleError(err, res));
-    };
-
-    updateSaleStatus = (req: Request, res: Response): void => { /* ...código existente... */
-        const { id } = req.params;
-        const [error, updateSaleStatusDto] = UpdateOrderStatusDto.update(req.body);
-        if (error) {
-            res.status(400).json({ error });
-            logger.warn(`Error en validación de UpdateOrderStatusDto para ID ${id}`, { error, body: req.body });
-            return;
-        }
-        new UpdateOrderStatusUseCase(this.orderRepository)
-            .execute(id, updateSaleStatusDto!)
-            .then(data => res.json(data))
-            .catch(err => this.handleError(err, res));
-    };
-
-    getSalesByCustomer = (req: Request, res: Response): void => { /* ...código existente... */
+    // --- getSalesByCustomer MODIFICADO ---
+    getSalesByCustomer = (req: Request, res: Response): void => {
         const { customerId } = req.params;
         const { page = 1, limit = 10 } = req.query;
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
@@ -116,17 +69,19 @@ export class OrderController {
             this.customerRepository
         )
             .execute(customerId, paginationDto!)
-            .then(data => res.json(data))
+            .then(data => res.json(data)) // Devuelve directamente el objeto { total, orders }
             .catch(err => this.handleError(err, res));
     };
+    // --- FIN getSalesByCustomer MODIFICADO ---
 
-    getSalesByDateRange = (req: Request, res: Response): void => { /* ...código existente... */
+    // --- getSalesByDateRange MODIFICADO ---
+    getSalesByDateRange = (req: Request, res: Response): void => {
         const { startDate, endDate } = req.body;
         const { page = 1, limit = 10 } = req.query;
 
         if (!startDate || !endDate) {
             res.status(400).json({ error: "Debe proporcionar fechas de inicio y fin" });
-            return; // Añadir return para evitar ejecución posterior
+            return;
         }
 
         try {
@@ -135,30 +90,32 @@ export class OrderController {
 
             if (isNaN(start.getTime()) || isNaN(end.getTime())) {
                 res.status(400).json({ error: "Formato de fecha inválido" });
-                return; // Añadir return
+                return;
             }
 
             const [error, paginationDto] = PaginationDto.create(+page, +limit);
             if (error) {
                 res.status(400).json({ error });
                 logger.warn(`Error en paginación para getSalesByDateRange`, { error, query: req.query });
-                return; // Añadir return
+                return;
             }
 
             new FindOrderByDateRangeUseCase(this.orderRepository)
                 .execute(start, end, paginationDto!)
                 .then(data => {
-                    logger.info(`Se encontraron ${data.length} pedidos en el rango.`);
-                    res.json(data);
+                    logger.info(`Se encontraron ${data.total} pedidos en el rango.`); // Loguear el total
+                    res.json(data); // Devuelve directamente el objeto { total, orders }
                 })
                 .catch(err => this.handleError(err, res));
         } catch (error) {
             this.handleError(error, res);
         }
     };
+    // --- FIN getSalesByDateRange MODIFICADO ---
 
-    getMyOrders = (req: Request, res: Response): void => { /* ...código existente... */
-        const userId = req.body.user?.id; // Obtener ID del usuario autenticado
+    // --- getMyOrders MODIFICADO ---
+    getMyOrders = (req: Request, res: Response): void => {
+        const userId = req.body.user?.id;
 
         if (!userId) {
             this.handleError(CustomError.unauthorized('Usuario no autenticado'), res);
@@ -176,6 +133,50 @@ export class OrderController {
 
         new GetMyOrdersUseCase(this.orderRepository, this.customerRepository)
             .execute(userId, paginationDto!)
+            .then(data => res.json(data)) // Devuelve directamente el objeto { total, orders }
+            .catch(err => this.handleError(err, res));
+    };
+    // --- FIN getMyOrders MODIFICADO ---
+
+
+    // --- Resto de métodos (createSale, getSaleById, updateSaleStatus) sin cambios necesarios aquí ---
+    createSale = (req: Request, res: Response): void => {
+        const userId = req.body.user?.id;
+        const [error, createSaleDto] = CreateOrderDto.create(req.body, userId);
+
+        if (error) {
+            res.status(400).json({ error });
+            logger.warn("Error en validación de CreateOrderDto", { error, body: req.body, userId });
+            return;
+        }
+
+        new CreateOrderUseCase(
+            this.orderRepository, this.customerRepository, this.productRepository,
+            this.couponRepository, this.neighborhoodRepository, this.cityRepository
+        )
+            .execute(createSaleDto!, userId)
+            .then(data => res.status(201).json(data))
+            .catch(err => this.handleError(err, res));
+    };
+
+    getSaleById = (req: Request, res: Response): void => {
+        const { id } = req.params;
+        new GetOrderByIdUseCase(this.orderRepository)
+            .execute(id)
+            .then(data => res.json(data))
+            .catch(err => this.handleError(err, res));
+    };
+
+    updateSaleStatus = (req: Request, res: Response): void => {
+        const { id } = req.params;
+        const [error, updateSaleStatusDto] = UpdateOrderStatusDto.update(req.body);
+        if (error) {
+            res.status(400).json({ error });
+            logger.warn(`Error en validación de UpdateOrderStatusDto para ID ${id}`, { error, body: req.body });
+            return;
+        }
+        new UpdateOrderStatusUseCase(this.orderRepository)
+            .execute(id, updateSaleStatusDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
     };

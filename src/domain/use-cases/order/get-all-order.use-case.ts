@@ -1,36 +1,38 @@
+// src/domain/use-cases/order/get-all-order.use-case.ts
 import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { OrderEntity } from "../../entities/order/order.entity";
 import { CustomError } from "../../errors/custom.error";
 import { OrderRepository } from "../../repositories/order/order.repository";
+import logger from "../../../configs/logger"; // Importar logger
 
+// --- INTERFAZ MODIFICADA ---
 interface IGetAllOrderUseCase {
-    execute(paginationDto: PaginationDto): Promise<OrderEntity[]>
+    execute(paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }>
 }
+// --- FIN INTERFAZ MODIFICADA ---
 
 export class GetAllOrderUseCase implements IGetAllOrderUseCase {
     constructor(
         private readonly orderRepository: OrderRepository
     ) { }
 
-    async execute(paginationDto: PaginationDto): Promise<OrderEntity[]> {
+    // --- MÉTODO EXECUTE MODIFICADO ---
+    async execute(paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         try {
-            // Si no se proporciona paginación, creamos una por defecto
-            if (!paginationDto) {
-                const [error, defaultPagination] = PaginationDto.create(1, 10);
-                if (error) throw CustomError.badRequest(error);
-                paginationDto = defaultPagination!;
-            }
+            // La validación de paginationDto ya se hace en el controller
 
-            // Obtenemos todas las ventas
-            const orders = await this.orderRepository.getAll(paginationDto);
+            // Obtenemos el objeto { total, orders } del repositorio
+            const result = await this.orderRepository.getAll(paginationDto);
 
-            // Devolvemos las ventas
-            return orders;
+            // Devolvemos el objeto completo
+            return result;
         } catch (error) {
+            logger.error("Error en GetAllOrderUseCase:", { error }); // Usar logger
             if (error instanceof CustomError) {
                 throw error;
             }
-            throw CustomError.internalServerError("get-all-sales-use-case, error interno del servidor");
+            throw CustomError.internalServerError("Error al obtener todas las ventas");
         }
     }
+    // --- FIN MÉTODO EXECUTE MODIFICADO ---
 }

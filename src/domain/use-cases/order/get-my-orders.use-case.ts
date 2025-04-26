@@ -6,41 +6,40 @@ import { CustomerRepository } from "../../repositories/customers/customer.reposi
 import { OrderRepository } from "../../repositories/order/order.repository";
 import logger from "../../../configs/logger";
 
+// --- INTERFAZ MODIFICADA ---
 interface IGetMyOrdersUseCase {
-    execute(userId: string, paginationDto: PaginationDto): Promise<OrderEntity[]>
+    execute(userId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }>
 }
+// --- FIN INTERFAZ MODIFICADA ---
 
 export class GetMyOrdersUseCase implements IGetMyOrdersUseCase {
     constructor(
         private readonly orderRepository: OrderRepository,
-        private readonly customerRepository: CustomerRepository // Necesario para encontrar el CustomerId
+        private readonly customerRepository: CustomerRepository
     ) { }
 
-    async execute(userId: string, paginationDto: PaginationDto): Promise<OrderEntity[]> {
+    // --- MÉTODO EXECUTE MODIFICADO ---
+    async execute(userId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         logger.info(`Iniciando GetMyOrdersUseCase para userId: ${userId}`);
 
         try {
-            // 1. Encontrar el perfil de cliente asociado al usuario autenticado
             const customer = await this.customerRepository.findByUserId(userId);
 
             if (!customer) {
-                // Esto indica una inconsistencia si el usuario está autenticado pero no tiene cliente
                 logger.error(`¡INCONSISTENCIA! No se encontró Customer para User ID: ${userId}`);
-                throw CustomError.internalServerError('No se pudo encontrar el perfil de cliente asociado a este usuario. Contacte a soporte.');
-                // O podrías devolver un array vacío si prefieres:
-                // logger.warn(`No se encontró Customer para User ID: ${userId}, devolviendo historial vacío.`);
-                // return [];
+                // Devolver estructura vacía en lugar de lanzar error 500
+                return { total: 0, orders: [] };
+                // throw CustomError.internalServerError('No se pudo encontrar el perfil de cliente asociado.');
             }
 
             const customerId = customer.id.toString();
             logger.debug(`Cliente encontrado (ID: ${customerId}) para User ID: ${userId}`);
 
-            // 2. Usar el customerId para encontrar sus pedidos usando el método existente
-            //    del repositorio de pedidos.
-            const orders = await this.orderRepository.findByCustomer(customerId, paginationDto);
+            // El repositorio ya devuelve la estructura correcta
+            const result = await this.orderRepository.findByCustomer(customerId, paginationDto);
 
-            logger.info(`Pedidos encontrados para cliente ${customerId} (Usuario ${userId}): ${orders.length}`);
-            return orders;
+            logger.info(`Pedidos encontrados para cliente ${customerId} (Usuario ${userId}): ${result.total}`);
+            return result; // Devolver el objeto { total, orders }
 
         } catch (error) {
             logger.error(`Error en GetMyOrdersUseCase para userId ${userId}:`, { error });
@@ -50,4 +49,5 @@ export class GetMyOrdersUseCase implements IGetMyOrdersUseCase {
             throw CustomError.internalServerError("Error al obtener el historial de pedidos.");
         }
     }
+    // --- FIN MÉTODO EXECUTE MODIFICADO ---
 }

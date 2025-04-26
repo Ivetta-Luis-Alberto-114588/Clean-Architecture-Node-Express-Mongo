@@ -14,7 +14,7 @@ import logger from "../../../configs/logger";
 import { CouponDataSource } from "../../../domain/datasources/coupon/coupon.datasource";
 import { CouponMongoDataSourceImpl } from "../coupon/coupon.mongo.datasource.impl";
 
-// <<<--- Interfaz para detalles resueltos (importar o definir) --- >>>
+// Interfaz para detalles resueltos (importar o definir)
 interface ResolvedShippingDetails {
     recipientName: string; phone: string; streetAddress: string; postalCode?: string;
     neighborhoodName: string; cityName: string; additionalInfo?: string;
@@ -26,12 +26,29 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
 
     private readonly couponDataSource: CouponDataSource = new CouponMongoDataSourceImpl();
 
+    // --- MÉTODO HELPER PARA POBLAR (sin cambios) ---
+    private async findSaleByIdPopulated(id: string): Promise<any> {
+        if (!mongoose.Types.ObjectId.isValid(id)) return null;
+        return OrderModel.findById(id)
+            .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+            .populate({
+                path: 'items.product',
+                model: 'Product',
+                populate: [
+                    { path: 'category', model: 'Category' },
+                    { path: 'unit', model: 'Unit' }
+                ]
+            })
+            .lean();
+    }
+
+    // --- MÉTODO CREATE (sin cambios) ---
     async create(
         createOrderDto: CreateOrderDto,
         calculatedDiscountRate: number,
         couponIdToIncrement: string | null | undefined,
         finalCustomerId: string,
-        shippingDetails: ResolvedShippingDetails // <<<--- RECIBIR DETALLES
+        shippingDetails: ResolvedShippingDetails
     ): Promise<OrderEntity> {
         const session = await mongoose.startSession();
         session.startTransaction();
@@ -76,8 +93,6 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             const finalTotal = Math.round((subtotalWithTax - discountAmount) * 100) / 100;
             if (finalTotal < 0) throw CustomError.badRequest('Total negativo.');
 
-
-            // Crear el objeto para el modelo OrderModel, incluyendo shippingDetails
             const saleData = {
                 customer: finalCustomerId,
                 items: saleItems,
@@ -87,8 +102,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 discountAmount: discountAmount,
                 total: finalTotal,
                 notes: createOrderDto.notes || "",
-                status: 'pending' as 'pending' | 'completed' | 'cancelled', // Asegurar tipo
-                // <<<--- MAPEAR DETALLES DE ENVÍO --- >>>
+                status: 'pending' as 'pending' | 'completed' | 'cancelled',
                 shippingDetails: {
                     recipientName: shippingDetails.recipientName,
                     phone: shippingDetails.phone,
@@ -101,7 +115,6 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                     originalNeighborhoodId: new mongoose.Types.ObjectId(shippingDetails.originalNeighborhoodId),
                     originalCityId: new mongoose.Types.ObjectId(shippingDetails.originalCityId),
                 },
-                // <<<--- FIN MAPEO --- >>>
                 metadata: { couponCodeUsed: createOrderDto.couponCode || null }
             };
 
@@ -134,40 +147,43 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
         }
     }
 
-    // ... (resto de métodos del datasource: getAll, findById, updateStatus, etc.) ...
-    private async findSaleByIdPopulated(id: string): Promise<any> { /* ... código existente ... */
-        if (!mongoose.Types.ObjectId.isValid(id)) return null; // Validar ID
-        return OrderModel.findById(id)
-            .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-            .populate({
-                path: 'items.product', // La ruta al campo a poblar dentro del array
-                model: 'Product',      // El modelo a usar
-                populate: [            // Poblar anidado dentro del producto
-                    { path: 'category', model: 'Category' },
-                    { path: 'unit', model: 'Unit' }
-                ]
-            })
-            .lean();
-    }
-    async getAll(paginationDto: PaginationDto): Promise<OrderEntity[]> { /* ... código existente ... */
+    // --- MÉTODO getAll MODIFICADO ---
+    async getAll(paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         const { page, limit } = paginationDto;
+        const skip = (page - 1) * limit;
+        const queryFilter = {}; // Filtro vacío para obtener todos (admin)
+
         try {
-            const salesDocs = await OrderModel.find()
-                .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-                .populate({ // <<<--- AÑADIR POPULATE AQUÍ TAMBIÉN
-                    path: 'items.product',
-                    model: 'Product',
-                    populate: [{ path: 'category' }, { path: 'unit' }]
-                })
-                .limit(limit).skip((page - 1) * limit).sort({ date: -1 }).lean();
-            return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+            // Ejecutar conteo y búsqueda en paralelo
+            const [total, salesDocs] = await Promise.all([
+                OrderModel.countDocuments(queryFilter), // Contar todos los documentos
+                OrderModel.find(queryFilter) // Encontrar documentos para la página
+                    .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                    .populate({
+                        path: 'items.product',
+                        model: 'Product',
+                        populate: [{ path: 'category' }, { path: 'unit' }]
+                    })
+                    .limit(limit)
+                    .skip(skip)
+                    .sort({ date: -1 }) // Ordenar por fecha descendente
+                    .lean() // Usar lean para mejor rendimiento si solo lees
+            ]);
+
+            const orders = salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+
+            return { total, orders }; // Devolver el objeto con total y orders
+
         } catch (error) {
-            logger.error("[OrderDS] Error obteniendo ventas:", { error });
+            logger.error("[OrderDS] Error obteniendo todas las ventas (admin):", { error });
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError(`Error al obtener ventas: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-    async findById(id: string): Promise<OrderEntity> { /* ... código existente ... */
+    // --- FIN MÉTODO getAll MODIFICADO ---
+
+    // --- findById (sin cambios) ---
+    async findById(id: string): Promise<OrderEntity> {
         try {
             const saleDoc = await this.findSaleByIdPopulated(id);
             if (!saleDoc) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
@@ -180,10 +196,10 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
         }
     }
 
-
+    // --- updateStatus (sin cambios) ---
     async updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<OrderEntity> {
-        let retries = 3; // Número máximo de reintentos
-        let lastError: any = null; // Almacenar el último error para el throw final
+        let retries = 3;
+        let lastError: any = null;
 
         while (retries > 0) {
             const session = await mongoose.startSession();
@@ -198,120 +214,138 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
 
                 if (sale.status === updateOrderStatusDto.status) {
                     logger.info(`[OrderDS] Pedido ${id} ya está ${updateOrderStatusDto.status}.`);
-                    await session.commitTransaction(); // Commit vacío para cerrar TX
-                    session.endSession(); // Terminar sesión
+                    await session.commitTransaction();
+                    session.endSession();
                     const currentSaleDoc = await this.findSaleByIdPopulated(id);
                     if (!currentSaleDoc) throw CustomError.internalServerError("Error al recuperar venta sin cambios.");
-                    return OrderMapper.fromObjectToSaleEntity(currentSaleDoc); // Devolver estado actual
+                    return OrderMapper.fromObjectToSaleEntity(currentSaleDoc);
                 }
 
-                // Lógica para restaurar stock si se cancela
                 if (updateOrderStatusDto.status === 'cancelled' && (sale.status === 'pending' || sale.status === 'completed')) {
                     logger.info(`[OrderDS] Cancelando pedido ${id}. Restaurando stock...`);
                     for (const item of sale.items) {
-                        // Usar updateOne para mayor seguridad en concurrencia (opcional pero bueno)
                         const stockUpdateResult = await ProductModel.updateOne(
-                            { _id: item.product, stock: { $gte: 0 } }, // Condición opcional para evitar stock negativo
+                            { _id: item.product, stock: { $gte: 0 } },
                             { $inc: { stock: item.quantity } },
                             { session }
                         );
                         if (stockUpdateResult.modifiedCount > 0) {
                             logger.debug(`[OrderDS] Stock restaurado para prod ${item.product} (+${item.quantity})`);
                         } else {
-                            logger.warn(`[OrderDS] No se pudo restaurar stock para prod ${item.product} (posiblemente no encontrado o stock ya restaurado)`);
+                            logger.warn(`[OrderDS] No se pudo restaurar stock para prod ${item.product}`);
                         }
                     }
                 }
 
-                // Actualizar estado y notas
                 sale.status = updateOrderStatusDto.status;
                 if (updateOrderStatusDto.notes !== undefined) sale.notes = updateOrderStatusDto.notes;
 
-                // Guardar los cambios en el pedido
                 await sale.save({ session });
                 logger.info(`[OrderDS] Estado pedido ${id} actualizado a ${updateOrderStatusDto.status}`);
 
-                // Si todo fue bien, hacer commit
                 await session.commitTransaction();
                 logger.info(`[OrderDS] TX commit (Intento ${4 - retries}) actualización estado pedido ${id}`);
-                session.endSession(); // Terminar sesión después de commit exitoso
+                session.endSession();
 
-                // Obtener y devolver la venta actualizada y poblada
                 const updatedSaleDoc = await this.findSaleByIdPopulated(id);
                 if (!updatedSaleDoc) throw CustomError.internalServerError("Error recuperando venta actualizada post-commit.");
-                return OrderMapper.fromObjectToSaleEntity(updatedSaleDoc); // ÉXITO: Salir de la función
+                return OrderMapper.fromObjectToSaleEntity(updatedSaleDoc);
 
             } catch (error: any) {
-                lastError = error; // Guardar el error de este intento
+                lastError = error;
                 await session.abortTransaction();
                 logger.warn(`[OrderDS] TX abortada (Intento ${4 - retries}) para pedido ${id}`, { session: session.id, error: error.message });
-                session.endSession(); // Terminar sesión después de abortar
+                session.endSession();
 
-                // Verificar si es un WriteConflict y quedan reintentos
-                if (error.code === 112 && retries > 1) { // Código 112 es WriteConflict
+                if (error.code === 112 && retries > 1) {
                     retries--;
-                    const delay = Math.pow(2, 3 - retries) * 100; // Backoff exponencial (100ms, 200ms, 400ms)
+                    const delay = Math.pow(2, 3 - retries) * 100;
                     logger.warn(`WriteConflict detectado para pedido ${id}. Reintentando en ${delay}ms... (${retries} intentos restantes)`);
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    continue; // Saltar a la siguiente iteración del bucle while
+                    continue;
                 } else {
-                    // Si no es WriteConflict o se acabaron los reintentos, salir del bucle para lanzar error
                     break;
                 }
             }
-        } // Fin del while
-
-        // Si el bucle terminó debido a un error final o por agotar reintentos
-        logger.error(`[OrderDS] Error final TX actualizar estado pedido ${id}`, { error: lastError });
-        if (lastError instanceof CustomError) throw lastError; // Relanzar si ya es CustomError
-
-        // Verificar si el último error fue WriteConflict después de agotar reintentos
-        if (lastError && lastError.code === 112) {
-            throw CustomError.internalServerError(`No se pudo actualizar el estado del pedido ${id} después de varios intentos debido a conflictos de escritura.`);
         }
 
-        // Lanzar un error genérico para otros casos
+        logger.error(`[OrderDS] Error final TX actualizar estado pedido ${id}`, { error: lastError });
+        if (lastError instanceof CustomError) throw lastError;
+        if (lastError && lastError.code === 112) {
+            throw CustomError.internalServerError(`No se pudo actualizar el estado del pedido ${id} después de varios intentos debido a conflictos.`);
+        }
         throw CustomError.internalServerError(`Error actualizando estado venta: ${lastError?.message || String(lastError)}`);
     }
 
-
-    async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<OrderEntity[]> { /* ... código existente ... */
+    // --- findByCustomer MODIFICADO ---
+    async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         const { page, limit } = paginationDto;
+        const skip = (page - 1) * limit;
+        const queryFilter = { customer: new mongoose.Types.ObjectId(customerId) };
+
         try {
             if (!mongoose.Types.ObjectId.isValid(customerId)) throw CustomError.badRequest("ID de cliente inválido");
-            const salesDocs = await OrderModel.find({ customer: customerId })
-                .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-                .populate({ // <<<--- AÑADIR POPULATE AQUÍ TAMBIÉN
-                    path: 'items.product',
-                    model: 'Product',
-                    populate: [{ path: 'category' }, { path: 'unit' }]
-                })
-                .limit(limit).skip((page - 1) * limit).sort({ date: -1 }).lean();
-            return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+
+            const [total, salesDocs] = await Promise.all([
+                OrderModel.countDocuments(queryFilter),
+                OrderModel.find(queryFilter)
+                    .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                    .populate({
+                        path: 'items.product',
+                        model: 'Product',
+                        populate: [{ path: 'category' }, { path: 'unit' }]
+                    })
+                    .limit(limit)
+                    .skip(skip)
+                    .sort({ date: -1 })
+                    .lean()
+            ]);
+
+            const orders = salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+            return { total, orders };
+
         } catch (error) {
             logger.error(`[OrderDS] Error buscando ventas cliente ${customerId}:`, { error });
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError(`Error buscando ventas por cliente: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-    async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<OrderEntity[]> { /* ... código existente ... */
+    // --- FIN findByCustomer MODIFICADO ---
+
+    // --- findByDateRange MODIFICADO ---
+    async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         const { page, limit } = paginationDto;
+        const skip = (page - 1) * limit;
+
         try {
             if (startDate > endDate) throw CustomError.badRequest("Fecha inicio > fecha fin");
-            const endOfDay = new Date(endDate); endOfDay.setHours(23, 59, 59, 999);
-            const salesDocs = await OrderModel.find({ date: { $gte: startDate, $lte: endOfDay } })
-                .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-                .populate({ // <<<--- AÑADIR POPULATE AQUÍ TAMBIÉN
-                    path: 'items.product',
-                    model: 'Product',
-                    populate: [{ path: 'category' }, { path: 'unit' }]
-                })
-                .limit(limit).skip((page - 1) * limit).sort({ date: -1 }).lean();
-            return salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+            const endOfDay = new Date(endDate);
+            endOfDay.setHours(23, 59, 59, 999);
+            const queryFilter = { date: { $gte: startDate, $lte: endOfDay } };
+
+            const [total, salesDocs] = await Promise.all([
+                OrderModel.countDocuments(queryFilter),
+                OrderModel.find(queryFilter)
+                    .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                    .populate({
+                        path: 'items.product',
+                        model: 'Product',
+                        populate: [{ path: 'category' }, { path: 'unit' }]
+                    })
+                    .limit(limit)
+                    .skip(skip)
+                    .sort({ date: -1 })
+                    .lean()
+            ]);
+
+            const orders = salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+            return { total, orders };
+
         } catch (error) {
             logger.error(`[OrderDS] Error buscando ventas por rango fecha:`, { error });
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError(`Error buscando ventas por rango fecha: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
+    // --- FIN findByDateRange MODIFICADO ---
 }
