@@ -72,7 +72,8 @@ export class server {
                 corsOptions.origin = '*'; // Permitir cualquier origen en desarrollo/test
                 logger.warn('CORS configurado para permitir CUALQUIER origen (Solo DEV/TEST)');
             } else {
-                corsOptions.origin = envs.FRONTEND_URL; // Usar URL específica en producción
+                // corsOptions.origin = envs.FRONTEND_URL; // Usar URL específica en producción
+                corsOptions.origin = '*'; // Usar URL específica en producción
                 logger.info(`CORS configurado para origen: ${envs.FRONTEND_URL}`);
             }
 
