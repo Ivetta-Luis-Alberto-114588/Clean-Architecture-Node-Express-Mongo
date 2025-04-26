@@ -1,5 +1,5 @@
 // src/presentation/routes.ts
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import { AuthRoutes } from "./auth/routes.auth";
 import { ProductRoutes } from "./products/routes.product";
 import { CategoryRoutes } from "./products/routes.category.";
@@ -21,6 +21,9 @@ export class MainRoutes {
     static get getMainRoutes(): Router {
 
         const router = Router()
+        router.get('/ping', (req: Request, res: Response) => {
+            res.status(200).send('pong');
+        });
 
         // Rutas Públicas / de Usuario
         router.use("/api/auth", AuthRoutes.getAuthRoutes);
