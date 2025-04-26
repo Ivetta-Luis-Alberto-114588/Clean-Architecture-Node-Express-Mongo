@@ -2,6 +2,7 @@
 import { AuthDatasource } from "../../domain/datasources/auth.datasource";
 import { LoginUserDto } from "../../domain/dtos/auth/login-user.dto";
 import { RegisterUserDto } from "../../domain/dtos/auth/register-user.dto";
+import { PaginationDto } from "../../domain/dtos/shared/pagination.dto"; // <-- IMPORTAR
 import { UserEntity } from "../../domain/entities/user.entity";
 import { AuthRepository } from "../../domain/repositories/auth.repository";
 
@@ -20,7 +21,6 @@ export class AuthRepositoryImpl implements AuthRepository {
         return this.authDatasource.register(registerUserDto)
     }
 
-    // <<<--- IMPLEMENTACIÓN NUEVOS MÉTODOS --- >>>
     findByEmail(email: string): Promise<UserEntity | null> {
         return this.authDatasource.findByEmail(email);
     }
@@ -28,5 +28,10 @@ export class AuthRepositoryImpl implements AuthRepository {
     updatePassword(userId: string, newHashedPassword: string): Promise<boolean> {
         return this.authDatasource.updatePassword(userId, newHashedPassword);
     }
-    // <<<--- FIN IMPLEMENTACIÓN --- >>>
+
+    // --- IMPLEMENTACIÓN NUEVO MÉTODO PAGINADO ---
+    getAllPaginated(paginationDto: PaginationDto): Promise<{ total: number; users: UserEntity[] }> {
+        return this.authDatasource.getAllPaginated(paginationDto);
+    }
+    // --- FIN IMPLEMENTACIÓN ---
 }

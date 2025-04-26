@@ -4,10 +4,11 @@ import { UserModel } from "../../data/mongodb/models/user.model";
 import { AuthDatasource } from "../../domain/datasources/auth.datasource";
 import { LoginUserDto } from "../../domain/dtos/auth/login-user.dto";
 import { RegisterUserDto } from "../../domain/dtos/auth/register-user.dto";
+import { PaginationDto } from "../../domain/dtos/shared/pagination.dto"; // <-- IMPORTAR
 import { UserEntity } from "../../domain/entities/user.entity";
 import { CustomError } from "../../domain/errors/custom.error";
 import { UserMapper } from "../mappers/user.mapper";
-import logger from "../../configs/logger"; // Importar logger
+import logger from "../../configs/logger";
 
 type HashFunction = (password: string) => string
 type CompareFunction = (password: string, hashed: string) => boolean
@@ -19,8 +20,8 @@ export class AuthDatasourceImpl implements AuthDatasource {
         private readonly comparePassword: CompareFunction = BcryptAdapter.compare
     ) { }
 
+    // ... (métodos login, register, findByEmail, updatePassword sin cambios) ...
     async login(loginUserDto: LoginUserDto): Promise<UserEntity> {
-        // ... (código existente sin cambios) ...
         const { email, password } = loginUserDto
         try {
             const user = await UserModel.findOne({ email: email.toLowerCase() });
@@ -40,7 +41,6 @@ export class AuthDatasourceImpl implements AuthDatasource {
     }
 
     async register(registerUserDto: RegisterUserDto): Promise<UserEntity> {
-        // ... (código existente sin cambios) ...
         const { name, email, password } = registerUserDto;
         try {
             const exists = await UserModel.findOne({ email: email.toLowerCase() });
@@ -63,7 +63,6 @@ export class AuthDatasourceImpl implements AuthDatasource {
         }
     }
 
-    // <<<--- IMPLEMENTACIÓN NUEVOS MÉTODOS --- >>>
     async findByEmail(email: string): Promise<UserEntity | null> {
         try {
             const user = await UserModel.findOne({ email: email.toLowerCase() });
@@ -71,7 +70,6 @@ export class AuthDatasourceImpl implements AuthDatasource {
             return UserMapper.fromObjectToUserEntity(user);
         } catch (error) {
             logger.error(`Error buscando usuario por email ${email}`, { error });
-            // No lanzar error aquí, devolver null para que el UseCase decida
             return null;
         }
     }
@@ -85,19 +83,49 @@ export class AuthDatasourceImpl implements AuthDatasource {
 
             if (result.matchedCount === 0) {
                 logger.warn(`Intento de actualizar contraseña para usuario no encontrado: ${userId}`);
-                return false; // Usuario no encontrado
+                return false;
             }
             if (result.modifiedCount === 0) {
                 logger.warn(`Contraseña no modificada para usuario ${userId} (posiblemente era la misma)`);
-                // Considerar esto como éxito o no dependiendo del caso. True es razonable.
             }
 
             logger.info(`Contraseña actualizada para usuario ${userId}`);
-            return true; // Actualización exitosa (o no necesaria)
+            return true;
         } catch (error) {
             logger.error(`Error actualizando contraseña para usuario ${userId}`, { error });
             throw CustomError.internalServerError("Error al actualizar la contraseña.");
         }
     }
-    // <<<--- FIN IMPLEMENTACIÓN --- >>>
+
+
+    // --- IMPLEMENTACIÓN NUEVO MÉTODO PAGINADO ---
+    async getAllPaginated(paginationDto: PaginationDto): Promise<{ total: number; users: UserEntity[] }> {
+        const { page, limit } = paginationDto;
+        const skip = (page - 1) * limit;
+
+        try {
+            // Ejecutar conteo y búsqueda en paralelo
+            const [total, usersData] = await Promise.all([
+                UserModel.countDocuments(), // Contar todos los usuarios
+                UserModel.find() // Encontrar usuarios para la página actual
+                    .skip(skip)
+                    .limit(limit)
+                    .sort({ createdAt: -1 }) // Opcional: ordenar por fecha de creación
+                    .lean() // Usar lean() para obtener objetos JS planos (mejor rendimiento)
+            ]);
+
+            // Mapear los resultados a UserEntity
+            // ¡Importante! lean() devuelve objetos planos, el mapper debe poder manejarlos
+            const users = usersData.map(userDoc => UserMapper.fromObjectToUserEntity(userDoc));
+
+            return {
+                total,
+                users
+            };
+        } catch (error) {
+            logger.error('Error obteniendo usuarios paginados en AuthDatasourceImpl', { error });
+            throw CustomError.internalServerError("Error al obtener usuarios paginados.");
+        }
+    }
+    // --- FIN IMPLEMENTACIÓN ---
 }

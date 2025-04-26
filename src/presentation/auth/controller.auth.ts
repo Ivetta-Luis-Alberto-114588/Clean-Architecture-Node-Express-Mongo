@@ -13,6 +13,7 @@ import { RequestPasswordResetUseCase } from "../../domain/use-cases/auth/request
 import { ResetPasswordUseCase } from "../../domain/use-cases/auth/reset-password.use-case"; // <<<--- IMPORTAR
 import { EmailService } from "../../domain/interfaces/email.service"; // <<<--- IMPORTAR
 import { UserModel } from "../../data/mongodb/models/user.model"; // <<<--- IMPORTAR (si se usa en otros métodos)
+import { PaginationDto } from "../../domain/dtos/shared/pagination.dto";
 
 export class AuthController {
 
@@ -94,9 +95,29 @@ export class AuthController {
         });
     }
     getAllUsers = async (req: Request, res: Response) => {
+        const { page = 1, limit = 10 } = req.query; // Obtener page y limit de la query
+
+        // Validar paginación
+        const [error, paginationDto] = PaginationDto.create(+page, +limit);
+        if (error) return res.status(400).json({ error });
+
         try {
-            const users = await UserModel.find();
-            return res.json({ users });
+            // Llamar al método paginado del repositorio
+            const { total, users } = await this.authRepository.getAllPaginated(paginationDto!);
+
+            // --- IMPORTANTE: Omitir contraseñas antes de enviar ---
+            const usersToSend = users.map(user => {
+                const { password, ...userWithoutPassword } = user;
+                return userWithoutPassword;
+            });
+            // --- FIN OMITIR CONTRASEÑAS ---
+
+            // Devolver la estructura paginada
+            return res.json({
+                total,
+                users: usersToSend // Enviar usuarios sin contraseña
+            });
+
         } catch (err) {
             return this.handleError(err, res);
         }
