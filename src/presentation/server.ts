@@ -63,10 +63,12 @@ export class server {
 
             // Configurar CORS
             this.app.use(cors({
-                origin: '*', // En producción, restringe esto
-                methods: ['GET', 'POST', 'PUT', 'DELETE'],
-                allowedHeaders: ['Content-Type', 'Authorization']
+                origin: envs.FRONTEND_URL || '*', // Usar variable de entorno!
+                methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // <-- AÑADIR PATCH y OPTIONS
+                allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // Añadir otros comunes si es necesario
+                credentials: true // Importante si usas Authorization header o cookies
             }));
+            logger.info(`CORS habilitado para origen: ${envs.FRONTEND_URL || '*'}`);
 
 
 
