@@ -102,28 +102,51 @@ export class AuthDatasourceImpl implements AuthDatasource {
     async getAllPaginated(paginationDto: PaginationDto): Promise<{ total: number; users: UserEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
+        logger.debug(`getAllPaginated - Page: ${page}, Limit: ${limit}, Skip: ${skip}`); // Log de entrada
 
         try {
+            const countPromise = UserModel.countDocuments();
+            const findPromise = UserModel.find()
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 }) // Verifica que timestamps:true esté en user.model.ts
+                // .lean() // <--- PRUEBA COMENTANDO ESTO PRIMERO
+                .exec(); // Usa exec() para asegurar que devuelve una Promesa
+
             // Ejecutar conteo y búsqueda en paralelo
-            const [total, usersData] = await Promise.all([
-                UserModel.countDocuments(), // Contar todos los usuarios
-                UserModel.find() // Encontrar usuarios para la página actual
-                    .skip(skip)
-                    .limit(limit)
-                    .sort({ createdAt: -1 }) // Opcional: ordenar por fecha de creación
-                    .lean() // Usar lean() para obtener objetos JS planos (mejor rendimiento)
-            ]);
+            const [total, usersData] = await Promise.all([countPromise, findPromise]);
+
+            logger.debug(`getAllPaginated - Total encontrado: ${total}`);
+            logger.debug(`getAllPaginated - Datos crudos encontrados: ${usersData?.length} usuarios`);
+            // Loguea los datos crudos SÓLO para depurar, pueden contener passwords hasheadas
+            // logger.debug('getAllPaginated - Datos crudos:', JSON.stringify(usersData, null, 2));
 
             // Mapear los resultados a UserEntity
-            // ¡Importante! lean() devuelve objetos planos, el mapper debe poder manejarlos
-            const users = usersData.map(userDoc => UserMapper.fromObjectToUserEntity(userDoc));
+            const users = usersData.map(userDoc => {
+                try {
+                    return UserMapper.fromObjectToUserEntity(userDoc);
+                } catch (mapperError: any) {
+                    // Loguear el error específico del mapper y el documento que falló
+                    logger.error(`Error mapeando User doc: ${userDoc?._id || 'ID Desconocido'}`, { error: mapperError.message, stack: mapperError.stack, userDoc });
+                    // Puedes decidir lanzar el error o devolver un UserEntity placeholder/null
+                    throw new Error(`Error mapeando usuario: ${mapperError.message}`); // Relanzar para que caiga en el catch principal
+                }
+            });
+
+            logger.debug(`getAllPaginated - Mapeo completado para ${users.length} usuarios.`);
 
             return {
                 total,
                 users
             };
-        } catch (error) {
-            logger.error('Error obteniendo usuarios paginados en AuthDatasourceImpl', { error });
+        } catch (error: any) { // Captura el error específico
+            // Loguear el error DETALLADO antes de lanzar el genérico
+            logger.error('Error DETALLADO obteniendo usuarios paginados en AuthDatasourceImpl', {
+                errorMessage: error.message,
+                stack: error.stack,
+                errorObject: error // Loguea el objeto de error completo si es posible
+            });
+            // Lanza el error genérico para la respuesta API
             throw CustomError.internalServerError("Error al obtener usuarios paginados.");
         }
     }
