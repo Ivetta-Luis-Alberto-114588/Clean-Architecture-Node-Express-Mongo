@@ -61,14 +61,23 @@ export class server {
 
 
 
-            // Configurar CORS
-            this.app.use(cors({
-                origin: envs.FRONTEND_URL || '*', // Usar variable de entorno!
-                methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], // <-- AÑADIR PATCH y OPTIONS
-                allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], // Añadir otros comunes si es necesario
-                credentials: true // Importante si usas Authorization header o cookies
-            }));
-            logger.info(`CORS habilitado para origen: ${envs.FRONTEND_URL || '*'}`);
+            // --- CONFIGURACIÓN CORS CONDICIONAL ---
+            const corsOptions: cors.CorsOptions = {
+                methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+                allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+                credentials: true
+            };
+
+            if (envs.NODE_ENV === 'development' || envs.NODE_ENV === 'test') {
+                corsOptions.origin = '*'; // Permitir cualquier origen en desarrollo/test
+                logger.warn('CORS configurado para permitir CUALQUIER origen (Solo DEV/TEST)');
+            } else {
+                corsOptions.origin = envs.FRONTEND_URL; // Usar URL específica en producción
+                logger.info(`CORS configurado para origen: ${envs.FRONTEND_URL}`);
+            }
+
+            this.app.use(cors(corsOptions));
+            // --- FIN CONFIGURACIÓN CORS ---
 
 
 
