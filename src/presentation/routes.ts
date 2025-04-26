@@ -21,6 +21,18 @@ export class MainRoutes {
     static get getMainRoutes(): Router {
 
         const router = Router()
+
+
+        // Responder a GET y HEAD en la raíz
+        router.all('/', (req: Request, res: Response) => {
+            // HEAD no necesita cuerpo, GET sí
+            if (req.method === 'HEAD') {
+                res.status(200).end(); // Solo estado 200 y cabeceras
+            } else {
+                res.status(200).json({ message: 'API E-commerce V1 - Running OK' });
+            }
+        });
+
         router.get('/ping', (req: Request, res: Response) => {
             res.status(200).send('pong');
         });
