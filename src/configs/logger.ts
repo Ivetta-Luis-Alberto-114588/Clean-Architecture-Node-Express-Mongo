@@ -121,11 +121,11 @@ class Logger {
     // Prioridad 2: Basado en entorno
     switch (envs.NODE_ENV) {
       case 'production':
-        return 'info';
+        return 'debug';
       case 'development':
         return 'debug';
       default:
-        return 'info';
+        return 'debug';
     }
   }
 
