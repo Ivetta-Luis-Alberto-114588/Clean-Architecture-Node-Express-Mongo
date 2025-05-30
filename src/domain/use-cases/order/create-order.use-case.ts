@@ -3,17 +3,17 @@ import { CreateOrderDto } from "../../dtos/order/create-order.dto";
 import { OrderEntity } from "../../entities/order/order.entity";
 import { CustomError } from "../../errors/custom.error";
 import { CustomerRepository } from "../../repositories/customers/customer.repository";
-import { ProductRepository } from "../../repositories/products/product.repository";
 import { OrderRepository } from "../../repositories/order/order.repository";
+import { ProductRepository } from "../../repositories/products/product.repository";
 import { CouponRepository } from "../../repositories/coupon/coupon.repository";
 import { CouponEntity } from "../../entities/coupon/coupon.entity";
-import logger from "../../../configs/logger";
 import { CustomerEntity } from "../../entities/customers/customer";
 import { CreateCustomerDto } from "../../dtos/customers/create-customer.dto";
-import { AddressEntity } from "../../entities/customers/address.entity";
+import logger from "../../../configs/logger";
+import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { NeighborhoodRepository } from "../../repositories/customers/neighborhood.repository";
 import { CityRepository } from "../../repositories/customers/city.repository";
-import { PaginationDto } from "../../dtos/shared/pagination.dto"; // Necesario para la opción de buscar default
+import { OrderStatusRepository } from "../../repositories/order/order-status.repository";
 
 interface ICreateOrderUseCase {
     execute(createOrderDto: CreateOrderDto, userId?: string): Promise<OrderEntity>;
@@ -33,8 +33,9 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         private readonly customerRepository: CustomerRepository,
         private readonly productRepository: ProductRepository,
         private readonly couponRepository: CouponRepository,
-        private readonly neighborhoodRepository: NeighborhoodRepository, // Inyectar
-        private readonly cityRepository: CityRepository,             // Inyectar
+        private readonly neighborhoodRepository: NeighborhoodRepository,
+        private readonly cityRepository: CityRepository,
+        private readonly orderStatusRepository: OrderStatusRepository,
     ) { }
 
     async execute(createOrderDto: CreateOrderDto, userId?: string): Promise<OrderEntity> {
@@ -46,6 +47,12 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         let resolvedShippingDetails: ResolvedShippingDetails;
 
         try {
+            // --- 0. Obtener estado por defecto para la orden ---
+            const defaultStatus = await this.orderStatusRepository.findDefault();
+            if (!defaultStatus) {
+                throw CustomError.internalServerError('No se encontró un estado por defecto para pedidos. Configure uno en el sistema.');
+            }
+
             // --- 1. Determinar/Crear Cliente ---
             if (userId) {
                 const existingCustomer = await this.customerRepository.findByUserId(userId);
@@ -163,7 +170,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
             logger.info(`[CreateOrderUC] Llamando a orderRepository.create con Cliente: ${finalCustomerId}`);
             const createdOrder = await this.orderRepository.create(
                 createOrderDto, calculatedDiscountRate, couponIdToIncrement, finalCustomerId,
-                resolvedShippingDetails // Pasar detalles resueltos
+                resolvedShippingDetails, defaultStatus.id // Pasar el ID del estado por defecto
             );
             logger.info(`[CreateOrderUC] Pedido creado exitosamente: ${createdOrder.id}`);
             return createdOrder;

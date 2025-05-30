@@ -17,7 +17,7 @@ const orderSchema = new Schema({
     discountAmount: { type: Number, required: true },
     total: { type: Number, required: true, index: true },
     date: { type: Date, default: Date.now, index: true },
-    status: { type: String, enum: ['pending', 'completed', 'cancelled'], default: 'pending', index: true },
+    status: { type: Schema.Types.ObjectId, ref: 'OrderStatus', required: true, index: true },
     notes: { type: String, default: "" },
 
     // <<<--- CAMPOS SHIPPING DETAILS ACTUALIZADOS --- >>>

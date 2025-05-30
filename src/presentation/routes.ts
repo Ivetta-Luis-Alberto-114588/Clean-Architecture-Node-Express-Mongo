@@ -15,6 +15,7 @@ import { CartRoutes } from "./cart/routes.cart";
 import { CouponRoutes } from "./coupon/routes.coupon";
 import { AdminRoutes } from "./admin/routes.admin";
 import { TagRoutes } from "./products/routes.tag";
+import { OrderStatusRoutes } from "./order/routes.order-status";
 
 export class MainRoutes {
 
@@ -49,9 +50,9 @@ export class MainRoutes {
         router.use("/api/addresses", AddressRoutes.getRoutes);
         router.use("/api/sales", OrderRoutes.getOrderRoutes);
         router.use("/api/payments", PaymentRoutes.getPaymentRoutes);
-        router.use("/api/chatbot", ChatbotRoutes.getChatbotRoutes);
-        router.use("/api/cart", CartRoutes.getCartRoutes);
+        router.use("/api/chatbot", ChatbotRoutes.getChatbotRoutes); router.use("/api/cart", CartRoutes.getCartRoutes);
         router.use("/api/coupons", CouponRoutes.getCouponRoutes);
+        router.use("/api/order-statuses", OrderStatusRoutes.routes);
 
         // Rutas de Administración
         router.use("/api/admin", AdminRoutes.getAdminRoutes);

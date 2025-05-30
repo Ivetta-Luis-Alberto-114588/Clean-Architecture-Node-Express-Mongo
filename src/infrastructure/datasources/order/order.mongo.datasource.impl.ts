@@ -24,13 +24,12 @@ interface ResolvedShippingDetails {
 
 export class OrderMongoDataSourceImpl implements OrderDataSource {
 
-    private readonly couponDataSource: CouponDataSource = new CouponMongoDataSourceImpl();
-
-    // --- MÉTODO HELPER PARA POBLAR (sin cambios) ---
+    private readonly couponDataSource: CouponDataSource = new CouponMongoDataSourceImpl();    // --- MÉTODO HELPER PARA POBLAR (actualizado para incluir OrderStatus) ---
     private async findSaleByIdPopulated(id: string): Promise<any> {
         if (!mongoose.Types.ObjectId.isValid(id)) return null;
         return OrderModel.findById(id)
             .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+            .populate({ path: 'status', model: 'OrderStatus' })
             .populate({
                 path: 'items.product',
                 model: 'Product',
@@ -40,15 +39,14 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 ]
             })
             .lean();
-    }
-
-    // --- MÉTODO CREATE (sin cambios) ---
+    }// --- MÉTODO CREATE (actualizado para usar OrderStatus ID) ---
     async create(
         createOrderDto: CreateOrderDto,
         calculatedDiscountRate: number,
         couponIdToIncrement: string | null | undefined,
         finalCustomerId: string,
-        shippingDetails: ResolvedShippingDetails
+        shippingDetails: ResolvedShippingDetails,
+        defaultOrderStatusId: string
     ): Promise<OrderEntity> {
         const session = await mongoose.startSession();
         session.startTransaction();
@@ -100,9 +98,8 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 taxAmount: totalTaxAmount,
                 discountRate: discountRate,
                 discountAmount: discountAmount,
-                total: finalTotal,
-                notes: createOrderDto.notes || "",
-                status: 'pending' as 'pending' | 'completed' | 'cancelled',
+                total: finalTotal, notes: createOrderDto.notes || "",
+                status: new mongoose.Types.ObjectId(defaultOrderStatusId),
                 shippingDetails: {
                     recipientName: shippingDetails.recipientName,
                     phone: shippingDetails.phone,
@@ -153,12 +150,12 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
         const skip = (page - 1) * limit;
         const queryFilter = {}; // Filtro vacío para obtener todos (admin)
 
-        try {
-            // Ejecutar conteo y búsqueda en paralelo
+        try {            // Ejecutar conteo y búsqueda en paralelo
             const [total, salesDocs] = await Promise.all([
                 OrderModel.countDocuments(queryFilter), // Contar todos los documentos
                 OrderModel.find(queryFilter) // Encontrar documentos para la página
                     .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                    .populate({ path: 'status', model: 'OrderStatus' })
                     .populate({
                         path: 'items.product',
                         model: 'Product',
@@ -210,10 +207,8 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 if (!mongoose.Types.ObjectId.isValid(id)) throw CustomError.badRequest("ID de pedido inválido");
 
                 const sale = await OrderModel.findById(id).session(session);
-                if (!sale) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
-
-                if (sale.status === updateOrderStatusDto.status) {
-                    logger.info(`[OrderDS] Pedido ${id} ya está ${updateOrderStatusDto.status}.`);
+                if (!sale) throw CustomError.notFound(`Venta con ID ${id} no encontrada`); if (sale.status && sale.status.toString() === updateOrderStatusDto.statusId) {
+                    logger.info(`[OrderDS] Pedido ${id} ya está en el estado ${updateOrderStatusDto.statusId}.`);
                     await session.commitTransaction();
                     session.endSession();
                     const currentSaleDoc = await this.findSaleByIdPopulated(id);
@@ -221,7 +216,24 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                     return OrderMapper.fromObjectToSaleEntity(currentSaleDoc);
                 }
 
-                if (updateOrderStatusDto.status === 'cancelled' && (sale.status === 'pending' || sale.status === 'completed')) {
+                // Para manejar la lógica de cancelación, necesitamos obtener los códigos de estado
+                // Esto requiere consultar la colección OrderStatus
+                const { OrderStatusModel } = await import('../../../data/mongodb/models/order/order-status.model');
+
+                let shouldRestoreStock = false;
+                if (updateOrderStatusDto.statusId) {
+                    const [newStatus, currentStatus] = await Promise.all([
+                        OrderStatusModel.findById(updateOrderStatusDto.statusId).session(session),
+                        sale.status ? OrderStatusModel.findById(sale.status).session(session) : null
+                    ]);
+
+                    // Si el nuevo estado es 'cancelled' y el estado actual era 'pending' o 'completed'
+                    if (newStatus?.code === 'CANCELLED' && currentStatus && ['PENDING', 'COMPLETED'].includes(currentStatus.code)) {
+                        shouldRestoreStock = true;
+                    }
+                }
+
+                if (shouldRestoreStock) {
                     logger.info(`[OrderDS] Cancelando pedido ${id}. Restaurando stock...`);
                     for (const item of sale.items) {
                         const stockUpdateResult = await ProductModel.updateOne(
@@ -237,11 +249,9 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                     }
                 }
 
-                sale.status = updateOrderStatusDto.status;
-                if (updateOrderStatusDto.notes !== undefined) sale.notes = updateOrderStatusDto.notes;
-
-                await sale.save({ session });
-                logger.info(`[OrderDS] Estado pedido ${id} actualizado a ${updateOrderStatusDto.status}`);
+                sale.status = new mongoose.Types.ObjectId(updateOrderStatusDto.statusId);
+                if (updateOrderStatusDto.notes !== undefined) sale.notes = updateOrderStatusDto.notes; await sale.save({ session });
+                logger.info(`[OrderDS] Estado pedido ${id} actualizado a ${updateOrderStatusDto.statusId}`);
 
                 await session.commitTransaction();
                 logger.info(`[OrderDS] TX commit (Intento ${4 - retries}) actualización estado pedido ${id}`);
@@ -281,15 +291,14 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
     async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
-        const queryFilter = { customer: new mongoose.Types.ObjectId(customerId) };
-
-        try {
+        const queryFilter = { customer: new mongoose.Types.ObjectId(customerId) }; try {
             if (!mongoose.Types.ObjectId.isValid(customerId)) throw CustomError.badRequest("ID de cliente inválido");
 
             const [total, salesDocs] = await Promise.all([
                 OrderModel.countDocuments(queryFilter),
                 OrderModel.find(queryFilter)
                     .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                    .populate({ path: 'status', model: 'OrderStatus' })
                     .populate({
                         path: 'items.product',
                         model: 'Product',
@@ -321,12 +330,11 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             if (startDate > endDate) throw CustomError.badRequest("Fecha inicio > fecha fin");
             const endOfDay = new Date(endDate);
             endOfDay.setHours(23, 59, 59, 999);
-            const queryFilter = { date: { $gte: startDate, $lte: endOfDay } };
-
-            const [total, salesDocs] = await Promise.all([
+            const queryFilter = { date: { $gte: startDate, $lte: endOfDay } }; const [total, salesDocs] = await Promise.all([
                 OrderModel.countDocuments(queryFilter),
                 OrderModel.find(queryFilter)
                     .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                    .populate({ path: 'status', model: 'OrderStatus' })
                     .populate({
                         path: 'items.product',
                         model: 'Product',

@@ -2,9 +2,11 @@
 import { CustomerEntity } from "../../../domain/entities/customers/customer";
 import { ProductEntity } from "../../../domain/entities/products/product.entity";
 import { OrderEntity, OrderItemEntity, ShippingDetailsEntity } from "../../../domain/entities/order/order.entity";
+import { OrderStatusEntity } from "../../../domain/entities/order/order-status.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
 import { CustomerMapper } from "../customers/customer.mapper";
 import { ProductMapper } from "../products/product.mapper";
+import { OrderStatusMapper } from "./order-status.mapper";
 import logger from "../../../configs/logger";
 import { CityEntity } from "../../../domain/entities/customers/citiy"; // <<<--- AÑADIR
 import { NeighborhoodEntity } from "../../../domain/entities/customers/neighborhood"; // <<<--- AÑADIR
@@ -76,30 +78,58 @@ export class OrderMapper {
                 );
             }
             return { product: productEntity, quantity: Number(item.quantity) || 0, unitPrice: Number(item.unitPrice) || 0, subtotal: Number(item.subtotal) || 0 };
-        }).filter((item): item is OrderItemEntity => item !== null);
-
-
-        const finalShippingDetails: ShippingDetailsEntity = {
+        }).filter((item): item is OrderItemEntity => item !== null); const finalShippingDetails: ShippingDetailsEntity = {
             recipientName: shippingDetails.recipientName, phone: shippingDetails.phone, streetAddress: shippingDetails.streetAddress,
             postalCode: shippingDetails.postalCode, neighborhoodName: shippingDetails.neighborhoodName, cityName: shippingDetails.cityName,
             additionalInfo: shippingDetails.additionalInfo,
-        };
+        };        // Handle OrderStatus mapping
+        let statusEntity: OrderStatusEntity;
+        try {
+            if (typeof status === 'object' && status !== null) {
+                statusEntity = OrderStatusMapper.fromObjectToEntity(status);
+            } else {
+                // Fallback for old string status or missing status
+                statusEntity = new OrderStatusEntity(
+                    'unknown',
+                    typeof status === 'string' ? status.toUpperCase() : 'PENDING',
+                    typeof status === 'string' ? status : 'Pending',
+                    'Estado migrado desde sistema anterior',
+                    '#6c757d',
+                    1,
+                    true,
+                    false,
+                    []
+                );
+            }
+        } catch (error) {
+            logger.error('Error mapping status in OrderMapper:', { error, status });
+            // Default fallback status
+            statusEntity = new OrderStatusEntity(
+                'unknown',
+                'PENDING',
+                'Pending',
+                'Estado por defecto debido a error',
+                '#6c757d',
+                1,
+                true,
+                false,
+                []
+            );
+        }
 
         return new OrderEntity(
             _id?.toString() || id?.toString(),
             customerEntity, saleItems,
             Number(subtotal) || 0, Number(taxRate ?? 0), Number(taxAmount) || 0,
             Number(discountRate ?? 0), Number(discountAmount ?? 0), Number(total) || 0,
-            new Date(date || Date.now()), status || 'pending', notes || "",
+            new Date(date || Date.now()), statusEntity, notes || "",
             finalShippingDetails
         );
-    }
-
-    static fromSaleEntityToObject(entity: OrderEntity): any { /* ... código sin cambios ... */
+    } static fromSaleEntityToObject(entity: OrderEntity): any { /* ... código sin cambios ... */
         return {
             customer: entity.customer.id,
             items: entity.items.map(item => ({ product: item.product.id, quantity: item.quantity, unitPrice: item.unitPrice, subtotal: item.subtotal })),
-            subtotal: entity.subtotal, taxAmount: entity.taxAmount, discountRate: entity.discountRate, discountAmount: entity.discountAmount, total: entity.total, date: entity.date, status: entity.status, notes: entity.notes,
+            subtotal: entity.subtotal, taxAmount: entity.taxAmount, discountRate: entity.discountRate, discountAmount: entity.discountAmount, total: entity.total, date: entity.date, status: entity.status.id, notes: entity.notes,
             shippingDetails: entity.shippingDetails ? {
                 recipientName: entity.shippingDetails.recipientName, phone: entity.shippingDetails.phone, streetAddress: entity.shippingDetails.streetAddress,
                 postalCode: entity.shippingDetails.postalCode, neighborhoodName: entity.shippingDetails.neighborhoodName, cityName: entity.shippingDetails.cityName,

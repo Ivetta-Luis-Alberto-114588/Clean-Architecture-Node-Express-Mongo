@@ -14,6 +14,8 @@ import { NeighborhoodMongoDataSourceImpl } from "../../infrastructure/datasource
 import { NeighborhoodRepositoryImpl } from "../../infrastructure/repositories/customers/neighborhood.repository.impl";
 import { CityMongoDataSourceImpl } from "../../infrastructure/datasources/customers/city.mongo.datasource.impl";
 import { CityRepositoryImpl } from "../../infrastructure/repositories/customers/city.repository.impl";
+import { OrderStatusMongoDataSourceImpl } from "../../infrastructure/datasources/order/order-status.mongo.datasource.impl";
+import { OrderStatusRepositoryImpl } from "../../infrastructure/repositories/order/order-status.repository.impl";
 
 export class OrderRoutes {
     static get getOrderRoutes(): Router {
@@ -29,10 +31,11 @@ export class OrderRoutes {
 
         const orderRepository = new OrderRepositoryImpl(orderDatasource);
         const customerRepository = new CustomerRepositoryImpl(customerDatasource);
-        const productRepository = new ProductRepositoryImpl(productDatasource);
-        const couponRepository = new CouponRepositoryImpl(couponDatasource);
+        const productRepository = new ProductRepositoryImpl(productDatasource); const couponRepository = new CouponRepositoryImpl(couponDatasource);
         const neighborhoodRepository = new NeighborhoodRepositoryImpl(neighborhoodDatasource); // <<<--- NUEVO
         const cityRepository = new CityRepositoryImpl(cityDatasource);                         // <<<--- NUEVO
+        const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
+        const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);
 
         // <<<--- PASAR NUEVAS DEPENDENCIAS AL CONTROLLER --- >>>
         const controller = new OrderController(
@@ -41,7 +44,8 @@ export class OrderRoutes {
             productRepository,
             couponRepository,
             neighborhoodRepository, // Pasar
-            cityRepository          // Pasar
+            cityRepository,          // Pasar
+            orderStatusRepository   // Pasar OrderStatus repository
         );
 
         // --- Rutas (sin cambios aquí) ---

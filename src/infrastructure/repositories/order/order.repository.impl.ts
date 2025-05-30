@@ -15,17 +15,16 @@ interface ResolvedShippingDetails {
 
 export class OrderRepositoryImpl implements OrderRepository {
 
-    constructor(private readonly orderDataSource: OrderDataSource) { }
-
-    async create(
+    constructor(private readonly orderDataSource: OrderDataSource) { } async create(
         createSaleDto: CreateOrderDto,
         calculatedDiscountRate: number,
         couponIdToIncrement: string | null | undefined,
         finalCustomerId: string,
-        shippingDetails: ResolvedShippingDetails
+        shippingDetails: ResolvedShippingDetails,
+        defaultOrderStatusId: string
     ): Promise<OrderEntity> {
         return await this.orderDataSource.create(
-            createSaleDto, calculatedDiscountRate, couponIdToIncrement, finalCustomerId, shippingDetails
+            createSaleDto, calculatedDiscountRate, couponIdToIncrement, finalCustomerId, shippingDetails, defaultOrderStatusId
         );
     }
 

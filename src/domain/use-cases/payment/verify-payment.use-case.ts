@@ -53,7 +53,7 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
         // Si el pago está aprobado, actualizar el estado de la venta a 'completed'
         if (paymentInfo.status === MercadoPagoPaymentStatus.APPROVED) {
           await this.orderRepository.updateStatus(payment.saleId, {
-            status: 'completed',
+            statusId: '683a1a39dd398aae92ab05fa', // COMPLETED status ID
             notes: `Pago aprobado con ID ${paymentInfo.id}`
           });
         }

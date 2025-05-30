@@ -23,7 +23,7 @@ export class ProcessWebhookUseCase implements IProcessWebhookUseCase {
       // Si el pago está aprobado, actualizar el estado de la venta a 'completed'
       if (payment.status === MercadoPagoPaymentStatus.APPROVED) {
         await this.orderRepository.updateStatus(payment.saleId, {
-          status: 'completed',
+          statusId: '683a1a39dd398aae92ab05fa', // COMPLETED status ID
           notes: `Pago aprobado mediante webhook con ID ${payment.providerPaymentId}`
         });
       }

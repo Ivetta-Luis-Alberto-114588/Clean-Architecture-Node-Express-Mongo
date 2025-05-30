@@ -18,6 +18,7 @@ import logger from "../../configs/logger";
 import { GetMyOrdersUseCase } from "../../domain/use-cases/order/get-my-orders.use-case";
 import { NeighborhoodRepository } from "../../domain/repositories/customers/neighborhood.repository";
 import { CityRepository } from "../../domain/repositories/customers/city.repository";
+import { OrderStatusRepository } from "../../domain/repositories/order/order-status.repository";
 
 export class OrderController {
 
@@ -28,6 +29,7 @@ export class OrderController {
         private readonly couponRepository: CouponRepository,
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
+        private readonly orderStatusRepository: OrderStatusRepository,
     ) { }
 
     private handleError = (error: unknown, res: Response) => {
@@ -148,11 +150,10 @@ export class OrderController {
             res.status(400).json({ error });
             logger.warn("Error en validación de CreateOrderDto", { error, body: req.body, userId });
             return;
-        }
-
-        new CreateOrderUseCase(
+        } new CreateOrderUseCase(
             this.orderRepository, this.customerRepository, this.productRepository,
-            this.couponRepository, this.neighborhoodRepository, this.cityRepository
+            this.couponRepository, this.neighborhoodRepository, this.cityRepository,
+            this.orderStatusRepository
         )
             .execute(createSaleDto!, userId)
             .then(data => res.status(201).json(data))
@@ -175,7 +176,7 @@ export class OrderController {
             logger.warn(`Error en validación de UpdateOrderStatusDto para ID ${id}`, { error, body: req.body });
             return;
         }
-        new UpdateOrderStatusUseCase(this.orderRepository)
+        new UpdateOrderStatusUseCase(this.orderRepository, this.orderStatusRepository)
             .execute(id, updateSaleStatusDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));

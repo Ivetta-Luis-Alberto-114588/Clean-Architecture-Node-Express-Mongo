@@ -17,7 +17,8 @@ export abstract class OrderRepository {
         calculatedDiscountRate: number,
         couponIdToIncrement: string | null | undefined,
         finalCustomerId: string,
-        shippingDetails: ResolvedShippingDetails
+        shippingDetails: ResolvedShippingDetails,
+        defaultOrderStatusId: string
     ): Promise<OrderEntity>;
 
     // --- FIRMA MODIFICADA ---

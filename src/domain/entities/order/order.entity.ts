@@ -1,6 +1,7 @@
 // src/domain/entities/order/order.entity.ts
 import { CustomerEntity } from "../customers/customer";
 import { ProductEntity } from "../products/product.entity";
+import { OrderStatusEntity } from "./order-status.entity";
 
 export interface OrderItemEntity {
     product: ProductEntity;
@@ -39,7 +40,7 @@ export class OrderEntity {
         public discountAmount: number,
         public total: number,
         public date: Date,
-        public status: 'pending' | 'completed' | 'cancelled',
+        public status: OrderStatusEntity,
         public notes?: string,
         public shippingDetails?: ShippingDetailsEntity // <<<--- ACTUALIZADO
     ) { }

@@ -6,6 +6,7 @@ import { CustomerMapper } from "../customers/customer.mapper";
 import { OrderMapper } from "../order/order.mapper";
 import { CustomerEntity } from "../../../domain/entities/customers/customer";
 import { OrderEntity } from "../../../domain/entities/order/order.entity";
+import { OrderStatusEntity } from "../../../domain/entities/order/order-status.entity";
 
 export class PaymentMapper {
   static fromObjectToPaymentEntity(object: any): PaymentEntity {
@@ -61,7 +62,18 @@ export class PaymentMapper {
       // Mapeamos el cliente si está poblado
       const customer = typeof customerId === 'object' && customerId !== null
         ? CustomerMapper.fromObjectToCustomerEntity(customerId)
-        : placeholderCustomer;
+        : placeholderCustomer;      // Crear un OrderStatusEntity por defecto para casos donde no hay venta poblada
+      const defaultStatus = new OrderStatusEntity(
+        '683a1a39dd398aae92ab05f6', // id
+        'PENDING', // code
+        'Pendiente', // name
+        'Estado inicial del pedido', // description
+        '#FFA500', // color
+        0, // order
+        true, // isActive
+        true, // isDefault
+        [] // canTransitionTo
+      );
 
       // Mapeamos la venta si está poblada
       const sale = typeof saleId === 'object' && saleId !== null
@@ -77,7 +89,7 @@ export class PaymentMapper {
           0,  // discountAmount
           0,  // total
           new Date(), // date
-          'pending', // status
+          defaultStatus, // status
           '' // notes (opcional)
         );
 
