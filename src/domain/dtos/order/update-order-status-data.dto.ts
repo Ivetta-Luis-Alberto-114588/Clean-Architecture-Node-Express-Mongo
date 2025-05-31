@@ -2,7 +2,8 @@
 import mongoose from "mongoose";
 
 export class UpdateOrderStatusDataDto {
-    private constructor(
+    public constructor(
+        public code?: string,
         public name?: string,
         public description?: string,
         public color?: string,
@@ -10,12 +11,18 @@ export class UpdateOrderStatusDataDto {
         public isActive?: boolean,
         public isDefault?: boolean,
         public canTransitionTo?: string[]
-    ) { }
-
-    static update(object: { [key: string]: any }): [string?, UpdateOrderStatusDataDto?] {
-        const { name, description, color, order, isActive, isDefault, canTransitionTo } = object;
+    ) { }static update(object: { [key: string]: any }): [string?, UpdateOrderStatusDataDto?] {
+        const { code, name, description, color, order, isActive, isDefault, canTransitionTo, allowedTransitions } = object;
 
         const updateData: any = {};
+
+        // Validación del código
+        if (code !== undefined) {
+            if (typeof code !== 'string' || code.trim().length < 2) {
+                return ['Código debe ser una cadena de al menos 2 caracteres', undefined];
+            }
+            updateData.code = code.trim();
+        }
 
         // Validaciones opcionales
         if (name !== undefined) {
@@ -53,21 +60,26 @@ export class UpdateOrderStatusDataDto {
 
         if (typeof isDefault === 'boolean') {
             updateData.isDefault = isDefault;
-        }
-
-        if (Array.isArray(canTransitionTo)) {
-            // Validar que todos los IDs sean válidos
-            for (const id of canTransitionTo) {
-                if (!mongoose.Types.ObjectId.isValid(id)) {
-                    return [`ID de transición inválido: ${id}`, undefined];
+        }        if (Array.isArray(canTransitionTo) || Array.isArray(allowedTransitions)) {
+            // Support both field names: canTransitionTo and allowedTransitions
+            const transitionsArray = canTransitionTo || allowedTransitions;
+            
+            // Validar que todos los elementos sean válidos (ObjectIds o códigos de estado)
+            for (const item of transitionsArray) {
+                if (typeof item !== 'string' || item.trim().length === 0) {
+                    return [`Elemento de transición inválido: debe ser un ObjectId válido o código de estado`, undefined];
+                }
+                
+                // Si no es un ObjectId válido, debe ser un código de estado (al menos 2 caracteres)
+                if (!mongoose.Types.ObjectId.isValid(item) && item.trim().length < 2) {
+                    return [`Código de estado de transición inválido: ${item} (debe tener al menos 2 caracteres)`, undefined];
                 }
             }
-            updateData.canTransitionTo = canTransitionTo;
-        }
-
-        return [
+            updateData.canTransitionTo = transitionsArray;
+        }return [
             undefined,
             new UpdateOrderStatusDataDto(
+                updateData.code,
                 updateData.name,
                 updateData.description,
                 updateData.color,

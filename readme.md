@@ -501,6 +501,36 @@ npm test
   ```
 
 * **PUT /:id**: Actualiza un estado de pedido existente. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "code": "PREPARING_UPDATED",
+    "name": "En Preparación Actualizado",
+    "description": "Descripción actualizada del estado",
+    "color": "#FF9800",
+    "order": 3,
+    "isActive": true,
+    "isDefault": false,
+    "canTransitionTo": ["shipped_status_id", "cancelled_status_id"]
+  }
+  ```
+  
+  **Alternativamente, puedes usar códigos de estado en lugar de IDs para las transiciones:**
+  ```json
+  {
+    "code": "PREPARING_UPDATED",
+    "allowedTransitions": ["SHIPPED", "CANCELLED"]
+  }
+  ```
+  
+  **Notas importantes:**
+  - El campo `code` se convierte automáticamente a mayúsculas.
+  - Puedes usar tanto `canTransitionTo` (con ObjectIds) como `allowedTransitions` (con códigos de estado).
+  - Los códigos de estado en `allowedTransitions` se convierten automáticamente a ObjectIds.
+  - Todos los campos son opcionales; solo se actualizarán los campos proporcionados.
+  - Si se proporciona un código duplicado, se retornará un error 400.
+
 * **DELETE /:id**: Elimina un estado de pedido (solo si no está siendo usado por ningún pedido). **(🔒 Requiere JWT + Admin Role)**
 * **POST /validate-transition**: Valida si una transición de estado es permitida. **(🔒 Requiere JWT + Admin Role)**
 

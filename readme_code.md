@@ -4,6 +4,10 @@ debe estar instalado node 20
 
 se puede usar nvm (list, install, use) para tener un manejador de versiones de node
 
+
+NPM RUN DEV
+
+
 npm install, para instalar todos los modulos
 
 instalar docker desktop
@@ -79,11 +83,10 @@ MERCADO PAGO
 
 hay que usar ngrok para poder recibir los webhook de mercado pago
 
-
 (en navegador ventana incognito, funciona mejor con chrome, tengo que iniciar como si yo fuese un comprador corriendo en mi maquina)
 
 1) debo entrar con estas credenciales Comprador1:
-   url: https://www.mercadopago.com.ar/developers/ 
+   url: https://www.mercadopago.com.ar/developers/
    usuario: TESTUSER1283783729,
    contraseña: FBB90AC2#25c3#4199#
    mail: test_user_1283783729@testuser.com
@@ -105,9 +108,21 @@ Vendedor1:
 	usuario: TESTUSER174603780,
 	contraseña: 9325521F#e74e#4a37#
 
+
+
+
+
+
+
 TENER EN CUENTA LOS PLAZOS DE ACREDITACION DE MP
 
 https://www.mercadopago.com.ar/costs-section  --> en esta parte se debe configurar los plazos de espera y las comisiones que nos va a cobrar mercado pago --> la seccion se llama "cconfigurar costos por cobro" de checkout . Al 2025-03-04 por cobro al instante es del 6.29%, a 10 dias es el 4.39%
+
+
+
+
+
+
 
 TESTING
 
