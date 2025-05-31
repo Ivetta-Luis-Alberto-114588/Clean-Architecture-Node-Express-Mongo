@@ -294,229 +294,932 @@ npm test
 
 ### Productos (**/api/products**)
 
-* **GET /search**: Realiza búsquedas de productos por palabra clave (nombre/descripción) y permite filtrar por categorías, **etiquetas (tags)**, rango de precios, y ordenar los resultados. Devuelve resultados paginados y el conteo total.
+**Endpoints Públicos (No requieren autenticación):**
+
+* **GET /search**: Realiza búsquedas de productos por palabra clave (nombre/descripción) y permite filtrar por categorías, **etiquetas (tags)**, rango de precios, y ordenar los resultados. Devuelve resultados paginados y el conteo total. **(🔓 Público - Sin JWT)**
 
   * **Query Params:** **q**, **categories** **(string CSV),** **minPrice**, **maxPrice**, **tags** **(string CSV, ej:** **popular,oferta**)**,** **sortBy** **(**price**,** **createdAt**, **name**, **relevance**), **sortOrder** **(**asc**,** **desc**), **page**, **limit**.
-* **GET /by-category/:categoryId**: Lista productos pertenecientes a una categoría específica, con paginación.
-* **GET /**: Lista todos los productos activos, con paginación.
-* **GET /:id**: Obtiene los detalles de un producto específico por su ID.
-* **POST /**: (Admin) Crea un nuevo producto. Permite subir una imagen (campo **image** **en** **multipart/form-data**) y asignar **etiquetas (campo** **tags** **como string CSV o array en** **form-data**)**. (Requiere JWT + Admin Role).**
-* **PUT /:id**: (Admin) Actualiza un producto existente. Permite subir/reemplazar una imagen (campo **image** **en** **multipart/form-data**) y modificar **etiquetas (campo** **tags** **como string CSV o array en** **form-data**, enviar vacío o null para borrar)**. (Requiere JWT + Admin Role).**
-* **DELETE /:id**: (Admin) Elimina un producto (y su imagen asociada si existe). (Requiere JWT + Admin Role).
+* **GET /by-category/:categoryId**: Lista productos pertenecientes a una categoría específica, con paginación. **(🔓 Público - Sin JWT)**
+* **GET /**: Lista todos los productos activos, con paginación. **(🔓 Público - Sin JWT)**
+* **GET /:id**: Obtiene los detalles de un producto específico por su ID. **(🔓 Público - Sin JWT)**
+
+**Endpoints de Administración:**
+
+* **POST /**: Crea un nuevo producto. Permite subir una imagen (campo **image** **en** **multipart/form-data**) y asignar **etiquetas (campo** **tags** **como string CSV o array en** **form-data**)**. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida (form-data):**
+  ```json
+  {
+    "name": "Smartphone Galaxy S24",
+    "description": "Último modelo con cámara de 108MP y 5G",
+    "price": 899.99,
+    "stock": 50,
+    "categoryId": "category_id_here",
+    "unitId": "unit_id_here",
+    "tags": "popular,nuevo,5g", // O como array: ["popular", "nuevo", "5g"]
+    "taxRate": 0.21,
+    "isActive": true,
+    "image": "archivo_imagen.jpg" // Campo multipart/form-data
+  }
+  ```
+
+* **PUT /:id**: Actualiza un producto existente. Permite subir/reemplazar una imagen (campo **image** **en** **multipart/form-data**) y modificar **etiquetas (campo** **tags** **como string CSV o array en** **form-data**, enviar vacío o null para borrar)**. **(🔒 Requiere JWT + Admin Role)**
+* **DELETE /:id**: Elimina un producto (y su imagen asociada si existe). **(🔒 Requiere JWT + Admin Role)**
 
 ---
 
 ### Categorías (**/api/categories**)
 
-* **GET /**: Lista todas las categorías (paginado).
-* **GET /:id**: Obtiene una categoría por su ID.
-* **POST /**: (Admin) Crea una nueva categoría. (Requiere JWT + Admin Role).
-* **PUT /:id**: (Admin) Actualiza una categoría existente. (Requiere JWT + Admin Role).
-* **DELETE /:id**: (Admin) Elimina una categoría. (Requiere JWT + Admin Role).
+**Endpoints Públicos (No requieren autenticación):**
+
+* **GET /**: Lista todas las categorías (paginado). **(🔓 Público - Sin JWT)**
+* **GET /:id**: Obtiene una categoría por su ID. **(🔓 Público - Sin JWT)**
+
+**Endpoints de Administración:**
+
+* **POST /**: Crea una nueva categoría. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "name": "Tecnología",
+    "description": "Productos relacionados con tecnología y gadgets",
+    "isActive": true
+  }
+  ```
+  
+  **Respuesta JSON:**
+  ```json
+  {
+    "id": 1,
+    "name": "Tecnología",
+    "description": "Productos relacionados con tecnología y gadgets",
+    "isActive": true
+  }
+  ```
+
+* **PUT /:id**: Actualiza una categoría existente. **(🔒 Requiere JWT + Admin Role)**
+* **DELETE /:id**: Elimina una categoría. **(🔒 Requiere JWT + Admin Role)**
 
 ---
 
-### Tags (Etiquetas) (**/api/tags**) **<-- ¡NUEVA SECCIÓN!**
+### Tags (Etiquetas) (**/api/tags**)
 
-* **GET /**: Lista todas las etiquetas activas (paginado). **(Público)**
+**Endpoints Públicos (No requieren autenticación):**
+
+* **GET /**: Lista todas las etiquetas activas (paginado). **(🔓 Público - Sin JWT)**
+  
+  **Respuesta JSON:**
+  ```json
+  {
+    "tags": [
+      {
+        "id": "tag_id_string",
+        "name": "popular",
+        "description": "Productos populares entre los usuarios",
+        "isActive": true,
+        "createdAt": "2024-01-15T10:30:00.000Z",
+        "updatedAt": "2024-01-15T10:30:00.000Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "totalPages": 3
+    }
+  }
+  ```
+
+**Endpoints de Administración (**/api/admin/tags**):**
+
+* **POST /**: Crea una nueva etiqueta. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "name": "oferta",
+    "description": "Productos en oferta especial",
+    "isActive": true
+  }
+  ```
+  
+  **Respuesta JSON:**
+  ```json
+  {
+    "id": "generated_string_id",
+    "name": "oferta",
+    "description": "Productos en oferta especial",
+    "isActive": true,
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+  ```
+
+* **PUT /:id**: Actualiza una etiqueta existente. **(🔒 Requiere JWT + Admin Role)**
+* **DELETE /:id**: Elimina una etiqueta. **(🔒 Requiere JWT + Admin Role)**
 
 ---
 
 ### Unidades (**/api/units**)
 
-* **GET /**: Lista todas las unidades de medida (paginado).
-* **GET /:id**: Obtiene una unidad por su ID.
-* **POST /**: (Admin) Crea una nueva unidad. (Requiere JWT + Admin Role).
-* **PUT /:id**: (Admin) Actualiza una unidad existente. (Requiere JWT + Admin Role).
-* **DELETE /:id**: (Admin) Elimina una unidad. (Requiere JWT + Admin Role).
+**Endpoints Públicos (No requieren autenticación):**
+
+* **GET /**: Lista todas las unidades de medida (paginado). **(🔓 Público - Sin JWT)**
+* **GET /:id**: Obtiene una unidad por su ID. **(🔓 Público - Sin JWT)**
+
+**Endpoints de Administración:**
+
+* **POST /**: Crea una nueva unidad. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "name": "Kilogramo",
+    "description": "Unidad de masa del sistema internacional",
+    "isActive": true
+  }
+  ```
+  
+  **Respuesta JSON:**
+  ```json
+  {
+    "id": 1,
+    "name": "Kilogramo",
+    "description": "Unidad de masa del sistema internacional",
+    "isActive": true
+  }
+  ```
+
+* **PUT /:id**: Actualiza una unidad existente. **(🔒 Requiere JWT + Admin Role)**
+* **DELETE /:id**: Elimina una unidad. **(🔒 Requiere JWT + Admin Role)**
+
+---
+
+### Estados de Pedido (**/api/order-statuses**)
+
+**Endpoints Públicos (No requieren autenticación):**
+
+* **GET /active**: Lista todos los estados de pedido activos (ordenados por order). **(🔓 Público - Sin JWT)**
+* **GET /default**: Obtiene el estado de pedido por defecto del sistema. **(🔓 Público - Sin JWT)**
+* **GET /code/:code**: Busca un estado de pedido específico por su código (ej: "PENDING", "CONFIRMED"). **(🔓 Público - Sin JWT)**
+
+**Endpoints de Administración:**
+
+* **GET /**: Lista todos los estados de pedido (activos e inactivos) con paginación. **(🔒 Requiere JWT + Admin Role)**
+* **POST /**: Crea un nuevo estado de pedido. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "code": "PREPARING",
+    "name": "En Preparación", 
+    "description": "El pedido está siendo preparado para envío",
+    "color": "#FF9800",
+    "order": 3,
+    "isActive": true,
+    "isDefault": false,
+    "canTransitionTo": ["shipped_status_id", "cancelled_status_id"]
+  }
+  ```
+  
+  **Respuesta JSON:**
+  ```json
+  {
+    "id": "generated_string_id",
+    "code": "PREPARING",
+    "name": "En Preparación",
+    "description": "El pedido está siendo preparado para envío",
+    "color": "#FF9800",
+    "order": 3,
+    "isActive": true,
+    "isDefault": false,
+    "canTransitionTo": ["shipped_status_id", "cancelled_status_id"],
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+  ```
+
+* **PUT /:id**: Actualiza un estado de pedido existente. **(🔒 Requiere JWT + Admin Role)**
+* **DELETE /:id**: Elimina un estado de pedido (solo si no está siendo usado por ningún pedido). **(🔒 Requiere JWT + Admin Role)**
+* **POST /validate-transition**: Valida si una transición de estado es permitida. **(🔒 Requiere JWT + Admin Role)**
+
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "fromStatusId": "current_status_id",
+    "toStatusId": "target_status_id"
+  }
+  ```
 
 ---
 
 ### Ciudades (**/api/cities**)
 
-* **GET /**: Lista todas las ciudades (paginado).
-* **GET /:id**: Obtiene una ciudad por su ID.
-* **GET /by-name/:name**: Busca una ciudad por su nombre exacto.
-* **POST /**: (Admin) Crea una nueva ciudad. (Requiere JWT + Admin Role).
-* **PUT /:id**: (Admin) Actualiza una ciudad existente. (Requiere JWT + Admin Role).
-* **DELETE /:id**: (Admin) Elimina una ciudad. (Requiere JWT + Admin Role).
+**Endpoints Públicos (No requieren autenticación):**
+
+* **GET /**: Lista todas las ciudades (paginado). **(🔓 Público - Sin JWT)**
+* **GET /:id**: Obtiene una ciudad por su ID. **(🔓 Público - Sin JWT)**
+* **GET /by-name/:name**: Busca una ciudad por su nombre exacto. **(🔓 Público - Sin JWT)**
+
+**Endpoints de Administración:**
+
+* **POST /**: Crea una nueva ciudad. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "name": "Buenos Aires",
+    "description": "Capital de Argentina",
+    "isActive": true
+  }
+  ```
+  
+  **Respuesta JSON:**
+  ```json
+  {
+    "id": "generated_string_id",
+    "name": "Buenos Aires",
+    "description": "Capital de Argentina",
+    "isActive": true
+  }
+  ```
+
+* **PUT /:id**: Actualiza una ciudad existente. **(🔒 Requiere JWT + Admin Role)**
+* **DELETE /:id**: Elimina una ciudad. **(🔒 Requiere JWT + Admin Role)**
 
 ---
 
 ### Barrios (**/api/neighborhoods**)
 
-* **GET /**: Lista todos los barrios (paginado).
-* **GET /:id**: Obtiene un barrio por su ID.
-* **GET /by-city/:cityId**: Lista barrios pertenecientes a una ciudad específica (paginado).
-* **POST /**: (Admin) Crea un nuevo barrio, asociándolo a una ciudad. (Requiere JWT + Admin Role).
-* **PUT /:id**: (Admin) Actualiza un barrio existente. (Requiere JWT + Admin Role).
-* **DELETE /:id**: (Admin) Elimina un barrio. (Requiere JWT + Admin Role).
+**Endpoints Públicos (No requieren autenticación):**
+
+* **GET /**: Lista todos los barrios (paginado). **(🔓 Público - Sin JWT)**
+* **GET /:id**: Obtiene un barrio por su ID. **(🔓 Público - Sin JWT)**
+* **GET /by-city/:cityId**: Lista barrios pertenecientes a una ciudad específica (paginado). **(🔓 Público - Sin JWT)**
+
+**Endpoints de Administración:**
+
+* **POST /**: Crea un nuevo barrio, asociándolo a una ciudad. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "name": "Palermo",
+    "description": "Barrio tradicional de Buenos Aires",
+    "cityId": "city_string_id",
+    "isActive": true
+  }
+  ```
+
+* **PUT /:id**: Actualiza un barrio existente. **(🔒 Requiere JWT + Admin Role)**
+* **DELETE /:id**: Elimina un barrio. **(🔒 Requiere JWT + Admin Role)**
 
 ---
 
 ### Clientes (**/api/customers**)
 
-* **GET /**: (Admin) Lista todos los clientes (paginado). (Requiere JWT + Admin Role).
-* **GET /:id**: (Admin) Obtiene un cliente por su ID. (Requiere JWT + Admin Role).
-* **GET /by-neighborhood/:neighborhoodId**: (Admin) Lista clientes por barrio (paginado). (Requiere JWT + Admin Role).
-* **GET /by-email/:email**: (Admin) Busca un cliente por su email. (Requiere JWT + Admin Role).
-* **POST /**: (Admin) Crea un nuevo cliente directamente (útil para cargas iniciales o casos especiales). (Requiere JWT + Admin Role). **Nota: El registro de usuario ya crea un cliente asociado.**
-* **PUT /:id**: (Admin) Actualiza la información de un cliente. (Requiere JWT + Admin Role).
-* **DELETE /:id**: (Admin) Elimina un cliente (y potencialmente sus datos asociados como direcciones). (Requiere JWT + Admin Role).
+**Endpoints de Administración (Todos requieren JWT + Admin Role):**
+
+* **GET /**: Lista todos los clientes (paginado). **(🔒 Requiere JWT + Admin Role)**
+* **GET /:id**: Obtiene un cliente por su ID. **(🔒 Requiere JWT + Admin Role)**
+* **GET /by-neighborhood/:neighborhoodId**: Lista clientes por barrio (paginado). **(🔒 Requiere JWT + Admin Role)**
+* **GET /by-email/:email**: Busca un cliente por su email. **(🔒 Requiere JWT + Admin Role)**
+* **POST /**: Crea un nuevo cliente directamente (útil para cargas iniciales o casos especiales). **(🔒 Requiere JWT + Admin Role)**
+  
+  **Nota:** El registro de usuario ya crea un cliente asociado automáticamente.
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "firstName": "Juan",
+    "lastName": "Pérez",
+    "email": "juan.perez@email.com",
+    "phone": "+54911234567",
+    "documentType": "DNI",
+    "documentNumber": "12345678",
+    "birthDate": "1990-05-15",
+    "isActive": true,
+    "userId": "user_id_if_registered" // Opcional
+  }
+  ```
+
+* **PUT /:id**: Actualiza la información de un cliente. **(🔒 Requiere JWT + Admin Role)**
+* **DELETE /:id**: Elimina un cliente (y potencialmente sus datos asociados como direcciones). **(🔒 Requiere JWT + Admin Role)**
 
 ---
 
-### Direcciones (**/api/addresses**) (Requieren JWT)
+### Direcciones (**/api/addresses**) 
 
-* **POST /**: Crea una nueva dirección de envío para el usuario autenticado.
-* **GET /**: Obtiene la lista de direcciones guardadas por el usuario autenticado (paginado).
-* **PUT /:id**: Actualiza una dirección específica del usuario autenticado.
-* **DELETE /:id**: Elimina una dirección específica del usuario autenticado.
-* **PATCH /:id/default**: Marca una dirección específica como la predeterminada para el usuario autenticado.
+**Todos los endpoints requieren JWT (usuario autenticado):**
+
+* **POST /**: Crea una nueva dirección de envío para el usuario autenticado. **(🔒 Requiere JWT)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "street": "Av. Corrientes 1234",
+    "number": "1234",
+    "floor": "5",
+    "apartment": "B",
+    "cityId": "city_string_id",
+    "neighborhoodId": "neighborhood_string_id",
+    "postalCode": "C1043AAZ",
+    "reference": "Cerca del teatro San Martín",
+    "isDefault": false
+  }
+  ```
+
+* **GET /**: Obtiene la lista de direcciones guardadas por el usuario autenticado (paginado). **(🔒 Requiere JWT)**
+* **PUT /:id**: Actualiza una dirección específica del usuario autenticado. **(🔒 Requiere JWT)**
+* **DELETE /:id**: Elimina una dirección específica del usuario autenticado. **(🔒 Requiere JWT)**
+* **PATCH /:id/default**: Marca una dirección específica como la predeterminada para el usuario autenticado. **(🔒 Requiere JWT)**
 
 ---
 
-### Carrito (**/api/cart**) (Requieren JWT)
+### Carrito (**/api/cart**)
 
-* **GET /**: Obtiene el contenido actual del carrito del usuario autenticado.
-* **POST /items**: Añade un producto (o incrementa su cantidad) al carrito.
-* **PUT /items/:productId**: Establece una cantidad específica para un producto en el carrito (si es 0, lo elimina).
-* **DELETE /items/:productId**: Elimina un producto específico del carrito.
-* **DELETE /**: Elimina todos los ítems del carrito del usuario.
+**Todos los endpoints requieren JWT (usuario autenticado):**
+
+* **GET /**: Obtiene el contenido actual del carrito del usuario autenticado. **(🔒 Requiere JWT)**
+  
+  **Respuesta JSON:**
+  ```json
+  {
+    "items": [
+      {
+        "productId": "product_id",
+        "productName": "Smartphone Galaxy S24",
+        "quantity": 2,
+        "unitPrice": 899.99,
+        "taxRate": 0.21,
+        "subtotal": 1799.98,
+        "taxes": 377.996,
+        "total": 2177.976
+      }
+    ],
+    "summary": {
+      "totalItems": 2,
+      "subtotal": 1799.98,
+      "taxes": 377.996,
+      "total": 2177.976
+    }
+  }
+  ```
+
+* **POST /items**: Añade un producto (o incrementa su cantidad) al carrito. **(🔒 Requiere JWT)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "productId": "product_id",
+    "quantity": 1
+  }
+  ```
+
+* **PUT /items/:productId**: Establece una cantidad específica para un producto en el carrito (si es 0, lo elimina). **(🔒 Requiere JWT)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "quantity": 3
+  }
+  ```
+
+* **DELETE /items/:productId**: Elimina un producto específico del carrito. **(🔒 Requiere JWT)**
+* **DELETE /**: Elimina todos los ítems del carrito del usuario. **(🔒 Requiere JWT)**
 
 ---
 
 ### Pedidos/Ventas (**/api/sales**)
 
-* **POST /**: Crea un nuevo pedido. Puede ser usado por usuarios autenticados (usando su perfil y direcciones guardadas/nuevas) o por invitados (proporcionando datos de cliente y envío). (Requiere JWT si se usa **selectedAddressId**).
-* **GET /**: (Admin) Lista todos los pedidos del sistema (paginado). (Requiere JWT + Admin Role).
-* **GET /my-orders**: Lista el historial de pedidos del usuario autenticado (paginado). (Requiere JWT).
-* **GET /:id**: Obtiene los detalles de un pedido específico por su ID. (Requiere JWT; si es Admin o dueño del pedido).
-* **PATCH /:id/status**: (Admin) Actualiza el estado de un pedido (ej: a 'completed' o 'cancelled'). (Requiere JWT + Admin Role).
-* **GET /by-customer/:customerId**: (Admin) Lista los pedidos de un cliente específico (paginado). (Requiere JWT + Admin Role).
-* **POST /by-date-range**: (Admin) Lista pedidos dentro de un rango de fechas (paginado). (Requiere JWT + Admin Role).
+* **POST /**: Crea un nuevo pedido. Puede ser usado por usuarios autenticados (usando su perfil y direcciones guardadas/nuevas) o por invitados (proporcionando datos de cliente y envío). **(🔒 Requiere JWT si se usa selectedAddressId)**
+  
+  **Estructura JSON para usuario autenticado:**
+  ```json
+  {
+    "selectedAddressId": "address_id", // Usar dirección guardada
+    // O alternativamente:
+    "shippingAddress": {
+      "street": "Nueva calle 123",
+      "number": "123",
+      "cityId": "city_id",
+      "neighborhoodId": "neighborhood_id"
+    },
+    "couponCode": "DESCUENTO10", // Opcional
+    "paymentMethod": "mercadopago",
+    "notes": "Entregar en horario de oficina"
+  }
+  ```
+
+* **GET /**: Lista todos los pedidos del sistema (paginado). **(🔒 Requiere JWT + Admin Role)**
+* **GET /my-orders**: Lista el historial de pedidos del usuario autenticado (paginado). **(🔒 Requiere JWT)**
+* **GET /:id**: Obtiene los detalles de un pedido específico por su ID. **(🔒 Requiere JWT - Admin o dueño del pedido)**
+* **PATCH /:id/status**: Actualiza el estado de un pedido (ej: a 'completed' o 'cancelled'). **(🔒 Requiere JWT + Admin Role)**
+* **GET /by-customer/:customerId**: Lista los pedidos de un cliente específico (paginado). **(🔒 Requiere JWT + Admin Role)**
+* **POST /by-date-range**: Lista pedidos dentro de un rango de fechas (paginado). **(🔒 Requiere JWT + Admin Role)**
 
 ---
 
 ### Pagos (**/api/payments**)
 
-* **POST /sale/:saleId**: Inicia el proceso de pago para una venta específica, creando una preferencia en Mercado Pago y un registro de pago local. (Puede requerir JWT, dependiendo de la implementación exacta del flujo).
-* **POST /prueba/sale/:saleId**: Endpoint de prueba simplificado para crear preferencias.
-* **GET /**: (Admin) Lista todos los registros de pago guardados localmente (paginado). (Requiere JWT + Admin Role).
-* **GET /:id**: (Admin) Obtiene información de un registro de pago local por su ID. (Requiere JWT + Admin Role).
-* **GET /by-sale/:saleId**: (Admin) Lista los registros de pago locales asociados a una venta (paginado). (Requiere JWT + Admin Role).
-* **POST /verify**: Verifica el estado actual de un pago con Mercado Pago usando el ID local y el ID del proveedor. (Puede requerir JWT).
-* **GET /preference/:preferenceId**: Obtiene el estado de una preferencia de Mercado Pago y del pago asociado (si existe). (Puede requerir JWT).
-* **GET /mercadopago/payments**: (Admin) Consulta directamente a Mercado Pago los pagos **realizados** **desde la cuenta asociada al Access Token (paginado, filtros opcionales). (Requiere JWT + Admin Role).**
-* **GET /mercadopago/charges**: (Admin) Consulta directamente a Mercado Pago los **cobros recibidos** **en la cuenta asociada al Access Token (paginado, filtros opcionales). (Requiere JWT + Admin Role).**
-* **POST /webhook**: **Endpoint Público.** **Recibe notificaciones (webhooks) de Mercado Pago sobre cambios en el estado de los pagos.**
-* **GET /success**: **Endpoint Público.** **Callback de Mercado Pago al que se redirige tras un pago exitoso. Redirecciona al frontend.**
-* **GET /failure**: **Endpoint Público.** **Callback de Mercado Pago al que se redirige tras un pago fallido. Redirecciona al frontend.**
-* **GET /pending**: **Endpoint Público.** **Callback de Mercado Pago al que se redirige para pagos pendientes. Redirecciona al frontend.**
+**Endpoints de Usuario:**
+
+* **POST /sale/:saleId**: Inicia el proceso de pago para una venta específica, creando una preferencia en Mercado Pago y un registro de pago local. **(🔒 Puede requerir JWT según implementación)**
+* **POST /prueba/sale/:saleId**: Endpoint de prueba simplificado para crear preferencias. **(🔒 Puede requerir JWT según implementación)**
+* **POST /verify**: Verifica el estado actual de un pago con Mercado Pago usando el ID local y el ID del proveedor. **(🔒 Puede requerir JWT según implementación)**
+* **GET /preference/:preferenceId**: Obtiene el estado de una preferencia de Mercado Pago y del pago asociado (si existe). **(🔒 Puede requerir JWT según implementación)**
+
+**Endpoints Públicos (Callbacks de Mercado Pago):**
+
+* **POST /webhook**: Recibe notificaciones (webhooks) de Mercado Pago sobre cambios en el estado de los pagos. **(🔓 Público - Webhook)**
+* **GET /success**: Callback de Mercado Pago al que se redirige tras un pago exitoso. Redirecciona al frontend. **(🔓 Público - Callback)**
+* **GET /failure**: Callback de Mercado Pago al que se redirige tras un pago fallido. Redirecciona al frontend. **(🔓 Público - Callback)**
+* **GET /pending**: Callback de Mercado Pago al que se redirige para pagos pendientes. Redirecciona al frontend. **(🔓 Público - Callback)**
+
+**Endpoints de Administración:**
+
+* **GET /**: Lista todos los registros de pago guardados localmente (paginado). **(🔒 Requiere JWT + Admin Role)**
+* **GET /:id**: Obtiene información de un registro de pago local por su ID. **(🔒 Requiere JWT + Admin Role)**
+* **GET /by-sale/:saleId**: Lista los registros de pago locales asociados a una venta (paginado). **(🔒 Requiere JWT + Admin Role)**
+* **GET /mercadopago/payments**: Consulta directamente a Mercado Pago los pagos realizados desde la cuenta asociada al Access Token (paginado, filtros opcionales). **(🔒 Requiere JWT + Admin Role)**
+* **GET /mercadopago/charges**: Consulta directamente a Mercado Pago los cobros recibidos en la cuenta asociada al Access Token (paginado, filtros opcionales). **(🔒 Requiere JWT + Admin Role)**
 
 ---
 
 ### Cupones (**/api/coupons**)
 
-* **GET /**: (Admin) Lista todos los cupones (paginado). (Requiere JWT + Admin Role).
-* **GET /:id**: (Admin) Obtiene un cupón por su ID. (Requiere JWT + Admin Role).
-* **POST /**: (Admin) Crea un nuevo cupón. (Requiere JWT + Admin Role).
-* **PUT /:id**: (Admin) Actualiza un cupón existente. (Requiere JWT + Admin Role).
-* **DELETE /:id**: (Admin) Elimina (o desactiva) un cupón. (Requiere JWT + Admin Role).
-* **(Posible endpoint público futuro** **GET /validate/:code**)**.**
+**Endpoints de Administración (Todos requieren JWT + Admin Role):**
+
+* **GET /**: Lista todos los cupones (paginado). **(🔒 Requiere JWT + Admin Role)**
+* **GET /:id**: Obtiene un cupón por su ID. **(🔒 Requiere JWT + Admin Role)**
+* **POST /**: Crea un nuevo cupón. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "code": "DESCUENTO10",
+    "description": "Descuento del 10% en toda la tienda",
+    "discountType": "percentage", // "percentage" o "fixed"
+    "discountValue": 10,
+    "minOrderAmount": 100,
+    "maxUsage": 100,
+    "validFrom": "2024-01-01T00:00:00.000Z",
+    "validUntil": "2024-12-31T23:59:59.999Z",
+    "isActive": true
+  }
+  ```
+
+* **PUT /:id**: Actualiza un cupón existente. **(🔒 Requiere JWT + Admin Role)**
+* **DELETE /:id**: Elimina (o desactiva) un cupón. **(🔒 Requiere JWT + Admin Role)**
+
+**Endpoints Públicos futuros:**
+
+* **GET /validate/:code**: Valida un código de cupón. **(🔓 Posible endpoint público futuro)**
 
 ---
 
 ### Chatbot (**/api/chatbot**)
 
-* **POST /query**: Envía una consulta al chatbot y obtiene una respuesta. Puede incluir **sessionId** **y** **userType**. (Público).
-* **GET /session/:sessionId**: Obtiene el historial de mensajes de una sesión específica. (Público).
-* **POST /session**: Crea una nueva sesión de chat. Puede especificar **userType** **('customer' u 'owner'). (Público).**
-* **GET /sessions**: (Admin) Lista todas las sesiones de chat activas/recientes. (Requiere JWT + Admin Role).
-* **POST /generate-embeddings**: (Admin) Dispara el proceso de generación/actualización de embeddings para la base de conocimiento del RAG. (Requiere JWT + Admin Role).
-* **POST /change-llm**: (Admin) Cambia el modelo de lenguaje grande (LLM) que utiliza el chatbot (ej: de Claude a OpenAI). (Requiere JWT + Admin Role).
-* **GET /current-llm**: (Admin) Muestra cuál LLM está configurado actualmente. (Requiere JWT + Admin Role).
-* **GET /validate-embeddings**: (Admin) Compara el número de documentos en la BD con los embeddings generados para verificar consistencia. (Requiere JWT + Admin Role).
+**Endpoints Públicos (No requieren autenticación):**
+
+* **POST /query**: Envía una consulta al chatbot y obtiene una respuesta. **(🔓 Público - Sin JWT)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "message": "¿Qué productos tienen en oferta?",
+    "sessionId": "session_uuid_optional",
+    "userType": "customer" // "customer" u "owner"
+  }
+  ```
+
+* **GET /session/:sessionId**: Obtiene el historial de mensajes de una sesión específica. **(🔓 Público - Sin JWT)**
+* **POST /session**: Crea una nueva sesión de chat. **(🔓 Público - Sin JWT)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "userType": "customer" // "customer" u "owner"
+  }
+  ```
+
+**Endpoints de Administración:**
+
+* **GET /sessions**: Lista todas las sesiones de chat activas/recientes. **(🔒 Requiere JWT + Admin Role)**
+* **POST /generate-embeddings**: Dispara el proceso de generación/actualización de embeddings para la base de conocimiento del RAG. **(🔒 Requiere JWT + Admin Role)**
+* **POST /change-llm**: Cambia el modelo de lenguaje grande (LLM) que utiliza el chatbot. **(🔒 Requiere JWT + Admin Role)**
+  
+  **Estructura JSON requerida:**
+  ```json
+  {
+    "llmProvider": "openai" // "openai" o "anthropic"
+  }
+  ```
+
+* **GET /current-llm**: Muestra cuál LLM está configurado actualmente. **(🔒 Requiere JWT + Admin Role)**
+* **GET /validate-embeddings**: Compara el número de documentos en la BD con los embeddings generados para verificar consistencia. **(🔒 Requiere JWT + Admin Role)**
 
 ---
 
 ### Administración (**/api/admin**)
 
-**(Todos los siguientes endpoints requieren autenticación JWT y rol** **ADMIN_ROLE**)
+**Todos los endpoints bajo `/api/admin/` requieren JWT + Admin Role. 🔒**
 
-* **Productos (**/api/admin/products**)**
+#### Productos (**/api/admin/products**)
 
-  * **GET /**: Lista todos los productos (incluyendo activos e inactivos), con paginación.
-  * **GET /search**: Realiza búsquedas y filtrados avanzados sobre todos los productos (activos e inactivos).
+* **GET /**: Lista todos los productos (incluyendo activos e inactivos), con paginación. **(🔒 Requiere JWT + Admin Role)**
+* **GET /search**: Realiza búsquedas y filtrados avanzados sobre todos los productos (activos e inactivos). **(🔒 Requiere JWT + Admin Role)**
+  
+  **Query Params:** `q`, `categories`, `minPrice`, `maxPrice`, `tags`, `sortBy`, `sortOrder`, `page`, `limit`.
 
-    * **Query Params:** **q**, **categories**, **minPrice**, **maxPrice**, **tags**, **sortBy**, **sortOrder**, **page**, **limit**.
-  * **GET /:id**: Obtiene los detalles completos de un producto específico por su ID.
-  * **POST /**: Crea un nuevo producto (permite subir imagen vía **multipart/form-data** **con campo** **image** **y asignar** **tags**).
-  * **PUT /:id**: Actualiza un producto existente (permite subir/reemplazar imagen vía **multipart/form-data** **con campo** **image** **y modificar** **tags**).
-  * **DELETE /:id**: Elimina un producto (y su imagen asociada).
-  * **GET /by-category/:categoryId**: Lista productos (activos e inactivos) de una categoría específica, con paginación.
+* **GET /:id**: Obtiene los detalles completos de un producto específico por su ID. **(🔒 Requiere JWT + Admin Role)**
+  * **POST /**: Crea un nuevo producto (permite subir imagen vía **multipart/form-data** **con campo** **image** **y asignar** **tags**). **(🔒 Requiere JWT + Admin Role)**
+  
+    **Estructura JSON requerida (form-data):**
+    ```json
+    {
+      "name": "Laptop Gaming ROG",
+      "description": "Laptop gaming de alta gama con RTX 4070 y Ryzen 9",
+      "price": 1899.99,
+      "stock": 15,
+      "categoryId": "category_id_here",
+      "unitId": "unit_id_here", 
+      "tags": "gaming,laptop,alta-gama", // O como array: ["gaming", "laptop", "alta-gama"]
+      "taxRate": 0.21,
+      "isActive": true,
+      "image": "archivo_imagen.jpg" // Campo multipart/form-data
+    }
+    ```
+
+  * **PUT /:id**: Actualiza un producto existente (permite subir/reemplazar imagen vía **multipart/form-data** **con campo** **image** **y modificar** **tags**). **(🔒 Requiere JWT + Admin Role)**
+  * **DELETE /:id**: Elimina un producto (y su imagen asociada). **(🔒 Requiere JWT + Admin Role)**
+  * **GET /by-category/:categoryId**: Lista productos (activos e inactivos) de una categoría específica, con paginación. **(🔒 Requiere JWT + Admin Role)**
 * **Categorías (**/api/admin/categories**)**
 
-  * **GET /**: Lista todas las categorías (paginado).
-  * **GET /:id**: Obtiene una categoría por su ID.
-  * **POST /**: Crea una nueva categoría.
-  * **PUT /:id**: Actualiza una categoría existente.
-  * **DELETE /:id**: Elimina una categoría.
-* **Tags (**/api/admin/tags**)** **<-- ¡NUEVA SECCIÓN!**
+  * **GET /**: Lista todas las categorías (paginado). **(🔒 Requiere JWT + Admin Role)**
+  * **GET /:id**: Obtiene una categoría por su ID. **(🔒 Requiere JWT + Admin Role)**
+  * **POST /**: Crea una nueva categoría. **(🔒 Requiere JWT + Admin Role)**
+  
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "name": "Electrodomésticos",
+      "description": "Productos para el hogar y cocina",
+      "isActive": true
+    }
+    ```
 
-  * **GET /**: Lista todas las etiquetas (paginado).
-  * **POST /**: Crea una nueva etiqueta.
-  * **GET /:id**: Obtiene una etiqueta por ID.
-  * **PUT /:id**: Actualiza una etiqueta.
-  * **DELETE /:id**: Elimina (o desactiva) una etiqueta.
+  * **PUT /:id**: Actualiza una categoría existente. **(🔒 Requiere JWT + Admin Role)**
+  * **DELETE /:id**: Elimina una categoría. **(🔒 Requiere JWT + Admin Role)**
+* **Tags (**/api/admin/tags**)**
+
+  * **GET /**: Lista todas las etiquetas (activas e inactivas) con paginación. **(🔒 Requiere JWT + Admin Role)**
+  * **POST /**: Crea una nueva etiqueta. **(🔒 Requiere JWT + Admin Role)**
+  
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "name": "popular",
+      "description": "Productos más vendidos y demandados",
+      "isActive": true
+    }
+    ```
+
+  * **GET /:id**: Obtiene una etiqueta por ID. **(🔒 Requiere JWT + Admin Role)**
+  * **PUT /:id**: Actualiza una etiqueta. **(🔒 Requiere JWT + Admin Role)**
+  * **DELETE /:id**: Elimina (o desactiva) una etiqueta. **(🔒 Requiere JWT + Admin Role)**
 * **Unidades (**/api/admin/units**)**
 
-  * **GET /**: Lista todas las unidades de medida (paginado).
-  * **GET /:id**: Obtiene una unidad por su ID.
-  * **POST /**: Crea una nueva unidad.
-  * **PUT /:id**: Actualiza una unidad existente.
-  * **DELETE /:id**: Elimina una unidad.
+  * **GET /**: Lista todas las unidades de medida (paginado). **(🔒 Requiere JWT + Admin Role)**
+    
+    **Respuesta:**
+    ```json
+    {
+      "units": [
+        {
+          "id": 1,
+          "name": "Litro",
+          "description": "Unidad de volumen del sistema métrico",
+          "isActive": true
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "limit": 10
+    }
+    ```
+
+  * **GET /:id**: Obtiene una unidad por su ID. **(🔒 Requiere JWT + Admin Role)**
+  * **POST /**: Crea una nueva unidad. **(🔒 Requiere JWT + Admin Role)**
+  
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "name": "Litro",
+      "description": "Unidad de volumen del sistema métrico",
+      "isActive": true
+    }
+    ```
+
+  * **PUT /:id**: Actualiza una unidad existente. **(🔒 Requiere JWT + Admin Role)**
+  * **DELETE /:id**: Elimina una unidad. **(🔒 Requiere JWT + Admin Role)**
+* **Estados de Pedido (**/api/admin/order-statuses**)**
+
+  * **GET /**: Lista todos los estados de pedido (activos e inactivos) con paginación. **(🔒 Requiere JWT + Admin Role)**
+    
+    **Respuesta:**
+    ```json
+    {
+      "orderStatuses": [
+        {
+          "id": "status_uuid_here",
+          "code": "PENDING",
+          "name": "Pendiente",
+          "description": "Pedido recibido, pendiente de procesamiento",
+          "color": "#FFC107",
+          "order": 1,
+          "isActive": true,
+          "isDefault": true,
+          "canTransitionTo": ["CONFIRMED", "CANCELLED"]
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "limit": 10
+    }
+    ```
+
+  * **POST /**: Crea un nuevo estado de pedido. **(🔒 Requiere JWT + Admin Role)**
+  
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "name": "Enviado",
+      "code": "SHIPPED",
+      "description": "El pedido ha sido enviado al cliente",
+      "color": "#4CAF50",
+      "order": 4,
+      "isActive": true,
+      "isDefault": false,
+      "canTransitionTo": ["DELIVERED", "RETURNED"]
+    }
+    ```
+
+  * **GET /:id**: Obtiene un estado de pedido específico por su ID. **(🔒 Requiere JWT + Admin Role)**
+  * **PUT /:id**: Actualiza un estado de pedido existente. **(🔒 Requiere JWT + Admin Role)**
+  * **DELETE /:id**: Elimina un estado de pedido (solo si no está siendo usado). **(🔒 Requiere JWT + Admin Role)**
+  * **POST /validate-transition**: Valida si una transición entre estados es permitida. **(🔒 Requiere JWT + Admin Role)**
+    
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "fromStatusId": "status_uuid_here",
+      "toStatusId": "status_uuid_here"
+    }
+    ```
 * **Pedidos (**/api/admin/orders**)**
 
-  * **GET /**: Lista todos los pedidos del sistema (paginado).
-  * **GET /:id**: Obtiene los detalles completos de un pedido específico por su ID.
-  * **PATCH /:id/status**: Actualiza el estado de un pedido (ej: a 'completed', 'shipped', 'cancelled').
-  * **GET /by-customer/:customerId**: Lista todos los pedidos de un cliente específico (paginado).
-  * **POST /by-date-range**: Lista pedidos dentro de un rango de fechas (paginado).
+  * **GET /**: Lista todos los pedidos del sistema (paginado). **(🔒 Requiere JWT + Admin Role)**
+    
+    **Respuesta:**
+    ```json
+    {
+      "orders": [
+        {
+          "id": "order_uuid_here",
+          "orderNumber": "ORD-2024-001",
+          "customerId": "customer_uuid_here",
+          "statusId": "status_uuid_here",
+          "subtotal": 299.99,
+          "taxAmount": 62.99,
+          "total": 362.98,
+          "createdAt": "2024-01-15T10:30:00Z"
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "limit": 10
+    }
+    ```
+
+  * **GET /:id**: Obtiene los detalles completos de un pedido específico por su ID. **(🔒 Requiere JWT + Admin Role)**
+  * **PATCH /:id/status**: Actualiza el estado de un pedido (ej: a 'completed', 'shipped', 'cancelled'). **(🔒 Requiere JWT + Admin Role)**
+    
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "statusId": "new_status_uuid_here"
+    }
+    ```
+
+  * **GET /by-customer/:customerId**: Lista todos los pedidos de un cliente específico (paginado). **(🔒 Requiere JWT + Admin Role)**
+  * **POST /by-date-range**: Lista pedidos dentro de un rango de fechas (paginado). **(🔒 Requiere JWT + Admin Role)**
+    
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "startDate": "2024-01-01",
+      "endDate": "2024-01-31"
+    }
+    ```
 * **Clientes (**/api/admin/customers**)**
 
-  * **GET /**: Lista todos los clientes (paginado).
-  * **GET /:id**: Obtiene un cliente por su ID.
-  * **POST /**: Crea un nuevo cliente directamente.
-  * **PUT /:id**: Actualiza la información de un cliente.
-  * **DELETE /:id**: Elimina un cliente (considerar qué pasa con sus pedidos/direcciones).
-  * **GET /by-neighborhood/:neighborhoodId**: Lista clientes por barrio (paginado).
-  * **GET /by-email/:email**: Busca un cliente por su email.
+  * **GET /**: Lista todos los clientes (paginado). **(🔒 Requiere JWT + Admin Role)**
+    
+    **Respuesta:**
+    ```json
+    {
+      "customers": [
+        {
+          "id": "customer_uuid_here",
+          "firstName": "Juan",
+          "lastName": "Pérez",
+          "email": "juan.perez@email.com",
+          "phone": "+54 9 11 1234-5678",
+          "isActive": true,
+          "createdAt": "2024-01-15T10:30:00Z"
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "limit": 10
+    }
+    ```
+
+  * **GET /:id**: Obtiene un cliente por su ID. **(🔒 Requiere JWT + Admin Role)**
+  * **POST /**: Crea un nuevo cliente directamente. **(🔒 Requiere JWT + Admin Role)**
+    
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "firstName": "María",
+      "lastName": "González",
+      "email": "maria.gonzalez@email.com",
+      "phone": "+54 9 11 9876-5432",
+      "isActive": true
+    }
+    ```
+
+  * **PUT /:id**: Actualiza la información de un cliente. **(🔒 Requiere JWT + Admin Role)**
+  * **DELETE /:id**: Elimina un cliente (considerar qué pasa con sus pedidos/direcciones). **(🔒 Requiere JWT + Admin Role)**
+  * **GET /by-neighborhood/:neighborhoodId**: Lista clientes por barrio (paginado). **(🔒 Requiere JWT + Admin Role)**
+  * **GET /by-email/:email**: Busca un cliente por su email. **(🔒 Requiere JWT + Admin Role)**
 * **Usuarios (**/api/admin/users**)**
 
-  * **GET /**: Lista todos los usuarios registrados.
-  * **PUT /:id**: Actualiza datos de un usuario (ej: asignar/quitar rol **ADMIN_ROLE**). **¡Operación sensible!**
-  * **DELETE /:id**: Elimina una cuenta de usuario (considerar si también se elimina el cliente asociado).
+  * **GET /**: Lista todos los usuarios registrados. **(🔒 Requiere JWT + Admin Role)**
+    
+    **Respuesta:**
+    ```json
+    {
+      "users": [
+        {
+          "id": "user_uuid_here",
+          "email": "admin@empresa.com",
+          "role": "ADMIN_ROLE",
+          "isActive": true,
+          "customerId": "customer_uuid_here",
+          "createdAt": "2024-01-15T10:30:00Z"
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "limit": 10
+    }
+    ```
+
+  * **PUT /:id**: Actualiza datos de un usuario (ej: asignar/quitar rol **ADMIN_ROLE**). **¡Operación sensible!** **(🔒 Requiere JWT + Admin Role)**
+    
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "role": "ADMIN_ROLE", // O "USER_ROLE"
+      "isActive": true
+    }
+    ```
+
+  * **DELETE /:id**: Elimina una cuenta de usuario (considerar si también se elimina el cliente asociado). **(🔒 Requiere JWT + Admin Role)**
 * **Cupones (**/api/admin/coupons**)**
 
-  * **GET /**: Lista todos los cupones (paginado).
-  * **GET /:id**: Obtiene un cupón por su ID.
-  * **POST /**: Crea un nuevo cupón.
-  * **PUT /:id**: Actualiza un cupón existente.
-  * **DELETE /:id**: Elimina (o desactiva) un cupón.
+  * **GET /**: Lista todos los cupones (paginado). **(🔒 Requiere JWT + Admin Role)**
+    
+    **Respuesta:**
+    ```json
+    {
+      "coupons": [
+        {
+          "id": "coupon_uuid_here",
+          "code": "DESCUENTO20",
+          "name": "Descuento Enero",
+          "description": "20% de descuento en todos los productos",
+          "discountType": "percentage",
+          "discountValue": 20,
+          "minPurchaseAmount": 100,
+          "maxDiscountAmount": 50,
+          "expiresAt": "2024-01-31T23:59:59Z",
+          "isActive": true,
+          "usageCount": 15,
+          "maxUsageCount": 100
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "limit": 10
+    }
+    ```
+
+  * **GET /:id**: Obtiene un cupón por su ID. **(🔒 Requiere JWT + Admin Role)**
+  * **POST /**: Crea un nuevo cupón. **(🔒 Requiere JWT + Admin Role)**
+    
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "code": "VERANO2024",
+      "name": "Descuento de Verano",
+      "description": "15% de descuento para la temporada de verano",
+      "discountType": "percentage",
+      "discountValue": 15,
+      "minPurchaseAmount": 50,
+      "maxDiscountAmount": 25,
+      "expiresAt": "2024-03-31T23:59:59Z",
+      "isActive": true,
+      "maxUsageCount": 200
+    }
+    ```
+
+  * **PUT /:id**: Actualiza un cupón existente. **(🔒 Requiere JWT + Admin Role)**
+  * **DELETE /:id**: Elimina (o desactiva) un cupón. **(🔒 Requiere JWT + Admin Role)**
 * **Ciudades (**/api/admin/cities**)**
 
-  * **GET /**: Lista todas las ciudades (paginado).
-  * **GET /:id**: Obtiene una ciudad por su ID.
-  * **POST /**: Crea una nueva ciudad.
-  * **PUT /:id**: Actualiza una ciudad existente.
-  * **DELETE /:id**: Elimina una ciudad (considerar impacto en barrios/direcciones).
-  * **GET /by-name/:name**: Busca una ciudad por nombre exacto.
+  * **GET /**: Lista todas las ciudades (paginado). **(🔒 Requiere JWT + Admin Role)**
+    
+    **Respuesta:**
+    ```json
+    {
+      "cities": [
+        {
+          "id": "city_uuid_here",
+          "name": "Córdoba",
+          "description": "Capital de la provincia de Córdoba",
+          "isActive": true
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "limit": 10
+    }
+    ```
+
+  * **GET /:id**: Obtiene una ciudad por su ID. **(🔒 Requiere JWT + Admin Role)**
+  * **POST /**: Crea una nueva ciudad. **(🔒 Requiere JWT + Admin Role)**
+  
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "name": "Córdoba",
+      "description": "Capital de la provincia de Córdoba",
+      "isActive": true
+    }
+    ```
+
+  * **PUT /:id**: Actualiza una ciudad existente. **(🔒 Requiere JWT + Admin Role)**
+  * **DELETE /:id**: Elimina una ciudad (considerar impacto en barrios/direcciones). **(🔒 Requiere JWT + Admin Role)**
+  * **GET /by-name/:name**: Busca una ciudad por nombre exacto. **(🔒 Requiere JWT + Admin Role)**
 * **Barrios (**/api/admin/neighborhoods**)**
 
-  * **GET /**: Lista todos los barrios (paginado).
-  * **GET /:id**: Obtiene un barrio por su ID.
-  * **POST /**: Crea un nuevo barrio.
-  * **PUT /:id**: Actualiza un barrio existente.
-  * **DELETE /:id**: Elimina un barrio (considerar impacto en clientes/direcciones).
-  * **GET /by-city/:cityId**: Lista barrios por ciudad (paginado).
+  * **GET /**: Lista todos los barrios (paginado). **(🔒 Requiere JWT + Admin Role)**
+    
+    **Respuesta:**
+    ```json
+    {
+      "neighborhoods": [
+        {
+          "id": "neighborhood_uuid_here",
+          "name": "Nueva Córdoba",
+          "description": "Barrio universitario y comercial",
+          "cityId": "city_uuid_here",
+          "isActive": true
+        }
+      ],
+      "total": 1,
+      "page": 1,
+      "limit": 10
+    }
+    ```
+
+  * **GET /:id**: Obtiene un barrio por su ID. **(🔒 Requiere JWT + Admin Role)**
+  * **POST /**: Crea un nuevo barrio. **(🔒 Requiere JWT + Admin Role)**
+    
+    **Estructura JSON requerida:**
+    ```json
+    {
+      "name": "Cerro de las Rosas",
+      "description": "Barrio residencial zona norte",
+      "cityId": "city_uuid_here",
+      "isActive": true
+    }
+    ```
+
+  * **PUT /:id**: Actualiza un barrio existente. **(🔒 Requiere JWT + Admin Role)**
+  * **DELETE /:id**: Elimina un barrio (considerar impacto en clientes/direcciones). **(🔒 Requiere JWT + Admin Role)**
+  * **GET /by-city/:cityId**: Lista barrios por ciudad (paginado). **(🔒 Requiere JWT + Admin Role)**
