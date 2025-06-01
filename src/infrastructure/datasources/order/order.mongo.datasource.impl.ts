@@ -24,21 +24,35 @@ interface ResolvedShippingDetails {
 
 export class OrderMongoDataSourceImpl implements OrderDataSource {
 
-    private readonly couponDataSource: CouponDataSource = new CouponMongoDataSourceImpl();    // --- MÉTODO HELPER PARA POBLAR (actualizado para incluir OrderStatus) ---
+    private readonly couponDataSource: CouponDataSource = new CouponMongoDataSourceImpl();
+    // --- MÉTODO HELPER PARA POBLAR (actualizado para incluir OrderStatus) ---
     private async findSaleByIdPopulated(id: string): Promise<any> {
-        if (!mongoose.Types.ObjectId.isValid(id)) return null;
-        return OrderModel.findById(id)
-            .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-            .populate({ path: 'status', model: 'OrderStatus' })
-            .populate({
-                path: 'items.product',
-                model: 'Product',
-                populate: [
-                    { path: 'category', model: 'Category' },
-                    { path: 'unit', model: 'Unit' }
-                ]
-            })
-            .lean();
+        logger.info(`[OrderDS] findSaleByIdPopulated: Received id: '${id}', length: ${id.length}`);
+        const isValidObjectId = mongoose.Types.ObjectId.isValid(id);
+        logger.info(`[OrderDS] findSaleByIdPopulated: mongoose.Types.ObjectId.isValid('${id}') is ${isValidObjectId}`);
+        if (!isValidObjectId) {
+            logger.warn(`[OrderDS] findSaleByIdPopulated: ID '${id}' is not a valid ObjectId according to mongoose.Types.ObjectId.isValid.`);
+            return null;
+        }
+        try {
+            const result = await OrderModel.findById(id)
+                .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                .populate({ path: 'status', model: 'OrderStatus' })
+                .populate({
+                    path: 'items.product',
+                    model: 'Product',
+                    populate: [
+                        { path: 'category', model: 'Category' },
+                        { path: 'unit', model: 'Unit' }
+                    ]
+                })
+                .lean();
+            logger.info(`[OrderDS] findSaleByIdPopulated: OrderModel.findById('${id}') succeeded.`);
+            return result;
+        } catch (castError: any) {
+            logger.error(`[OrderDS] findSaleByIdPopulated: OrderModel.findById('${id}') threw an error:`, { error: castError, message: castError.message, stack: castError.stack });
+            throw castError; 
+        }
     }// --- MÉTODO CREATE (actualizado para usar OrderStatus ID) ---
     async create(
         createOrderDto: CreateOrderDto,
@@ -194,21 +208,29 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             throw CustomError.internalServerError(`Error al obtener ventas: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-    // --- FIN MÉTODO getAll MODIFICADO ---    // --- findById (sin cambios) ---
-    async findById(id: string): Promise<OrderEntity> {
-        try {
-            // Validar formato ObjectId antes de buscar
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                throw CustomError.badRequest(`ID venta inválido: ${id}. Debe ser un ObjectId válido de 24 caracteres hexadecimales.`);
-            }
+    // --- FIN MÉTODO getAll MODIFICADO ---
 
+    // --- findById (sin cambios) ---
+    async findById(id: string): Promise<OrderEntity> {
+        logger.info(`[OrderDS] findById: Received id: '${id}', length: ${id.length}`);
+        try {
             const saleDoc = await this.findSaleByIdPopulated(id);
-            if (!saleDoc) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
+            if (!saleDoc) {
+                logger.warn(`[OrderDS] findById: findSaleByIdPopulated returned null for id '${id}'. Throwing notFound.`);
+                throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
+            }
             return OrderMapper.fromObjectToSaleEntity(saleDoc);
-        } catch (error) {
-            logger.error(`[OrderDS] Error buscando venta ID ${id}:`, { error });
-            if (error instanceof mongoose.Error.CastError) throw CustomError.badRequest(`ID venta inválido: ${id}`);
-            if (error instanceof CustomError) throw error;
+        } catch (error: any) {
+            logger.error(`[OrderDS] findById: Catching error for id '${id}':`, { error, message: error.message, stack: error.stack });
+            if (error instanceof mongoose.Error.CastError) {
+                logger.error(`[OrderDS] findById: Error is mongoose.Error.CastError for id '${id}'. Path: ${error.path}, Value: ${error.value}, Kind: ${error.kind}, Reason: ${error.reason?.message}`);
+                throw CustomError.badRequest(`ID venta inválido: ${id}`);
+            }
+            if (error instanceof CustomError) {
+                logger.warn(`[OrderDS] findById: Error is CustomError for id '${id}'. Message: ${error.message}, StatusCode: ${error.statusCode}`);
+                throw error;
+            }
+            logger.error(`[OrderDS] findById: Error is an unknown error for id '${id}'.`);
             throw CustomError.internalServerError(`Error buscando venta: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
