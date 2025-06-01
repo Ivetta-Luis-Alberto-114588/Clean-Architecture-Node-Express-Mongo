@@ -142,20 +142,18 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             logger.info(`[OrderDS] Finalizando sesión Mongoose crear pedido`, { session: session?.id });
             session.endSession();
         }
-    }
-
-    // --- MÉTODO getAll MODIFICADO ---
+    }    // --- MÉTODO getAll MODIFICADO ---
     async getAll(paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
         const queryFilter = {}; // Filtro vacío para obtener todos (admin)
 
-        try {            // Ejecutar conteo y búsqueda en paralelo
+        try {
+            // Ejecutar conteo y búsqueda en paralelo
             const [total, salesDocs] = await Promise.all([
                 OrderModel.countDocuments(queryFilter), // Contar todos los documentos
                 OrderModel.find(queryFilter) // Encontrar documentos para la página
                     .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-                    .populate({ path: 'status', model: 'OrderStatus' })
                     .populate({
                         path: 'items.product',
                         model: 'Product',
@@ -167,7 +165,26 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                     .lean() // Usar lean para mejor rendimiento si solo lees
             ]);
 
-            const orders = salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+            // Poblar status manualmente para evitar errores con referencias inválidas
+            const populatedSalesDocs = await Promise.all(
+                salesDocs.map(async (doc: any) => {
+                    try {
+                        // Solo intentar poblar si el status es un ObjectId válido
+                        if (doc.status && mongoose.Types.ObjectId.isValid(doc.status)) {
+                            const { OrderStatusModel } = await import('../../../data/mongodb/models/order/order-status.model');
+                            const populatedStatus = await OrderStatusModel.findById(doc.status).lean();
+                            doc.status = populatedStatus || doc.status;
+                        }
+                        // Si no es un ObjectId válido, dejarlo como está (el mapper lo manejará)
+                    } catch (error) {
+                        logger.warn(`[OrderDS] Error poblando status para orden ${doc._id}:`, { error, status: doc.status });
+                        // Dejar el status como está si hay error
+                    }
+                    return doc;
+                })
+            );
+
+            const orders = populatedSalesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
 
             return { total, orders }; // Devolver el objeto con total y orders
 
@@ -285,9 +302,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             throw CustomError.internalServerError(`No se pudo actualizar el estado del pedido ${id} después de varios intentos debido a conflictos.`);
         }
         throw CustomError.internalServerError(`Error actualizando estado venta: ${lastError?.message || String(lastError)}`);
-    }
-
-    // --- findByCustomer MODIFICADO ---
+    }    // --- findByCustomer MODIFICADO ---
     async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
@@ -298,7 +313,6 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 OrderModel.countDocuments(queryFilter),
                 OrderModel.find(queryFilter)
                     .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-                    .populate({ path: 'status', model: 'OrderStatus' })
                     .populate({
                         path: 'items.product',
                         model: 'Product',
@@ -310,7 +324,26 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                     .lean()
             ]);
 
-            const orders = salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+            // Poblar status manualmente para evitar errores con referencias inválidas
+            const populatedSalesDocs = await Promise.all(
+                salesDocs.map(async (doc: any) => {
+                    try {
+                        // Solo intentar poblar si el status es un ObjectId válido
+                        if (doc.status && mongoose.Types.ObjectId.isValid(doc.status)) {
+                            const { OrderStatusModel } = await import('../../../data/mongodb/models/order/order-status.model');
+                            const populatedStatus = await OrderStatusModel.findById(doc.status).lean();
+                            doc.status = populatedStatus || doc.status;
+                        }
+                        // Si no es un ObjectId válido, dejarlo como está (el mapper lo manejará)
+                    } catch (error) {
+                        logger.warn(`[OrderDS] Error poblando status para orden ${doc._id}:`, { error, status: doc.status });
+                        // Dejar el status como está si hay error
+                    }
+                    return doc;
+                })
+            );
+
+            const orders = populatedSalesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
             return { total, orders };
 
         } catch (error) {
@@ -319,9 +352,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             throw CustomError.internalServerError(`Error buscando ventas por cliente: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-    // --- FIN findByCustomer MODIFICADO ---
-
-    // --- findByDateRange MODIFICADO ---
+    // --- FIN findByCustomer MODIFICADO ---    // --- findByDateRange MODIFICADO ---
     async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
@@ -334,7 +365,6 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 OrderModel.countDocuments(queryFilter),
                 OrderModel.find(queryFilter)
                     .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-                    .populate({ path: 'status', model: 'OrderStatus' })
                     .populate({
                         path: 'items.product',
                         model: 'Product',
@@ -346,7 +376,26 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                     .lean()
             ]);
 
-            const orders = salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+            // Poblar status manualmente para evitar errores con referencias inválidas
+            const populatedSalesDocs = await Promise.all(
+                salesDocs.map(async (doc: any) => {
+                    try {
+                        // Solo intentar poblar si el status es un ObjectId válido
+                        if (doc.status && mongoose.Types.ObjectId.isValid(doc.status)) {
+                            const { OrderStatusModel } = await import('../../../data/mongodb/models/order/order-status.model');
+                            const populatedStatus = await OrderStatusModel.findById(doc.status).lean();
+                            doc.status = populatedStatus || doc.status;
+                        }
+                        // Si no es un ObjectId válido, dejarlo como está (el mapper lo manejará)
+                    } catch (error) {
+                        logger.warn(`[OrderDS] Error poblando status para orden ${doc._id}:`, { error, status: doc.status });
+                        // Dejar el status como está si hay error
+                    }
+                    return doc;
+                })
+            );
+
+            const orders = populatedSalesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
             return { total, orders };
 
         } catch (error) {
