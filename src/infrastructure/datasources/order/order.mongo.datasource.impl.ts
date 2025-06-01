@@ -194,11 +194,14 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             throw CustomError.internalServerError(`Error al obtener ventas: ${error instanceof Error ? error.message : String(error)}`);
         }
     }
-    // --- FIN MÉTODO getAll MODIFICADO ---
-
-    // --- findById (sin cambios) ---
+    // --- FIN MÉTODO getAll MODIFICADO ---    // --- findById (sin cambios) ---
     async findById(id: string): Promise<OrderEntity> {
         try {
+            // Validar formato ObjectId antes de buscar
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                throw CustomError.badRequest(`ID venta inválido: ${id}. Debe ser un ObjectId válido de 24 caracteres hexadecimales.`);
+            }
+
             const saleDoc = await this.findSaleByIdPopulated(id);
             if (!saleDoc) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
             return OrderMapper.fromObjectToSaleEntity(saleDoc);
