@@ -51,8 +51,9 @@ export class AdminOrderRoutes {
         // --- Rutas de gestión de pedidos para Admin (sin cambios aquí) ---
         router.get('/', controller.getAllSales);
         router.get('/:id', controller.getSaleById);
-        router.patch('/:id/status', controller.updateSaleStatus);
+        router.get('/dashboard-view', controller.getOrdersForDashboard);
         router.get('/by-customer/:customerId', controller.getSalesByCustomer);
+        router.patch('/:id/status', controller.updateSaleStatus);
         router.post('/by-date-range', controller.getSalesByDateRange);
 
         return router;

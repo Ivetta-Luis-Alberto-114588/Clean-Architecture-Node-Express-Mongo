@@ -53,4 +53,8 @@ export class OrderRepositoryImpl implements OrderRepository {
         return this.orderDataSource.findByDateRange(startDate, endDate, paginationDto);
     }
     // --- FIN MÉTODO findByDateRange MODIFICADO ---
+
+    async findByStatus(statusId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
+        return this.orderDataSource.findByStatus(statusId, paginationDto);
+    }
 }

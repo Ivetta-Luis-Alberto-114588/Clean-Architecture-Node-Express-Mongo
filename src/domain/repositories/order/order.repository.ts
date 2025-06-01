@@ -35,4 +35,6 @@ export abstract class OrderRepository {
     // --- FIRMA MODIFICADA ---
     abstract findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }>;
     // --- FIN FIRMA MODIFICADA ---
+
+    abstract findByStatus(statusId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }>; // NUEVO
 }

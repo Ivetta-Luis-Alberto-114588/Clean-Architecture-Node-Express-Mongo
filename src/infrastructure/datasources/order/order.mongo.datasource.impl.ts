@@ -1,6 +1,7 @@
 // src/infrastructure/datasources/order/order.mongo.datasource.impl.ts
 import mongoose from "mongoose";
 import { OrderModel } from "../../../data/mongodb/models/order/order.model";
+import { OrderStatusModel } from "../../../data/mongodb/models/order/order-status.model";
 import { ProductModel } from "../../../data/mongodb/models/products/product.model";
 import { CustomerModel } from "../../../data/mongodb/models/customers/customer.model";
 import { OrderDataSource } from "../../../domain/datasources/order/order.datasource";
@@ -51,7 +52,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             return result;
         } catch (castError: any) {
             logger.error(`[OrderDS] findSaleByIdPopulated: OrderModel.findById('${id}') threw an error:`, { error: castError, message: castError.message, stack: castError.stack });
-            throw castError; 
+            throw castError;
         }
     }// --- MÉTODO CREATE (actualizado para usar OrderStatus ID) ---
     async create(
@@ -237,7 +238,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
 
     // --- updateStatus (sin cambios) ---
     async updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<OrderEntity> {
-        let retries = 3;
+        let retries = 3; // Para manejar posibles WriteConflicts
         let lastError: any = null;
 
         while (retries > 0) {
@@ -249,28 +250,60 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 if (!mongoose.Types.ObjectId.isValid(id)) throw CustomError.badRequest("ID de pedido inválido");
 
                 const sale = await OrderModel.findById(id).session(session);
-                if (!sale) throw CustomError.notFound(`Venta con ID ${id} no encontrada`); if (sale.status && sale.status.toString() === updateOrderStatusDto.statusId) {
-                    logger.info(`[OrderDS] Pedido ${id} ya está en el estado ${updateOrderStatusDto.statusId}.`);
+                if (!sale) throw CustomError.notFound(`Venta con ID ${id} no encontrada`);
+
+                // Si el estado ya es el deseado, no hacer nada más que actualizar notas si vienen
+                if (sale.status && sale.status.toString() === updateOrderStatusDto.statusId) {
+                    if (updateOrderStatusDto.notes !== undefined && sale.notes !== updateOrderStatusDto.notes) {
+                        sale.notes = updateOrderStatusDto.notes;
+                        await sale.save({ session });
+                        logger.info(`[OrderDS] Pedido ${id} ya en estado ${updateOrderStatusDto.statusId}. Solo notas actualizadas.`);
+                    } else {
+                        logger.info(`[OrderDS] Pedido ${id} ya está en el estado ${updateOrderStatusDto.statusId}. Sin cambios.`);
+                    }
                     await session.commitTransaction();
                     session.endSession();
-                    const currentSaleDoc = await this.findSaleByIdPopulated(id);
+                    const currentSaleDoc = await this.findSaleByIdPopulated(id); // Reutilizar helper
                     if (!currentSaleDoc) throw CustomError.internalServerError("Error al recuperar venta sin cambios.");
                     return OrderMapper.fromObjectToSaleEntity(currentSaleDoc);
                 }
 
-                // Para manejar la lógica de cancelación, necesitamos obtener los códigos de estado
-                // Esto requiere consultar la colección OrderStatus
-                const { OrderStatusModel } = await import('../../../data/mongodb/models/order/order-status.model');
+                // --- VALIDACIÓN DE TRANSICIÓN ---
+                const currentStatusId = sale.status; // Este es un ObjectId o null/undefined
+                const newStatusId = new mongoose.Types.ObjectId(updateOrderStatusDto.statusId);
+
+                if (currentStatusId) { // Solo validar si hay un estado actual
+                    const currentStatusDoc = await OrderStatusModel.findById(currentStatusId).session(session).lean();
+                    const newStatusDoc = await OrderStatusModel.findById(newStatusId).session(session).lean();
+
+                    if (!currentStatusDoc) throw CustomError.internalServerError(`Estado actual ID ${currentStatusId} no encontrado para pedido ${id}`);
+                    if (!newStatusDoc) throw CustomError.badRequest(`Nuevo estado ID ${newStatusId} no encontrado`);
+
+                    if (!newStatusDoc.isActive) {
+                        throw CustomError.badRequest(`No se puede cambiar a un estado inactivo ('${newStatusDoc.name}')`);
+                    }
+
+                    // Verificar si la transición está permitida
+                    const isTransitionAllowed = currentStatusDoc.canTransitionTo?.some(
+                        (allowedId: mongoose.Types.ObjectId) => allowedId.equals(newStatusId)
+                    );
+
+                    if (currentStatusDoc.canTransitionTo && currentStatusDoc.canTransitionTo.length > 0 && !isTransitionAllowed) {
+                        throw CustomError.badRequest(`Transición de estado de '${currentStatusDoc.name}' a '${newStatusDoc.name}' no permitida.`);
+                    }
+                    // Si canTransitionTo está vacío, algunas lógicas permiten cualquier transición (si no es final).
+                    // Si canTransitionTo no existe o es vacío y NO es un estado final, se podría permitir. Ajustar según tu lógica.
+                    // Por ahora, si canTransitionTo tiene elementos, se debe cumplir. Si está vacío, se deniega a menos que no haya restricciones.
+                }
+                // --- FIN VALIDACIÓN ---
 
                 let shouldRestoreStock = false;
                 if (updateOrderStatusDto.statusId) {
-                    const [newStatus, currentStatus] = await Promise.all([
-                        OrderStatusModel.findById(updateOrderStatusDto.statusId).session(session),
-                        sale.status ? OrderStatusModel.findById(sale.status).session(session) : null
-                    ]);
+                    const newStatus = await OrderStatusModel.findById(newStatusId).session(session);
+                    const currentStatus = sale.status ? await OrderStatusModel.findById(sale.status).session(session) : null;
 
-                    // Si el nuevo estado es 'cancelled' y el estado actual era 'pending' o 'completed'
-                    if (newStatus?.code === 'CANCELLED' && currentStatus && ['PENDING', 'COMPLETED'].includes(currentStatus.code)) {
+                    // Lógica de restauración de stock (ejemplo)
+                    if (newStatus?.code === 'CANCELLED' && currentStatus && ['PENDING', 'COMPLETED', 'PREPARING'].includes(currentStatus.code)) {
                         shouldRestoreStock = true;
                     }
                 }
@@ -278,28 +311,27 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 if (shouldRestoreStock) {
                     logger.info(`[OrderDS] Cancelando pedido ${id}. Restaurando stock...`);
                     for (const item of sale.items) {
-                        const stockUpdateResult = await ProductModel.updateOne(
-                            { _id: item.product, stock: { $gte: 0 } },
+                        await ProductModel.updateOne( // ProductModel debe ser importado
+                            { _id: item.product },
                             { $inc: { stock: item.quantity } },
                             { session }
                         );
-                        if (stockUpdateResult.modifiedCount > 0) {
-                            logger.debug(`[OrderDS] Stock restaurado para prod ${item.product} (+${item.quantity})`);
-                        } else {
-                            logger.warn(`[OrderDS] No se pudo restaurar stock para prod ${item.product}`);
-                        }
+                        logger.debug(`[OrderDS] Stock restaurado para prod ${item.product} (+${item.quantity})`);
                     }
                 }
 
-                sale.status = new mongoose.Types.ObjectId(updateOrderStatusDto.statusId);
-                if (updateOrderStatusDto.notes !== undefined) sale.notes = updateOrderStatusDto.notes; await sale.save({ session });
+                sale.status = newStatusId;
+                if (updateOrderStatusDto.notes !== undefined) {
+                    sale.notes = updateOrderStatusDto.notes;
+                }
+                await sale.save({ session });
                 logger.info(`[OrderDS] Estado pedido ${id} actualizado a ${updateOrderStatusDto.statusId}`);
 
                 await session.commitTransaction();
                 logger.info(`[OrderDS] TX commit (Intento ${4 - retries}) actualización estado pedido ${id}`);
                 session.endSession();
 
-                const updatedSaleDoc = await this.findSaleByIdPopulated(id);
+                const updatedSaleDoc = await this.findSaleByIdPopulated(id); // Reutilizar helper
                 if (!updatedSaleDoc) throw CustomError.internalServerError("Error recuperando venta actualizada post-commit.");
                 return OrderMapper.fromObjectToSaleEntity(updatedSaleDoc);
 
@@ -309,25 +341,64 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 logger.warn(`[OrderDS] TX abortada (Intento ${4 - retries}) para pedido ${id}`, { session: session.id, error: error.message });
                 session.endSession();
 
-                if (error.code === 112 && retries > 1) {
+                if (error.code === 112 && retries > 1) { // Error de WriteConflict en MongoDB
                     retries--;
-                    const delay = Math.pow(2, 3 - retries) * 100;
+                    const delay = Math.pow(2, 3 - retries) * 100; // Backoff exponencial
                     logger.warn(`WriteConflict detectado para pedido ${id}. Reintentando en ${delay}ms... (${retries} intentos restantes)`);
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    continue;
+                    continue; // Reintentar el bucle while
                 } else {
-                    break;
+                    break; // Salir del bucle si no es WriteConflict o se agotaron reintentos
                 }
             }
         }
 
+        // Si todos los reintentos fallan
         logger.error(`[OrderDS] Error final TX actualizar estado pedido ${id}`, { error: lastError });
         if (lastError instanceof CustomError) throw lastError;
-        if (lastError && lastError.code === 112) {
+        if (lastError && lastError.code === 112) { // E11000 duplicate key error
             throw CustomError.internalServerError(`No se pudo actualizar el estado del pedido ${id} después de varios intentos debido a conflictos.`);
         }
         throw CustomError.internalServerError(`Error actualizando estado venta: ${lastError?.message || String(lastError)}`);
-    }    // --- findByCustomer MODIFICADO ---
+    }
+
+
+    async findByStatus(statusId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
+        const { page, limit } = paginationDto;
+        const skip = (page - 1) * limit;
+        const queryFilter = { status: new mongoose.Types.ObjectId(statusId) };
+
+        try {
+            if (!mongoose.Types.ObjectId.isValid(statusId)) throw CustomError.badRequest("ID de estado inválido");
+
+            const [total, salesDocs] = await Promise.all([
+                OrderModel.countDocuments(queryFilter),
+                OrderModel.find(queryFilter)
+                    .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                    .populate({ path: 'status', model: 'OrderStatus' }) // Poblar el estado
+                    .populate({
+                        path: 'items.product',
+                        model: 'Product',
+                        populate: [{ path: 'category' }, { path: 'unit' }]
+                    })
+                    .limit(limit)
+                    .skip(skip)
+                    .sort({ date: -1 }) // O el orden que prefieras para el dashboard
+                    .lean()
+            ]);
+
+            const orders = salesDocs.map(doc => OrderMapper.fromObjectToSaleEntity(doc));
+            return { total, orders };
+
+        } catch (error) {
+            logger.error(`[OrderDS] Error buscando ventas por estado ${statusId}:`, { error });
+            if (error instanceof CustomError) throw error;
+            throw CustomError.internalServerError(`Error buscando ventas por estado: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+
+
+    // --- findByCustomer MODIFICADO ---
     async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;

@@ -19,6 +19,8 @@ import { GetMyOrdersUseCase } from "../../domain/use-cases/order/get-my-orders.u
 import { NeighborhoodRepository } from "../../domain/repositories/customers/neighborhood.repository";
 import { CityRepository } from "../../domain/repositories/customers/city.repository";
 import { OrderStatusRepository } from "../../domain/repositories/order/order-status.repository";
+// import { GetOrdersForDashboardUseCase } from '../../domain/use-cases/order/get-orders-for-dashboard.use-case'; // NUEVO
+import { GetOrdersForDashboardUseCase } from './../../domain/use-cases/order/get-orders-for-dashboard.use-case'; // NUEVO
 
 export class OrderController {
 
@@ -30,7 +32,10 @@ export class OrderController {
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
         private readonly orderStatusRepository: OrderStatusRepository,
+
     ) { }
+
+
 
     private handleError = (error: unknown, res: Response) => {
         if (error instanceof CustomError) {
@@ -39,6 +44,17 @@ export class OrderController {
         logger.error("Error en OrderController:", { error: error instanceof Error ? error.stack : error });
         return res.status(500).json({ error: "Error interno del servidor" });
     };
+
+    getOrdersForDashboard = async (req: Request, res: Response): Promise<void> => {
+        try {
+            // El UseCase se encargará de la lógica de obtener estados y sus órdenes
+            const data = await new GetOrdersForDashboardUseCase(this.orderRepository, this.orderStatusRepository).execute();
+            res.json(data);
+        } catch (error) {
+            this.handleError(error, res);
+        }
+    };
+
 
     // --- MÉTODO getAllSales MODIFICADO ---
     getAllSales = (req: Request, res: Response): void => {
