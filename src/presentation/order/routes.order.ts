@@ -16,6 +16,7 @@ import { CityMongoDataSourceImpl } from "../../infrastructure/datasources/custom
 import { CityRepositoryImpl } from "../../infrastructure/repositories/customers/city.repository.impl";
 import { OrderStatusMongoDataSourceImpl } from "../../infrastructure/datasources/order/order-status.mongo.datasource.impl";
 import { OrderStatusRepositoryImpl } from "../../infrastructure/repositories/order/order-status.repository.impl";
+import { UpdateOrderUseCase } from "../../domain/use-cases/order/update-order.use-case";
 
 export class OrderRoutes {
     static get getOrderRoutes(): Router {
@@ -26,36 +27,43 @@ export class OrderRoutes {
         const customerDatasource = new CustomerMongoDataSourceImpl();
         const productDatasource = new ProductMongoDataSourceImpl();
         const couponDatasource = new CouponMongoDataSourceImpl();
-        const neighborhoodDatasource = new NeighborhoodMongoDataSourceImpl(); // <<<--- NUEVO
-        const cityDatasource = new CityMongoDataSourceImpl();             // <<<--- NUEVO
-
+        const neighborhoodDatasource = new NeighborhoodMongoDataSourceImpl();
+        const cityDatasource = new CityMongoDataSourceImpl();
+        const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
+        
+        // Repositorios
         const orderRepository = new OrderRepositoryImpl(orderDatasource);
         const customerRepository = new CustomerRepositoryImpl(customerDatasource);
-        const productRepository = new ProductRepositoryImpl(productDatasource); const couponRepository = new CouponRepositoryImpl(couponDatasource);
-        const neighborhoodRepository = new NeighborhoodRepositoryImpl(neighborhoodDatasource); // <<<--- NUEVO
-        const cityRepository = new CityRepositoryImpl(cityDatasource);                         // <<<--- NUEVO
-        const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
+        const productRepository = new ProductRepositoryImpl(productDatasource);
+        const couponRepository = new CouponRepositoryImpl(couponDatasource);
+        const neighborhoodRepository = new NeighborhoodRepositoryImpl(neighborhoodDatasource);
+        const cityRepository = new CityRepositoryImpl(cityDatasource);
         const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);
 
-        // <<<--- PASAR NUEVAS DEPENDENCIAS AL CONTROLLER --- >>>
+        // Use case para actualizar pedidos
+        const updateOrderUseCase = new UpdateOrderUseCase(orderRepository);
+        
+        // Controller con todas las dependencias
         const controller = new OrderController(
             orderRepository,
             customerRepository,
             productRepository,
             couponRepository,
-            neighborhoodRepository, // Pasar
-            cityRepository,          // Pasar
-            orderStatusRepository   // Pasar OrderStatus repository
+            neighborhoodRepository,
+            cityRepository,
+            orderStatusRepository,
+            updateOrderUseCase
         );
 
-        // --- Rutas (sin cambios aquí) ---
+        // Rutas
         router.post('/', [AuthMiddleware.validateJwt], controller.createSale);
         router.get('/my-orders', [AuthMiddleware.validateJwt], controller.getMyOrders);
         router.get('/', controller.getAllSales);
         router.get('/:id', controller.getSaleById);
         router.patch('/:id/status', controller.updateSaleStatus);
         router.get('/by-customer/:customerId', controller.getSalesByCustomer);
-        router.post('/by-date-range', controller.getSalesByDateRange);
+        router.post('/by-date-range', controller.getSalesByDateRange);        // NUEVO: endpoint para actualizar completamente un pedido
+        router.put('/:id', [AuthMiddleware.validateJwt], controller.updateSale);
 
         return router;
     }

@@ -274,7 +274,6 @@ npm test
 
 **(Opcional: Especifica tu licencia, ej. MIT)**
 
-
 ## 🌐 API Endpoints Detallados
 
 ---
@@ -282,9 +281,11 @@ npm test
 ### Autenticación (**/api/auth**)
 
 #### **POST /register**
+
 - **Descripción**: Registra un nuevo usuario en el sistema y crea un perfil de cliente básico asociado.
 - **Autenticación**: No requerida
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido)",
@@ -292,7 +293,9 @@ npm test
   "password": "string (requerido, mínimo 6 caracteres)"
 }
 ```
+
 - **Respuesta exitosa (201)**:
+
 ```json
 {
   "user": {
@@ -307,17 +310,21 @@ npm test
 ```
 
 #### **POST /login**
+
 - **Descripción**: Autentica a un usuario existente usando email y contraseña, devuelve un token JWT.
 - **Autenticación**: No requerida
 - **Rate Limit**: Aplicado
 - **Cuerpo de la petición**:
+
 ```json
 {
   "email": "string (requerido, formato email válido)",
   "password": "string (requerido)"
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "user": {
@@ -332,9 +339,11 @@ npm test
 ```
 
 #### **GET /**
+
 - **Descripción**: Verifica un token JWT válido y devuelve los datos del usuario autenticado.
 - **Autenticación**: JWT requerido
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "user": {
@@ -348,12 +357,14 @@ npm test
 ```
 
 #### **GET /all**
+
 - **Descripción**: Obtiene una lista paginada de todos los usuarios registrados.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Query Parameters**:
   - `page`: number (opcional, default: 1)
   - `limit`: number (opcional, default: 10)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "total": "number",
@@ -372,10 +383,12 @@ npm test
 ```
 
 #### **PUT /:id**
+
 - **Descripción**: Actualiza la información de un usuario específico.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del usuario)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (opcional)",
@@ -383,7 +396,9 @@ npm test
   "role": ["string"] (opcional)
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Usuario actualizado",
@@ -398,10 +413,12 @@ npm test
 ```
 
 #### **DELETE /:id**
+
 - **Descripción**: Elimina un usuario específico del sistema.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del usuario)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Usuario eliminado"
@@ -409,16 +426,20 @@ npm test
 ```
 
 #### **POST /forgot-password**
+
 - **Descripción**: Inicia el proceso de recuperación de contraseña.
 - **Autenticación**: No requerida
 - **Rate Limit**: Aplicado
 - **Cuerpo de la petición**:
+
 ```json
 {
   "email": "string (requerido, formato email válido)"
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Si el email está registrado, recibirás un enlace de recuperación"
@@ -426,17 +447,21 @@ npm test
 ```
 
 #### **POST /reset-password**
+
 - **Descripción**: Permite establecer una nueva contraseña usando un token válido.
 - **Autenticación**: No requerida
 - **Rate Limit**: Aplicado
 - **Cuerpo de la petición**:
+
 ```json
 {
   "token": "string (requerido, token recibido por email)",
   "password": "string (requerido, nueva contraseña)"
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Contraseña actualizada exitosamente"
@@ -448,6 +473,7 @@ npm test
 ### Productos (**/api/products**)
 
 #### **GET /search**
+
 - **Descripción**: Realiza búsquedas de productos por palabra clave y permite filtrar por categorías, etiquetas, rango de precios, y ordenar los resultados.
 - **Autenticación**: No requerida
 - **Query Parameters**:
@@ -461,6 +487,7 @@ npm test
   - `page`: number (opcional, default: 1)
   - `limit`: number (opcional, default: 10)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "total": "number",
@@ -492,6 +519,7 @@ npm test
 ```
 
 #### **GET /by-category/:categoryId**
+
 - **Descripción**: Lista productos pertenecientes a una categoría específica.
 - **Autenticación**: No requerida
 - **Parámetros de ruta**: `categoryId` (ObjectId de la categoría)
@@ -501,6 +529,7 @@ npm test
 - **Respuesta exitosa (200)**: Misma estructura que `/search`
 
 #### **GET /**
+
 - **Descripción**: Lista todos los productos activos.
 - **Autenticación**: No requerida
 - **Query Parameters**:
@@ -509,10 +538,12 @@ npm test
 - **Respuesta exitosa (200)**: Misma estructura que `/search`
 
 #### **GET /:id**
+
 - **Descripción**: Obtiene los detalles de un producto específico por su ID.
 - **Autenticación**: No requerida
 - **Parámetros de ruta**: `id` (ObjectId del producto)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "id": "string",
@@ -539,6 +570,7 @@ npm test
 ```
 
 #### **POST /**
+
 - **Descripción**: Crea un nuevo producto.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Tipo de contenido**: `multipart/form-data`
@@ -556,6 +588,7 @@ npm test
 - **Respuesta exitosa (201)**: Misma estructura que GET /:id
 
 #### **PUT /:id**
+
 - **Descripción**: Actualiza un producto existente.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del producto)
@@ -564,10 +597,12 @@ npm test
 - **Respuesta exitosa (200)**: Misma estructura que GET /:id
 
 #### **DELETE /:id**
+
 - **Descripción**: Elimina un producto y su imagen asociada.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del producto)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Producto eliminado",
@@ -583,12 +618,14 @@ npm test
 ### Categorías (**/api/categories**)
 
 #### **GET /**
+
 - **Descripción**: Lista todas las categorías disponibles.
 - **Autenticación**: No requerida
 - **Query Parameters**:
   - `page`: number (opcional, default: 1)
   - `limit`: number (opcional, default: 10)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "total": "number",
@@ -604,10 +641,12 @@ npm test
 ```
 
 #### **GET /:id**
+
 - **Descripción**: Obtiene una categoría específica por su ID.
 - **Autenticación**: No requerida
 - **Parámetros de ruta**: `id` (ObjectId de la categoría)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "id": "string",
@@ -618,9 +657,11 @@ npm test
 ```
 
 #### **POST /**
+
 - **Descripción**: Crea una nueva categoría.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido)",
@@ -628,13 +669,16 @@ npm test
   "isActive": "boolean (requerido)"
 }
 ```
+
 - **Respuesta exitosa (201)**: Misma estructura que GET /:id
 
 #### **PUT /:id**
+
 - **Descripción**: Actualiza una categoría existente.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId de la categoría)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (opcional)",
@@ -642,13 +686,16 @@ npm test
   "isActive": "boolean (opcional)"
 }
 ```
+
 - **Respuesta exitosa (200)**: Misma estructura que GET /:id
 
 #### **DELETE /:id**
+
 - **Descripción**: Elimina una categoría.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId de la categoría)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Categoría eliminada"
@@ -660,12 +707,14 @@ npm test
 ### Tags (Etiquetas) (**/api/tags**)
 
 #### **GET /**
+
 - **Descripción**: Lista todas las etiquetas activas disponibles.
 - **Autenticación**: No requerida
 - **Query Parameters**:
   - `page`: number (opcional, default: 1)
   - `limit`: number (opcional, default: 10)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "total": "number",
@@ -687,12 +736,14 @@ npm test
 ### Unidades (**/api/units**)
 
 #### **GET /**
+
 - **Descripción**: Lista todas las unidades de medida disponibles.
 - **Autenticación**: No requerida
 - **Query Parameters**:
   - `page`: number (opcional, default: 1)
   - `limit`: number (opcional, default: 10)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "total": "number",
@@ -708,10 +759,12 @@ npm test
 ```
 
 #### **GET /:id**
+
 - **Descripción**: Obtiene una unidad específica por su ID.
 - **Autenticación**: No requerida
 - **Parámetros de ruta**: `id` (ObjectId de la unidad)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "id": "string",
@@ -722,9 +775,11 @@ npm test
 ```
 
 #### **POST /**
+
 - **Descripción**: Crea una nueva unidad de medida.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido)",
@@ -732,13 +787,16 @@ npm test
   "isActive": "boolean (opcional, default: true)"
 }
 ```
+
 - **Respuesta exitosa (201)**: Misma estructura que GET /:id
 
 #### **PUT /:id**
+
 - **Descripción**: Actualiza una unidad existente.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId de la unidad)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (opcional)",
@@ -746,13 +804,16 @@ npm test
   "isActive": "boolean (opcional)"
 }
 ```
+
 - **Respuesta exitosa (200)**: Misma estructura que GET /:id
 
 #### **DELETE /:id**
+
 - **Descripción**: Elimina una unidad.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId de la unidad)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Unidad eliminada"
@@ -764,12 +825,14 @@ npm test
 ### Ciudades (**/api/cities**)
 
 #### **GET /**
+
 - **Descripción**: Lista todas las ciudades disponibles.
 - **Autenticación**: No requerida
 - **Query Parameters**:
   - `page`: number (opcional, default: 1)
   - `limit`: number (opcional, default: 10)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "total": "number",
@@ -785,10 +848,12 @@ npm test
 ```
 
 #### **GET /:id**
+
 - **Descripción**: Obtiene una ciudad específica por su ID.
 - **Autenticación**: No requerida
 - **Parámetros de ruta**: `id` (ObjectId de la ciudad)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "id": "string",
@@ -799,15 +864,18 @@ npm test
 ```
 
 #### **GET /by-name/:name**
+
 - **Descripción**: Busca una ciudad por su nombre exacto.
 - **Autenticación**: No requerida
 - **Parámetros de ruta**: `name` (nombre exacto de la ciudad)
 - **Respuesta exitosa (200)**: Misma estructura que GET /:id
 
 #### **POST /**
+
 - **Descripción**: Crea una nueva ciudad.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido)",
@@ -815,13 +883,16 @@ npm test
   "isActive": "boolean (opcional, default: true)"
 }
 ```
+
 - **Respuesta exitosa (201)**: Misma estructura que GET /:id
 
 #### **PUT /:id**
+
 - **Descripción**: Actualiza una ciudad existente.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId de la ciudad)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (opcional)",
@@ -829,13 +900,16 @@ npm test
   "isActive": "boolean (opcional)"
 }
 ```
+
 - **Respuesta exitosa (200)**: Misma estructura que GET /:id
 
 #### **DELETE /:id**
+
 - **Descripción**: Elimina una ciudad.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId de la ciudad)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Ciudad eliminada"
@@ -847,12 +921,14 @@ npm test
 ### Barrios (**/api/neighborhoods**)
 
 #### **GET /**
+
 - **Descripción**: Lista todos los barrios disponibles.
 - **Autenticación**: No requerida
 - **Query Parameters**:
   - `page`: number (opcional, default: 1)
   - `limit`: number (opcional, default: 10)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "total": "number",
@@ -874,10 +950,12 @@ npm test
 ```
 
 #### **GET /:id**
+
 - **Descripción**: Obtiene un barrio específico por su ID.
 - **Autenticación**: No requerida
 - **Parámetros de ruta**: `id` (ObjectId del barrio)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "id": "string",
@@ -894,6 +972,7 @@ npm test
 ```
 
 #### **GET /by-city/:cityId**
+
 - **Descripción**: Lista barrios pertenecientes a una ciudad específica.
 - **Autenticación**: No requerida
 - **Parámetros de ruta**: `cityId` (ObjectId de la ciudad)
@@ -903,9 +982,11 @@ npm test
 - **Respuesta exitosa (200)**: Misma estructura que GET /
 
 #### **POST /**
+
 - **Descripción**: Crea un nuevo barrio asociado a una ciudad.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido)",
@@ -914,13 +995,16 @@ npm test
   "isActive": "boolean (opcional, default: true)"
 }
 ```
+
 - **Respuesta exitosa (201)**: Misma estructura que GET /:id
 
 #### **PUT /:id**
+
 - **Descripción**: Actualiza un barrio existente.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del barrio)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (opcional)",
@@ -929,13 +1013,16 @@ npm test
   "isActive": "boolean (opcional)"
 }
 ```
+
 - **Respuesta exitosa (200)**: Misma estructura que GET /:id
 
 #### **DELETE /:id**
+
 - **Descripción**: Elimina un barrio.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del barrio)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Barrio eliminado"
@@ -947,12 +1034,14 @@ npm test
 ### Clientes (**/api/customers**)
 
 #### **GET /**
+
 - **Descripción**: Lista todos los clientes registrados en el sistema.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Query Parameters**:
   - `page`: number (opcional, default: 1)
   - `limit`: number (opcional, default: 10)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "total": "number",
@@ -983,12 +1072,14 @@ npm test
 ```
 
 #### **GET /:id**
+
 - **Descripción**: Obtiene un cliente específico por su ID.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del cliente)
 - **Respuesta exitosa (200)**: Misma estructura que elemento individual de GET /
 
 #### **GET /by-neighborhood/:neighborhoodId**
+
 - **Descripción**: Lista clientes por barrio específico.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `neighborhoodId` (ObjectId del barrio)
@@ -998,15 +1089,18 @@ npm test
 - **Respuesta exitosa (200)**: Misma estructura que GET /
 
 #### **GET /by-email/:email**
+
 - **Descripción**: Busca un cliente por su dirección de email.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `email` (email del cliente)
 - **Respuesta exitosa (200)**: Misma estructura que elemento individual de GET /
 
 #### **POST /**
+
 - **Descripción**: Crea un nuevo cliente directamente (útil para cargas iniciales).
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido)",
@@ -1018,9 +1112,11 @@ npm test
   "userId": "string (opcional, ObjectId del usuario asociado)"
 }
 ```
+
 - **Respuesta exitosa (201)**: Misma estructura que GET /:id
 
 #### **PUT /:id**
+
 - **Descripción**: Actualiza la información de un cliente.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del cliente)
@@ -1028,10 +1124,12 @@ npm test
 - **Respuesta exitosa (200)**: Misma estructura que GET /:id
 
 #### **DELETE /:id**
+
 - **Descripción**: Elimina un cliente y sus datos asociados.
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del cliente)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Cliente eliminado"
@@ -1045,9 +1143,11 @@ npm test
 **Nota: Todos los endpoints requieren autenticación JWT**
 
 #### **POST /**
+
 - **Descripción**: Crea una nueva dirección de envío para el usuario autenticado.
 - **Autenticación**: JWT requerido
 - **Cuerpo de la petición**:
+
 ```json
 {
   "recipientName": "string (requerido)",
@@ -1061,7 +1161,9 @@ npm test
   "alias": "string (opcional)"
 }
 ```
+
 - **Respuesta exitosa (201)**:
+
 ```json
 {
   "id": "string",
@@ -1098,12 +1200,14 @@ npm test
 ```
 
 #### **GET /**
+
 - **Descripción**: Obtiene la lista de direcciones guardadas del usuario autenticado.
 - **Autenticación**: JWT requerido
 - **Query Parameters**:
   - `page`: number (opcional, default: 1)
   - `limit`: number (opcional, default: 10)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "total": "number",
@@ -1143,6 +1247,7 @@ npm test
 ```
 
 #### **PUT /:id**
+
 - **Descripción**: Actualiza una dirección específica del usuario autenticado.
 - **Autenticación**: JWT requerido
 - **Parámetros de ruta**: `id` (ObjectId de la dirección)
@@ -1150,10 +1255,12 @@ npm test
 - **Respuesta exitosa (200)**: Misma estructura que POST /
 
 #### **DELETE /:id**
+
 - **Descripción**: Elimina una dirección específica del usuario autenticado.
 - **Autenticación**: JWT requerido
 - **Parámetros de ruta**: `id` (ObjectId de la dirección)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Dirección eliminada"
@@ -1161,10 +1268,12 @@ npm test
 ```
 
 #### **PATCH /:id/default**
+
 - **Descripción**: Marca una dirección como predeterminada para el usuario autenticado.
 - **Autenticación**: JWT requerido
 - **Parámetros de ruta**: `id` (ObjectId de la dirección)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Dirección marcada como predeterminada",
@@ -1182,9 +1291,11 @@ npm test
 **Nota: Todos los endpoints requieren autenticación JWT**
 
 #### **GET /**
+
 - **Descripción**: Obtiene el contenido actual del carrito del usuario autenticado.
 - **Autenticación**: JWT requerido
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "id": "string",
@@ -1237,39 +1348,48 @@ npm test
 ```
 
 #### **POST /items**
+
 - **Descripción**: Añade un producto al carrito o incrementa su cantidad si ya existe.
 - **Autenticación**: JWT requerido
 - **Cuerpo de la petición**:
+
 ```json
 {
   "productId": "string (requerido, ObjectId válido)",
   "quantity": "number (requerido, entero positivo)"
 }
 ```
+
 - **Respuesta exitosa (200)**: Misma estructura que GET /
 
 #### **PUT /items/:productId**
+
 - **Descripción**: Establece una cantidad específica para un producto en el carrito (si es 0, lo elimina).
 - **Autenticación**: JWT requerido
 - **Parámetros de ruta**: `productId` (ObjectId del producto)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "quantity": "number (requerido, entero no negativo)"
 }
 ```
+
 - **Respuesta exitosa (200)**: Misma estructura que GET /
 
 #### **DELETE /items/:productId**
+
 - **Descripción**: Elimina un producto específico del carrito.
 - **Autenticación**: JWT requerido
 - **Parámetros de ruta**: `productId` (ObjectId del producto)
 - **Respuesta exitosa (200)**: Misma estructura que GET /
 
 #### **DELETE /**
+
 - **Descripción**: Elimina todos los ítems del carrito del usuario.
 - **Autenticación**: JWT requerido
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Carrito vaciado",
@@ -1287,9 +1407,11 @@ npm test
 ### Pedidos/Ventas (**/api/sales**)
 
 #### **POST /**
+
 - **Descripción**: Crea un nuevo pedido. Puede ser usado por usuarios autenticados (usando su perfil y direcciones guardadas/nuevas) o por invitados (proporcionando datos de cliente y envío).
 - **Autenticación**: Opcional (JWT requerido solo si se usa `selectedAddressId`)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "items": [
@@ -1317,7 +1439,9 @@ npm test
   }
 }
 ```
+
 - **Respuesta exitosa (201)**:
+
 ```json
 {
   "order": {
@@ -1366,12 +1490,14 @@ npm test
 ```
 
 #### **GET /**
+
 - **Descripción**: Lista todos los pedidos del sistema con paginación
 - **Autenticación**: JWT + Rol de Administrador
 - **Query Parameters**:
   - `page`: número de página (opcional, default: 1)
   - `limit`: elementos por página (opcional, default: 10, max: 100)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "orders": [
@@ -1398,6 +1524,7 @@ npm test
 ```
 
 #### **GET /my-orders**
+
 - **Descripción**: Lista el historial de pedidos del usuario autenticado
 - **Autenticación**: JWT (usuario)
 - **Query Parameters**:
@@ -1406,20 +1533,25 @@ npm test
 - **Respuesta exitosa (200)**: Mismo formato que GET / pero solo pedidos del usuario
 
 #### **GET /:id**
+
 - **Descripción**: Obtiene los detalles completos de un pedido específico
 - **Autenticación**: JWT (Admin o propietario del pedido)
 - **Respuesta exitosa (200)**: Misma estructura que POST / con detalles completos
 
 #### **PATCH /:id/status**
+
 - **Descripción**: Actualiza el estado de un pedido
 - **Autenticación**: JWT + Rol de Administrador
 - **Cuerpo de la petición**:
+
 ```json
 {
   "status": "string (requerido: 'pending', 'processing', 'shipped', 'delivered', 'cancelled')"
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Order status updated successfully",
@@ -1432,15 +1564,18 @@ npm test
 ```
 
 #### **GET /by-customer/:customerId**
+
 - **Descripción**: Lista los pedidos de un cliente específico
 - **Autenticación**: JWT + Rol de Administrador
 - **Query Parameters**: `page`, `limit` (igual que GET /)
 - **Respuesta exitosa (200)**: Mismo formato que GET /
 
 #### **POST /by-date-range**
+
 - **Descripción**: Lista pedidos dentro de un rango de fechas
 - **Autenticación**: JWT + Rol de Administrador
 - **Cuerpo de la petición**:
+
 ```json
 {
   "startDate": "string (requerido, ISO date)",
@@ -1449,25 +1584,259 @@ npm test
   "limit": "number (opcional, default: 10)"
 }
 ```
+
 - **Respuesta exitosa (200)**: Mismo formato que GET /
+
+#### **PUT /:id**
+
+- **Descripción**: Actualiza completamente un pedido existente incluyendo items, detalles de envío, notas y cupones. Permite modificación total del pedido sin cambiar su estado.
+- **Autenticación**: JWT requerido
+- **Parámetros de ruta**: `id` (ObjectId del pedido)
+- **Cuerpo de la petición**:
+
+```json
+{
+  "items": [
+    {
+      "productId": "string (opcional)",
+      "quantity": "number (opcional, > 0)",
+      "unitPrice": "number (opcional, > 0)",
+      "taxRate": "number (opcional, 0-100)"
+    }
+  ],
+  "shippingDetails": {
+    "recipientName": "string (opcional)",
+    "recipientPhone": "string (opcional)",
+    "street": "string (opcional)",
+    "number": "string (opcional)",
+    "neighborhood": "string (opcional)",
+    "city": "string (opcional)",
+    "zipCode": "string (opcional)",
+    "details": "string (opcional)"
+  },
+  "notes": "string (opcional)",
+  "couponCode": "string (opcional)"
+}
+```
+
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "order": {
+    "id": "string",
+    "orderNumber": "string",
+    "customer": {
+      "id": "string",
+      "name": "string",
+      "email": "string"
+    },
+    "items": [
+      {
+        "product": {
+          "id": "string",
+          "name": "string",
+          "price": "number"
+        },
+        "quantity": "number",
+        "unitPrice": "number",
+        "taxRate": "number",
+        "subtotal": "number"
+      }
+    ],
+    "shippingAddress": {
+      "street": "string",
+      "number": "string",
+      "neighborhood": "string",
+      "city": "string",
+      "zipCode": "string",
+      "details": "string"
+    },
+    "subtotal": "number",
+    "taxAmount": "number",
+    "discountAmount": "number",
+    "total": "number",
+    "status": "string",
+    "coupon": {
+      "code": "string",
+      "discountType": "string",
+      "discountValue": "number"
+    },
+    "notes": "string",
+    "createdAt": "string (ISO date)",
+    "updatedAt": "string (ISO date)"
+  }
+}
+```
+
+---
+
+### Estados de Pedido (**/api/order-statuses**)
+
+#### **GET /**
+
+- **Descripción**: Lista todos los estados de pedido con paginación y filtros
+- **Autenticación**: JWT + Rol de Administrador
+- **Query Parameters**:
+  - `page`: número de página (opcional, default: 1)
+  - `limit`: elementos por página (opcional, default: 10)
+  - `activeOnly`: mostrar solo estados activos (opcional, default: false)
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "total": "number",
+  "orderStatuses": [
+    {
+      "id": "string",
+      "code": "string",
+      "name": "string", 
+      "description": "string",
+      "color": "string",
+      "order": "number",
+      "isActive": "boolean",
+      "isDefault": "boolean",
+      "canTransitionTo": ["array de ObjectIds"]
+    }
+  ]
+}
+```
+
+#### **POST /**
+
+- **Descripción**: Crea un nuevo estado de pedido
+- **Autenticación**: JWT + Rol de Administrador
+- **Cuerpo de la petición**:
+
+```json
+{
+  "code": "string (requerido, único)",
+  "name": "string (requerido)",
+  "description": "string (opcional)",
+  "color": "string (opcional, hex color)",
+  "order": "number (opcional)",
+  "isActive": "boolean (opcional, default: true)",
+  "isDefault": "boolean (opcional, default: false)",
+  "canTransitionTo": ["array de códigos o IDs (opcional)"]
+}
+```
+
+#### **GET /:id**
+
+- **Descripción**: Obtiene un estado de pedido por su ID
+- **Autenticación**: JWT + Rol de Administrador
+- **Respuesta exitosa (200)**: Objeto del estado como en GET /
+
+#### **PUT /:id**
+
+- **Descripción**: Actualiza completamente un estado de pedido
+- **Autenticación**: JWT + Rol de Administrador
+- **Cuerpo de la petición**: Mismo formato que POST /
+
+#### **PATCH /:id/transitions**
+
+- **Descripción**: Actualiza únicamente las transiciones permitidas de un estado de pedido específico
+- **Autenticación**: JWT + Rol de Administrador
+- **Parámetros de ruta**: `id` (ObjectId del estado)
+- **Cuerpo de la petición**:
+
+```json
+{
+  "canTransitionTo": [
+    "string (código de estado o ObjectId)",
+    "PROCESSING",
+    "SHIPPED", 
+    "675a1b2c3d4e5f6789012345"
+  ]
+}
+```
+
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "id": "string",
+  "code": "string",
+  "name": "string",
+  "description": "string", 
+  "color": "string",
+  "order": "number",
+  "isActive": "boolean",
+  "isDefault": "boolean",
+  "canTransitionTo": ["array de ObjectIds convertidos"]
+}
+```
+
+- **Características especiales**:
+  - Acepta tanto códigos de estado como ObjectIds en el array
+  - Convierte automáticamente códigos a ObjectIds
+  - Valida que todos los estados de destino existan
+  - Previene autoreferencias (un estado no puede transicionar a sí mismo)
+  - Mantiene todos los demás campos del estado sin modificar
+
+#### **DELETE /:id**
+
+- **Descripción**: Elimina un estado de pedido
+- **Autenticación**: JWT + Rol de Administrador
+
+#### **GET /active**
+
+- **Descripción**: Lista solo los estados de pedido activos (ruta pública)
+- **Autenticación**: No requerida
+- **Query Parameters**: `page`, `limit` (igual que GET /)
+
+#### **GET /default**
+
+- **Descripción**: Obtiene el estado de pedido por defecto (ruta pública)
+- **Autenticación**: No requerida
+
+#### **GET /code/:code**
+
+- **Descripción**: Obtiene un estado de pedido por su código (ruta pública)
+- **Autenticación**: No requerida
+
+#### **POST /validate-transition**
+
+- **Descripción**: Valida si es posible una transición entre dos estados
+- **Autenticación**: JWT + Rol de Administrador
+- **Cuerpo de la petición**:
+
+```json
+{
+  "fromStatusId": "string (ObjectId requerido)",
+  "toStatusId": "string (ObjectId requerido)"
+}
+```
+
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "isValid": "boolean"
+}
+```
 
 ---
 
 ### Pagos (**/api/payments**)
 
 #### **POST /sale/:saleId**
+
 - **Descripción**: Inicia el proceso de pago para una venta específica, creando una preferencia en Mercado Pago y un registro de pago local
 - **Autenticación**: Opcional (dependiendo del flujo de implementación)
 - **Parámetros de ruta**:
   - `saleId`: ID del pedido/venta (string, requerido)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "paymentMethod": "string (opcional, default: 'mercadopago')",
   "returnUrl": "string (opcional, URL de retorno personalizada)"
 }
 ```
+
 - **Respuesta exitosa (201)**:
+
 ```json
 {
   "payment": {
@@ -1489,12 +1858,14 @@ npm test
 ```
 
 #### **POST /prueba/sale/:saleId**
+
 - **Descripción**: Endpoint de prueba simplificado para crear preferencias de pago
 - **Autenticación**: No requerida (solo para testing)
 - **Parámetros de ruta**: `saleId` (string, requerido)
 - **Respuesta exitosa (201)**: Misma estructura que POST /sale/:saleId
 
 #### **GET /**
+
 - **Descripción**: Lista todos los registros de pago guardados localmente
 - **Autenticación**: JWT + Rol de Administrador
 - **Query Parameters**:
@@ -1502,6 +1873,7 @@ npm test
   - `limit`: elementos por página (opcional, default: 10)
   - `status`: filtrar por estado (opcional: 'pending', 'approved', 'rejected')
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "payments": [
@@ -1528,9 +1900,11 @@ npm test
 ```
 
 #### **GET /:id**
+
 - **Descripción**: Obtiene información detallada de un registro de pago local por su ID
 - **Autenticación**: JWT + Rol de Administrador
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "payment": {
@@ -1550,22 +1924,27 @@ npm test
 ```
 
 #### **GET /by-sale/:saleId**
+
 - **Descripción**: Lista los registros de pago locales asociados a una venta específica
 - **Autenticación**: JWT + Rol de Administrador
 - **Query Parameters**: `page`, `limit`
 - **Respuesta exitosa (200)**: Mismo formato que GET /
 
 #### **POST /verify**
+
 - **Descripción**: Verifica el estado actual de un pago con Mercado Pago
 - **Autenticación**: Opcional
 - **Cuerpo de la petición**:
+
 ```json
 {
   "paymentId": "string (requerido, ID local del pago)",
   "providerId": "string (opcional, ID del proveedor de pago)"
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "payment": {
@@ -1580,9 +1959,11 @@ npm test
 ```
 
 #### **GET /preference/:preferenceId**
+
 - **Descripción**: Obtiene el estado de una preferencia de Mercado Pago y del pago asociado
 - **Autenticación**: Opcional
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "preference": {
@@ -1600,6 +1981,7 @@ npm test
 ```
 
 #### **GET /mercadopago/payments**
+
 - **Descripción**: Consulta directamente a Mercado Pago los pagos realizados desde la cuenta asociada al Access Token
 - **Autenticación**: JWT + Rol de Administrador
 - **Query Parameters**:
@@ -1609,6 +1991,7 @@ npm test
   - `dateFrom`: fecha desde (opcional, YYYY-MM-DD)
   - `dateTo`: fecha hasta (opcional, YYYY-MM-DD)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "payments": "array (datos directos de MercadoPago)",
@@ -1621,12 +2004,14 @@ npm test
 ```
 
 #### **GET /mercadopago/charges**
+
 - **Descripción**: Consulta directamente a Mercado Pago los cobros recibidos en la cuenta asociada al Access Token
 - **Autenticación**: JWT + Rol de Administrador
 - **Query Parameters**: Mismos que `/mercadopago/payments`
 - **Respuesta exitosa (200)**: Formato similar a `/mercadopago/payments`
 
 #### **POST /webhook**
+
 - **Descripción**: Endpoint público que recibe notificaciones (webhooks) de Mercado Pago sobre cambios en el estado de los pagos
 - **Autenticación**: No requerida (endpoint público)
 - **Headers requeridos**:
@@ -1634,6 +2019,7 @@ npm test
   - `x-request-id`: ID de la solicitud de Mercado Pago
 - **Cuerpo de la petición**: Formato definido por Mercado Pago
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Webhook processed successfully"
@@ -1641,6 +2027,7 @@ npm test
 ```
 
 #### **GET /success**
+
 - **Descripción**: Callback público de Mercado Pago para pagos exitosos. Redirecciona al frontend.
 - **Autenticación**: No requerida (endpoint público)
 - **Query Parameters**:
@@ -1650,12 +2037,14 @@ npm test
 - **Respuesta**: Redirección 302 al frontend con parámetros
 
 #### **GET /failure**
+
 - **Descripción**: Callback público de Mercado Pago para pagos fallidos. Redirecciona al frontend.
 - **Autenticación**: No requerida (endpoint público)
 - **Query Parameters**: Mismos que `/success`
 - **Respuesta**: Redirección 302 al frontend con parámetros de error
 
 #### **GET /pending**
+
 - **Descripción**: Callback público de Mercado Pago para pagos pendientes. Redirecciona al frontend.
 - **Autenticación**: No requerida (endpoint público)
 - **Query Parameters**: Mismos que `/success`
@@ -1666,6 +2055,7 @@ npm test
 ### Cupones (**/api/coupons**)
 
 #### **GET /**
+
 - **Descripción**: Lista todos los cupones del sistema con paginación
 - **Autenticación**: JWT + Rol de Administrador
 - **Query Parameters**:
@@ -1674,6 +2064,7 @@ npm test
   - `active`: filtrar por estado activo (opcional, boolean)
   - `expired`: incluir cupones expirados (opcional, boolean)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "coupons": [
@@ -1703,9 +2094,11 @@ npm test
 ```
 
 #### **GET /:id**
+
 - **Descripción**: Obtiene un cupón específico por su ID
 - **Autenticación**: JWT + Rol de Administrador
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "coupon": {
@@ -1735,9 +2128,11 @@ npm test
 ```
 
 #### **POST /**
+
 - **Descripción**: Crea un nuevo cupón de descuento
 - **Autenticación**: JWT + Rol de Administrador
 - **Cuerpo de la petición**:
+
 ```json
 {
   "code": "string (requerido, único, 3-20 caracteres)",
@@ -1751,7 +2146,9 @@ npm test
   "expirationDate": "string (opcional, ISO date, debe ser futura)"
 }
 ```
+
 - **Respuesta exitosa (201)**:
+
 ```json
 {
   "coupon": {
@@ -1773,10 +2170,12 @@ npm test
 ```
 
 #### **PUT /:id**
+
 - **Descripción**: Actualiza un cupón existente
 - **Autenticación**: JWT + Rol de Administrador
 - **Cuerpo de la petición**: Mismo formato que POST / (todos los campos opcionales)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Coupon updated successfully",
@@ -1799,11 +2198,13 @@ npm test
 ```
 
 #### **DELETE /:id**
+
 - **Descripción**: Elimina o desactiva un cupón
 - **Autenticación**: JWT + Rol de Administrador
 - **Query Parameters**:
   - `force`: eliminación definitiva (opcional, boolean, default: false)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Coupon deleted successfully"
@@ -1811,11 +2212,13 @@ npm test
 ```
 
 #### **GET /validate/:code** *(Endpoint público futuro)*
+
 - **Descripción**: Valida un código de cupón para uso público durante el checkout
 - **Autenticación**: No requerida (endpoint público)
 - **Query Parameters**:
   - `orderAmount`: monto del pedido para validar mínimo (opcional, number)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "valid": "boolean",
@@ -1830,7 +2233,9 @@ npm test
   "message": "string (descripción del estado de validación)"
 }
 ```
+
 - **Respuesta de error (400)**:
+
 ```json
 {
   "valid": false,
@@ -1843,9 +2248,11 @@ npm test
 ### Chatbot (**/api/chatbot**)
 
 #### **POST /query**
+
 - **Descripción**: Envía una consulta al chatbot y obtiene una respuesta basada en RAG (Retrieval-Augmented Generation)
 - **Autenticación**: No requerida (endpoint público)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "message": "string (requerido, consulta del usuario)",
@@ -1858,7 +2265,9 @@ npm test
   }
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "response": "string (respuesta generada por el chatbot)",
@@ -1877,11 +2286,13 @@ npm test
 ```
 
 #### **GET /session/:sessionId**
+
 - **Descripción**: Obtiene el historial de mensajes de una sesión específica de chat
 - **Autenticación**: No requerida (endpoint público)
 - **Query Parameters**:
   - `limit`: número máximo de mensajes (opcional, default: 50, max: 100)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "session": {
@@ -1910,9 +2321,11 @@ npm test
 ```
 
 #### **POST /session**
+
 - **Descripción**: Crea una nueva sesión de chat
 - **Autenticación**: No requerida (endpoint público)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "userType": "string (opcional: 'customer' | 'owner', default: 'customer')",
@@ -1922,7 +2335,9 @@ npm test
   }
 }
 ```
+
 - **Respuesta exitosa (201)**:
+
 ```json
 {
   "session": {
@@ -1936,6 +2351,7 @@ npm test
 ```
 
 #### **GET /sessions**
+
 - **Descripción**: Lista todas las sesiones de chat activas/recientes para administración
 - **Autenticación**: JWT + Rol de Administrador
 - **Query Parameters**:
@@ -1945,6 +2361,7 @@ npm test
   - `dateFrom`: fecha desde (opcional, ISO date)
   - `dateTo`: fecha hasta (opcional, ISO date)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "sessions": [
@@ -1973,16 +2390,20 @@ npm test
 ```
 
 #### **POST /generate-embeddings**
+
 - **Descripción**: Dispara el proceso de generación/actualización de embeddings para la base de conocimiento del RAG
 - **Autenticación**: JWT + Rol de Administrador
 - **Cuerpo de la petición**:
+
 ```json
 {
   "forceRegenerate": "boolean (opcional, regenerar embeddings existentes)",
   "entities": "array (opcional, ['products', 'categories', 'orders', 'customers'])"
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Embeddings generation started",
@@ -1993,9 +2414,11 @@ npm test
 ```
 
 #### **POST /change-llm**
+
 - **Descripción**: Cambia el modelo de lenguaje grande (LLM) que utiliza el chatbot
 - **Autenticación**: JWT + Rol de Administrador
 - **Cuerpo de la petición**:
+
 ```json
 {
   "provider": "string (requerido: 'openai' | 'anthropic')",
@@ -2007,7 +2430,9 @@ npm test
   }
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "LLM configuration updated successfully",
@@ -2024,9 +2449,11 @@ npm test
 ```
 
 #### **GET /current-llm**
+
 - **Descripción**: Muestra la configuración actual del LLM
 - **Autenticación**: JWT + Rol de Administrador
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "currentLLM": {
@@ -2048,9 +2475,11 @@ npm test
 ```
 
 #### **GET /validate-embeddings**
+
 - **Descripción**: Compara el número de documentos en la BD con los embeddings generados para verificar consistencia
 - **Autenticación**: JWT + Rol de Administrador
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "validation": {
@@ -2086,12 +2515,14 @@ npm test
 #### **Productos (**/api/admin/products**)**
 
 ##### **GET /**
+
 - **Descripción**: Lista todos los productos (incluyendo activos e inactivos) con paginación
 - **Query Parameters**:
   - `page`: número de página (opcional, default: 1)
   - `limit`: elementos por página (opcional, default: 10, max: 100)
   - `includeInactive`: incluir productos inactivos (opcional, boolean, default: true)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "products": [
@@ -2130,6 +2561,7 @@ npm test
 ```
 
 ##### **GET /search**
+
 - **Descripción**: Realiza búsquedas y filtrados avanzados sobre todos los productos
 - **Query Parameters**:
   - `q`: término de búsqueda (opcional, busca en nombre y descripción)
@@ -2143,8 +2575,10 @@ npm test
 - **Respuesta exitosa (200)**: Mismo formato que GET /
 
 ##### **GET /:id**
+
 - **Descripción**: Obtiene los detalles completos de un producto específico por su ID
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "product": {
@@ -2179,6 +2613,7 @@ npm test
 ```
 
 ##### **POST /**
+
 - **Descripción**: Crea un nuevo producto (permite subir imagen vía multipart/form-data)
 - **Content-Type**: `multipart/form-data`
 - **Campos del formulario**:
@@ -2194,10 +2629,12 @@ npm test
 - **Respuesta exitosa (201)**: Mismo formato que GET /:id
 
 ##### **PUT /:id**
+
 - **Descripción**: Actualiza un producto existente (permite subir/reemplazar imagen)
 - **Content-Type**: `multipart/form-data`
 - **Campos del formulario**: Mismos que POST / (todos opcionales)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Product updated successfully",
@@ -2211,8 +2648,10 @@ npm test
 ```
 
 ##### **DELETE /:id**
+
 - **Descripción**: Elimina un producto y su imagen asociada
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Product deleted successfully"
@@ -2220,6 +2659,7 @@ npm test
 ```
 
 ##### **GET /by-category/:categoryId**
+
 - **Descripción**: Lista productos (activos e inactivos) de una categoría específica
 - **Query Parameters**: `page`, `limit`, `includeInactive`
 - **Respuesta exitosa (200)**: Mismo formato que GET /
@@ -2227,9 +2667,11 @@ npm test
 #### **Categorías (**/api/admin/categories**)**
 
 ##### **GET /**
+
 - **Descripción**: Lista todas las categorías con paginación
 - **Query Parameters**: `page`, `limit`
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "categories": [
@@ -2252,8 +2694,10 @@ npm test
 ```
 
 ##### **GET /:id**
+
 - **Descripción**: Obtiene una categoría por su ID
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "category": {
@@ -2269,8 +2713,10 @@ npm test
 ```
 
 ##### **POST /**
+
 - **Descripción**: Crea una nueva categoría
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido, único)",
@@ -2278,12 +2724,15 @@ npm test
   "isActive": "boolean (opcional, default: true)"
 }
 ```
+
 - **Respuesta exitosa (201)**: Mismo formato que GET /:id
 
 ##### **PUT /:id**
+
 - **Descripción**: Actualiza una categoría existente
 - **Cuerpo de la petición**: Mismos campos que POST / (todos opcionales)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Category updated successfully",
@@ -2296,8 +2745,10 @@ npm test
 ```
 
 ##### **DELETE /:id**
+
 - **Descripción**: Elimina una categoría (verifica que no tenga productos asociados)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Category deleted successfully"
@@ -2307,9 +2758,11 @@ npm test
 #### **Tags (**/api/admin/tags**)**
 
 ##### **GET /**
+
 - **Descripción**: Lista todas las etiquetas con paginación
 - **Query Parameters**: `page`, `limit`, `active` (filtrar por estado activo)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "tags": [
@@ -2332,8 +2785,10 @@ npm test
 ```
 
 ##### **POST /**
+
 - **Descripción**: Crea una nueva etiqueta
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido, único)",
@@ -2341,7 +2796,9 @@ npm test
   "isActive": "boolean (opcional, default: true)"
 }
 ```
+
 - **Respuesta exitosa (201)**:
+
 ```json
 {
   "tag": {
@@ -2355,13 +2812,16 @@ npm test
 ```
 
 ##### **GET /:id**
+
 - **Descripción**: Obtiene una etiqueta por ID
 - **Respuesta exitosa (200)**: Mismo formato que POST /
 
 ##### **PUT /:id**
+
 - **Descripción**: Actualiza una etiqueta
 - **Cuerpo de la petición**: Mismos campos que POST / (todos opcionales)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Tag updated successfully",
@@ -2374,8 +2834,10 @@ npm test
 ```
 
 ##### **DELETE /:id**
+
 - **Descripción**: Elimina o desactiva una etiqueta
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Tag deleted successfully"
@@ -2385,9 +2847,11 @@ npm test
 #### **Unidades (**/api/admin/units**)**
 
 ##### **GET /**
+
 - **Descripción**: Lista todas las unidades de medida con paginación
 - **Query Parameters**: `page`, `limit`
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "units": [
@@ -2409,8 +2873,10 @@ npm test
 ```
 
 ##### **GET /:id**
+
 - **Descripción**: Obtiene una unidad por su ID
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "unit": {
@@ -2425,20 +2891,25 @@ npm test
 ```
 
 ##### **POST /**
+
 - **Descripción**: Crea una nueva unidad
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido, único)",
   "abbreviation": "string (requerido, único, 1-5 caracteres)"
 }
 ```
+
 - **Respuesta exitosa (201)**: Mismo formato que GET /:id
 
 ##### **PUT /:id**
+
 - **Descripción**: Actualiza una unidad existente
 - **Cuerpo de la petición**: Mismos campos que POST / (todos opcionales)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Unit updated successfully",
@@ -2452,8 +2923,10 @@ npm test
 ```
 
 ##### **DELETE /:id**
+
 - **Descripción**: Elimina una unidad (verifica que no tenga productos asociados)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Unit deleted successfully"
@@ -2463,37 +2936,46 @@ npm test
 #### **Pedidos (**/api/admin/orders**)**
 
 ##### **GET /**
+
 - **Descripción**: Lista todos los pedidos del sistema con paginación
 - **Query Parameters**: `page`, `limit`, `status` (filtrar por estado)
 - **Respuesta exitosa (200)**: Mismo formato que `/api/sales` GET /
 
 ##### **GET /:id**
+
 - **Descripción**: Obtiene los detalles completos de un pedido específico
 - **Respuesta exitosa (200)**: Mismo formato que `/api/sales` GET /:id
 
 ##### **PATCH /:id/status**
+
 - **Descripción**: Actualiza el estado de un pedido
 - **Cuerpo de la petición**:
+
 ```json
 {
   "status": "string (requerido: 'pending', 'processing', 'shipped', 'delivered', 'cancelled')"
 }
 ```
+
 - **Respuesta exitosa (200)**: Mismo formato que `/api/sales` PATCH /:id/status
 
 ##### **GET /by-customer/:customerId**
+
 - **Descripción**: Lista todos los pedidos de un cliente específico
 - **Query Parameters**: `page`, `limit`
 - **Respuesta exitosa (200)**: Mismo formato que GET /
 
 ##### **POST /by-date-range**
+
 - **Descripción**: Lista pedidos dentro de un rango de fechas
 - **Cuerpo de la petición**: Mismo formato que `/api/sales` POST /by-date-range
 - **Respuesta exitosa (200)**: Mismo formato que GET /
 
 ##### **GET /dashboard-view**
+
 - **Descripción**: Obtiene datos agrupados de pedidos para el panel de administración tipo Kanban
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "dashboard": {
@@ -2532,9 +3014,11 @@ npm test
 #### **Clientes (**/api/admin/customers**)**
 
 ##### **GET /**
+
 - **Descripción**: Lista todos los clientes con paginación
 - **Query Parameters**: `page`, `limit`, `search` (buscar por nombre/email)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "customers": [
@@ -2559,8 +3043,10 @@ npm test
 ```
 
 ##### **GET /:id**
+
 - **Descripción**: Obtiene un cliente por su ID con información detallada
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "customer": {
@@ -2599,8 +3085,10 @@ npm test
 ```
 
 ##### **POST /**
+
 - **Descripción**: Crea un nuevo cliente directamente
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido)",
@@ -2615,12 +3103,15 @@ npm test
   }
 }
 ```
+
 - **Respuesta exitosa (201)**: Mismo formato que GET /:id
 
 ##### **PUT /:id**
+
 - **Descripción**: Actualiza la información de un cliente
 - **Cuerpo de la petición**: Mismos campos que POST / (todos opcionales)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Customer updated successfully",
@@ -2634,10 +3125,12 @@ npm test
 ```
 
 ##### **DELETE /:id**
+
 - **Descripción**: Elimina un cliente (considera impacto en pedidos/direcciones)
 - **Query Parameters**:
   - `force`: eliminación definitiva (opcional, boolean)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Customer deleted successfully"
@@ -2645,20 +3138,24 @@ npm test
 ```
 
 ##### **GET /by-neighborhood/:neighborhoodId**
+
 - **Descripción**: Lista clientes por barrio con paginación
 - **Query Parameters**: `page`, `limit`
 - **Respuesta exitosa (200)**: Mismo formato que GET /
 
 ##### **GET /by-email/:email**
+
 - **Descripción**: Busca un cliente por su email
 - **Respuesta exitosa (200)**: Mismo formato que GET /:id
 
 #### **Usuarios (**/api/admin/users**)**
 
 ##### **GET /**
+
 - **Descripción**: Lista todos los usuarios registrados
 - **Query Parameters**: `page`, `limit`, `role` (filtrar por rol)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "users": [
@@ -2682,8 +3179,10 @@ npm test
 ```
 
 ##### **PUT /:id**
+
 - **Descripción**: Actualiza datos de un usuario (operación sensible para asignar/quitar rol ADMIN_ROLE)
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (opcional)",
@@ -2692,7 +3191,9 @@ npm test
   "isActive": "boolean (opcional)"
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "User updated successfully",
@@ -2707,8 +3208,10 @@ npm test
 ```
 
 ##### **DELETE /:id**
+
 - **Descripción**: Elimina una cuenta de usuario (considera si también se elimina el cliente asociado)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "User deleted successfully"
@@ -2722,9 +3225,11 @@ npm test
 #### **Ciudades (**/api/admin/cities**)**
 
 ##### **GET /**
+
 - **Descripción**: Lista todas las ciudades con paginación
 - **Query Parameters**: `page`, `limit`, `search` (buscar por nombre)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "cities": [
@@ -2746,8 +3251,10 @@ npm test
 ```
 
 ##### **GET /:id**
+
 - **Descripción**: Obtiene una ciudad por su ID
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "city": {
@@ -2771,24 +3278,31 @@ npm test
 ```
 
 ##### **POST /**
+
 - **Descripción**: Crea una nueva ciudad
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido, único)"
 }
 ```
+
 - **Respuesta exitosa (201)**: Mismo formato que GET /:id
 
 ##### **PUT /:id**
+
 - **Descripción**: Actualiza una ciudad existente
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido)"
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "City updated successfully",
@@ -2801,8 +3315,10 @@ npm test
 ```
 
 ##### **DELETE /:id**
+
 - **Descripción**: Elimina una ciudad (considera impacto en barrios/direcciones)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "City deleted successfully"
@@ -2810,15 +3326,18 @@ npm test
 ```
 
 ##### **GET /by-name/:name**
+
 - **Descripción**: Busca una ciudad por nombre exacto
 - **Respuesta exitosa (200)**: Mismo formato que GET /:id
 
 #### **Barrios (**/api/admin/neighborhoods**)**
 
 ##### **GET /**
+
 - **Descripción**: Lista todos los barrios con paginación
 - **Query Parameters**: `page`, `limit`, `cityId` (filtrar por ciudad)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "neighborhoods": [
@@ -2843,8 +3362,10 @@ npm test
 ```
 
 ##### **GET /:id**
+
 - **Descripción**: Obtiene un barrio por su ID
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "neighborhood": {
@@ -2862,26 +3383,33 @@ npm test
 ```
 
 ##### **POST /**
+
 - **Descripción**: Crea un nuevo barrio
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (requerido)",
   "cityId": "string (requerido)"
 }
 ```
+
 - **Respuesta exitosa (201)**: Mismo formato que GET /:id
 
 ##### **PUT /:id**
+
 - **Descripción**: Actualiza un barrio existente
 - **Cuerpo de la petición**:
+
 ```json
 {
   "name": "string (opcional)",
   "cityId": "string (opcional)"
 }
 ```
+
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Neighborhood updated successfully",
@@ -2894,8 +3422,10 @@ npm test
 ```
 
 ##### **DELETE /:id**
+
 - **Descripción**: Elimina un barrio (considera impacto en clientes/direcciones)
 - **Respuesta exitosa (200)**:
+
 ```json
 {
   "message": "Neighborhood deleted successfully"
@@ -2903,6 +3433,7 @@ npm test
 ```
 
 ##### **GET /by-city/:cityId**
+
 - **Descripción**: Lista barrios por ciudad con paginación
 - **Query Parameters**: `page`, `limit`
 - **Respuesta exitosa (200)**: Mismo formato que GET /

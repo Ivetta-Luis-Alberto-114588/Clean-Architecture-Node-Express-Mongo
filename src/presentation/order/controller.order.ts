@@ -19,8 +19,9 @@ import { GetMyOrdersUseCase } from "../../domain/use-cases/order/get-my-orders.u
 import { NeighborhoodRepository } from "../../domain/repositories/customers/neighborhood.repository";
 import { CityRepository } from "../../domain/repositories/customers/city.repository";
 import { OrderStatusRepository } from "../../domain/repositories/order/order-status.repository";
-// import { GetOrdersForDashboardUseCase } from '../../domain/use-cases/order/get-orders-for-dashboard.use-case'; // NUEVO
 import { GetOrdersForDashboardUseCase } from './../../domain/use-cases/order/get-orders-for-dashboard.use-case'; // NUEVO
+import { UpdateOrderDto } from "../../domain/dtos/order/update-order.dto";
+import { UpdateOrderUseCase } from "../../domain/use-cases/order/update-order.use-case";
 
 export class OrderController {
 
@@ -32,7 +33,7 @@ export class OrderController {
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
         private readonly orderStatusRepository: OrderStatusRepository,
-
+        private readonly updateOrderUseCase: UpdateOrderUseCase // Inyectar use case
     ) { }
 
 
@@ -194,6 +195,21 @@ export class OrderController {
         }
         new UpdateOrderStatusUseCase(this.orderRepository, this.orderStatusRepository)
             .execute(id, updateSaleStatusDto!)
+            .then(data => res.json(data))
+            .catch(err => this.handleError(err, res));
+    };
+
+    /**
+     * Full update of an order
+     */
+    updateSale = (req: Request, res: Response): void => {
+        const { id } = req.params;
+        const [error, updateDto] = UpdateOrderDto.create(req.body);
+        if (error) {
+            res.status(400).json({ error });
+            return;
+        }
+        this.updateOrderUseCase.execute(id, updateDto!) // execute use case
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
     };

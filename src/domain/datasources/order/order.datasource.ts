@@ -38,4 +38,7 @@ export abstract class OrderDataSource {
     // --- FIN FIRMA MODIFICADA ---
 
     abstract findByStatus(statusId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }>; // NUEVO
+
+    // Nuevo método para actualización completa de pedido
+    abstract updateOrder(id: string, updateDto: import("../../dtos/order/update-order.dto").UpdateOrderDto): Promise<OrderEntity>;
 }

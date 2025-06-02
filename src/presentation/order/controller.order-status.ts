@@ -2,6 +2,7 @@
 import { Request, Response } from "express";
 import { CreateOrderStatusDto } from "../../domain/dtos/order/create-order-status.dto";
 import { UpdateOrderStatusDataDto } from "../../domain/dtos/order/update-order-status-data.dto";
+import { UpdateOrderStatusTransitionsDto } from "../../domain/dtos/order/update-order-status-transitions.dto";
 import { PaginationDto } from "../../domain/dtos/shared/pagination.dto";
 import { OrderStatusRepository } from "../../domain/repositories/order/order-status.repository";
 import { CreateOrderStatusUseCase } from "../../domain/use-cases/order/create-order-status.use-case";
@@ -9,6 +10,7 @@ import { GetAllOrderStatusesUseCase } from "../../domain/use-cases/order/get-all
 import { UpdateOrderStatusDataUseCase } from "../../domain/use-cases/order/update-order-status-data.use-case";
 import { DeleteOrderStatusUseCase } from "../../domain/use-cases/order/delete-order-status.use-case";
 import { ValidateOrderStatusTransitionUseCase } from "../../domain/use-cases/order/validate-order-status-transition.use-case";
+import { UpdateOrderStatusTransitionsUseCaseImpl } from "../../domain/use-cases/order/update-order-status-transitions.use-case";
 import logger from "../../configs/logger";
 
 export class OrderStatusController {
@@ -151,6 +153,23 @@ export class OrderStatusController {
         new ValidateOrderStatusTransitionUseCase(this.orderStatusRepository)
             .execute(fromStatusId, toStatusId)
             .then(isValid => res.json({ isValid }))
+            .catch(err => this.handleError(err, res));
+    };
+
+    // PATCH /api/order-statuses/:id/transitions - Actualizar transiciones permitidas
+    updateOrderStatusTransitions = (req: Request, res: Response): void => {
+        const { id } = req.params;
+
+        const [error, updateOrderStatusTransitionsDto] = UpdateOrderStatusTransitionsDto.create(req.body);
+        if (error) {
+            res.status(400).json({ error });
+            logger.warn(`Error en validación de UpdateOrderStatusTransitionsDto para ID ${id}`, { error, body: req.body });
+            return;
+        }
+
+        new UpdateOrderStatusTransitionsUseCaseImpl(this.orderStatusRepository)
+            .execute(id, updateOrderStatusTransitionsDto!)
+            .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
     };
 }

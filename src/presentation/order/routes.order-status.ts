@@ -40,6 +40,11 @@ export class OrderStatusRoutes {
             AuthMiddleware.checkRole(['ADMIN_ROLE']), 
             orderStatusController.updateOrderStatus
         );
+        router.patch('/:id/transitions', 
+            AuthMiddleware.validateJwt, 
+            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+            orderStatusController.updateOrderStatusTransitions
+        );
         router.delete('/:id', 
             AuthMiddleware.validateJwt, 
             AuthMiddleware.checkRole(['ADMIN_ROLE']), 

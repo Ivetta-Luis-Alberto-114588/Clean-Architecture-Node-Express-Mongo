@@ -3,6 +3,7 @@ import { CreateOrderDto } from "../../dtos/order/create-order.dto";
 import { UpdateOrderStatusDto } from "../../dtos/order/update-order-status.dto";
 import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { OrderEntity } from "../../entities/order/order.entity";
+import { UpdateOrderDto } from "../../dtos/order/update-order.dto";
 
 // Interfaz para detalles resueltos (importar o definir)
 interface ResolvedShippingDetails {
@@ -37,4 +38,7 @@ export abstract class OrderRepository {
     // --- FIN FIRMA MODIFICADA ---
 
     abstract findByStatus(statusId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }>; // NUEVO
+
+    // Nuevo método para actualización completa de pedido
+    abstract updateOrder(id: string, updateDto: UpdateOrderDto): Promise<OrderEntity>;
 }
