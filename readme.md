@@ -45,6 +45,14 @@
   * **Actualización de estado del pedido (pendiente, completado, cancelado).**
   * **Historial de pedidos para el usuario autenticado (**/my-orders**).**
   * **Búsqueda/listado de pedidos para administración.**
+* **Métodos de Pago:**
+
+  * **CRUD completo para Métodos de Pago (efectivo, tarjetas, transferencias, etc.).**
+  * **Configuración de métodos activos/inactivos dinámicamente.**
+  * **Asociación automática de estados de pedido por método de pago.**
+  * **Clasificación entre pagos online y offline.**
+  * **Endpoints públicos para consulta de métodos disponibles.**
+  * **Gestión administrativa protegida por roles.**
 * **Integración de Pagos (Mercado Pago):**
 
   * **Creación de preferencias de pago.**
@@ -66,7 +74,7 @@
 * **Panel de Administración (API):**
 
   * **Endpoints dedicados bajo** **/api/admin** **protegidos por rol** **ADMIN_ROLE**.
-  * **Permite gestionar Productos, Categorías, Unidades,** **Tags**, Pedidos, Clientes, Ciudades, Barrios, Cupones y Usuarios.
+  * **Permite gestionar Productos, Categorías, Unidades,** **Tags**, **Métodos de Pago**, Pedidos, Clientes, Ciudades, Barrios, Cupones y Usuarios.
 * **Subida de Imágenes (Cloudinary):**
 
   * **Integración para subir/eliminar imágenes de productos.**
@@ -189,12 +197,12 @@ El proyecto sigue una arquitectura en capas inspirada en principios de Clean Arc
   db.users.createIndex({ email: 1 }, { unique: true })
   db.payments.createIndex({ externalReference: 1 }, { unique: true })
   db.payments.createIndex({ preferenceId: 1 }, { unique: true })
-  db.addresses.createIndex({ customerId: 1 })
-  db.categories.createIndex({ name: 1 }, { unique: true }) // Asumiendo unicidad
+  db.addresses.createIndex({ customerId: 1 })  db.categories.createIndex({ name: 1 }, { unique: true }) // Asumiendo unicidad
   db.units.createIndex({ name: 1 }, { unique: true }) // Asumiendo unicidad
   db.cities.createIndex({ name: 1 }, { unique: true }) // Asumiendo unicidad
   db.neighborhoods.createIndex({ name: 1, city: 1 }, { unique: true }) // Índice compuesto
   db.coupons.createIndex({ code: 1 }, { unique: true }) // Asumiendo unicidad
+  db.paymentmethods.createIndex({ code: 1 }, { unique: true }) // Métodos de pago únicos por código
   // Revisa otros índices que puedas necesitar
   ```
 
@@ -1815,6 +1823,201 @@ npm test
   "isValid": "boolean"
 }
 ```
+
+---
+
+### Métodos de Pago (**/api/payment-methods**)
+
+#### **GET /active**
+
+- **Descripción**: Obtiene todos los métodos de pago activos disponibles para los clientes.
+- **Autenticación**: No requerida
+- **Respuesta exitosa (200)**:
+
+```json
+[
+  {
+    "id": "string",
+    "code": "string",
+    "name": "string",
+    "description": "string",
+    "isActive": true,
+    "defaultOrderStatusId": {
+      "_id": "string",
+      "code": "string",
+      "name": "string",
+      "description": "string",
+      "color": "string"
+    },
+    "requiresOnlinePayment": "boolean",
+    "createdAt": "string (ISO date)",
+    "updatedAt": "string (ISO date)"
+  }
+]
+```
+
+#### **GET /code/:code**
+
+- **Descripción**: Busca un método de pago específico por su código único.
+- **Autenticación**: No requerida
+- **Parámetros de ruta**: `code` (código del método de pago, ej: "CASH", "CREDIT_CARD")
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "id": "string",
+  "code": "string",
+  "name": "string",
+  "description": "string",
+  "isActive": "boolean",
+  "defaultOrderStatusId": {
+    "_id": "string",
+    "code": "string",
+    "name": "string",
+    "description": "string",
+    "color": "string"
+  },
+  "requiresOnlinePayment": "boolean",
+  "createdAt": "string (ISO date)",
+  "updatedAt": "string (ISO date)"
+}
+```
+
+#### **GET /**
+
+- **Descripción**: Lista todos los métodos de pago (incluye activos e inactivos) con paginación.
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Query Parameters**:
+  - `page`: number (opcional, default: 1)
+  - `limit`: number (opcional, default: 10)
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "total": "number",
+  "paymentMethods": [
+    {
+      "id": "string",
+      "code": "string",
+      "name": "string",
+      "description": "string",
+      "isActive": "boolean",
+      "defaultOrderStatusId": {
+        "_id": "string",
+        "code": "string",
+        "name": "string",
+        "description": "string",
+        "color": "string"
+      },
+      "requiresOnlinePayment": "boolean",
+      "createdAt": "string (ISO date)",
+      "updatedAt": "string (ISO date)"
+    }
+  ]
+}
+```
+
+#### **GET /:id**
+
+- **Descripción**: Obtiene los detalles de un método de pago específico por su ID.
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Parámetros de ruta**: `id` (ObjectId del método de pago)
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "id": "string",
+  "code": "string",
+  "name": "string",
+  "description": "string",
+  "isActive": "boolean",
+  "defaultOrderStatusId": {
+    "_id": "string",
+    "code": "string",
+    "name": "string",
+    "description": "string",
+    "color": "string"
+  },
+  "requiresOnlinePayment": "boolean",
+  "createdAt": "string (ISO date)",
+  "updatedAt": "string (ISO date)"
+}
+```
+
+#### **POST /**
+
+- **Descripción**: Crea un nuevo método de pago.
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Cuerpo de la petición**:
+
+```json
+{
+  "code": "string (requerido, único, ej: 'CASH', 'CREDIT_CARD')",
+  "name": "string (requerido)",
+  "description": "string (requerido)",
+  "isActive": "boolean (opcional, default: true)",
+  "defaultOrderStatusId": "string (requerido, ObjectId de estado de pedido existente)",
+  "requiresOnlinePayment": "boolean (opcional, default: false)"
+}
+```
+
+- **Respuesta exitosa (201)**: Misma estructura que GET /:id
+
+#### **PUT /:id**
+
+- **Descripción**: Actualiza un método de pago existente.
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Parámetros de ruta**: `id` (ObjectId del método de pago)
+- **Cuerpo de la petición**:
+
+```json
+{
+  "code": "string (opcional)",
+  "name": "string (opcional)",
+  "description": "string (opcional)",
+  "isActive": "boolean (opcional)",
+  "defaultOrderStatusId": "string (opcional, ObjectId de estado de pedido existente)",
+  "requiresOnlinePayment": "boolean (opcional)"
+}
+```
+
+- **Respuesta exitosa (200)**: Misma estructura que GET /:id
+
+#### **DELETE /:id**
+
+- **Descripción**: Elimina un método de pago del sistema.
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Parámetros de ruta**: `id` (ObjectId del método de pago)
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "id": "string",
+  "code": "string",
+  "name": "string",
+  "description": "string",
+  "isActive": "boolean",
+  "defaultOrderStatusId": "string",
+  "requiresOnlinePayment": "boolean",
+  "createdAt": "string (ISO date)",
+  "updatedAt": "string (ISO date)"
+}
+```
+
+#### **Códigos de Métodos de Pago Comunes**
+
+- `CASH`: Pago en efectivo
+- `CREDIT_CARD`: Tarjeta de crédito
+- `DEBIT_CARD`: Tarjeta de débito
+- `BANK_TRANSFER`: Transferencia bancaria
+- `PAYPAL`: PayPal
+- `MERCADO_PAGO`: Mercado Pago
+
+#### **Campos Especiales**
+
+- **requiresOnlinePayment**: Indica si el método requiere procesamiento de pago online (true) o si es offline como efectivo (false)
+- **defaultOrderStatusId**: Estado de pedido que se asignará automáticamente cuando se use este método de pago
+- **isActive**: Permite habilitar/deshabilitar métodos de pago sin eliminarlos del sistema
 
 ---
 
