@@ -49,12 +49,29 @@ const orderStatusSeeds: OrderStatusSeed[] = [
 
 export async function seedOrderStatuses(): Promise<void> {
     try {
-        logger.info('Iniciando seed de estados de pedido...');
-
-        // Check if there are already order statuses
+        logger.info('Iniciando seed de estados de pedido...');        // Check if there are already order statuses
         const existingCount = await OrderStatusModel.countDocuments();
         if (existingCount > 0) {
-            logger.info(`Ya existen ${existingCount} estados de pedido. Saltando seed.`);
+            logger.info(`Ya existen ${existingCount} estados de pedido. Verificando estado por defecto...`);
+            
+            // Check if there's a default status
+            const defaultStatus = await OrderStatusModel.findOne({ isDefault: true });
+            if (!defaultStatus) {
+                // Set PENDING as default if it exists, otherwise set the first one
+                const pendingStatus = await OrderStatusModel.findOne({ code: 'PENDING' });
+                if (pendingStatus) {
+                    await OrderStatusModel.findByIdAndUpdate(pendingStatus._id, { isDefault: true });
+                    logger.info(`✅ Estado 'PENDING' marcado como por defecto`);
+                } else {
+                    const firstStatus = await OrderStatusModel.findOne();
+                    if (firstStatus) {
+                        await OrderStatusModel.findByIdAndUpdate(firstStatus._id, { isDefault: true });
+                        logger.info(`✅ Estado '${firstStatus.code}' marcado como por defecto`);
+                    }
+                }
+            } else {
+                logger.info(`✅ Estado por defecto ya configurado: ${defaultStatus.code}`);
+            }
             return;
         }
 

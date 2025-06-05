@@ -2,6 +2,61 @@
 
 **Este es el backend para una aplicación de E-commerce completa, construida con Node.js, TypeScript, Express y MongoDB. Incorpora características modernas como autenticación JWT, integración con pasarelas de pago, gestión de productos/clientes (con** **búsqueda y filtrado avanzados**, **gestión de direcciones**), un carrito de compras, sistema de cupones, un **panel de administración API** **y un chatbot inteligente basado en RAG (Retrieval-Augmented Generation).**
 
+## 📑 Índice de Contenidos
+
+- [✨ Características Principales](#-características-principales)
+- [🛠️ Tecnologías Utilizadas](#-tecnologías-utilizadas)
+- [🏗️ Arquitectura](#-arquitectura)
+- [📋 Prerrequisitos](#-prerrequisitos)
+- [🚀 Instalación](#-instalación)
+- [▶️ Ejecutar la Aplicación](#-ejecutar-la-aplicación)
+- [🧪 Ejecutar Tests](#-ejecutar-tests-pendiente)
+- [🌐 API Endpoints Principales](#-api-endpoints-principales)
+- [📧 Sistema de Notificaciones](#-sistema-de-notificaciones)
+- [🌐 API Endpoints Detallados](#-api-endpoints-detallados)
+- [💡 Decisiones Arquitectónicas y Destacados](#-decisiones-arquitectónicas-y-destacados)
+- [🚧 Mejoras Futuras / TODO](#-mejoras-futuras--todo)
+- [🤝 Contribuciones](#-contribuciones)
+- [📄 Licencia](#-licencia)
+
+## 🔗 Enlaces Rápidos a Endpoints
+
+### 🔐 Autenticación y Usuarios
+- [👤 Autenticación (/api/auth)](#autenticación-apiauth)
+
+### 📦 Productos y Categorías  
+- [🛍️ Gestión de Productos (/api/products)](#productos-apiproducts)
+- [📁 Gestión de Categorías (/api/categories)](#categorías-apicategories)
+- [🏷️ Gestión de Tags (/api/tags)](#tags-etiquetas-apitags)
+- [📏 Gestión de Unidades (/api/units)](#unidades-apiunits)
+
+### 🛒 Carrito y Pedidos
+- [🛒 Gestión del Carrito (/api/cart)](#carrito-apicart)
+- [📦 Gestión de Pedidos (/api/sales)](#pedidosventas-apisales)
+
+### 👥 Clientes y Direcciones
+- [👤 Gestión de Clientes (/api/customers)](#clientes-apicustomers)
+- [🏠 Gestión de Direcciones (/api/addresses)](#direcciones-apiaddresses)
+
+### 🌍 Ubicaciones
+- [🌍 Gestión de Ciudades (/api/cities)](#ciudades-apicities)
+- [🏘️ Gestión de Barrios (/api/neighborhoods)](#barrios-apineighborhoods)
+
+### 💰 Pagos y Descuentos
+- [💳 Procesamiento de Pagos (/api/payments)](#pagos-apipayments)
+- [💎 Métodos de Pago (/api/payment-methods)](#métodos-de-pago-apipayment-methods)
+- [🎫 Sistema de Cupones (/api/coupons)](#cupones-apicoupons)
+
+### 📧 Comunicación
+- [📧 Notificaciones por Email](#notificaciones-por-email-nodemailer)
+- [📱 Notificaciones de Telegram](#notificaciones-de-telegram)
+
+### 🔧 Utilidades y Admin
+- [🤖 IA y Chatbot (/api/chatbot)](#chatbot-apichatbot)
+- [⚙️ Panel de Administración (/api/admin)](#administración-apiadmin)
+
+---
+
 ## ✨ Características Principales
 
 * **Autenticación:**
@@ -37,12 +92,12 @@
   * **Vaciar carrito.**
   * **Almacena precios y tasas de IVA al momento de agregar el ítem.**
 * **Gestión de Pedidos (Ventas):**
-
   * **Creación de pedidos usando dirección seleccionada, nueva o default.**
   * **Snapshot de la dirección de envío guardado en cada pedido.**
   * **Cálculo automático de subtotales, impuestos, descuentos y total.**
   * **Aplicación de cupones de descuento (porcentual o fijo).**
   * **Actualización de estado del pedido (pendiente, completado, cancelado).**
+  * **Notificaciones automáticas por email al crear pedidos nuevos.**
   * **Historial de pedidos para el usuario autenticado (**/my-orders**).**
   * **Búsqueda/listado de pedidos para administración.**
 * **Métodos de Pago:**
@@ -81,6 +136,10 @@
 * **Notificaciones por Email (Nodemailer):**
 
   * **Envío de correos para restablecimiento de contraseña.**
+  * **Sistema de notificaciones automáticas para pedidos.**
+  * **Arquitectura extensible con múltiples canales (Email, Telegram).**
+  * **Notificaciones HTML formateadas con detalles del pedido.**
+  * **Configuración por variables de entorno con validación SMTP.**
 * **Infraestructura y Calidad:**
 
   * **Arquitectura en capas (Domain, Infrastructure, Presentation).**
@@ -171,12 +230,16 @@ El proyecto sigue una arquitectura en capas inspirada en principios de Clean Arc
   CLOUDINARY_API_KEY=tu_api_key
   CLOUDINARY_API_SECRET=tu_api_secret
   CLOUDINARY_URL=cloudinary://tu_api_key:tu_api_secret@tu_cloud_name
-
   # Email Service (ej. Gmail App Password)
   EMAIL_SERVICE=gmail
   EMAIL_USER=tu_correo@gmail.com
   EMAIL_PASS=tu_contraseña_de_aplicacion
   EMAIL_SENDER_NAME="Tu Tienda Online"
+
+  # Notification System
+  NOTIFICATION_EMAIL_TO=destinatario@gmail.com # Email donde llegan las notificaciones de pedidos
+  NOTIFICATION_TELEGRAM_BOT_TOKEN=your_telegram_bot_token # Token del bot de Telegram (opcional)
+  NOTIFICATION_TELEGRAM_CHAT_ID=your_chat_id # ID del chat de Telegram (opcional)
 
   # Opcional: Log Level (debug, info, warn, error)
   # LOG_LEVEL=debug
@@ -230,6 +293,68 @@ npm test
 
 **🌐 API Endpoints Principales**
 
+## 📧 Sistema de Notificaciones
+
+[⬆️ Volver al Índice](#-índice-de-contenidos)
+
+### 🔔 Notificaciones Automáticas de Pedidos
+
+El sistema incluye un **sistema de notificaciones automáticas** que se activa cuando se crea un nuevo pedido:
+
+#### ✨ **Características:**
+- **Activación automática:** Se dispara al crear un pedido exitosamente
+- **No bloquea la respuesta:** Las notificaciones se envían de forma asíncrona
+- **Múltiples canales:** Soporte para Email y Telegram
+- **Formato HTML:** Emails con diseño profesional y responsivo
+- **Manejo de errores:** Si falla la notificación, no afecta el pedido
+
+#### 📨 **Contenido del Email:**
+- **Asunto:** `🛒 Nueva Orden Recibida!`
+- **Información incluida:**
+  - ID y número de orden
+  - Datos del cliente (nombre, email)
+  - Listado de productos con cantidades y precios
+  - Total del pedido
+  - Fecha y hora de creación
+  - Dirección de envío
+
+#### ⚙️ **Configuración:**
+
+**Variables de entorno requeridas:**
+```env
+# Email (obligatorio)
+EMAIL_SMTP_HOST=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USER=tu_email@gmail.com
+EMAIL_SMTP_PASS=tu_password_de_aplicacion
+EMAIL_FROM=tu_email@gmail.com
+EMAIL_TO=destinatario@gmail.com
+
+# Telegram (opcional)
+TELEGRAM_BOT_TOKEN=tu_bot_token
+TELEGRAM_CHAT_ID=tu_chat_id
+
+# Canales activos
+NOTIFICATION_CHANNELS=email,telegram
+```
+
+#### 🚀 **Uso:**
+Las notificaciones se envían automáticamente cuando se hace:
+```
+POST /api/sales
+```
+
+No requiere configuración adicional en el frontend. El sistema detecta automáticamente cuando se crea un pedido y envía las notificaciones correspondientes.
+
+#### 📱 **Telegram (Opcional):**
+Para configurar Telegram:
+1. Crear un bot con @BotFather
+2. Obtener el token del bot
+3. Obtener tu chat ID visitando: `https://api.telegram.org/bot{TOKEN}/getUpdates`
+4. Configurar las variables de entorno
+
+---
+
 ## 💡 Decisiones Arquitectónicas y Destacados
 
 * **TypeScript, Arquitectura en Capas, Inyección de Dependencias, DTOs, Mappers.**
@@ -238,6 +363,7 @@ npm test
 * **Búsqueda/Filtrado eficiente con MongoDB nativo (incluyendo filtro por** **tags**).
 * **Gestión de Direcciones de Envío separada.**
 * **Snapshot de Dirección en Pedidos.**
+* **Sistema de Notificaciones Extensible con múltiples canales (Email, Telegram).**
 * **Panel de Administración API (**/api/admin**).**
 * **Chatbot RAG con Langchain y Transformers.js.**
 * **Integraciones: Mercado Pago, Cloudinary, Nodemailer.**
@@ -266,7 +392,6 @@ npm test
 * **Wishlist.**
 * **Recomendaciones de Productos.**
 * **Promociones Avanzadas.**
-* **Notificaciones Adicionales (Email/Push).**
 * **Refinar Lógica del Chatbot.**
 * **Integración con Analítica.**
 * **Soporte Multi-idioma/Multi-moneda.**
@@ -284,9 +409,13 @@ npm test
 
 ## 🌐 API Endpoints Detallados
 
+[⬆️ Volver al Índice](#-índice-de-contenidos) | [🔗 Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
 ---
 
 ### Autenticación (**/api/auth**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
 #### **POST /register**
 
@@ -480,6 +609,8 @@ npm test
 
 ### Productos (**/api/products**)
 
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
 #### **GET /search**
 
 - **Descripción**: Realiza búsquedas de productos por palabra clave y permite filtrar por categorías, etiquetas, rango de precios, y ordenar los resultados.
@@ -625,6 +756,8 @@ npm test
 
 ### Categorías (**/api/categories**)
 
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
 #### **GET /**
 
 - **Descripción**: Lista todas las categorías disponibles.
@@ -714,6 +847,8 @@ npm test
 
 ### Tags (Etiquetas) (**/api/tags**)
 
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
 #### **GET /**
 
 - **Descripción**: Lista todas las etiquetas activas disponibles.
@@ -742,6 +877,8 @@ npm test
 ---
 
 ### Unidades (**/api/units**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
 #### **GET /**
 
@@ -831,6 +968,8 @@ npm test
 ---
 
 ### Ciudades (**/api/cities**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
 #### **GET /**
 
@@ -927,6 +1066,8 @@ npm test
 ---
 
 ### Barrios (**/api/neighborhoods**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
 #### **GET /**
 
@@ -1041,6 +1182,8 @@ npm test
 
 ### Clientes (**/api/customers**)
 
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
 #### **GET /**
 
 - **Descripción**: Lista todos los clientes registrados en el sistema.
@@ -1147,6 +1290,8 @@ npm test
 ---
 
 ### Direcciones (**/api/addresses**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
 **Nota: Todos los endpoints requieren autenticación JWT**
 
@@ -1296,6 +1441,8 @@ npm test
 
 ### Carrito (**/api/cart**)
 
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
 **Nota: Todos los endpoints requieren autenticación JWT**
 
 #### **GET /**
@@ -1413,6 +1560,8 @@ npm test
 ---
 
 ### Pedidos/Ventas (**/api/sales**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
 #### **POST /**
 
@@ -1828,6 +1977,8 @@ npm test
 
 ### Métodos de Pago (**/api/payment-methods**)
 
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
 #### **GET /active**
 
 - **Descripción**: Obtiene todos los métodos de pago activos disponibles para los clientes.
@@ -2022,6 +2173,8 @@ npm test
 ---
 
 ### Pagos (**/api/payments**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
 #### **POST /sale/:saleId**
 
@@ -2257,6 +2410,8 @@ npm test
 
 ### Cupones (**/api/coupons**)
 
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
 #### **GET /**
 
 - **Descripción**: Lista todos los cupones del sistema con paginación
@@ -2449,6 +2604,8 @@ npm test
 ---
 
 ### Chatbot (**/api/chatbot**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
 #### **POST /query**
 
@@ -2712,6 +2869,8 @@ npm test
 ---
 
 ### Administración (**/api/admin**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
 **(Todos los siguientes endpoints requieren autenticación JWT y rol ADMIN_ROLE)**
 

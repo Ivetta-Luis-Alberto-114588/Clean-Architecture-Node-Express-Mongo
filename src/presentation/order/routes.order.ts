@@ -17,6 +17,8 @@ import { CityRepositoryImpl } from "../../infrastructure/repositories/customers/
 import { OrderStatusMongoDataSourceImpl } from "../../infrastructure/datasources/order/order-status.mongo.datasource.impl";
 import { OrderStatusRepositoryImpl } from "../../infrastructure/repositories/order/order-status.repository.impl";
 import { UpdateOrderUseCase } from "../../domain/use-cases/order/update-order.use-case";
+import { NotificationServiceImpl } from "../../infrastructure/services/notification.service";
+import { notificationConfig } from "../../configs/notification.config";
 
 export class OrderRoutes {
     static get getOrderRoutes(): Router {
@@ -38,10 +40,11 @@ export class OrderRoutes {
         const couponRepository = new CouponRepositoryImpl(couponDatasource);
         const neighborhoodRepository = new NeighborhoodRepositoryImpl(neighborhoodDatasource);
         const cityRepository = new CityRepositoryImpl(cityDatasource);
-        const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);
-
-        // Use case para actualizar pedidos
+        const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);        // Use case para actualizar pedidos
         const updateOrderUseCase = new UpdateOrderUseCase(orderRepository);
+        
+        // Notification service
+        const notificationService = new NotificationServiceImpl(notificationConfig);
         
         // Controller con todas las dependencias
         const controller = new OrderController(
@@ -52,7 +55,8 @@ export class OrderRoutes {
             neighborhoodRepository,
             cityRepository,
             orderStatusRepository,
-            updateOrderUseCase
+            updateOrderUseCase,
+            notificationService
         );
 
         // Rutas

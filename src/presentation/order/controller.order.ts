@@ -19,9 +19,10 @@ import { GetMyOrdersUseCase } from "../../domain/use-cases/order/get-my-orders.u
 import { NeighborhoodRepository } from "../../domain/repositories/customers/neighborhood.repository";
 import { CityRepository } from "../../domain/repositories/customers/city.repository";
 import { OrderStatusRepository } from "../../domain/repositories/order/order-status.repository";
-import { GetOrdersForDashboardUseCase } from './../../domain/use-cases/order/get-orders-for-dashboard.use-case'; // NUEVO
+import { GetOrdersForDashboardUseCase } from './../../domain/use-cases/order/get-orders-for-dashboard.use-case';
 import { UpdateOrderDto } from "../../domain/dtos/order/update-order.dto";
 import { UpdateOrderUseCase } from "../../domain/use-cases/order/update-order.use-case";
+import { NotificationServiceImpl } from "../../infrastructure/services/notification.service";
 
 export class OrderController {
 
@@ -33,10 +34,9 @@ export class OrderController {
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
         private readonly orderStatusRepository: OrderStatusRepository,
-        private readonly updateOrderUseCase: UpdateOrderUseCase // Inyectar use case
+        private readonly updateOrderUseCase: UpdateOrderUseCase,
+        private readonly notificationService: NotificationServiceImpl
     ) { }
-
-
 
     private handleError = (error: unknown, res: Response) => {
         if (error instanceof CustomError) {
@@ -48,7 +48,6 @@ export class OrderController {
 
     getOrdersForDashboard = async (req: Request, res: Response): Promise<void> => {
         try {
-            // El UseCase se encargará de la lógica de obtener estados y sus órdenes
             const data = await new GetOrdersForDashboardUseCase(this.orderRepository, this.orderStatusRepository).execute();
             res.json(data);
         } catch (error) {
@@ -56,8 +55,6 @@ export class OrderController {
         }
     };
 
-
-    // --- MÉTODO getAllSales MODIFICADO ---
     getAllSales = (req: Request, res: Response): void => {
         const { page = 1, limit = 10 } = req.query;
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
@@ -68,12 +65,10 @@ export class OrderController {
         }
         new GetAllOrderUseCase(this.orderRepository)
             .execute(paginationDto!)
-            .then(data => res.json(data)) // Devuelve directamente el objeto { total, orders }
+            .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
     };
-    // --- FIN MÉTODO getAllSales MODIFICADO ---
 
-    // --- getSalesByCustomer MODIFICADO ---
     getSalesByCustomer = (req: Request, res: Response): void => {
         const { customerId } = req.params;
         const { page = 1, limit = 10 } = req.query;
@@ -88,12 +83,10 @@ export class OrderController {
             this.customerRepository
         )
             .execute(customerId, paginationDto!)
-            .then(data => res.json(data)) // Devuelve directamente el objeto { total, orders }
+            .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
     };
-    // --- FIN getSalesByCustomer MODIFICADO ---
 
-    // --- getSalesByDateRange MODIFICADO ---
     getSalesByDateRange = (req: Request, res: Response): void => {
         const { startDate, endDate } = req.body;
         const { page = 1, limit = 10 } = req.query;
@@ -122,17 +115,15 @@ export class OrderController {
             new FindOrderByDateRangeUseCase(this.orderRepository)
                 .execute(start, end, paginationDto!)
                 .then(data => {
-                    logger.info(`Se encontraron ${data.total} pedidos en el rango.`); // Loguear el total
-                    res.json(data); // Devuelve directamente el objeto { total, orders }
+                    logger.info(`Se encontraron ${data.total} pedidos en el rango.`);
+                    res.json(data);
                 })
                 .catch(err => this.handleError(err, res));
         } catch (error) {
             this.handleError(error, res);
         }
     };
-    // --- FIN getSalesByDateRange MODIFICADO ---
 
-    // --- getMyOrders MODIFICADO ---
     getMyOrders = (req: Request, res: Response): void => {
         const userId = req.body.user?.id;
 
@@ -152,13 +143,10 @@ export class OrderController {
 
         new GetMyOrdersUseCase(this.orderRepository, this.customerRepository)
             .execute(userId, paginationDto!)
-            .then(data => res.json(data)) // Devuelve directamente el objeto { total, orders }
+            .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
     };
-    // --- FIN getMyOrders MODIFICADO ---
 
-
-    // --- Resto de métodos (createSale, getSaleById, updateSaleStatus) sin cambios necesarios aquí ---
     createSale = (req: Request, res: Response): void => {
         const userId = req.body.user?.id;
         const [error, createSaleDto] = CreateOrderDto.create(req.body, userId);
@@ -167,13 +155,38 @@ export class OrderController {
             res.status(400).json({ error });
             logger.warn("Error en validación de CreateOrderDto", { error, body: req.body, userId });
             return;
-        } new CreateOrderUseCase(
+        }
+
+        new CreateOrderUseCase(
             this.orderRepository, this.customerRepository, this.productRepository,
             this.couponRepository, this.neighborhoodRepository, this.cityRepository,
             this.orderStatusRepository
         )
             .execute(createSaleDto!, userId)
-            .then(data => res.status(201).json(data))
+            .then(async (data) => {
+                // Enviar notificación de nueva orden (sin bloquear la respuesta)
+                try {                    await this.notificationService.sendOrderNotification({
+                        orderId: data.id,
+                        customerName: data.customer?.name || 'Cliente',
+                        customerEmail: data.customer?.email || '',
+                        total: data.total,
+                        items: data.items?.map(detail => ({
+                            productName: detail.product?.name || 'Producto',
+                            quantity: detail.quantity,
+                            price: detail.unitPrice
+                        })) || [],
+                        orderDate: data.date || new Date()
+                    });
+                    logger.info(`Notificación enviada para orden ${data.id}`);
+                } catch (notificationError) {
+                    logger.warn(`Error al enviar notificación para orden ${data.id}:`, { 
+                        error: notificationError instanceof Error ? notificationError.message : notificationError 
+                    });
+                    // No lanzamos el error para que no afecte la respuesta de la orden
+                }
+                
+                res.status(201).json(data);
+            })
             .catch(err => this.handleError(err, res));
     };
 
@@ -209,7 +222,7 @@ export class OrderController {
             res.status(400).json({ error });
             return;
         }
-        this.updateOrderUseCase.execute(id, updateDto!) // execute use case
+        this.updateOrderUseCase.execute(id, updateDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
     };
