@@ -1,3 +1,7 @@
+import { CreateAddressDto } from "../../../../src/domain/dtos/customers/create-address.dto";
+import { UpdateAddressDto } from "../../../../src/domain/dtos/customers/update-address.dto";
+import { PaginationDto } from "../../../../src/domain/dtos/shared/pagination.dto";
+import { AddressEntity } from "../../../../src/domain/entities/customers/address.entity";
 import { CustomerEntity } from "../../../../src/domain/entities/customers/customer";
 import { CustomError } from "../../../../src/domain/errors/custom.error";
 import { CustomerRepository } from "../../../../src/domain/repositories/customers/customer.repository";
@@ -6,6 +10,7 @@ import { GetCustomerByEmailUseCase } from "../../../../src/domain/use-cases/cust
 
 // Mock del CustomerRepository
 class MockCustomerRepository implements CustomerRepository {
+
   private mockCustomer: CustomerEntity | null = null;
   private mockError: Error | null = null;
   private findByEmailCalled = false;
@@ -26,11 +31,11 @@ class MockCustomerRepository implements CustomerRepository {
   // Implementación del método findByEmail del repositorio
   async findByEmail(email: string): Promise<CustomerEntity | null> {
     this.findByEmailCalled = true;
-    
+
     if (this.mockError) {
       throw this.mockError;
     }
-    
+
     return this.mockCustomer;
   }
 
@@ -41,12 +46,34 @@ class MockCustomerRepository implements CustomerRepository {
   async update() { return {} as CustomerEntity; }
   async delete() { return {} as CustomerEntity; }
   async findByNeighborhood() { return []; }
+  async findByUserId(userId: string): Promise<CustomerEntity | null> {
+    throw new Error("Method not implemented.");
+  }
+  async createAddress(createAddressDto: CreateAddressDto): Promise<AddressEntity> {
+    throw new Error("Method not implemented.");
+  }
+  async getAddressesByCustomerId(customerId: string, paginationDto: PaginationDto): Promise<AddressEntity[]> {
+    throw new Error("Method not implemented.");
+  }
+  async findAddressById(addressId: string): Promise<AddressEntity | null> {
+    throw new Error("Method not implemented.");
+  }
+  async updateAddress(addressId: string, updateAddressDto: UpdateAddressDto): Promise<AddressEntity | null> {
+    throw new Error("Method not implemented.");
+  }
+  async deleteAddress(addressId: string, customerId: string): Promise<AddressEntity | null> {
+    throw new Error("Method not implemented.");
+  }
+  async setDefaultAddress(addressId: string, customerId: string): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
+
 }
 
 describe('GetCustomerByEmailUseCase', () => {
   let mockRepository: MockCustomerRepository;
   let useCase: GetCustomerByEmailUseCase;
-  
+
   // Cliente mock para las pruebas
   const mockNeighborhood = {
     id: 123,
@@ -60,7 +87,7 @@ describe('GetCustomerByEmailUseCase', () => {
     },
     isActive: true
   };
-  
+
   const mockCustomer: CustomerEntity = {
     id: 789,
     name: 'Cliente Test',
@@ -80,13 +107,13 @@ describe('GetCustomerByEmailUseCase', () => {
   test('should get customer by email successfully', async () => {
     // Configurar el mock para devolver un cliente válido
     mockRepository.setMockCustomer(mockCustomer);
-    
+
     // Ejecutar el caso de uso
     const result = await useCase.execute('cliente@test.com');
-    
+
     // Verificar que el método findByEmail fue llamado
     expect(mockRepository.wasFindByEmailCalled()).toBe(true);
-    
+
     // Verificar que se devolvió el cliente correctamente
     expect(result).toEqual(mockCustomer);
   });
@@ -94,13 +121,13 @@ describe('GetCustomerByEmailUseCase', () => {
   test('should return null when customer does not exist', async () => {
     // Configurar el mock para que devuelva null (cliente no encontrado)
     mockRepository.setMockCustomer(null);
-    
+
     // Ejecutar el caso de uso
     const result = await useCase.execute('cliente@test.com');
-    
+
     // Verificar que el método findByEmail fue llamado
     expect(mockRepository.wasFindByEmailCalled()).toBe(true);
-    
+
     // Verificar que se devuelve null
     expect(result).toBeNull();
   });
@@ -109,7 +136,7 @@ describe('GetCustomerByEmailUseCase', () => {
     // Ejecutar el caso de uso con un email inválido y esperar que lance una excepción
     await expect(useCase.execute('emailinvalido')).rejects.toThrow(CustomError);
     await expect(useCase.execute('emailinvalido')).rejects.toThrow(/Formato de email inválido/);
-    
+
     // Verificar que el método findByEmail NO fue llamado debido al error de validación
     expect(mockRepository.wasFindByEmailCalled()).toBe(false);
   });
@@ -118,16 +145,16 @@ describe('GetCustomerByEmailUseCase', () => {
     // Configurar el mock para que lance un error específico
     const testError = new Error('Error de prueba en el repositorio');
     mockRepository.setMockError(testError);
-    
+
     // Ejecutar el caso de uso y esperar que lance una excepción
     await expect(useCase.execute('cliente@test.com')).rejects.toThrow(CustomError);
-    
+
     // Usar toMatchObject para verificar el código de estado del error
     // en lugar de depender del mensaje exacto
     await expect(useCase.execute('cliente@test.com')).rejects.toMatchObject({
       statusCode: 500
     });
-    
+
     // Verificar que el método findByEmail fue llamado
     expect(mockRepository.wasFindByEmailCalled()).toBe(true);
   });
@@ -136,11 +163,11 @@ describe('GetCustomerByEmailUseCase', () => {
     // Configurar el mock para que lance un CustomError específico
     const customError = CustomError.badRequest('Error personalizado de prueba');
     mockRepository.setMockError(customError);
-    
+
     // Ejecutar el caso de uso y esperar que lance el mismo CustomError
     await expect(useCase.execute('cliente@test.com')).rejects.toThrow(CustomError);
     await expect(useCase.execute('cliente@test.com')).rejects.toThrow('Error personalizado de prueba');
-    
+
     // Verificar que el método findByEmail fue llamado
     expect(mockRepository.wasFindByEmailCalled()).toBe(true);
   });

@@ -9,14 +9,14 @@ import { CityEntity } from '../../../../src/domain/entities/customers/citiy';
 describe('PaymentEntity', () => {
   // Objetos mock para las pruebas
   const mockCity = new CityEntity(
-    1,
+    "1",
     'Test City',
     'Test City Description',
     true
   );
 
   const mockNeighborhood = new NeighborhoodEntity(
-    2,
+    "2",
     'Test Neighborhood',
     'Test Neighborhood Description',
     mockCity,
@@ -24,7 +24,7 @@ describe('PaymentEntity', () => {
   );
 
   const mockCustomer = new CustomerEntity(
-    3,
+    "3",
     'John Doe',
     'john.doe@example.com',
     '+123456789',
@@ -34,7 +34,7 @@ describe('PaymentEntity', () => {
   );
 
   const mockSale = new SaleEntity(
-    '4',
+    "4",
     mockCustomer,
     [], // items vacíos para la prueba
     100, // subtotal
@@ -375,7 +375,7 @@ describe('PaymentEntity', () => {
     expect(payment.customer.email).toBe('john.doe@example.com');
     expect(payment.customer.neighborhood.name).toBe('Test Neighborhood');
     expect(payment.customer.neighborhood.city.name).toBe('Test City');
-    
+
     expect(payment.sale.total).toBe(116);
     expect(payment.sale.status).toBe('pending');
     expect(payment.sale.customer).toBe(mockCustomer);

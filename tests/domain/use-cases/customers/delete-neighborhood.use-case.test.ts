@@ -27,26 +27,26 @@ class MockNeighborhoodRepository implements NeighborhoodRepository {
     if (this.mockError) {
       throw this.mockError;
     }
-    
+
     if (!this.mockNeighborhood) {
       throw CustomError.notFound("Barrio no encontrado");
     }
-    
+
     return this.mockNeighborhood;
   }
 
   // Implementación del método delete del repositorio
   async delete(id: string): Promise<NeighborhoodEntity> {
     this.deleteCalled = true;
-    
+
     if (this.mockError) {
       throw this.mockError;
     }
-    
+
     if (!this.mockNeighborhood) {
       throw CustomError.notFound("Barrio no encontrado");
     }
-    
+
     return this.mockNeighborhood;
   }
 
@@ -62,14 +62,14 @@ class MockNeighborhoodRepository implements NeighborhoodRepository {
 describe('DeleteNeighborhoodUseCase', () => {
   let mockRepository: MockNeighborhoodRepository;
   let useCase: DeleteNeighborhoodUseCase;
-  
+
   // Barrio mock para las pruebas
   const mockNeighborhood: NeighborhoodEntity = {
-    id: 123,
+    id: "123",
     name: 'Barrio Test',
     description: 'Descripción Test',
     city: {
-      id: 456,
+      id: "456",
       name: 'Ciudad Test',
       description: 'Descripción Test',
       isActive: true
@@ -86,13 +86,13 @@ describe('DeleteNeighborhoodUseCase', () => {
   test('should delete neighborhood successfully', async () => {
     // Configurar el mock para devolver un barrio válido
     mockRepository.setMockNeighborhood(mockNeighborhood);
-    
+
     // Ejecutar el caso de uso
     const result = await useCase.execute('123');
-    
+
     // Verificar que el método delete fue llamado
     expect(mockRepository.wasDeleteCalled()).toBe(true);
-    
+
     // Verificar que se devolvió el barrio eliminado correctamente
     expect(result).toEqual(mockNeighborhood);
   });
@@ -100,11 +100,11 @@ describe('DeleteNeighborhoodUseCase', () => {
   test('should throw NotFound error when neighborhood does not exist', async () => {
     // Configurar el mock para que devuelva null (barrio no encontrado)
     mockRepository.setMockNeighborhood(null);
-    
+
     // Ejecutar el caso de uso y esperar que lance una excepción
     await expect(useCase.execute('123')).rejects.toThrow(CustomError);
     await expect(useCase.execute('123')).rejects.toThrow(/Barrio no encontrado/);
-    
+
     // Verificar que el método delete NO fue llamado
     expect(mockRepository.wasDeleteCalled()).toBe(false);
   });
@@ -113,7 +113,7 @@ describe('DeleteNeighborhoodUseCase', () => {
     // Configurar el mock para que lance un error específico
     const testError = new Error('Error de prueba en el repositorio');
     mockRepository.setMockError(testError);
-    
+
     // Ejecutar el caso de uso y esperar que lance una excepción
     await expect(useCase.execute('123')).rejects.toThrow(CustomError);
     await expect(useCase.execute('123')).rejects.toThrow(/error interno del servidor/);
@@ -123,7 +123,7 @@ describe('DeleteNeighborhoodUseCase', () => {
     // Configurar el mock para que lance un CustomError específico
     const customError = CustomError.badRequest('Error personalizado de prueba');
     mockRepository.setMockError(customError);
-    
+
     // Ejecutar el caso de uso y esperar que lance el mismo CustomError
     await expect(useCase.execute('123')).rejects.toThrow(CustomError);
     await expect(useCase.execute('123')).rejects.toThrow('Error personalizado de prueba');

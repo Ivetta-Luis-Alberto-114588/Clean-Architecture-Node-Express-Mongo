@@ -19,7 +19,7 @@ describe('DeleteCityUseCase', () => {
 
   // Ciudad de ejemplo para pruebas
   const mockCity: CityEntity = {
-    id: 1,
+    id: "1",
     name: 'test city',
     description: 'test description',
     isActive: true
@@ -86,7 +86,7 @@ describe('DeleteCityUseCase', () => {
     await expect(resultPromise)
       .rejects
       .toBeInstanceOf(CustomError);
-    
+
     await resultPromise.catch(error => {
       expect(error.statusCode).toBe(500);
       expect(error.message).toContain('error interno del servidor');

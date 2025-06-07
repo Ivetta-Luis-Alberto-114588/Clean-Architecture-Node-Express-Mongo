@@ -5,14 +5,14 @@ import { CityEntity } from '../../../../src/domain/entities/customers/citiy';
 describe('CustomerEntity', () => {
   // Crear objetos mock para las pruebas
   const mockCity = new CityEntity(
-    1,
+    "1",
     'Test City',
     'Test City Description',
     true
   );
 
   const mockNeighborhood = new NeighborhoodEntity(
-    2,
+    "2",
     'Test Neighborhood',
     'Test Neighborhood Description',
     mockCity,
@@ -22,7 +22,7 @@ describe('CustomerEntity', () => {
   // Test de creación básica
   test('should create a CustomerEntity instance with all properties', () => {
     // Arrange
-    const id = 3;
+    const id = "3";
     const name = 'John Doe';
     const email = 'john.doe@example.com';
     const phone = '+123456789';
@@ -31,12 +31,12 @@ describe('CustomerEntity', () => {
 
     // Act
     const customer = new CustomerEntity(
-      id, 
-      name, 
-      email, 
-      phone, 
-      address, 
-      mockNeighborhood, 
+      id,
+      name,
+      email,
+      phone,
+      address,
+      mockNeighborhood,
       isActive
     );
 
@@ -54,7 +54,7 @@ describe('CustomerEntity', () => {
   // Test con isActive false
   test('should create a CustomerEntity instance with isActive set to false', () => {
     // Arrange
-    const id = 4;
+    const id = "4";
     const name = 'Jane Doe';
     const email = 'jane.doe@example.com';
     const phone = '+987654321';
@@ -63,12 +63,12 @@ describe('CustomerEntity', () => {
 
     // Act
     const customer = new CustomerEntity(
-      id, 
-      name, 
-      email, 
-      phone, 
-      address, 
-      mockNeighborhood, 
+      id,
+      name,
+      email,
+      phone,
+      address,
+      mockNeighborhood,
       isActive
     );
 
@@ -79,7 +79,7 @@ describe('CustomerEntity', () => {
   // Test con valor por defecto para isActive
   test('should set isActive to true by default when not provided', () => {
     // Arrange
-    const id = 5;
+    const id = "5";
     const name = 'Default Active User';
     const email = 'default.active@example.com';
     const phone = '+111222333';
@@ -87,11 +87,11 @@ describe('CustomerEntity', () => {
 
     // Act - No enviamos isActive (usará valor por defecto)
     const customer = new CustomerEntity(
-      id, 
-      name, 
-      email, 
-      phone, 
-      address, 
+      id,
+      name,
+      email,
+      phone,
+      address,
       mockNeighborhood
     );
 
@@ -102,7 +102,7 @@ describe('CustomerEntity', () => {
   // Test de relación completa (acceder a la ciudad a través del barrio)
   test('should allow access to city through neighborhood', () => {
     // Arrange
-    const id = 6;
+    const id = "6";
     const name = 'Relation Test User';
     const email = 'relation.test@example.com';
     const phone = '+444555666';
@@ -111,12 +111,12 @@ describe('CustomerEntity', () => {
 
     // Act
     const customer = new CustomerEntity(
-      id, 
-      name, 
-      email, 
-      phone, 
-      address, 
-      mockNeighborhood, 
+      id,
+      name,
+      email,
+      phone,
+      address,
+      mockNeighborhood,
       isActive
     );
 
@@ -128,7 +128,7 @@ describe('CustomerEntity', () => {
   // Test con valores extraños (verificar comportamiento con valores inusuales)
   test('should accept unusual values for id, name, email, etc.', () => {
     // Arrange
-    const id = -7; // ID negativo
+    const id = -"7"; // ID negativo
     const name = ''; // Nombre vacío
     const email = 'ñáéíóú@special-chars.com'; // Email con caracteres especiales
     const phone = ''; // Teléfono vacío
@@ -137,12 +137,12 @@ describe('CustomerEntity', () => {
 
     // Act
     const customer = new CustomerEntity(
-      id, 
-      name, 
-      email, 
-      phone, 
-      address, 
-      mockNeighborhood, 
+      id,
+      name,
+      email,
+      phone,
+      address,
+      mockNeighborhood,
       isActive
     );
 

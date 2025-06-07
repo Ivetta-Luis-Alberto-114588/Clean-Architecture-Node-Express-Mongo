@@ -58,14 +58,14 @@ describe('UpdateCustomerUseCase', () => {
   
   // Mocks de entidades para las pruebas
   const mockCity = {
-    id: 1,
+    id: '1',
     name: 'Buenos Aires',
     description: 'Capital de Argentina',
     isActive: true
   };
   
   const mockNeighborhood: NeighborhoodEntity = {
-    id: 2,
+    id: "2",
     name: 'Palermo',
     description: 'Barrio turístico',
     city: mockCity,
@@ -73,7 +73,7 @@ describe('UpdateCustomerUseCase', () => {
   };
   
   const mockNewNeighborhood: NeighborhoodEntity = {
-    id: 3,
+    id: '3',
     name: 'Recoleta',
     description: 'Barrio elegante',
     city: mockCity,
@@ -81,7 +81,7 @@ describe('UpdateCustomerUseCase', () => {
   };
   
   const mockExistingCustomer: CustomerEntity = {
-    id: 4,
+    id: '4',
     name: 'Juan Pérez',
     email: 'juan.perez@ejemplo.com',
     phone: '+5491123456789',
@@ -91,7 +91,7 @@ describe('UpdateCustomerUseCase', () => {
   };
   
   const mockUpdatedCustomer: CustomerEntity = {
-    id: 4,
+    id: '4',
     name: 'Cliente Actualizado',
     email: 'actualizado@ejemplo.com',
     phone: '+5491187654321',
@@ -196,7 +196,7 @@ describe('UpdateCustomerUseCase', () => {
     expect(error).toBeUndefined();
     
     // Simular que ya existe un cliente con ese email
-    const anotherCustomer = { ...mockExistingCustomer, id: 999 }; // ID diferente
+    const anotherCustomer = { ...mockExistingCustomer, id: '999' }; // ID diferente
     mockCustomerRepository.findByEmail.mockResolvedValue(anotherCustomer);
     
     // Verificar que se lanza el error adecuado

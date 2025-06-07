@@ -29,11 +29,11 @@ class MockCustomerRepository implements CustomerRepository {
   // Implementación del método findByNeighborhood del repositorio
   async findByNeighborhood(neighborhoodId: string, paginationDto: PaginationDto): Promise<CustomerEntity[]> {
     this.findByNeighborhoodCalled = true;
-    
+
     if (this.mockError) {
       throw this.mockError;
     }
-    
+
     return this.mockCustomers;
   }
 
@@ -68,15 +68,15 @@ class MockNeighborhoodRepository implements NeighborhoodRepository {
   // Implementación del método findById del repositorio
   async findById(id: string): Promise<NeighborhoodEntity> {
     this.findByIdCalled = true;
-    
+
     if (this.mockError) {
       throw this.mockError;
     }
-    
+
     if (!this.mockNeighborhood) {
       throw CustomError.notFound(`Barrio con ID ${id} no encontrado`);
     }
-    
+
     return this.mockNeighborhood;
   }
 
@@ -95,24 +95,24 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
   let mockNeighborhoodRepository: MockNeighborhoodRepository;
   let useCase: FindCustomersByNeighborhoodUseCase;
   let paginationDto: PaginationDto;
-  
+
   // Datos mock para las pruebas
   const mockNeighborhood: NeighborhoodEntity = {
-    id: 123,
+    id: "123",
     name: 'Barrio Test',
     description: 'Descripción Test',
     city: {
-      id: 456,
+      id: "456",
       name: 'Ciudad Test',
       description: 'Descripción Test',
       isActive: true
     },
     isActive: true
   };
-  
+
   const mockCustomers: CustomerEntity[] = [
     {
-      id: 789,
+      id: "789",
       name: 'Cliente Test 1',
       email: 'cliente1@test.com',
       phone: '1234567890',
@@ -121,7 +121,7 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
       isActive: true
     },
     {
-      id: 123,
+      id: "123",
       name: 'Cliente Test 2',
       email: 'cliente2@test.com',
       phone: '0987654321',
@@ -139,7 +139,7 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
       mockCustomerRepository,
       mockNeighborhoodRepository
     );
-    
+
     // Crear un PaginationDto válido
     const [error, pagination] = PaginationDto.create(1, 10);
     expect(error).toBeUndefined();
@@ -150,14 +150,14 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
     // Configurar los mocks para devolver datos válidos
     mockNeighborhoodRepository.setMockNeighborhood(mockNeighborhood);
     mockCustomerRepository.setMockCustomers(mockCustomers);
-    
+
     // Ejecutar el caso de uso
     const result = await useCase.execute('123', paginationDto);
-    
+
     // Verificar que los métodos fueron llamados
     expect(mockNeighborhoodRepository.wasFindByIdCalled()).toBe(true);
     expect(mockCustomerRepository.wasFindByNeighborhoodCalled()).toBe(true);
-    
+
     // Verificar que se devolvieron los clientes correctamente
     expect(result).toEqual(mockCustomers);
     expect(result.length).toBe(2);
@@ -167,14 +167,14 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
     // Configurar los mocks: barrio existe pero no hay clientes
     mockNeighborhoodRepository.setMockNeighborhood(mockNeighborhood);
     mockCustomerRepository.setMockCustomers([]);
-    
+
     // Ejecutar el caso de uso
     const result = await useCase.execute('123', paginationDto);
-    
+
     // Verificar que los métodos fueron llamados
     expect(mockNeighborhoodRepository.wasFindByIdCalled()).toBe(true);
     expect(mockCustomerRepository.wasFindByNeighborhoodCalled()).toBe(true);
-    
+
     // Verificar que se devuelve un array vacío
     expect(result).toEqual([]);
     expect(result.length).toBe(0);
@@ -184,23 +184,23 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
     // Configurar los mocks para devolver datos válidos
     mockNeighborhoodRepository.setMockNeighborhood(mockNeighborhood);
     mockCustomerRepository.setMockCustomers(mockCustomers);
-    
+
     // Espiar el método create de PaginationDto
     const spyCreate = jest.spyOn(PaginationDto, 'create');
-    
+
     // Ejecutar el caso de uso sin proporcionar paginación
     const result = await useCase.execute('123', undefined as unknown as PaginationDto);
-    
+
     // Verificar que se creó una paginación por defecto
     expect(spyCreate).toHaveBeenCalledWith(1, 5);
-    
+
     // Verificar que los métodos fueron llamados
     expect(mockNeighborhoodRepository.wasFindByIdCalled()).toBe(true);
     expect(mockCustomerRepository.wasFindByNeighborhoodCalled()).toBe(true);
-    
+
     // Verificar que se devolvieron los clientes correctamente
     expect(result).toEqual(mockCustomers);
-    
+
     // Restaurar el espía
     spyCreate.mockRestore();
   });
@@ -208,14 +208,14 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
   test('should throw NotFound error when neighborhood does not exist', async () => {
     // Configurar el mock para que devuelva null (barrio no encontrado)
     mockNeighborhoodRepository.setMockNeighborhood(null);
-    
+
     // Ejecutar el caso de uso y esperar que lance una excepción
     await expect(useCase.execute('123', paginationDto)).rejects.toThrow(CustomError);
     await expect(useCase.execute('123', paginationDto)).rejects.toThrow(/Barrio con ID 123 no encontrado/);
-    
+
     // Verificar que el método findById fue llamado
     expect(mockNeighborhoodRepository.wasFindByIdCalled()).toBe(true);
-    
+
     // Verificar que el método findByNeighborhood NO fue llamado
     expect(mockCustomerRepository.wasFindByNeighborhoodCalled()).toBe(false);
   });
@@ -223,20 +223,20 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
   test('should throw BadRequest when pagination is invalid', async () => {
     // Configurar los mocks para devolver datos válidos
     mockNeighborhoodRepository.setMockNeighborhood(mockNeighborhood);
-    
+
     // Espiar el método create de PaginationDto para que devuelva un error
     const spyCreate = jest.spyOn(PaginationDto, 'create').mockReturnValue(['Error de paginación', undefined]);
-    
+
     // Ejecutar el caso de uso sin proporcionar paginación (que debería intentar crear una por defecto)
     await expect(useCase.execute('123', undefined as unknown as PaginationDto)).rejects.toThrow(CustomError);
     await expect(useCase.execute('123', undefined as unknown as PaginationDto)).rejects.toThrow('Error de paginación');
-    
+
     // Verificar que el método findById SÍ fue llamado
     expect(mockNeighborhoodRepository.wasFindByIdCalled()).toBe(true);
-    
+
     // Verificar que el método findByNeighborhood NO fue llamado
     expect(mockCustomerRepository.wasFindByNeighborhoodCalled()).toBe(false);
-    
+
     // Restaurar el espía
     spyCreate.mockRestore();
   });
@@ -245,14 +245,14 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
     // Configurar el mock para que lance un error específico
     const testError = new Error('Error de prueba en el repositorio de barrios');
     mockNeighborhoodRepository.setMockError(testError);
-    
+
     // Ejecutar el caso de uso y esperar que lance una excepción
     await expect(useCase.execute('123', paginationDto)).rejects.toThrow(CustomError);
     await expect(useCase.execute('123', paginationDto)).rejects.toThrow(/error interno del servidor/);
-    
+
     // Verificar que el método findById fue llamado
     expect(mockNeighborhoodRepository.wasFindByIdCalled()).toBe(true);
-    
+
     // Verificar que el método findByNeighborhood NO fue llamado
     expect(mockCustomerRepository.wasFindByNeighborhoodCalled()).toBe(false);
   });
@@ -261,14 +261,14 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
     // Configurar los mocks: barrio existe pero el repositorio de clientes da error
     mockNeighborhoodRepository.setMockNeighborhood(mockNeighborhood);
     mockCustomerRepository.setMockError(new Error('Error de prueba en el repositorio de clientes'));
-    
+
     // Ejecutar el caso de uso y esperar que lance una excepción
     await expect(useCase.execute('123', paginationDto)).rejects.toThrow(CustomError);
     await expect(useCase.execute('123', paginationDto)).rejects.toThrow(/error interno del servidor/);
-    
+
     // Verificar que el método findById fue llamado
     expect(mockNeighborhoodRepository.wasFindByIdCalled()).toBe(true);
-    
+
     // Verificar que el método findByNeighborhood también fue llamado
     expect(mockCustomerRepository.wasFindByNeighborhoodCalled()).toBe(true);
   });
@@ -277,11 +277,11 @@ describe('FindCustomersByNeighborhoodUseCase', () => {
     // Configurar el mock para que lance un CustomError específico
     const customError = CustomError.badRequest('Error personalizado de prueba');
     mockNeighborhoodRepository.setMockError(customError);
-    
+
     // Ejecutar el caso de uso y esperar que lance el mismo CustomError
     await expect(useCase.execute('123', paginationDto)).rejects.toThrow(CustomError);
     await expect(useCase.execute('123', paginationDto)).rejects.toThrow('Error personalizado de prueba');
-    
+
     // Verificar que el método findById fue llamado
     expect(mockNeighborhoodRepository.wasFindByIdCalled()).toBe(true);
   });

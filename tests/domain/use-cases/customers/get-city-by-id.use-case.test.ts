@@ -26,15 +26,15 @@ class MockCityRepository implements CityRepository {
   // Implementación del método findById del repositorio
   async findById(id: string): Promise<CityEntity> {
     this.findByIdCalled = true;
-    
+
     if (this.mockError) {
       throw this.mockError;
     }
-    
+
     if (!this.mockCity) {
       throw CustomError.notFound(`Ciudad con ID ${id} no encontrada`);
     }
-    
+
     return this.mockCity;
   }
 
@@ -50,10 +50,10 @@ class MockCityRepository implements CityRepository {
 describe('GetCityByIdUseCase', () => {
   let mockRepository: MockCityRepository;
   let useCase: GetCityByIdUseCase;
-  
+
   // Ciudad mock para las pruebas
   const mockCity: CityEntity = {
-    id: 123,
+    id: "123",
     name: 'Ciudad Test',
     description: 'Descripción Test',
     isActive: true
@@ -68,13 +68,13 @@ describe('GetCityByIdUseCase', () => {
   test('should get city by id successfully', async () => {
     // Configurar el mock para devolver una ciudad válida
     mockRepository.setMockCity(mockCity);
-    
+
     // Ejecutar el caso de uso
     const result = await useCase.execute('123');
-    
+
     // Verificar que el método findById fue llamado
     expect(mockRepository.wasFindByIdCalled()).toBe(true);
-    
+
     // Verificar que se devolvió la ciudad correctamente
     expect(result).toEqual(mockCity);
   });
@@ -82,11 +82,11 @@ describe('GetCityByIdUseCase', () => {
   test('should throw NotFound error when city does not exist', async () => {
     // Configurar el mock para que devuelva null (ciudad no encontrada)
     mockRepository.setMockCity(null);
-    
+
     // Ejecutar el caso de uso y esperar que lance una excepción
     await expect(useCase.execute('123')).rejects.toThrow(CustomError);
     await expect(useCase.execute('123')).rejects.toThrow(/Ciudad con ID 123 no encontrada/);
-    
+
     // Verificar que el método findById fue llamado
     expect(mockRepository.wasFindByIdCalled()).toBe(true);
   });
@@ -95,16 +95,16 @@ describe('GetCityByIdUseCase', () => {
     // Configurar el mock para que lance un error específico
     const testError = new Error('Error de prueba en el repositorio');
     mockRepository.setMockError(testError);
-    
+
     // Ejecutar el caso de uso y esperar que lance una excepción
     await expect(useCase.execute('123')).rejects.toThrow(CustomError);
-    
+
     // Usar toMatchObject para verificar el código de estado del error
     // en lugar de depender del mensaje exacto
     await expect(useCase.execute('123')).rejects.toMatchObject({
       statusCode: 500
     });
-    
+
     // Verificar que el método findById fue llamado
     expect(mockRepository.wasFindByIdCalled()).toBe(true);
   });
@@ -113,11 +113,11 @@ describe('GetCityByIdUseCase', () => {
     // Configurar el mock para que lance un CustomError específico
     const customError = CustomError.badRequest('Error personalizado de prueba');
     mockRepository.setMockError(customError);
-    
+
     // Ejecutar el caso de uso y esperar que lance el mismo CustomError
     await expect(useCase.execute('123')).rejects.toThrow(CustomError);
     await expect(useCase.execute('123')).rejects.toThrow('Error personalizado de prueba');
-    
+
     // Verificar que el método findById fue llamado
     expect(mockRepository.wasFindByIdCalled()).toBe(true);
   });
