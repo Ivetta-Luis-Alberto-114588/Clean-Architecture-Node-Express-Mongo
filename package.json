@@ -12,6 +12,8 @@
     "generate-embeddings": "node src/infrastructure/adapters/transformers-bridge.mjs",
     "seed": "tsnd src/seeders/index.ts",
     "test": "jest --runInBand --detectOpenHandles",
+    "test:unit": "jest --testPathPattern=tests/unit",
+    "test:integration": "jest --testPathPattern=tests/integration",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },

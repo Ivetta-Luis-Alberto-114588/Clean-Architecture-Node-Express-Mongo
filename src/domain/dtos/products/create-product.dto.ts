@@ -12,8 +12,8 @@ export class CreateProductDto {
         public imgUrl: string,
         public isActive: boolean = true,
         public taxRate: number = 21,
-        public tags?: string[]    ) { }
-    
+        public tags?: string[]) { }
+
     //este metodo va a devolver una instancia de la clase actual o un array con un string y undefined
     static create(object: { [key: string]: any }): [string?, CreateProductDto?] {
         // object("name": string)       [error, instancia del dto]
