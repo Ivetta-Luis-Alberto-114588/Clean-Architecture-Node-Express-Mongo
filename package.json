@@ -11,7 +11,7 @@
     "start": "node --max-old-space-size=512 dist/app.js",
     "generate-embeddings": "node src/infrastructure/adapters/transformers-bridge.mjs",
     "seed": "tsnd src/seeders/index.ts",
-    "test": "jest",
+    "test": "jest --runInBand --detectOpenHandles",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },

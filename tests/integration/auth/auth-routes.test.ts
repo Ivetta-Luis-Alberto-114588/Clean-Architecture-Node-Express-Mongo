@@ -37,7 +37,9 @@ describe('Auth Product Routes Integration Tests', () => {
       ProductModel.deleteMany({}),
       CategoryModel.deleteMany({}),
       UnitModel.deleteMany({})
-    ]);// 3. Crear usuario de prueba para autenticación
+    ]);
+
+    // 3. Crear usuario de prueba para autenticación
     const hashedPassword = BcryptAdapter.hash('password123');
     testUser = await UserModel.create({
       name: 'auth test admin',
@@ -93,10 +95,13 @@ describe('Auth Product Routes Integration Tests', () => {
     test('should create a new product', async () => {
       const productData = {
         name: 'New Test Product',
-        description: 'Created during integration test', price: 19.99,
+        description: 'Created during integration test',
+        price: 19.99,
         stock: 50,
-        category: testCategory._id,  // Usar ObjectId de la categoría
-        unit: testUnit._id           // Usar ObjectId de la unidad
+        category: testCategory._id,    // Changed from categoryId
+        unit: testUnit._id,            // Changed from unitId
+        imgUrl: 'http://example.com/img.png',
+        isActive: true
       };
 
       const response = await request(testServer.app)
