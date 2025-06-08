@@ -222,9 +222,8 @@ describe('CreateProductDto', () => {
     expect(error).toBe('imgUrl is required');
     expect(createProductDto).toBeUndefined();
   });
-  
-  // Prueba de validación: isActive requerido
-  test('should return error if isActive is not provided', () => {
+    // Prueba de validación: isActive defaults to true when not provided
+  test('should default isActive to true when not provided', () => {
     // Datos de prueba con isActive faltante
     const productData = {
       name: 'Test Product',
@@ -240,7 +239,30 @@ describe('CreateProductDto', () => {
     const [error, createProductDto] = CreateProductDto.create(productData);
     
     // Verificaciones
-    expect(error).toBe('isActive is required');
+    expect(error).toBeUndefined();
+    expect(createProductDto).toBeInstanceOf(CreateProductDto);
+    expect(createProductDto?.isActive).toBe(true); // Should default to true
+  });
+
+  // Prueba de validación: isActive debe ser boolean si se proporciona
+  test('should return error if isActive is not a boolean', () => {
+    // Datos de prueba con isActive inválido
+    const productData = {
+      name: 'Test Product',
+      description: 'Test product description',
+      price: 100,
+      stock: 10,
+      category: validCategoryId,
+      unit: validUnitId,
+      imgUrl: 'http://example.com/image.jpg',
+      isActive: 'not-a-boolean' // Invalid type
+    };
+    
+    // Creación del DTO
+    const [error, createProductDto] = CreateProductDto.create(productData);
+    
+    // Verificaciones
+    expect(error).toBe('isActive must be a boolean');
     expect(createProductDto).toBeUndefined();
   });
 });

@@ -198,9 +198,9 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
             const product = await ProductModel.findById(id)
                 .populate('category')
                 .populate('unit');
-            if (!product) throw CustomError.notFound("Product not found");
+            if (!product) throw CustomError.notFound("Producto no encontrado");
             // --- MODIFICACIÓN: Solo devolver si está activo para endpoint público ---
-            // if (!product.isActive) throw CustomError.notFound("Product not found"); // Opcional: decidir si mostrar inactivos por ID directo
+            // if (!product.isActive) throw CustomError.notFound("Producto no encontrado"); // Opcional: decidir si mostrar inactivos por ID directo
             return ProductMapper.fromObjectToProductEntity(product);
         } catch (error) {
             if (error instanceof mongoose.Error.CastError && error.path === '_id') {
@@ -226,7 +226,7 @@ export class ProductMongoDataSourceImpl extends ProductDataSource {
             const updatedProduct = await ProductModel.findByIdAndUpdate(id, updateProductDto, { new: true })
                 .populate('category')
                 .populate('unit');
-            if (!updatedProduct) throw CustomError.notFound("Product not found");
+            if (!updatedProduct) throw CustomError.notFound("Producto no encontrado");
             return ProductMapper.fromObjectToProductEntity(updatedProduct);
         } catch (error: any) {
             if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {

@@ -4,7 +4,7 @@ import { UnitEntity } from "./unit.entity";
 
 export class ProductEntity {
     constructor(
-        public id: number,
+        public id: number | string,
         public name: string,
         public price: number,
         public stock: number = 10,

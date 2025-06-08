@@ -24,10 +24,9 @@ export class ProductRoutes {
         // GET /api/products/search?q=... (Búsqueda)
         router.get('/search', (req: Request, res: Response) => {
             controller.searchProducts(req, res);
-        });
-
-        // GET /api/products/by-category/:categoryId (Productos por categoría)
+        });        // GET /api/products/by-category/:categoryId (Productos por categoría)
         router.get('/by-category/:categoryId', (req: Request, res: Response) => {
+            console.log("Route /by-category/:categoryId hit with params:", req.params);
             controller.getProductsByCategory(req, res);
         });
 

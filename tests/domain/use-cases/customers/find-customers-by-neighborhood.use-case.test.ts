@@ -1,4 +1,7 @@
+import { CreateAddressDto } from "../../../../src/domain/dtos/customers/create-address.dto";
+import { UpdateAddressDto } from "../../../../src/domain/dtos/customers/update-address.dto";
 import { PaginationDto } from "../../../../src/domain/dtos/shared/pagination.dto";
+import { AddressEntity } from "../../../../src/domain/entities/customers/address.entity";
 import { CustomerEntity } from "../../../../src/domain/entities/customers/customer";
 import { NeighborhoodEntity } from "../../../../src/domain/entities/customers/neighborhood";
 import { CustomError } from "../../../../src/domain/errors/custom.error";
@@ -9,6 +12,27 @@ import { FindCustomersByNeighborhoodUseCase } from "../../../../src/domain/use-c
 
 // Mock del CustomerRepository
 class MockCustomerRepository implements CustomerRepository {
+  findByUserId(userId: string): Promise<CustomerEntity | null> {
+    throw new Error("Method not implemented.");
+  }
+  createAddress(createAddressDto: CreateAddressDto): Promise<AddressEntity> {
+    throw new Error("Method not implemented.");
+  }
+  getAddressesByCustomerId(customerId: string, paginationDto: PaginationDto): Promise<AddressEntity[]> {
+    throw new Error("Method not implemented.");
+  }
+  findAddressById(addressId: string): Promise<AddressEntity | null> {
+    throw new Error("Method not implemented.");
+  }
+  updateAddress(addressId: string, updateAddressDto: UpdateAddressDto): Promise<AddressEntity | null> {
+    throw new Error("Method not implemented.");
+  }
+  deleteAddress(addressId: string, customerId: string): Promise<AddressEntity | null> {
+    throw new Error("Method not implemented.");
+  }
+  setDefaultAddress(addressId: string, customerId: string): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
   private mockCustomers: CustomerEntity[] = [];
   private mockError: Error | null = null;
   private findByNeighborhoodCalled = false;
@@ -44,6 +68,9 @@ class MockCustomerRepository implements CustomerRepository {
   async update() { return {} as CustomerEntity; }
   async delete() { return {} as CustomerEntity; }
   async findByEmail() { return null; }
+
+
+
 }
 
 // Mock del NeighborhoodRepository

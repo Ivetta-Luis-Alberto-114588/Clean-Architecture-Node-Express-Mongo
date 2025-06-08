@@ -14,21 +14,88 @@ interface IOptions {
 
 export class server {
     public readonly app = express()
-    private readonly port: number
-    private readonly routes: Router
+    public readonly port: number
+    public readonly routes: Router
 
     constructor(options: IOptions) {
         const { p_port, p_routes } = options
 
         this.port = p_port
         this.routes = p_routes
+
+        // Set up the app for testing
+        this.setupApp();
     }
 
-    async start() {
+    private setupApp() {
+        // Configure trust proxy based on environment
+        if (envs.NODE_ENV === 'development' || envs.NODE_ENV === 'test') {
+            this.app.set('trust proxy', true);
+        } else {
+            this.app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+        }
+
+        // Apply logging middleware first
+        this.app.use(LoggerMiddleware.getLoggerMiddleware());
+
+        // Apply rate limiting
+        this.app.use(RateLimitMiddleware.getGlobalRateLimit());
+
+        // CORS configuration
+        const corsOptions: cors.CorsOptions = {
+            methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+            allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+            credentials: true
+        };
+
+        if (envs.NODE_ENV === 'development' || envs.NODE_ENV === 'test') {
+            corsOptions.origin = '*';
+        } else {
+            corsOptions.origin = '*';
+        }
+
+        this.app.use(cors(corsOptions));
+
+        // Middleware for parsing JSON
+        this.app.use(express.json({
+            limit: '10mb'
+        }));
+
+        // Middleware for parsing URL-encoded data
+        this.app.use(express.urlencoded({
+            extended: true,
+            limit: '10mb'
+        }));
+
+        // Use defined routes
+        this.app.use(this.routes);
+
+        // 404 middleware
+        this.app.use((req: Request, res: Response) => {
+            logger.warn(`Ruta no encontrada: ${req.method} ${req.url}`, {
+                requestId: req.id
+            });
+            res.status(404).json({ error: 'Ruta no encontrada' });
+        });
+
+        // Error logging middleware
+        this.app.use(LoggerMiddleware.getErrorLoggerMiddleware());
+
+        // Global error handling middleware
+        this.app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+            const statusCode = err.statusCode || 500;
+            const message = err.message || 'Error interno del servidor';
+
+            res.status(statusCode).json({
+                error: message,
+                statusCode
+            });
+        });
+    } async start() {
         try {
             logger.info("Iniciando servidor...");
 
-            // Crear directorio de logs si no existe
+            // Create logs directory if it doesn't exist
             try {
                 const fs = require('fs');
                 const logsDir = path.join(process.cwd(), 'logs');
@@ -40,104 +107,12 @@ export class server {
                 logger.warn("No se pudo crear el directorio de logs", { error });
             }
 
-            // Configurar la confianza en proxies según el entorno
-            if (envs.NODE_ENV === 'development' || envs.NODE_ENV === 'test') {
-                logger.debug('Configurando trust proxy para entorno de desarrollo/test');
-                this.app.set('trust proxy', true);
-            } else {
-                logger.info('Configurando trust proxy para entorno de producción');
-                this.app.set('trust proxy', 'loopback, linklocal, uniquelocal');
-            }
-
-
-
-            // Aplicar el middleware de logging antes que cualquier otro middleware
-            this.app.use(LoggerMiddleware.getLoggerMiddleware());
-
-
-
-            // Aplicar el rate limit según el entorno
-            this.app.use(RateLimitMiddleware.getGlobalRateLimit());
-
-
-
-            // --- CONFIGURACIÓN CORS CONDICIONAL ---
-            const corsOptions: cors.CorsOptions = {
-                methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-                allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-                credentials: true
-            };
-
-            if (envs.NODE_ENV === 'development' || envs.NODE_ENV === 'test') {
-                corsOptions.origin = '*'; // Permitir cualquier origen en desarrollo/test
-                logger.warn('CORS configurado para permitir CUALQUIER origen (Solo DEV/TEST)');
-            } else {
-                // corsOptions.origin = envs.FRONTEND_URL; // Usar URL específica en producción
-                corsOptions.origin = '*'; // Usar URL específica en producción
-                logger.info(`CORS configurado para origen: ${envs.FRONTEND_URL}`);
-            }
-
-            this.app.use(cors(corsOptions));
-            // --- FIN CONFIGURACIÓN CORS ---
-
-
-
-            // Middleware para analizar JSON
-            this.app.use(express.json({
-                limit: '10mb' // Límite de tamaño para prevenir ataques
-            }));
-
-
-
-            // Middleware para analizar URL codificadas
-            this.app.use(express.urlencoded({
-                extended: true,
-                limit: '10mb'
-            }));
-
-
-
-            // Usar las rutas definidas
-            this.app.use(this.routes);
-
-
-
-            // Middleware para manejar 404
-            this.app.use((req: Request, res: Response) => {
-                logger.warn(`Ruta no encontrada: ${req.method} ${req.url}`, {
-                    requestId: req.id
-                });
-                res.status(404).json({ error: 'Ruta no encontrada' });
-            });
-
-
-
-            // Middleware para log de errores (debe ir después de las rutas)
-            this.app.use(LoggerMiddleware.getErrorLoggerMiddleware());
-
-
-
-            // Middleware para manejo global de errores
-            this.app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-                const statusCode = err.statusCode || 500;
-                const message = err.message || 'Error interno del servidor';
-
-                res.status(statusCode).json({
-                    error: message,
-                    statusCode
-                });
-            });
-
-
-
-            // Iniciar el servidor
+            // Start the server
             this.app.listen(this.port, () => {
                 logger.info(`🚀 Servidor corriendo exitosamente en puerto ${this.port} (Entorno: ${envs.NODE_ENV})`);
             });
 
-
         } catch (error) {
-
             logger.error('Error al iniciar el servidor', { error });
             process.exit(1);
         }

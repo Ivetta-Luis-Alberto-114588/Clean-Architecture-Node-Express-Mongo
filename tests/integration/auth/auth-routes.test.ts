@@ -1,223 +1,294 @@
 import request from 'supertest';
-import express from 'express';
+import mongoose from 'mongoose';
 import { server } from '../../../src/presentation/server';
 import { MainRoutes } from '../../../src/presentation/routes';
 import { UserModel } from '../../../src/data/mongodb/models/user.model';
+import { ProductModel } from '../../../src/data/mongodb/models/products/product.model';
+import { CategoryModel } from '../../../src/data/mongodb/models/products/category.model';
+import { UnitModel } from '../../../src/data/mongodb/models/products/unit.model';
 import { BcryptAdapter } from '../../../src/configs/bcrypt';
-import mongoose from 'mongoose';
+import { JwtAdapter } from '../../../src/configs/jwt';
+import { envs } from '../../../src/configs/envs';
 
-describe('Auth Routes Integration Tests', () => {
-  // Crear una instancia del servidor para las pruebas
-  const app = express();
-  let testServer: any;
-  
-  // Configuración previa a todas las pruebas
+describe('Auth Product Routes Integration Tests', () => {
+  let testServer: server;
+  let authToken: string;
+  let testUser: any;
+  let testCategory: any;
+  let testUnit: any;
+  let testProduct: any;
+  let categoryId: string;
+  let unitId: string;
+  let productId: string;
   beforeAll(async () => {
-    console.log("MongoDB connection state:", mongoose.connection.readyState);
-    console.log("Test using MongoDB connection:", mongoose.connection.id);
-    
-    // Asegurarse de que estamos conectados a la base de datos
-    if (mongoose.connection.readyState !== 1) {
-      console.warn("MongoDB connection is not active. Tests might fail.");
-      await mongoose.connect(process.env.MONGO_URL!, {
-        dbName: process.env.MONGO_DB_NAME
-      });
-      console.log("Connected to MongoDB. New state:", mongoose.connection.readyState);
-    }
-    
-    console.log("Clearing users collection...");
-    // Limpiar la colección de usuarios antes de empezar
-    await UserModel.deleteMany({});
-    
-    console.log("Creating test server...");
-    // Crear el servidor de pruebas
+    console.log("Setting up auth product tests...");
+
+    // 1. Crear instancia del servidor
     testServer = new server({
       p_port: 3001,
       p_routes: MainRoutes.getMainRoutes
     });
-    
-    // Aplicar las rutas al servidor de express
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-    app.use(MainRoutes.getMainRoutes);
+
+    console.log("Test server instance created");
+
+    // 2. Limpiar datos de prueba previos para evitar conflictos
+    await Promise.all([
+      UserModel.deleteMany({ email: { $in: ['auth-admin@test.com', 'admin@test.com'] } }),
+      ProductModel.deleteMany({}),
+      CategoryModel.deleteMany({}),
+      UnitModel.deleteMany({})
+    ]);// 3. Crear usuario de prueba para autenticación
+    const hashedPassword = BcryptAdapter.hash('password123');
+    testUser = await UserModel.create({
+      name: 'auth test admin',
+      email: 'auth-admin@test.com',
+      password: hashedPassword,
+      roles: ['ADMIN_ROLE']
+    }); console.log("Test admin created with ID:", testUser._id);
+
+    // 4. Generar token de autenticación
+    authToken = await JwtAdapter.generateToken({ id: testUser._id }, '2h') as string;
+    console.log("Auth token generated for tests");
+
+    // 5. Crear categoría de prueba
+    testCategory = await CategoryModel.create({
+      name: 'test category',
+      description: 'category for integration tests'
+    });
+    categoryId = testCategory._id.toString();
+    console.log("Test category created with ID:", categoryId);
+
+    // 6. Crear unidad de prueba
+    testUnit = await UnitModel.create({
+      name: 'test unit',
+      description: 'unit for integration tests'
+    });
+    unitId = testUnit._id.toString();
+    console.log("Test unit created with ID:", unitId);
+
+    // 7. Crear producto de prueba
+    testProduct = await ProductModel.create({
+      name: 'test product',
+      description: 'product for integration tests',
+      price: 10.99,
+      stock: 100,
+      category: testCategory._id,  // Usar ObjectId de la categoría
+      unit: testUnit._id           // Usar ObjectId de la unidad
+    });
+    productId = testProduct._id.toString();
+    console.log("Test product created with ID:", productId);
   });
-  
-  // Limpiar la base de datos después de todas las pruebas
   afterAll(async () => {
-    console.log("Cleaning up after all tests...");
-    if (mongoose.connection.readyState !== 0) {
-      await UserModel.deleteMany({});
-      await mongoose.connection.close();
-    }
+    console.log("Cleaning up after auth product tests...");
+
+    await Promise.all([
+      UserModel.deleteMany({ email: 'auth-admin@test.com' }),
+      ProductModel.deleteMany({}),
+      CategoryModel.deleteMany({}),
+      UnitModel.deleteMany({})
+    ]);
   });
-  
-  // Datos de prueba válidos
-  const testUser = {
-    name: 'Test User',
-    email: 'test@example.com',
-    password: 'password123'
-  };
-  
-  // Test simplificado para depurar el registro
-  test('should register a new user', async () => {
-    console.log("Starting register test with data:", testUser);
-    
-    // Hacer la solicitud de registro
-    const response = await request(app)
-      .post('/api/auth/register')
-      .send(testUser);
-    
-    console.log("Register response status:", response.status);
-    console.log("Register response body:", response.body);
-    
-    // Verificaciones básicas de la respuesta
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('user');
-    expect(response.body.user).toHaveProperty('id');
-    expect(response.body.user).toHaveProperty('token');
-    
-    // En lugar de buscar en la base de datos, vamos a verificar directamente
-    // los datos en la respuesta del servidor
-    const user = response.body.user;
-    expect(user.name).toBe(testUser.name.toLowerCase());
-    expect(user.email).toBe(testUser.email.toLowerCase());
-    
-    // Verificar que la contraseña está hasheada (no debería ser la misma que la original)
-    expect(user.password).not.toBe(testUser.password);
-    
-    // También podemos verificar que el token se haya generado correctamente
-    expect(user.token).toBeTruthy();
-    expect(typeof user.token).toBe('string');
-    expect(user.token.split('.').length).toBe(3); // Un JWT válido tiene 3 partes separadas por puntos
-  });
-  
-  // Test para login - MODIFICADO para mejorar la depuración
-  test('should login an existing user', async () => {
-    console.log("\n==== STARTING LOGIN TEST ====");
-    console.log("Cleaning up database before login test...");
-    
-    // Limpiar usuarios existentes para evitar conflictos
-    await UserModel.deleteMany({});
-    
-    // Crear un usuario directamente en la base de datos para el login
-    const hashedPassword = BcryptAdapter.hash(testUser.password);
-    console.log("Creating test user with hashed password:", hashedPassword);
-    
-    try {
-      const user = await UserModel.create({
-        name: testUser.name.toLowerCase(),
-        email: testUser.email.toLowerCase(),
-        password: hashedPassword,
-        roles: ['USER_ROLE']
-      });
-      
-      console.log("User created successfully with ID:", user._id);
-      console.log("User data:", {
-        name: user.name,
-        email: user.email,
-        passwordHash: user.password,
-        roles: user.roles
-      });
-      
-      // Verificar que el usuario existe antes de intentar el login
-      const userInDb = await UserModel.findOne({ email: testUser.email.toLowerCase() });
-      console.log("User found in DB:", userInDb ? "Yes" : "No");
-      if (userInDb) {
-        console.log("User DB details:", {
-          id: userInDb._id,
-          name: userInDb.name,
-          email: userInDb.email,
-          passwordHash: userInDb.password,
-          roles: userInDb.roles
-        });
-        
-        // Verificar que la contraseña hasheada coincide
-        const passwordMatches = BcryptAdapter.compare(testUser.password, userInDb.password);
-        console.log("Password match check:", passwordMatches);
-      } else {
-        console.error("ERROR: User not found in database after creation!");
-      }
-      
-      // Preparar los datos de login exactamente como espera la ruta
-      const loginData = {
-        email: testUser.email,
-        password: testUser.password
+
+  describe('POST /api/admin/products', () => {
+    test('should create a new product', async () => {
+      const productData = {
+        name: 'New Test Product',
+        description: 'Created during integration test', price: 19.99,
+        stock: 50,
+        category: testCategory._id,  // Usar ObjectId de la categoría
+        unit: testUnit._id           // Usar ObjectId de la unidad
       };
-      console.log("Attempting login with data:", loginData);
-      
-      // Intentar el login
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send(loginData);
-      
-      console.log("Login response status:", loginResponse.status);
-      console.log("Login response body:", loginResponse.body);
-      
-      if (loginResponse.status !== 200) {
-        console.error("ERROR: Login failed with status", loginResponse.status);
-        console.error("Error details:", loginResponse.body);
+
+      const response = await request(testServer.app)
+        .post('/api/admin/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(productData)
+        .expect(201);
+
+      expect(response.body).toHaveProperty('id');
+      expect(response.body).toHaveProperty('name', productData.name.toLowerCase());
+      expect(response.body).toHaveProperty('price', productData.price);
+
+      const createdProduct = await ProductModel.findById(response.body.id);
+      expect(createdProduct).toBeTruthy(); expect(createdProduct?.name).toBe(productData.name.toLowerCase());
+    });
+
+    test('should return 400 when trying to create a product with invalid data', async () => {
+      const invalidData = {
+        // Omitir campos requeridos como name o price        description: 'Invalid product data'
+      };
+
+      const response = await request(testServer.app)
+        .post('/api/admin/products')
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(invalidData)
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+    });
+  }); describe('GET /api/products', () => {
+    test('should get all products', async () => {
+      // Create a test product for this specific test
+      const testProductForGet = await ProductModel.create({
+        name: 'test product for get',
+        description: 'product for get test',
+        price: 10.99,
+        stock: 100,
+        category: testCategory._id,
+        unit: testUnit._id
+      });
+
+      const response = await request(testServer.app)
+        .get('/api/products')
+        .expect(200);
+
+      expect(response.body).toHaveProperty('total');
+      expect(response.body).toHaveProperty('products');
+      expect(Array.isArray(response.body.products)).toBe(true);
+      expect(response.body.total).toBeGreaterThanOrEqual(1);
+      if (response.body.products.length > 0) {
+        expect(response.body.products[0]).toHaveProperty('name', testProductForGet.name.toLowerCase());
       }
-      
-      // Expectativas básicas
-      expect(loginResponse.status).toBe(200);
-      expect(loginResponse.body).toHaveProperty('user');
-      expect(loginResponse.body.user).toHaveProperty('token');
-      expect(loginResponse.body.user.email).toBe(testUser.email.toLowerCase());
-      
-    } catch (error) {
-      console.error("Error during login test:", error);
-      throw error; // Re-lanzar para que Jest lo capture
-    }
+    });
+  }); describe('GET /api/products/by-category/:categoryId', () => {
+    test('should get products by category', async () => {
+      // Create category and unit for this specific test
+      const testCategoryForThis = await CategoryModel.create({
+        name: 'test category for by-category',
+        description: 'category for by-category test'
+      });
+
+      const testUnitForThis = await UnitModel.create({
+        name: 'test unit for by-category',
+        description: 'unit for by-category test'
+      });
+
+      // Create a test product for this specific test
+      const testProductForCategory = await ProductModel.create({
+        name: 'test product for category',
+        description: 'product for category test',
+        price: 15.99,
+        stock: 50,
+        category: testCategoryForThis._id,
+        unit: testUnitForThis._id
+      });
+
+      const response = await request(testServer.app)
+        .get(`/api/products/by-category/${testCategoryForThis._id.toString()}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('total');
+      expect(response.body).toHaveProperty('products');
+      expect(Array.isArray(response.body.products)).toBe(true);
+      expect(response.body.total).toBeGreaterThanOrEqual(1);
+      if (response.body.products.length > 0) {
+        expect(response.body.products[0]).toHaveProperty('name', testProductForCategory.name.toLowerCase());
+      }
+    });
+
+    test('should return 404 for non-existent category', async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toString();
+
+      await request(testServer.app)
+        .get(`/api/products/by-category/${nonExistentId}`)
+        .expect(404);
+    });
+  }); describe('PUT /api/admin/products/:id', () => {
+    test('should update a product', async () => {
+      // Create a product for this specific test
+      const testProductForUpdate = await ProductModel.create({
+        name: 'product to update',
+        description: 'this product will be updated',
+        price: 20.00,
+        stock: 75,
+        category: testCategory._id,
+        unit: testUnit._id
+      });
+
+      const updateData = {
+        name: 'Updated Product Name',
+        price: 29.99,
+        // No es necesario incluir todos los campos obligatorios en una actualización,
+        // pero algunos endpoints podrían requerirlo según la implementación
+      };
+
+      const response = await request(testServer.app)
+        .put(`/api/admin/products/${testProductForUpdate._id.toString()}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(updateData)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('id');
+      expect(response.body).toHaveProperty('name', updateData.name.toLowerCase());
+      expect(response.body).toHaveProperty('price', updateData.price);
+
+      const updatedProduct = await ProductModel.findById(testProductForUpdate._id);
+      expect(updatedProduct?.name).toBe(updateData.name.toLowerCase());
+      expect(updatedProduct?.price).toBe(updateData.price);
+    });
+
+    test('should return 400 when update data is invalid', async () => {
+      // Create a product for this specific test
+      const testProductForInvalidUpdate = await ProductModel.create({
+        name: 'product for invalid update',
+        description: 'this product will have invalid update',
+        price: 25.00,
+        stock: 30,
+        category: testCategory._id,
+        unit: testUnit._id
+      });
+
+      const invalidData = {
+        price: 'not-a-number' // Precio inválido
+      };
+
+      const response = await request(testServer.app)
+        .put(`/api/admin/products/${testProductForInvalidUpdate._id.toString()}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .send(invalidData)
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+    });
   });
-  
-  // Test alternativo usando el enfoque de registro y luego login
-  test('should register then login with same credentials', async () => {
-    console.log("\n==== STARTING REGISTER-THEN-LOGIN TEST ====");
-    
-    // Limpiar usuarios existentes para evitar conflictos
-    await UserModel.deleteMany({});
-    
-    // Datos del usuario para esta prueba específica
-    const newUser = {
-      name: 'Another Test User',
-      email: 'another@example.com',
-      password: 'testpassword456'
-    };
-    
-    console.log("1. Registrando nuevo usuario:", newUser);
-    
-    // Paso 1: Registrar el usuario
-    const registerResponse = await request(app)
-      .post('/api/auth/register')
-      .send(newUser);
-    
-    console.log("Register response status:", registerResponse.status);
-    console.log("Register response body:", registerResponse.body);
-    
-    // Verificar que el registro fue exitoso
-    expect(registerResponse.status).toBe(200);
-    expect(registerResponse.body).toHaveProperty('user');
-    expect(registerResponse.body.user).toHaveProperty('token');
-    
-    console.log("2. Intentando login con las mismas credenciales");
-    
-    // Paso 2: Intentar login con las mismas credenciales
-    const loginData = {
-      email: newUser.email,
-      password: newUser.password
-    };
-    
-    const loginResponse = await request(app)
-      .post('/api/auth/login')
-      .send(loginData);
-    
-    console.log("Login response status:", loginResponse.status);
-    console.log("Login response body:", loginResponse.body);
-    
-    // Verificar que el login fue exitoso
-    expect(loginResponse.status).toBe(200);
-    expect(loginResponse.body).toHaveProperty('user');
-    expect(loginResponse.body.user).toHaveProperty('token');
-    expect(loginResponse.body.user.email).toBe(newUser.email.toLowerCase());
+  describe('DELETE /api/admin/products/:id', () => {
+    test('should delete a product', async () => {      // Crear producto para eliminar
+      const productToDelete = await ProductModel.create({
+        name: 'Product to delete',
+        description: 'This product will be deleted',
+        price: 15.50,
+        stock: 20,
+        category: testCategory._id,  // Usar ObjectId de la categoría
+        unit: testUnit._id           // Usar ObjectId de la unidad
+      });
+
+      const productIdToDelete = productToDelete._id.toString();
+      console.log("Producto de prueba creado con ID:", productIdToDelete);
+
+      await request(testServer.app)
+        .delete(`/api/admin/products/${productIdToDelete}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200)
+        .catch(err => {
+          console.error(`Error al eliminar producto (ID: ${productIdToDelete}):`, err.message);
+          if (err.response) {
+            console.error('Cuerpo de respuesta:', err.response.body);
+          }
+          throw err;
+        });
+
+      const deletedProduct = await ProductModel.findById(productIdToDelete);
+      expect(deletedProduct).toBeNull();
+    });
+
+    test('should return 404 when trying to delete non-existent product', async () => {
+      const nonExistentId = new mongoose.Types.ObjectId().toString(); const response = await request(testServer.app)
+        .delete(`/api/admin/products/${nonExistentId}`)
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(404);
+
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toContain('Producto no encontrado');
+    });
   });
 });

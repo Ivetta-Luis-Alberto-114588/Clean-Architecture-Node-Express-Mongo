@@ -38,7 +38,7 @@ describe('CityEntity', () => {
   // Test con ID cero
   test('should accept ID as zero', () => {
     // Arrange
-    const id = "0";
+    const id = 0;
     const name = 'Test City';
     const description = 'Test Description';
     const isActive = true;
@@ -53,7 +53,7 @@ describe('CityEntity', () => {
   // Test con ID negativo (para verificar comportamiento con valores inusuales)
   test('should accept negative ID values', () => {
     // Arrange
-    const id = -"1";
+    const id = -1;
     const name = 'Negative City';
     const description = 'Negative City Description';
     const isActive = true;

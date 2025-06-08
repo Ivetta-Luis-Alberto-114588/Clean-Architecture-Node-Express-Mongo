@@ -18,12 +18,13 @@ describe('CreateProductUseCase', () => {
     findByNameForCreate: jest.fn(),
     findByName: jest.fn(),
     findByCategory: jest.fn(),
-    findByUnit: jest.fn()
+    findByUnit: jest.fn(),
+    search: jest.fn(),
   };
-  
+
   // Inicialización del caso de uso a probar
   let createProductUseCase: CreateProductUseCase;
-  
+
   // Datos de prueba
   const validProductData = {
     name: 'test product',
@@ -35,15 +36,15 @@ describe('CreateProductUseCase', () => {
     imgUrl: 'http://example.com/image.jpg',
     isActive: true
   };
-  
+
   // Crear el DTO usando el método estático create (que es la forma correcta)
   const [error, validCreateProductDto] = CreateProductDto.create(validProductData);
-  
+
   // Verificar que no hay error y el DTO se creó correctamente
   if (error || !validCreateProductDto) {
     throw new Error(`Failed to create test CreateProductDto: ${error}`);
   }
-  
+
   // Entidades mock para la respuesta
   const mockCategory = new CategoryEntity(
     1, // ID de categoría
@@ -51,42 +52,44 @@ describe('CreateProductUseCase', () => {
     'test category description',
     true
   );
-  
+
   const mockUnit = new UnitEntity(
     1, // ID de unidad
     'test unit',
     'test unit description',
     true
   );
-  
+
   // Producto de respuesta simulado
   const mockProductEntity = new ProductEntity(
     1, // ID de producto
-    'test product',
-    100,
-    10,
-    mockCategory,
-    mockUnit,
-    'http://example.com/image.jpg',
-    true,
-    'test product description'
+    'test product', //name
+    100, // price
+    10, // stock
+    mockCategory, // mock category
+    mockUnit, // mock unit
+    'http://example.com/image.jpg', // imgUrl
+    true, // isActive
+    'test product description', // description
+    21, // taxRate
+    121, // priceWithTax (100 + 21% tax)
   );
-  
+
   // Configuración previa a cada prueba
   beforeEach(() => {
     jest.resetAllMocks();
     createProductUseCase = new CreateProductUseCase(mockProductRepository);
-    
+
     // Configurar el comportamiento por defecto de los mocks
     mockProductRepository.findByNameForCreate.mockResolvedValue(null); // El producto no existe
     mockProductRepository.create.mockResolvedValue(mockProductEntity);
   });
-  
+
   // Prueba del flujo exitoso
   test('should create a product successfully', async () => {
     // Ejecutar el caso de uso
     const result = await createProductUseCase.execute(validCreateProductDto);
-    
+
     // Verificaciones
     expect(mockProductRepository.findByNameForCreate).toHaveBeenCalledWith(
       validCreateProductDto.name,
@@ -95,37 +98,37 @@ describe('CreateProductUseCase', () => {
     expect(mockProductRepository.create).toHaveBeenCalledWith(validCreateProductDto);
     expect(result).toEqual(mockProductEntity);
   });
-  
+
   // Prueba de producto ya existente
   test('should throw an error if product already exists', async () => {
     // Simular que el producto ya existe
     mockProductRepository.findByNameForCreate.mockResolvedValue(mockProductEntity);
-    
+
     // Verificar que se lanza el error adecuado
     await expect(createProductUseCase.execute(validCreateProductDto))
       .rejects
       .toThrow(CustomError);
-    
+
     // Verificar el mensaje específico
     await expect(createProductUseCase.execute(validCreateProductDto))
       .rejects
       .toThrow('create-product-use-case, product already exist');
-      
+
     // Verificar que no se intentó crear el producto
     expect(mockProductRepository.create).not.toHaveBeenCalled();
   });
-  
+
   // Prueba de manejo de errores del repositorio
   test('should handle repository errors', async () => {
     // Simular un error en el repositorio
     const repositoryError = new Error('Database connection error');
     mockProductRepository.findByNameForCreate.mockRejectedValue(repositoryError);
-    
+
     // Verificar que el error se transforma en un CustomError
     await expect(createProductUseCase.execute(validCreateProductDto))
       .rejects
       .toBeInstanceOf(CustomError);
-    
+
     await expect(createProductUseCase.execute(validCreateProductDto))
       .rejects
       .toMatchObject({
@@ -133,13 +136,13 @@ describe('CreateProductUseCase', () => {
         message: expect.stringContaining('create-product-use-case')
       });
   });
-  
+
   // Prueba de error específico del dominio
   test('should handle custom domain errors', async () => {
     // Simular un error específico del dominio
     const domainError = CustomError.badRequest('Invalid product data');
     mockProductRepository.findByNameForCreate.mockRejectedValue(domainError);
-    
+
     // Verificar que el error se propaga sin cambios
     await expect(createProductUseCase.execute(validCreateProductDto))
       .rejects

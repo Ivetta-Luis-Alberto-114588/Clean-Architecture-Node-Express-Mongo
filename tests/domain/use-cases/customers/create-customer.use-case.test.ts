@@ -18,7 +18,16 @@ describe('CreateCustomerUseCase', () => {
     update: jest.fn(),
     delete: jest.fn(),
     findByEmail: jest.fn(),
-    findByNeighborhood: jest.fn()
+    findByNeighborhood: jest.fn(),
+    findByUserId: jest.fn(),
+    // Métodos de dirección
+    createAddress: jest.fn(),
+    getAddressesByCustomerId: jest.fn(),
+    findAddressById: jest.fn(),
+    updateAddress: jest.fn(),
+    deleteAddress: jest.fn(),
+    setDefaultAddress: jest.fn()
+
   };
 
   const mockNeighborhoodRepository: jest.Mocked<NeighborhoodRepository> = {

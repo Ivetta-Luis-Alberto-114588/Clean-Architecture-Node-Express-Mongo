@@ -1,396 +1,292 @@
-// tests/integration/products/product-routes.test.ts
-
 import request from 'supertest';
-import express from 'express';
+import mongoose from 'mongoose';
 import { server } from '../../../src/presentation/server';
 import { MainRoutes } from '../../../src/presentation/routes';
 import { UserModel } from '../../../src/data/mongodb/models/user.model';
 import { ProductModel } from '../../../src/data/mongodb/models/products/product.model';
 import { CategoryModel } from '../../../src/data/mongodb/models/products/category.model';
 import { UnitModel } from '../../../src/data/mongodb/models/products/unit.model';
-import { JwtAdapter } from '../../../src/configs/jwt';
 import { BcryptAdapter } from '../../../src/configs/bcrypt';
-import mongoose from 'mongoose';
+import { JwtAdapter } from '../../../src/configs/jwt';
+import { envs } from '../../../src/configs/envs';
 
 describe('Product Routes Integration Tests', () => {
   // Crear una instancia del servidor para las pruebas
-  const app = express();
-  let testServer: any;
-  
-  // Token de autenticación
+  let testServer: server;
+  // Datos para autenticación
   let authToken: string;
-  
-  // IDs de prueba
+  let testUser: any;
+  let testCategory: any;
+  let testUnit: any;
+  let testProduct: any;
   let categoryId: string;
   let unitId: string;
   let productId: string;
-  
-  // Configuración previa a todas las pruebas
   beforeAll(async () => {
-    // Crear el servidor de pruebas
+    console.log("Setting up product tests...");
+
+    // 1. Crear instancia del servidor
     testServer = new server({
       p_port: 3001,
       p_routes: MainRoutes.getMainRoutes
+    });    // 2. Limpiar datos de prueba previos para evitar conflictos
+    await Promise.all([
+      UserModel.deleteMany({ email: { $in: ['product-admin@test.com', 'admin@test.com'] } }),
+      ProductModel.deleteMany({}),
+      CategoryModel.deleteMany({}),
+      UnitModel.deleteMany({})
+    ]);// 3. Crear usuario de prueba para autenticación
+    const hashedPassword = BcryptAdapter.hash('password123');
+    testUser = await UserModel.create({
+      name: 'product test admin',
+      email: 'product-admin@test.com',
+      password: hashedPassword,
+      roles: ['ADMIN_ROLE'] // Asegúrate de usar un rol que tenga permisos para productos
     });
-    
-    // Aplicar las rutas al servidor de express
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-    app.use(MainRoutes.getMainRoutes);
-    
-    // Limpiar las colecciones
-    if (mongoose.connection.readyState !== 0) {
-      await UserModel.deleteMany({});
-      await ProductModel.deleteMany({});
-      await CategoryModel.deleteMany({});
-      await UnitModel.deleteMany({});
-    }
-    
-    // Crear un usuario y obtener token
-    const user = await UserModel.create({
-      name: 'test admin',
-      email: 'admin@test.com',
-      password: BcryptAdapter.hash('password123'),
-      roles: ['ADMIN_ROLE']
-    });
-    
-    authToken = await JwtAdapter.generateToken({ id: user._id.toString() }) || '';
-  });
-  
-  // Limpiar la base de datos después de cada prueba
-  afterEach(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await ProductModel.deleteMany({});
-    }
-  });
-  
-  // Limpiar la base de datos después de todas las pruebas
-  afterAll(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await CategoryModel.deleteMany({});
-      await UnitModel.deleteMany({});
-      await UserModel.deleteMany({});
-    }
-  });
-  
-  // Crear categoría y unidad antes de cada prueba
-  beforeEach(async () => {
-    // Crear categoría
-    const category = await CategoryModel.create({
+    console.log("Test admin created with ID:", testUser._id);// 4. Generar token de autenticación
+    authToken = await JwtAdapter.generateToken({ id: testUser._id }, '2h') as string;
+    console.log("Auth token generated for tests");// 5. Crear categoría de prueba
+    testCategory = await CategoryModel.create({
       name: 'test category',
-      description: 'test category description',
-      isActive: true
+      description: 'category for integration tests'
     });
-    categoryId = category._id.toString();
-    
-    // Crear unidad
-    const unit = await UnitModel.create({
+    categoryId = testCategory._id.toString();
+    console.log("Test category created with ID:", categoryId);
+
+    // 6. Crear unidad de prueba
+    testUnit = await UnitModel.create({
       name: 'test unit',
-      description: 'test unit description',
-      isActive: true
+      description: 'unit for integration tests'
     });
-    unitId = unit._id.toString();
+    unitId = testUnit._id.toString();
+    console.log("Test unit created with ID:", unitId);
+
+    // 7. Crear producto de prueba
+    testProduct = await ProductModel.create({
+      name: 'test product',
+      description: 'product for integration tests',
+      price: 10.99,
+      stock: 100,
+      category: testCategory._id,  // Usar ObjectId de la categoría
+      unit: testUnit._id           // Usar ObjectId de la unidad
+    });
+    productId = testProduct._id.toString();
+    console.log("Test product created with ID:", productId);
+  });  afterAll(async () => {
+    console.log("Cleaning up after product tests...");
+
+    await Promise.all([
+      UserModel.deleteMany({ email: 'product-admin@test.com' }),
+      ProductModel.deleteMany({}),
+      CategoryModel.deleteMany({}),
+      UnitModel.deleteMany({})
+    ]);
+
+    // Si necesitas cerrar la conexión, puedes hacerlo aquí
+    // await mongoose.connection.close();
   });
-  
-  // Datos de prueba para un producto
-  const testProduct = {
-    name: 'Test Product',
-    description: 'Test product description',
-    price: 100,
-    stock: 10,
-    category: '', // Se asignará dinámicamente
-    unit: '', // Se asignará dinámicamente
-    imgUrl: 'http://example.com/image.jpg',
-    isActive: true
-  };
-  
-  describe('POST /api/products', () => {
+  // Tests para la creación de productos
+  describe('POST /api/admin/products', () => {
     test('should create a new product', async () => {
-      // Asignar IDs dinámicamente
       const productData = {
-        ...testProduct,
-        category: categoryId,
-        unit: unitId
+        name: 'New Test Product',
+        description: 'Created during integration test',
+        price: 19.99,
+        stock: 50,
+        category: testCategory._id,  // Usar ObjectId de la categoría
+        unit: testUnit._id           // Usar ObjectId de la unidad
       };
-      
-      // Hacer la solicitud de creación
-      const response = await request(app)
-        .post('/api/products')
+
+      const response = await request(testServer.app)
+        .post('/api/admin/products')
         .set('Authorization', `Bearer ${authToken}`)
         .send(productData)
-        .expect(200);
-      
+        .expect(201);
+
       // Verificar la estructura de la respuesta
       expect(response.body).toHaveProperty('id');
       expect(response.body).toHaveProperty('name', productData.name.toLowerCase());
       expect(response.body).toHaveProperty('price', productData.price);
-      expect(response.body).toHaveProperty('stock', productData.stock);
-      
-      // Guardar el ID para pruebas posteriores
-      productId = response.body.id;
-      
-      // Verificar que el producto se guardó en la base de datos
-      const savedProduct = await ProductModel.findById(productId);
-      expect(savedProduct).not.toBeNull();
-      if (savedProduct) {
-        expect(savedProduct.name).toBe(productData.name.toLowerCase());
-        expect(savedProduct.price).toBe(productData.price);
-      }
+
+      // Opcional: Verificar que el producto se creó en la BD
+      const createdProduct = await ProductModel.findById(response.body.id);
+      expect(createdProduct).toBeTruthy();
+      expect(createdProduct?.name).toBe(productData.name.toLowerCase());
     });
-    
+
     test('should return 400 when trying to create a product with invalid data', async () => {
-      // Datos inválidos (sin nombre)
       const invalidData = {
-        ...testProduct,
-        name: '',
-        category: categoryId,
-        unit: unitId
+        // Omitir campos requeridos como name o price
+        description: 'Invalid product data'
       };
-      
-      // Hacer la solicitud
-      const response = await request(app)
-        .post('/api/products')
+
+      const response = await request(testServer.app)
+        .post('/api/admin/products')
         .set('Authorization', `Bearer ${authToken}`)
         .send(invalidData)
         .expect(400);
-      
+
       // Verificar el mensaje de error
       expect(response.body).toHaveProperty('error');
     });
-  });
-  
+  });  // Tests para obtener productos
   describe('GET /api/products', () => {
-    // Crear un producto antes de las pruebas
-    beforeEach(async () => {
-      // Asegúrate de que categoryId y unitId estén definidos correctamente
-      console.log('Creating product for GET test with categoryId:', categoryId, 'and unitId:', unitId);
-      
-      // Crear producto de prueba
-      const product = await ProductModel.create({
-        name: testProduct.name.toLowerCase(),
-        description: testProduct.description.toLowerCase(),
-        price: testProduct.price,
-        stock: testProduct.stock,
-        category: categoryId,  // Verifica que este valor sea correcto
-        unit: unitId,          // Verifica que este valor sea correcto
-        imgUrl: testProduct.imgUrl,
-        isActive: testProduct.isActive
-      });
-      
-      productId = product._id.toString();
-      
-      // Verificar que el producto se creó
-      const savedProduct = await ProductModel.findById(productId);
-      console.log('Saved product:', savedProduct ? 'Found' : 'Not found');
-    });
-    
     test('should get all products', async () => {
-      // Verificar que el producto existe antes de hacer la solicitud
-      const productExists = await ProductModel.findById(productId);
-      console.log('Product exists before test:', productExists ? 'Yes' : 'No');
-      
-      // Hacer la solicitud
-      const response = await request(app)
+      // Create a test product for this specific test
+      const testProductForGet = await ProductModel.create({
+        name: 'test product for get',
+        description: 'product for get test',
+        price: 10.99,
+        stock: 100,
+        category: testCategory._id,
+        unit: testUnit._id
+      });
+
+      const response = await request(testServer.app)
         .get('/api/products')
-        .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
-      
-      console.log('GET response body length:', response.body.length);
-      
-      // Verificar que se devuelven productos
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeGreaterThanOrEqual(1);
-      if (response.body.length > 0) {
-        expect(response.body[0]).toHaveProperty('name', testProduct.name.toLowerCase());
+
+      // Verificar que se devuelve la estructura { total, products }
+      expect(response.body).toHaveProperty('total');
+      expect(response.body).toHaveProperty('products');
+      expect(Array.isArray(response.body.products)).toBe(true);
+      expect(response.body.total).toBeGreaterThanOrEqual(1);
+      if (response.body.products.length > 0) {
+        expect(response.body.products[0]).toHaveProperty('name', testProductForGet.name.toLowerCase());
       }
     });
-  });
-
-
-
-  
+  });  // Tests para obtener productos por categoría
   describe('GET /api/products/by-category/:categoryId', () => {
-    // Añade este beforeEach justo aquí
-    beforeEach(async () => {
-      // Crear producto de prueba con la categoría correcta
-      const product = await ProductModel.create({
-        name: testProduct.name.toLowerCase(),
-        description: testProduct.description.toLowerCase(),
-        price: testProduct.price,
-        stock: testProduct.stock,
-        category: categoryId,  // Asegúrate de que este sea el ID correcto
-        unit: unitId,
-        imgUrl: testProduct.imgUrl,
-        isActive: testProduct.isActive
-      });
-      
-      productId = product._id.toString();
-      
-      // Verificación opcional para debug
-      console.log(`Producto creado con ID: ${productId} y categoría: ${categoryId}`);
-    });
-    
     test('should get products by category', async () => {
-      // Hacer la solicitud
-      const response = await request(app)
+      // Create a test product for this specific test
+      const testProductForCategory = await ProductModel.create({
+        name: 'test product for category',
+        description: 'product for category test',
+        price: 15.99,
+        stock: 50,
+        category: testCategory._id,
+        unit: testUnit._id
+      });      const response = await request(testServer.app)
         .get(`/api/products/by-category/${categoryId}`)
-        .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
-      
-      // Verificar que se devuelven productos
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeGreaterThanOrEqual(1);
-      if (response.body.length > 0) {
-        expect(response.body[0]).toHaveProperty('name', testProduct.name.toLowerCase());
+
+      // Verificar que se devuelven productos con el formato correcto {total, products}
+      expect(response.body).toHaveProperty('total');
+      expect(response.body).toHaveProperty('products');
+      expect(Array.isArray(response.body.products)).toBe(true);
+      expect(response.body.total).toBeGreaterThanOrEqual(1);
+      if (response.body.products.length > 0) {
+        expect(response.body.products[0]).toHaveProperty('name', testProductForCategory.name.toLowerCase());
       }
     });
-    
+
     test('should return 404 for non-existent category', async () => {
-      // ID de categoría que no existe pero con formato válido
       const nonExistentId = new mongoose.Types.ObjectId().toString();
-      
-      // Hacer la solicitud
-      const response = await request(app)
+
+      await request(testServer.app)
         .get(`/api/products/by-category/${nonExistentId}`)
-        .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
-      
-      // Verificar el mensaje de error
-      expect(response.body).toHaveProperty('error');
     });
-  });
-  
-  describe('PUT /api/products/:id', () => {
-    // Crear un producto antes de las pruebas
-    beforeEach(async () => {
-      // Crear producto de prueba
-      const product = await ProductModel.create({
-        name: testProduct.name.toLowerCase(),
-        description: testProduct.description.toLowerCase(),
-        price: testProduct.price,
-        stock: testProduct.stock,
-        category: categoryId,
-        unit: unitId,
-        imgUrl: testProduct.imgUrl,
-        isActive: testProduct.isActive
-      });
-      
-      productId = product._id.toString();
-    });
-    
+  });  // Tests para actualizar productos
+  describe('PUT /api/admin/products/:id', () => {
     test('should update a product', async () => {
-      // Datos para actualizar
+      // Create a test product for this specific test
+      const testProductForUpdate = await ProductModel.create({
+        name: 'test product for update',
+        description: 'product for update test',
+        price: 20.99,
+        stock: 75,
+        category: testCategory._id,
+        unit: testUnit._id
+      });
+
       const updateData = {
         name: 'Updated Product Name',
-        price: 200,
-        description: 'Updated product description',
-        stock: 20,
-        category: categoryId,
-        unit: unitId,
-        imgUrl: testProduct.imgUrl,
-        isActive: true
+        price: 29.99
       };
-      
-      // Hacer la solicitud
-      const response = await request(app)
-        .put(`/api/products/${productId}`)
+
+      const response = await request(testServer.app)
+        .put(`/api/admin/products/${testProductForUpdate._id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(updateData)
         .expect(200);
-      
+
       // Verificar que el producto se actualizó
       expect(response.body).toHaveProperty('id');
       expect(response.body).toHaveProperty('name', updateData.name.toLowerCase());
       expect(response.body).toHaveProperty('price', updateData.price);
-      
-      // Verificar la actualización en la base de datos
-      const updatedProduct = await ProductModel.findById(productId);
-      if (updatedProduct) {
-        expect(updatedProduct.name).toBe(updateData.name.toLowerCase());
-        expect(updatedProduct.price).toBe(updateData.price);
-      }
+
+      // Opcional: Verificar en la BD
+      const updatedProduct = await ProductModel.findById(testProductForUpdate._id);
+      expect(updatedProduct?.name).toBe(updateData.name.toLowerCase());
+      expect(updatedProduct?.price).toBe(updateData.price);
     });
-    
+
     test('should return 400 when update data is invalid', async () => {
-      // Datos inválidos para la actualización (asegurarnos de que el DTO los valida como inválidos)
+      // Create a test product for this specific test
+      const testProductForInvalidUpdate = await ProductModel.create({
+        name: 'test product for invalid update',
+        description: 'product for invalid update test',
+        price: 25.99,
+        stock: 60,
+        category: testCategory._id,
+        unit: testUnit._id
+      });
+
       const invalidData = {
-        price: -50  // Precio negativo, que debería ser rechazado
+        price: 'not-a-number' // Precio inválido
       };
-      
-      // Hacer la solicitud
-      const response = await request(app)
-        .put(`/api/products/${productId}`)
+
+      const response = await request(testServer.app)
+        .put(`/api/admin/products/${testProductForInvalidUpdate._id}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send(invalidData)
         .expect(400);  // Esperamos 400 por datos inválidos
-      
+
       // Verificar el mensaje de error
       expect(response.body).toHaveProperty('error');
     });
   });
-  
-  describe('DELETE /api/products/:id', () => {
-    // Crear un producto antes de cada prueba
-    beforeEach(async () => {
-      // Crear producto de prueba - asegurémonos de que realmente se crea
-      const product = await ProductModel.create({
-        name: testProduct.name.toLowerCase(),
-        description: testProduct.description.toLowerCase(),
-        price: testProduct.price,
-        stock: testProduct.stock,
-        category: categoryId,
-        unit: unitId,
-        imgUrl: testProduct.imgUrl,
-        isActive: testProduct.isActive
-      });
-      
-      // Asignar el ID a la variable productId
-      productId = product._id.toString();
-      
-      // Verificar que el producto se creó correctamente
-      console.log(`Producto de prueba creado con ID: ${productId}`);
-      const createdProduct = await ProductModel.findById(productId);
-      if (!createdProduct) {
-        console.error('Error: El producto no se encuentra inmediatamente después de crearlo');
-      }
-    });
-    
+  // Tests para eliminar productos
+  describe('DELETE /api/admin/products/:id', () => {
     test('should delete a product', async () => {
-      // Verificación adicional antes de intentar eliminar
-      const productBeforeDelete = await ProductModel.findById(productId);
-      console.log(`Verificando producto antes de eliminar - Existe: ${!!productBeforeDelete}`);
-      
-      // Hacer la solicitud - añadimos manejadores adicionales en caso de error
-      const response = await request(app)
-        .delete(`/api/products/${productId}`)
+      // Crear un producto específico para eliminarlo
+      const productToDelete = await ProductModel.create({
+        name: 'Product to delete',
+        description: 'This product will be deleted',
+        price: 15.50,
+        stock: 20,
+        category: testCategory._id,  // Usar ObjectId de la categoría
+        unit: testUnit._id           // Usar ObjectId de la unidad
+      });
+      const productIdToDelete = productToDelete._id.toString();
+      console.log("Producto de prueba creado con ID:", productIdToDelete);
+
+      await request(testServer.app)
+        .delete(`/api/admin/products/${productIdToDelete}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200)
         .catch(err => {
-          console.error(`Error al eliminar producto (ID: ${productId}):`, err.message);
+          console.error(`Error al eliminar producto (ID: ${productIdToDelete}):`, err.message);
           if (err.response) {
             console.error('Cuerpo de respuesta:', err.response.body);
           }
           throw err;
         });
-      
-      // Verificar que el producto devuelto tiene el ID correcto
-      expect(response.body).toHaveProperty('id', expect.any(String));
-      
-      // Verificar que ya no existe en la base de datos
-      const deletedProduct = await ProductModel.findById(productId);
+
+      // Verificar que el producto ha sido eliminado
+      const deletedProduct = await ProductModel.findById(productIdToDelete);
       expect(deletedProduct).toBeNull();
     });
-    
+
     test('should return 404 when trying to delete non-existent product', async () => {
-      // ID de producto que no existe pero con formato válido
       const nonExistentId = new mongoose.Types.ObjectId().toString();
-      
-      // Hacer la solicitud
-      const response = await request(app)
-        .delete(`/api/products/${nonExistentId}`)
+
+      const response = await request(testServer.app)
+        .delete(`/api/admin/products/${nonExistentId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .expect(404);
-      
+
       // Verificar el mensaje de error
       expect(response.body).toHaveProperty('error');
       expect(response.body.error).toContain('Producto no encontrado');

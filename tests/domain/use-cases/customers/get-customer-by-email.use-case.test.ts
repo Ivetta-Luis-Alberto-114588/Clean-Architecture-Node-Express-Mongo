@@ -80,7 +80,7 @@ describe('GetCustomerByEmailUseCase', () => {
     name: 'Barrio Test',
     description: 'Descripción Test',
     city: {
-      id: 456,
+      id: "456",
       name: 'Ciudad Test',
       description: 'Descripción Test',
       isActive: true

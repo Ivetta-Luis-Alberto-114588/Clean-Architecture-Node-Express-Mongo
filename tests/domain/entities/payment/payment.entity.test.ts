@@ -5,6 +5,7 @@ import { CustomerEntity } from '../../../../src/domain/entities/customers/custom
 import { SaleEntity } from '../../../../src/domain/entities/sales/sale.entity';
 import { NeighborhoodEntity } from '../../../../src/domain/entities/customers/neighborhood';
 import { CityEntity } from '../../../../src/domain/entities/customers/citiy';
+import { OrderEntity } from '../../../../src/domain/entities/order/order.entity';
 
 describe('PaymentEntity', () => {
   // Objetos mock para las pruebas
@@ -33,7 +34,7 @@ describe('PaymentEntity', () => {
     true
   );
 
-  const mockSale = new SaleEntity(
+  const mockOrder = new OrderEntity(
     "4",
     mockCustomer,
     [], // items vacíos para la prueba
@@ -44,9 +45,38 @@ describe('PaymentEntity', () => {
     5, // discountAmount
     116, // total
     new Date(), // date
-    'pending', // status
-    'Test sale notes' // notes
+    {
+      id: "1",
+      code: 'PENDING',
+      name: 'Pending',
+      description: 'Order is pending',
+      color: '#FFA500',
+      order: 1,
+      isActive: true,
+      isDefault: true,
+      canTransitionTo: ['APPROVED', 'CANCELED']
+    }, // status
+    'Test order notes' // notes
+    // Nota: OrderEntity puede tener parámetros adicionales, revisar el constructor
   );
+
+
+
+  //ver de eliminar
+  // const mockSale = new SaleEntity(
+  //   "4",
+  //   mockCustomer,
+  //   [], // items vacíos para la prueba
+  //   100, // subtotal
+  //   21, // taxRate
+  //   21, // taxAmount
+  //   5, // discountRate
+  //   5, // discountAmount
+  //   116, // total
+  //   new Date(), // date
+  //   'pending', // status
+  //   'Test sale notes' // notes
+  // );
 
   // Test de creación básica
   test('should create a PaymentEntity instance with all properties', () => {
@@ -70,7 +100,7 @@ describe('PaymentEntity', () => {
     const payment = new PaymentEntity(
       id,
       saleId,
-      mockSale,
+      mockOrder,
       customerId,
       mockCustomer,
       amount,
@@ -90,7 +120,7 @@ describe('PaymentEntity', () => {
     expect(payment).toBeInstanceOf(PaymentEntity);
     expect(payment.id).toBe(id);
     expect(payment.saleId).toBe(saleId);
-    expect(payment.sale).toBe(mockSale);
+    expect(payment.sale).toBe(mockOrder);
     expect(payment.customerId).toBe(customerId);
     expect(payment.customer).toBe(mockCustomer);
     expect(payment.amount).toBe(amount);
@@ -116,7 +146,7 @@ describe('PaymentEntity', () => {
       const payment = new PaymentEntity(
         'test-id',
         'test-sale-id',
-        mockSale,
+        mockOrder,
         'test-customer-id',
         mockCustomer,
         100,
@@ -144,7 +174,7 @@ describe('PaymentEntity', () => {
       const payment = new PaymentEntity(
         'test-id',
         'test-sale-id',
-        mockSale,
+        mockOrder,
         'test-customer-id',
         mockCustomer,
         100,
@@ -172,7 +202,7 @@ describe('PaymentEntity', () => {
       const payment = new PaymentEntity(
         'test-id',
         'test-sale-id',
-        mockSale,
+        mockOrder,
         'test-customer-id',
         mockCustomer,
         100,
@@ -196,7 +226,7 @@ describe('PaymentEntity', () => {
     const paymentWithoutMetadata = new PaymentEntity(
       'test-id',
       'test-sale-id',
-      mockSale,
+      mockOrder,
       'test-customer-id',
       mockCustomer,
       100,
@@ -226,7 +256,7 @@ describe('PaymentEntity', () => {
     const paymentWithMetadata = new PaymentEntity(
       'test-id',
       'test-sale-id',
-      mockSale,
+      mockOrder,
       'test-customer-id',
       mockCustomer,
       100,
@@ -252,7 +282,7 @@ describe('PaymentEntity', () => {
     const paymentWithoutIdempotencyKey = new PaymentEntity(
       'test-id',
       'test-sale-id',
-      mockSale,
+      mockOrder,
       'test-customer-id',
       mockCustomer,
       100,
@@ -269,7 +299,7 @@ describe('PaymentEntity', () => {
     const paymentWithIdempotencyKey = new PaymentEntity(
       'test-id',
       'test-sale-id',
-      mockSale,
+      mockOrder,
       'test-customer-id',
       mockCustomer,
       100,
@@ -296,7 +326,7 @@ describe('PaymentEntity', () => {
     const zeroAmount = new PaymentEntity(
       'test-id',
       'test-sale-id',
-      mockSale,
+      mockOrder,
       'test-customer-id',
       mockCustomer,
       0,
@@ -313,7 +343,7 @@ describe('PaymentEntity', () => {
     const decimalAmount = new PaymentEntity(
       'test-id',
       'test-sale-id',
-      mockSale,
+      mockOrder,
       'test-customer-id',
       mockCustomer,
       99.99,
@@ -330,7 +360,7 @@ describe('PaymentEntity', () => {
     const largeAmount = new PaymentEntity(
       'test-id',
       'test-sale-id',
-      mockSale,
+      mockOrder,
       'test-customer-id',
       mockCustomer,
       1000000,
@@ -356,7 +386,7 @@ describe('PaymentEntity', () => {
     const payment = new PaymentEntity(
       'test-id',
       'test-sale-id',
-      mockSale,
+      mockOrder,
       'test-customer-id',
       mockCustomer,
       100,
@@ -377,7 +407,8 @@ describe('PaymentEntity', () => {
     expect(payment.customer.neighborhood.city.name).toBe('Test City');
 
     expect(payment.sale.total).toBe(116);
-    expect(payment.sale.status).toBe('pending');
+    expect(payment.sale.status.code).toBe('PENDING'); // ← CAMBIO: status → status.code
+    expect(payment.sale.status.name).toBe('Pending'); // ← AGREGAR: verificar name también
     expect(payment.sale.customer).toBe(mockCustomer);
   });
 });

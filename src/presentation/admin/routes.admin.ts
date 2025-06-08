@@ -19,9 +19,7 @@ export class AdminRoutes {
 
         // Middlewares aplicados a TODAS las rutas de admin
         router.use(AuthMiddleware.validateJwt);
-        router.use(AuthMiddleware.checkRole(['ADMIN_ROLE']));
-
-        // Montar las sub-rutas de administración
+        router.use(AuthMiddleware.checkRole(['ADMIN_ROLE']));        // Montar las sub-rutas de administración
         router.use('/products', AdminProductRoutes.getRoutes());
         router.use('/categories', AdminCategoryRoutes.getRoutes());
         router.use('/units', AdminUnitRoutes.getRoutes());

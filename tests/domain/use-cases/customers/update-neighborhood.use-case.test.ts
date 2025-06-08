@@ -132,7 +132,7 @@ describe('UpdateNeighborhoodUseCase', () => {
       .rejects
       .toThrow(/Barrio no encontrado/);
 
-    // Verificar que no se intentó actualizar el barrio
+    // Verificar que no se intentó actualizar el barrioshould throw an error if new city is not found
     expect(mockNeighborhoodRepository.update).not.toHaveBeenCalled();
   });
 
@@ -140,6 +140,8 @@ describe('UpdateNeighborhoodUseCase', () => {
   test('should throw an error if new city is not found', async () => {
     // Creamos un DTO que solo actualiza la ciudad
     const updateCityOnlyDto = {
+      name: 'Nombre temporal',
+      description: 'Descripción temporal',
       cityId: newCityId
     };
 
@@ -168,7 +170,8 @@ describe('UpdateNeighborhoodUseCase', () => {
   test('should update only the name successfully', async () => {
     // Creamos un DTO que solo actualiza el nombre
     const updateNameOnlyDto = {
-      name: 'Nuevo Nombre de Barrio'
+      name: 'Nuevo Nombre de Barrio',
+      description: "Descripción temporal", // Incluimos un campo temporal para evitar errores de validación
     };
 
     const [error, dto] = UpdateNeighborhoodDto.update(updateNameOnlyDto);
@@ -196,6 +199,7 @@ describe('UpdateNeighborhoodUseCase', () => {
   test('should update only the description successfully', async () => {
     // Creamos un DTO que solo actualiza la descripción
     const updateDescriptionOnlyDto = {
+      name: 'Nombre temporal', // Incluimos un campo temporal para evitar errores de validación
       description: 'Nueva descripción detallada'
     };
 
@@ -224,6 +228,8 @@ describe('UpdateNeighborhoodUseCase', () => {
   test('should update only the active status successfully', async () => {
     // Creamos un DTO que solo actualiza el estado activo
     const updateActiveStatusOnlyDto = {
+      name: 'Nombre temporal', // Incluimos un campo temporal para evitar errores de validación
+      description: 'Descripción temporal', // Incluimos un campo temporal para evitar errores de validación
       isActive: false
     };
 

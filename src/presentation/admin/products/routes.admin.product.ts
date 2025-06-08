@@ -15,15 +15,12 @@ export class AdminProductRoutes {
         const datasourceCategory = new CategoryMongoDataSourceImpl();
         const productRepository = new ProductRepositoryImpl(datasourceProduct);
         const categoryRepository = new CategoryRepositoryImpl(datasourceCategory);
-        const controller = new ProductController(productRepository, categoryRepository);
-
-        router.get('/', (req, res, next) => { controller.getAllProducts(req, res) });
+        const controller = new ProductController(productRepository, categoryRepository); router.get('/', (req, res, next) => { controller.getAllProducts(req, res) });
         router.get('/search', (req, res, next) => { controller.searchProducts(req, res) });
-        router.get('/:id', (req, res, next) => { controller.getProductById(req, res) });
-
-        // --- USAR singleRequired para POST ---
+        router.get('/by-category/:categoryId', (req, res, next) => { controller.getProductsByCategory(req, res) });
+        router.get('/:id', (req, res, next) => { controller.getProductById(req, res) });        // --- USAR singleOptional para POST ---
         router.post('/',
-            UploadMiddleware.singleRequired('image'), // Ahora requiere imagen al crear
+            UploadMiddleware.singleOptional('image'), // Imagen opcional al crear
             (req, res, next) => { controller.createProduct(req, res) }
         );
 
@@ -35,7 +32,6 @@ export class AdminProductRoutes {
         // --- FIN CAMBIO ---
 
         router.delete('/:id', (req, res, next) => { controller.deleteProduct(req, res) });
-        router.get('/by-category/:categoryId', (req, res, next) => { controller.getProductsByCategory(req, res) });
 
         return router;
     }

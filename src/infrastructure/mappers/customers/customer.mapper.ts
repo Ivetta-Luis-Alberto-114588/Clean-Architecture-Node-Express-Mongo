@@ -8,7 +8,9 @@ export class CustomerMapper {
 
     static fromObjectToCustomerEntity(object: { [key: string]: any }): CustomerEntity {
 
-        const { _id, id, name, email, phone, address, neighborhood, isActive, userId } = object; // <<<--- Añadir userId
+        const { _id, id, name, email, phone, address, isActive, userId } = object; // <<<--- Añadir userId
+        // Support both populated 'neighborhood' and raw 'neighborhoodId' from DTO
+        const neighborhoodRaw = (object as any).neighborhood ?? (object as any).neighborhoodId;
 
         // Validaciones
         if (!_id && !id) throw CustomError.badRequest('mapper missing id');
@@ -17,7 +19,7 @@ export class CustomerMapper {
         // Hacer opcionales phone y address en la validación si pueden ser placeholders
         // if(!phone) throw CustomError.badRequest("mapper missing phone");
         // if(!address) throw CustomError.badRequest("mapper missing address");
-        if (!neighborhood) throw CustomError.badRequest("mapper missing neighborhood");
+        if (!neighborhoodRaw) throw CustomError.badRequest("mapper missing neighborhood");
         if (isActive !== undefined && typeof isActive !== 'boolean')
             throw CustomError.badRequest("mapper isActive must be a boolean");
 
@@ -26,12 +28,14 @@ export class CustomerMapper {
 
         // Manejo de relación con Neighborhood
         let neighborhoodEntity: NeighborhoodEntity;
-        if (typeof neighborhood === 'object' && neighborhood !== null && (neighborhood._id || neighborhood.id)) {
-            neighborhoodEntity = NeighborhoodMapper.fromObjectToNeighborhoodEntity(neighborhood);
-        } else if (typeof neighborhood === 'string' || typeof neighborhood === 'object') { // Si es solo ID
-            // Crear un placeholder o lanzar error si se espera que siempre esté poblado
+        if (typeof neighborhoodRaw === 'object' && neighborhoodRaw !== null && ((neighborhoodRaw as any)._id || (neighborhoodRaw as any).id)) {
+            neighborhoodEntity = NeighborhoodMapper.fromObjectToNeighborhoodEntity(neighborhoodRaw);
+        } else if (typeof neighborhoodRaw === 'string' || typeof neighborhoodRaw === 'object') {
+            // If raw ID or string, create placeholder entity
             neighborhoodEntity = {
-                id: neighborhood.toString(), name: 'Barrio (No Poblado)', description: '',
+                id: neighborhoodRaw.toString(),
+                name: 'Barrio (No Poblado)',
+                description: '',
                 city: { id: '', name: 'Ciudad (No Poblada)', description: '', isActive: true },
                 isActive: true
             };

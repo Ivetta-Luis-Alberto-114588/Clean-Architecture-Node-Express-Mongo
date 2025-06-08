@@ -107,7 +107,7 @@ describe('NeighborhoodEntity', () => {
   test('should work with different City instances', () => {
     // Arrange
     const anotherCity = new CityEntity(
-      "99",
+      99,
       'Another City',
       'Another City Description',
       false

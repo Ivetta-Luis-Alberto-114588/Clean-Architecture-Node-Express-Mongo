@@ -42,8 +42,7 @@ export class ProductController {
         if (error) {
             logger.warn("Error de validación en searchProducts DTO:", { error, query: req.query });
             return res.status(400).json({ error });
-        }
-        new SearchProductsUseCase(this.productRepository)
+        } new SearchProductsUseCase(this.productRepository)
             .execute(searchDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
@@ -52,6 +51,8 @@ export class ProductController {
     createProduct = async (req: Request, res: Response) => {
         let uploadedImageUrl: string | null = null;
         try {
+            logger.debug("createProduct - Request body:", { body: req.body });
+
             let imgUrl = '';
             if ((req as any).file) {
                 uploadedImageUrl = await this.cloudinaryAdapter.uploadImage((req as any).file.path);
@@ -60,13 +61,21 @@ export class ProductController {
                     if (err) console.error('Error eliminando archivo temporal:', err);
                 });
             }
+
             const productData = { ...req.body, imgUrl: imgUrl || req.body.imgUrl || '' };
+            logger.debug("createProduct - Product data after processing:", { productData });
+
+            // Validar IDs de category y unit
             if (!productData.category || !mongoose.Types.ObjectId.isValid(productData.category)) {
+                logger.warn("createProduct - Invalid category ID:", { category: productData.category });
                 throw CustomError.badRequest('ID de categoría inválido o faltante');
             }
             if (!productData.unit || !mongoose.Types.ObjectId.isValid(productData.unit)) {
+                logger.warn("createProduct - Invalid unit ID:", { unit: productData.unit });
                 throw CustomError.badRequest('ID de unidad inválido o faltante');
             }
+
+            logger.debug("createProduct - About to create DTO with data:", { productData });
             const [error, createProductDto] = CreateProductDto.create(productData);
             if (error) {
                 logger.warn("Error creando CreateProductDto:", { error, data: productData });
@@ -161,22 +170,32 @@ export class ProductController {
 
     getProductsByCategory = async (req: Request, res: Response) => {
         try {
+            logger.debug("getProductsByCategory called with params:", { params: req.params, query: req.query });
             const { categoryId } = req.params;
+            logger.debug("Extracted categoryId:", { categoryId });
+
             if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+                logger.warn("Invalid categoryId:", { categoryId });
                 return res.status(400).json({ error: 'ID de categoría inválido' });
             }
+
             const { page = 1, limit = 10 } = req.query;
             const [error, paginationDto] = PaginationDto.create(Number(page), Number(limit));
             if (error) {
                 logger.warn("Error en paginación para getProductsByCategory:", { error, query: req.query });
                 return res.status(400).json({ error });
             }
+
+            logger.debug("About to execute GetProductByCategoryUseCase with:", { categoryId, paginationDto });
             const result = await new GetProductByCategoryUseCase(
                 this.productRepository,
                 this.categoryRepository
             ).execute(categoryId, paginationDto!);
+
+            logger.debug("getProductsByCategory result:", { result });
             return res.json(result);
         } catch (err) {
+            logger.error("Error in getProductsByCategory:", { error: err });
             return this.handleError(err, res);
         }
     }
