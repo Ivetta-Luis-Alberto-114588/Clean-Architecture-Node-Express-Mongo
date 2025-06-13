@@ -13,7 +13,7 @@ import { CategoryRepository } from "../../domain/repositories/products/categroy.
 import { UpdateProductUseCase } from "../../domain/use-cases/product/update-product.use-case";
 import { UpdateProductDto } from "../../domain/dtos/products/update-product.dto";
 import { CloudinaryAdapter } from "../../infrastructure/adapters/cloudinary.adapter";
-import { fileStorageAdapter } from "../../infrastructure/adapters/cloudinary-file-storage.adapter";
+import { fileStorageService } from "../../configs/file-storage";
 import fs from 'fs';
 import { SearchProductsDto } from "../../domain/dtos/products/search-product.dto";
 import { SearchProductsUseCase } from "../../domain/use-cases/product/search-products.use-case";
@@ -50,9 +50,8 @@ export class ProductController {
     createProduct = async (req: Request, res: Response) => {
         let uploadedImageUrl: string | null = null;
         try {
-            loggerService.debug("createProduct - Request body:", { body: req.body }); let imgUrl = '';
-            if ((req as any).file) {
-                const uploadResult = await fileStorageAdapter.uploadFile((req as any).file.path);
+            loggerService.debug("createProduct - Request body:", { body: req.body }); let imgUrl = ''; if ((req as any).file) {
+                const uploadResult = await fileStorageService.uploadFile((req as any).file.path);
                 uploadedImageUrl = uploadResult.url;
                 imgUrl = uploadResult.url;
                 fs.unlink((req as any).file.path, (err) => {
@@ -79,9 +78,9 @@ export class ProductController {
                 loggerService.warn("Error creando CreateProductDto:", { error, data: productData });
                 if (uploadedImageUrl) {
                     try {
-                        const publicId = fileStorageAdapter.getPublicIdFromUrl(uploadedImageUrl);
+                        const publicId = fileStorageService.getPublicIdFromUrl(uploadedImageUrl);
                         if (publicId) {
-                            await fileStorageAdapter.deleteFile(publicId);
+                            await fileStorageService.deleteFile(publicId);
                             loggerService.warn(`Imagen ${publicId} eliminada debido a fallo en DTO de creación.`);
                         }
                     } catch (cleanupError) {
@@ -95,9 +94,9 @@ export class ProductController {
         } catch (err) {
             if (uploadedImageUrl && !(err instanceof CustomError && err.statusCode === 400)) {
                 try {
-                    const publicId = fileStorageAdapter.getPublicIdFromUrl(uploadedImageUrl);
+                    const publicId = fileStorageService.getPublicIdFromUrl(uploadedImageUrl);
                     if (publicId) {
-                        await fileStorageAdapter.deleteFile(publicId);
+                        await fileStorageService.deleteFile(publicId);
                         loggerService.warn(`Imagen ${publicId} eliminada debido a fallo en creación de producto.`);
                     }
                 } catch (cleanupError) {
@@ -150,9 +149,9 @@ export class ProductController {
             const deletedProduct = await new DeleteProductUseCase(this.productRepository).execute(id);
             if (imageUrlToDelete) {
                 try {
-                    const publicId = fileStorageAdapter.getPublicIdFromUrl(imageUrlToDelete);
+                    const publicId = fileStorageService.getPublicIdFromUrl(imageUrlToDelete);
                     if (publicId) {
-                        await fileStorageAdapter.deleteFile(publicId);
+                        await fileStorageService.deleteFile(publicId);
                         loggerService.info(`Imagen ${publicId} eliminada para producto ${id}`);
                     }
                 } catch (deleteImgError) {
@@ -210,9 +209,9 @@ export class ProductController {
             existingProduct = await this.productRepository.findById(id);
             finalImgUrl = existingProduct.imgUrl;
             if (existingProduct.imgUrl) {
-                oldPublicId = fileStorageAdapter.getPublicIdFromUrl(existingProduct.imgUrl);
+                oldPublicId = fileStorageService.getPublicIdFromUrl(existingProduct.imgUrl);
             } if ((req as any).file) {
-                const uploadResult = await fileStorageAdapter.uploadFile((req as any).file.path);
+                const uploadResult = await fileStorageService.uploadFile((req as any).file.path);
                 newUploadedImageUrl = uploadResult.url;
                 finalImgUrl = uploadResult.url;
                 loggerService.info(`Nueva imagen subida para producto ${id}: ${finalImgUrl}`);
@@ -221,7 +220,7 @@ export class ProductController {
                 });
                 if (oldPublicId) {
                     try {
-                        await fileStorageAdapter.deleteFile(oldPublicId);
+                        await fileStorageService.deleteFile(oldPublicId);
                         loggerService.info(`Imagen anterior (${oldPublicId}) eliminada para producto ${id}`);
                     } catch (deleteError) {
                         loggerService.error(`Error eliminando imagen antigua ${oldPublicId} de Cloudinary:`, deleteError);
@@ -229,7 +228,7 @@ export class ProductController {
                 }
             } else if (req.body.imgUrl === '' && oldPublicId) {
                 try {
-                    await fileStorageAdapter.deleteFile(oldPublicId);
+                    await fileStorageService.deleteFile(oldPublicId);
                     loggerService.info(`Imagen existente (${oldPublicId}) eliminada explícitamente para producto ${id}`);
                     finalImgUrl = '';
                 } catch (deleteError) {
@@ -250,9 +249,9 @@ export class ProductController {
                 loggerService.warn("Error creando UpdateProductDto:", { error, data: productData });
                 if (newUploadedImageUrl) {
                     try {
-                        const publicIdToDelete = fileStorageAdapter.getPublicIdFromUrl(newUploadedImageUrl);
+                        const publicIdToDelete = fileStorageService.getPublicIdFromUrl(newUploadedImageUrl);
                         if (publicIdToDelete) {
-                            await fileStorageAdapter.deleteFile(publicIdToDelete);
+                            await fileStorageService.deleteFile(publicIdToDelete);
                             loggerService.warn(`Imagen nueva ${publicIdToDelete} eliminada por fallo en DTO de actualización.`);
                         }
                     } catch (cleanupError) {
@@ -267,9 +266,9 @@ export class ProductController {
         } catch (err) {
             if (newUploadedImageUrl && !(err instanceof CustomError && err.statusCode === 400)) {
                 try {
-                    const publicIdToDelete = fileStorageAdapter.getPublicIdFromUrl(newUploadedImageUrl);
+                    const publicIdToDelete = fileStorageService.getPublicIdFromUrl(newUploadedImageUrl);
                     if (publicIdToDelete) {
-                        await fileStorageAdapter.deleteFile(publicIdToDelete);
+                        await fileStorageService.deleteFile(publicIdToDelete);
                         loggerService.warn(`Imagen ${publicIdToDelete} eliminada debido a fallo en actualización de producto.`);
                     }
                 } catch (cleanupError) {

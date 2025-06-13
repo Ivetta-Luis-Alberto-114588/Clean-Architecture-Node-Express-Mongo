@@ -9,7 +9,8 @@ import { CouponRepository } from "../../repositories/coupon/coupon.repository";
 import { CouponEntity } from "../../entities/coupon/coupon.entity";
 import { CustomerEntity } from "../../entities/customers/customer";
 import { CreateCustomerDto } from "../../dtos/customers/create-customer.dto";
-import logger from "../../../configs/logger";
+import { ILogger } from "../../interfaces/logger.interface";
+import { NotificationService } from "../../interfaces/services/notification.service";
 import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { NeighborhoodRepository } from "../../repositories/customers/neighborhood.repository";
 import { CityRepository } from "../../repositories/customers/city.repository";
@@ -36,6 +37,8 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
         private readonly orderStatusRepository: OrderStatusRepository,
+        private readonly notificationService: NotificationService,
+        private readonly logger: ILogger
     ) { }
 
     async execute(createOrderDto: CreateOrderDto, userId?: string): Promise<OrderEntity> {
@@ -59,9 +62,9 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 if (!existingCustomer) throw CustomError.internalServerError('Perfil de cliente no encontrado para usuario autenticado.');
                 customerForOrder = existingCustomer;
                 finalCustomerId = customerForOrder.id.toString();
-                logger.info(`[CreateOrderUC] Cliente ${finalCustomerId} encontrado para User ${userId}`);
+                this.logger.info(`[CreateOrderUC] Cliente ${finalCustomerId} encontrado para User ${userId}`);
             } else {
-                logger.info(`[CreateOrderUC] Procesando pedido para invitado. Email: ${createOrderDto.customerEmail}`);
+                this.logger.info(`[CreateOrderUC] Procesando pedido para invitado. Email: ${createOrderDto.customerEmail}`);
                 if (!createOrderDto.customerEmail || !createOrderDto.customerName || !createOrderDto.shippingNeighborhoodId) {
                     throw CustomError.badRequest('Faltan datos del cliente invitado o barrio de envío.');
                 }
@@ -70,7 +73,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                     if (existingGuest.userId) throw CustomError.badRequest('Email ya registrado. Inicia sesión.');
                     customerForOrder = existingGuest;
                     finalCustomerId = existingGuest.id.toString();
-                    logger.info(`[CreateOrderUC] Cliente invitado existente ${finalCustomerId} encontrado por email.`);
+                    this.logger.info(`[CreateOrderUC] Cliente invitado existente ${finalCustomerId} encontrado por email.`);
                 } else {
                     const [errorDto, createGuestDto] = CreateCustomerDto.create({
                         name: createOrderDto.customerName,
@@ -84,7 +87,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                     await this.neighborhoodRepository.findById(createOrderDto.shippingNeighborhoodId);
                     customerForOrder = await this.customerRepository.create(createGuestDto!);
                     finalCustomerId = customerForOrder.id.toString();
-                    logger.info(`[CreateOrderUC] Nuevo cliente invitado creado: ${finalCustomerId}`);
+                    this.logger.info(`[CreateOrderUC] Nuevo cliente invitado creado: ${finalCustomerId}`);
                 }
             }
 
@@ -102,7 +105,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                     additionalInfo: selectedAddress.additionalInfo, originalAddressId: selectedAddress.id,
                     originalNeighborhoodId: selectedAddress.neighborhood.id.toString(), originalCityId: selectedAddress.city.id.toString(),
                 };
-                logger.info(`[CreateOrderUC] Usando dirección guardada ${selectedAddress.id}`);
+                this.logger.info(`[CreateOrderUC] Usando dirección guardada ${selectedAddress.id}`);
 
             } else if (createOrderDto.shippingStreetAddress) {
                 if (!createOrderDto.shippingNeighborhoodId) throw CustomError.badRequest("Falta ID de barrio para dirección de envío.");
@@ -120,13 +123,13 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                     additionalInfo: createOrderDto.shippingAdditionalInfo, originalAddressId: undefined,
                     originalNeighborhoodId: neighborhood.id.toString(), originalCityId: city.id.toString(),
                 };
-                logger.info(`[CreateOrderUC] Usando dirección de envío proporcionada.`);
+                this.logger.info(`[CreateOrderUC] Usando dirección de envío proporcionada.`);
 
             } else {
                 // Ni seleccionó ni proporcionó: Intentar usar la default si es usuario registrado
                 if (!userId) throw CustomError.badRequest("Invitados deben proporcionar dirección de envío.");
 
-                logger.info(`[CreateOrderUC] No se seleccionó ni proporcionó dirección. Buscando default para cliente ${finalCustomerId}`);
+                this.logger.info(`[CreateOrderUC] No se seleccionó ni proporcionó dirección. Buscando default para cliente ${finalCustomerId}`);
                 const [pgError, pgDto] = PaginationDto.create(1, 1); // Buscar solo 1
                 if (pgError) throw CustomError.internalServerError("Error creando paginación para buscar dirección default.");
                 const addresses = await this.customerRepository.getAddressesByCustomerId(finalCustomerId, pgDto!);
@@ -141,7 +144,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                     additionalInfo: defaultAddress.additionalInfo, originalAddressId: defaultAddress.id,
                     originalNeighborhoodId: defaultAddress.neighborhood.id.toString(), originalCityId: defaultAddress.city.id.toString(),
                 };
-                logger.info(`[CreateOrderUC] Usando dirección default encontrada ${defaultAddress.id}`);
+                this.logger.info(`[CreateOrderUC] Usando dirección default encontrada ${defaultAddress.id}`);
             }
 
             // --- 3. Lógica de Cupón ---
@@ -163,20 +166,39 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 if (coupon.discountType === 'percentage') calculatedDiscountRate = coupon.discountValue;
                 else calculatedDiscountRate = (subtotalWithTaxForCouponCalc > 0) ? Math.min((coupon.discountValue / subtotalWithTaxForCouponCalc) * 100, 100) : 0;
                 couponIdToIncrement = coupon.id;
-                logger.info(`[CreateOrderUC] Cupón ${coupon.code} validado. Tasa desc: ${calculatedDiscountRate.toFixed(2)}%`);
+                this.logger.info(`[CreateOrderUC] Cupón ${coupon.code} validado. Tasa desc: ${calculatedDiscountRate.toFixed(2)}%`);
             }
 
             // --- 4. Llamar al repositorio de Pedidos ---
-            logger.info(`[CreateOrderUC] Llamando a orderRepository.create con Cliente: ${finalCustomerId}`);
-            const createdOrder = await this.orderRepository.create(
+            this.logger.info(`[CreateOrderUC] Llamando a orderRepository.create con Cliente: ${finalCustomerId}`); const createdOrder = await this.orderRepository.create(
                 createOrderDto, calculatedDiscountRate, couponIdToIncrement, finalCustomerId,
                 resolvedShippingDetails, defaultStatus.id // Pasar el ID del estado por defecto
             );
-            logger.info(`[CreateOrderUC] Pedido creado exitosamente: ${createdOrder.id}`);
+            this.logger.info(`[CreateOrderUC] Pedido creado exitosamente: ${createdOrder.id}`);
+
+            // --- 5. Enviar notificación de nueva orden ---
+            try {
+                await this.notificationService.sendOrderNotification({
+                    orderId: createdOrder.id,
+                    customerName: createdOrder.customer?.name || 'Cliente',
+                    total: createdOrder.total, items: createdOrder.items.map(item => ({
+                        name: item.product?.name || 'Producto',
+                        quantity: item.quantity,
+                        price: item.unitPrice
+                    }))
+                });
+                this.logger.info(`[CreateOrderUC] Notificación enviada para orden: ${createdOrder.id}`);
+            } catch (notificationError) {
+                // No fallar la creación de la orden por errores de notificación
+                this.logger.warn(`[CreateOrderUC] Error enviando notificación para orden ${createdOrder.id}`, {
+                    error: notificationError as Error
+                });
+            }
+
             return createdOrder;
 
         } catch (error) {
-            logger.error("[CreateOrderUC] Error ejecutando:", { error: error instanceof Error ? { message: error.message, stack: error.stack } : error, userId, dto: createOrderDto });
+            this.logger.error("[CreateOrderUC] Error ejecutando:", { error: error instanceof Error ? { message: error.message, stack: error.stack } : error, userId, dto: createOrderDto });
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError(`Error al crear la venta: ${error instanceof Error ? error.message : String(error)}`);
         }

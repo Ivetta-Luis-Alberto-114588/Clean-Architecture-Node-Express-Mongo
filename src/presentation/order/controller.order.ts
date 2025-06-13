@@ -14,7 +14,8 @@ import { GetAllOrderUseCase } from "../../domain/use-cases/order/get-all-order.u
 import { GetOrderByIdUseCase } from "../../domain/use-cases/order/get-order-by-id.use-case";
 import { UpdateOrderStatusUseCase } from "../../domain/use-cases/order/update-order-status.use-case";
 import { CouponRepository } from "../../domain/repositories/coupon/coupon.repository";
-import logger from "../../configs/logger";
+import { loggerService } from "../../configs/logger";
+import { notificationService } from "../../configs/notification";
 import { GetMyOrdersUseCase } from "../../domain/use-cases/order/get-my-orders.use-case";
 import { NeighborhoodRepository } from "../../domain/repositories/customers/neighborhood.repository";
 import { CityRepository } from "../../domain/repositories/customers/city.repository";
@@ -22,10 +23,8 @@ import { OrderStatusRepository } from "../../domain/repositories/order/order-sta
 import { GetOrdersForDashboardUseCase } from './../../domain/use-cases/order/get-orders-for-dashboard.use-case';
 import { UpdateOrderDto } from "../../domain/dtos/order/update-order.dto";
 import { UpdateOrderUseCase } from "../../domain/use-cases/order/update-order.use-case";
-import { NotificationServiceImpl } from "../../infrastructure/services/notification.service";
 
 export class OrderController {
-
     constructor(
         private readonly orderRepository: OrderRepository,
         private readonly customerRepository: CustomerRepository,
@@ -34,15 +33,14 @@ export class OrderController {
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
         private readonly orderStatusRepository: OrderStatusRepository,
-        private readonly updateOrderUseCase: UpdateOrderUseCase,
-        private readonly notificationService: NotificationServiceImpl
+        private readonly updateOrderUseCase: UpdateOrderUseCase
     ) { }
 
     private handleError = (error: unknown, res: Response) => {
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ error: error.message });
         }
-        logger.error("Error en OrderController:", { error: error instanceof Error ? error.stack : error });
+        loggerService.error("Error en OrderController:", { error: error instanceof Error ? error.stack : error });
         return res.status(500).json({ error: "Error interno del servidor" });
     };
 
@@ -60,7 +58,7 @@ export class OrderController {
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
         if (error) {
             res.status(400).json({ error });
-            logger.warn("Error en paginación para getAllSales", { error, query: req.query });
+            loggerService.warn("Error en paginación para getAllSales", { error, query: req.query });
             return;
         }
         new GetAllOrderUseCase(this.orderRepository)
@@ -75,7 +73,7 @@ export class OrderController {
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
         if (error) {
             res.status(400).json({ error });
-            logger.warn(`Error en paginación para getSalesByCustomer ${customerId}`, { error, query: req.query });
+            loggerService.warn(`Error en paginación para getSalesByCustomer ${customerId}`, { error, query: req.query });
             return;
         }
         new FindOrderByCustomerUseCase(
@@ -108,14 +106,14 @@ export class OrderController {
             const [error, paginationDto] = PaginationDto.create(+page, +limit);
             if (error) {
                 res.status(400).json({ error });
-                logger.warn(`Error en paginación para getSalesByDateRange`, { error, query: req.query });
+                loggerService.warn(`Error en paginación para getSalesByDateRange`, { error, query: req.query });
                 return;
             }
 
             new FindOrderByDateRangeUseCase(this.orderRepository)
                 .execute(start, end, paginationDto!)
                 .then(data => {
-                    logger.info(`Se encontraron ${data.total} pedidos en el rango.`);
+                    loggerService.info(`Se encontraron ${data.total} pedidos en el rango.`);
                     res.json(data);
                 })
                 .catch(err => this.handleError(err, res));
@@ -137,7 +135,7 @@ export class OrderController {
 
         if (error) {
             res.status(400).json({ error });
-            logger.warn(`Error en paginación para getMyOrders (User: ${userId})`, { error, query: req.query });
+            loggerService.warn(`Error en paginación para getMyOrders (User: ${userId})`, { error, query: req.query });
             return;
         }
 
@@ -153,38 +151,34 @@ export class OrderController {
 
         if (error) {
             res.status(400).json({ error });
-            logger.warn("Error en validación de CreateOrderDto", { error, body: req.body, userId });
+            loggerService.warn("Error en validación de CreateOrderDto", { error, body: req.body, userId });
             return;
-        }
-
-        new CreateOrderUseCase(
+        } new CreateOrderUseCase(
             this.orderRepository, this.customerRepository, this.productRepository,
             this.couponRepository, this.neighborhoodRepository, this.cityRepository,
-            this.orderStatusRepository
+            this.orderStatusRepository, notificationService, loggerService
         )
-            .execute(createSaleDto!, userId)
-            .then(async (data) => {
+            .execute(createSaleDto!, userId).then(async (data) => {
                 // Enviar notificación de nueva orden (sin bloquear la respuesta)
-                try {                    await this.notificationService.sendOrderNotification({
+                try {
+                    await notificationService.sendOrderNotification({
                         orderId: data.id,
                         customerName: data.customer?.name || 'Cliente',
-                        customerEmail: data.customer?.email || '',
                         total: data.total,
                         items: data.items?.map(detail => ({
-                            productName: detail.product?.name || 'Producto',
+                            name: detail.product?.name || 'Producto',
                             quantity: detail.quantity,
                             price: detail.unitPrice
-                        })) || [],
-                        orderDate: data.date || new Date()
+                        })) || []
                     });
-                    logger.info(`Notificación enviada para orden ${data.id}`);
+                    loggerService.info(`Notificación enviada para orden ${data.id}`);
                 } catch (notificationError) {
-                    logger.warn(`Error al enviar notificación para orden ${data.id}:`, { 
-                        error: notificationError instanceof Error ? notificationError.message : notificationError 
+                    loggerService.warn(`Error al enviar notificación para orden ${data.id}:`, {
+                        error: notificationError instanceof Error ? notificationError.message : notificationError
                     });
                     // No lanzamos el error para que no afecte la respuesta de la orden
                 }
-                
+
                 res.status(201).json(data);
             })
             .catch(err => this.handleError(err, res));
@@ -203,7 +197,7 @@ export class OrderController {
         const [error, updateSaleStatusDto] = UpdateOrderStatusDto.update(req.body);
         if (error) {
             res.status(400).json({ error });
-            logger.warn(`Error en validación de UpdateOrderStatusDto para ID ${id}`, { error, body: req.body });
+            loggerService.warn(`Error en validación de UpdateOrderStatusDto para ID ${id}`, { error, body: req.body });
             return;
         }
         new UpdateOrderStatusUseCase(this.orderRepository, this.orderStatusRepository)

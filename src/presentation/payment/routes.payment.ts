@@ -1,5 +1,3 @@
-// src/presentation/payment/routes.payment.ts
-
 import { Router } from "express";
 import { PaymentController } from "./controller.payment";
 import { PaymentMongoDataSourceImpl } from "../../infrastructure/datasources/payment/payment.mongo.datasource.impl";
@@ -8,10 +6,9 @@ import { OrderMongoDataSourceImpl } from "../../infrastructure/datasources/order
 import { CustomerMongoDataSourceImpl } from "../../infrastructure/datasources/customers/customer.mongo.datasource.impl";
 import { OrderRepositoryImpl } from "../../infrastructure/repositories/order/order.repository.impl";
 import { CustomerRepositoryImpl } from "../../infrastructure/repositories/customers/customer.repository.impl";
-import { MercadoPagoPaymentAdapter } from "../../infrastructure/adapters/mercado-pago-payment.adapter";
-import { WinstonLoggerAdapter } from "../../infrastructure/adapters/winston-logger.adapter";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
-import { envs } from "../../configs/envs";
+import { loggerService } from "../../configs/logger";
+import { paymentService } from "../../configs/payment";
 
 export class PaymentRoutes {
   static get getPaymentRoutes(): Router {
@@ -20,25 +17,17 @@ export class PaymentRoutes {
     // Inicializamos las dependencias
     const paymentDatasource = new PaymentMongoDataSourceImpl();
     const saleDatasource = new OrderMongoDataSourceImpl();
-    const customerDatasource = new CustomerMongoDataSourceImpl(); const paymentRepository = new PaymentRepositoryImpl(paymentDatasource);
+    const customerDatasource = new CustomerMongoDataSourceImpl();    // Inicializar repositorios
+    const paymentRepository = new PaymentRepositoryImpl(paymentDatasource);
     const saleRepository = new OrderRepositoryImpl(saleDatasource);
     const customerRepository = new CustomerRepositoryImpl(customerDatasource);
-
-    // Inicializar servicios de infraestructura
-    const logger = new WinstonLoggerAdapter();
-    const paymentService = new MercadoPagoPaymentAdapter(
-      {
-        accessToken: envs.MERCADO_PAGO_ACCESS_TOKEN
-      },
-      logger
-    );
 
     const controller = new PaymentController(
       paymentRepository,
       saleRepository,
       customerRepository,
       paymentService,
-      logger
+      loggerService
     );
 
     // Rutas públicas (no requieren autenticación)

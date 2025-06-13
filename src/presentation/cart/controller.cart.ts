@@ -40,24 +40,20 @@ export class CartController {
         });
 
         return res.status(statusCode).json(errorData);
-    }
-
-    // Obtener el carrito del usuario actual
+    }    // Obtener el carrito del usuario actual
     getCart = (req: Request, res: Response) => {
         const userId = req.body.user?.id; // Obtenido del AuthMiddleware
-        const requestId = req.id; // Obtenido del LoggerMiddleware
 
         if (!userId) {
-            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res, requestId);
+            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res);
         }
 
         new GetCartUseCase(this.cartRepository)
             .execute(userId)
             .then(cart => {
-                if (!cart) {
-                    // Si no hay carrito, podemos devolver un carrito vacío o 404
+                if (!cart) {                    // Si no hay carrito, podemos devolver un carrito vacío o 404
                     // Devolver un carrito vacío suele ser más práctico para el frontend
-                    logger.info(`Usuario ${userId} (ReqID: ${requestId}) no tiene carrito, devolviendo vacío.`);
+                    logger.info(`Usuario ${userId} no tiene carrito, devolviendo vacío.`);
                     const emptyCart: CartEntity = { // Crear objeto que cumpla la interfaz
                         id: 'new',
                         userId: userId,
@@ -71,101 +67,81 @@ export class CartController {
                         subtotalWithoutTax: 0,
                     };
                     return res.status(200).json(emptyCart);
-                }
-                logger.info(`Carrito obtenido para usuario ${userId} (ReqID: ${requestId})`);
+                } logger.info(`Carrito obtenido para usuario ${userId}`);
                 res.json(cart);
             })
-            .catch(err => this.handleError(err, res, requestId));
-    }
-
-    // Añadir un item al carrito
+            .catch(err => this.handleError(err, res));
+    }    // Añadir un item al carrito
     addItem = (req: Request, res: Response) => {
         const userId = req.body.user?.id;
-        const requestId = req.id;
 
         if (!userId) {
-            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res, requestId);
+            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res);
         }
 
-        const [error, addItemDto] = AddItemToCartDto.create(req.body);
-        if (error) {
-            logger.warn(`Error de validación en addItem para usuario ${userId} (ReqID: ${requestId}): ${error}`);
+        const [error, addItemDto] = AddItemToCartDto.create(req.body); if (error) {
+            logger.warn(`Error de validación en addItem para usuario ${userId}: ${error}`);
             return res.status(400).json({ error });
         }
 
         new AddToCartUseCase(this.cartRepository, this.productRepository)
             .execute(userId, addItemDto!)
             .then(cart => {
-                logger.info(`Item añadido/actualizado para usuario ${userId}, producto ${addItemDto!.productId} (ReqID: ${requestId})`);
+                logger.info(`Item añadido/actualizado para usuario ${userId}, producto ${addItemDto!.productId}`);
                 res.status(200).json(cart); // Usar 200 para indicar éxito en la adición/actualización
             })
-            .catch(err => this.handleError(err, res, requestId));
-    }
-
-    // Actualizar la cantidad de un item
+            .catch(err => this.handleError(err, res));
+    }    // Actualizar la cantidad de un item
     updateItem = (req: Request, res: Response) => {
         const userId = req.body.user?.id;
         const { productId } = req.params;
-        const requestId = req.id;
 
         if (!userId) {
-            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res, requestId);
-        }
-
-        const [error, updateDto] = UpdateCartItemDto.create({ ...req.body, productId });
+            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res);
+        } const [error, updateDto] = UpdateCartItemDto.create({ ...req.body, productId });
         if (error) {
-            logger.warn(`Error de validación en updateItem para usuario ${userId}, producto ${productId} (ReqID: ${requestId}): ${error}`);
+            logger.warn(`Error de validación en updateItem para usuario ${userId}, producto ${productId}: ${error}`);
             return res.status(400).json({ error });
         }
 
         new UpdateCartItemUseCase(this.cartRepository, this.productRepository)
             .execute(userId, updateDto!)
             .then(cart => {
-                logger.info(`Item actualizado para usuario ${userId}, producto ${productId} (ReqID: ${requestId})`);
+                logger.info(`Item actualizado para usuario ${userId}, producto ${productId}`);
                 res.json(cart);
             })
-            .catch(err => this.handleError(err, res, requestId));
-    }
-
-    // Eliminar un item del carrito
+            .catch(err => this.handleError(err, res));
+    }    // Eliminar un item del carrito
     removeItem = (req: Request, res: Response) => {
         const userId = req.body.user?.id;
         const { productId } = req.params;
-        const requestId = req.id;
 
         if (!userId) {
-            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res, requestId);
+            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res);
         }
 
         if (!productId || !/^[0-9a-fA-F]{24}$/.test(productId)) {
-            logger.warn(`Intento de eliminar item con ID inválido: ${productId} por usuario ${userId} (ReqID: ${requestId})`);
+            logger.warn(`Intento de eliminar item con ID inválido: ${productId} por usuario ${userId}`);
             return res.status(400).json({ error: 'Se requiere un productId válido' });
-        }
-
-        new RemoveFromCartUseCase(this.cartRepository)
+        } new RemoveFromCartUseCase(this.cartRepository)
             .execute(userId, productId)
             .then(cart => {
-                logger.info(`Item eliminado para usuario ${userId}, producto ${productId} (ReqID: ${requestId})`);
+                logger.info(`Item eliminado para usuario ${userId}, producto ${productId}`);
                 res.json(cart);
             })
-            .catch(err => this.handleError(err, res, requestId));
-    }
-
-    // Vaciar el carrito completo
+            .catch(err => this.handleError(err, res));
+    }    // Vaciar el carrito completo
     clearCart = (req: Request, res: Response) => {
         const userId = req.body.user?.id;
-        const requestId = req.id;
 
         if (!userId) {
-            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res, requestId);
-        }
-
-        new ClearCartUseCase(this.cartRepository)
+            return this.handleError(CustomError.unauthorized('Usuario no autenticado'), res);
+        } new ClearCartUseCase(this.cartRepository)
             .execute(userId)
             .then(cart => {
-                logger.info(`Carrito vaciado para usuario ${userId} (ReqID: ${requestId})`);
+                logger.info(`Carrito vaciado para usuario ${userId}`);
                 res.json(cart);
             })
-            .catch(err => this.handleError(err, res, requestId));
+            .catch(err => this.handleError(err, res));
     }
 }

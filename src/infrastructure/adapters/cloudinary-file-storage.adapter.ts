@@ -70,7 +70,3 @@ export class CloudinaryFileStorageAdapter implements IFileStorageService {
         }
     }
 }
-
-// Instancia singleton para uso directo
-import { loggerAdapter } from './winston-logger.adapter';
-export const fileStorageAdapter = new CloudinaryFileStorageAdapter(loggerAdapter);

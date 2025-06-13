@@ -16,8 +16,8 @@ import { CityRepositoryImpl } from "../../../infrastructure/repositories/custome
 import { OrderStatusMongoDataSourceImpl } from "../../../infrastructure/datasources/order/order-status.mongo.datasource.impl";
 import { OrderStatusRepositoryImpl } from "../../../infrastructure/repositories/order/order-status.repository.impl";
 import { UpdateOrderUseCase } from "../../../domain/use-cases/order/update-order.use-case";
-import { NotificationServiceImpl } from "../../../infrastructure/services/notification.service";
-import { notificationConfig } from "../../../configs/notification.config";
+import { loggerService } from "../../../configs/logger";
+import { notificationService } from "../../../configs/notification";
 
 
 export class AdminOrderRoutes {
@@ -30,7 +30,7 @@ export class AdminOrderRoutes {
         const neighborhoodDatasource = new NeighborhoodMongoDataSourceImpl();
         const cityDatasource = new CityMongoDataSourceImpl();
         const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
-        
+
         // Repositorios
         const orderRepository = new OrderRepositoryImpl(orderDatasource);
         const customerRepository = new CustomerRepositoryImpl(customerDatasource);
@@ -40,10 +40,7 @@ export class AdminOrderRoutes {
         const cityRepository = new CityRepositoryImpl(cityDatasource);
         const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);        // Use case para actualizar pedidos
         const updateOrderUseCase = new UpdateOrderUseCase(orderRepository);
-        
-        // Notification service
-        const notificationService = new NotificationServiceImpl(notificationConfig);
-        
+
         // Controller con todas las dependencias
         const controller = new OrderController(
             orderRepository,
@@ -53,8 +50,7 @@ export class AdminOrderRoutes {
             neighborhoodRepository,
             cityRepository,
             orderStatusRepository,
-            updateOrderUseCase,
-            notificationService
+            updateOrderUseCase
         );// --- Rutas de gestión de pedidos para Admin ---
         router.get('/', controller.getAllSales);
         router.get('/:id', controller.getSaleById);
@@ -62,7 +58,7 @@ export class AdminOrderRoutes {
         router.get('/by-customer/:customerId', controller.getSalesByCustomer);
         router.patch('/:id/status', controller.updateSaleStatus);
         router.post('/by-date-range', controller.getSalesByDateRange);
-        
+
         // NUEVO: Ruta para actualización completa de pedidos
         router.put('/:id', controller.updateSale);
 
