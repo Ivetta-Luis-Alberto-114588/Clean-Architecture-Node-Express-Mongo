@@ -89,7 +89,7 @@ export class ProductController {
                     }
                 }
                 return res.status(400).json({ error });
-            }            const product = await new CreateProductUseCase(this.productRepository, loggerService).execute(createProductDto!);
+            } const product = await new CreateProductUseCase(this.productRepository, loggerService).execute(createProductDto!);
             loggerService.info(`Producto creado: ${product.id} - ${product.name}`);
             return res.status(201).json(product);
         } catch (err) {

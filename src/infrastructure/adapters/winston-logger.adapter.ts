@@ -7,7 +7,7 @@ export class WinstonLoggerAdapter implements ILogger {
 
     info(message: string, meta: Record<string, any> = {}): void {
         winstonLogger.info(message, meta);
-    }    error(message: string, meta: Record<string, any> = {}): void {
+    } error(message: string, meta: Record<string, any> = {}): void {
         // Si meta contiene un error, extraer información útil
         if (meta.error && meta.error instanceof Error) {
             const errorInfo: any = {

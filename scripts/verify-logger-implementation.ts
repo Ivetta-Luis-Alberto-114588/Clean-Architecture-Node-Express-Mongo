@@ -15,21 +15,21 @@ console.log('- loggerService.http existe:', typeof loggerService.http === 'funct
 // Test 2: Verificar que el logger funciona
 console.log('\n✅ Test 2: Logger functionality');
 try {
-  loggerService.info('Logger abstraction verification test', { timestamp: new Date().toISOString() });
-  loggerService.warn('Warning test message');
-  loggerService.error('Error test message', new Error('Test error'));
-  console.log('- ✅ Logger methods work correctly');
+    loggerService.info('Logger abstraction verification test', { timestamp: new Date().toISOString() });
+    loggerService.warn('Warning test message');
+    loggerService.error('Error test message', new Error('Test error'));
+    console.log('- ✅ Logger methods work correctly');
 } catch (error) {
-  console.log('- ❌ Logger methods failed:', error);
+    console.log('- ❌ Logger methods failed:', error);
 }
 
 // Test 3: Verificar que Use Cases pueden recibir logger
 console.log('\n✅ Test 3: Use Case logger injection');
 try {
-  console.log('- ✅ CreateProductUseCase constructor signature accepts logger parameter');
-  console.log('- ✅ Logger interface properly implemented');
+    console.log('- ✅ CreateProductUseCase constructor signature accepts logger parameter');
+    console.log('- ✅ Logger interface properly implemented');
 } catch (error) {
-  console.log('- ❌ Use Case instantiation failed:', error);
+    console.log('- ❌ Use Case instantiation failed:', error);
 }
 
 console.log('\n🎉 Logger abstraction verification completed!');
