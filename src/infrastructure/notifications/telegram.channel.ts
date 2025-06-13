@@ -3,15 +3,15 @@ import { NotificationChannel, NotificationMessage } from '../../domain/interface
 import { ITelegramService } from '../../domain/interfaces/telegram.service';
 
 export class TelegramChannel implements NotificationChannel {
-    constructor(private telegramService: ITelegramService) {}    async send(message: NotificationMessage): Promise<void> {
+    constructor(private telegramService: ITelegramService) { } async send(message: NotificationMessage): Promise<void> {
         if (!this.telegramService.isConfigured()) {
             return;
         }
 
         const telegramMessage = this.formatMessage(message);
-        
+
         const result = await this.telegramService.sendMessageToDefaultChat(telegramMessage, 'HTML');
-        
+
         if (!result.success) {
             throw new Error(`Failed to send Telegram notification: ${result.error}`);
         }
@@ -19,7 +19,7 @@ export class TelegramChannel implements NotificationChannel {
 
     private formatMessage(message: NotificationMessage): string {
         let formattedMessage = `<b>${message.title}</b>\n\n${message.body}`;
-        
+
         if (message.data) {
             formattedMessage += '\n\n<b>Detalles:</b>';
             Object.entries(message.data).forEach(([key, value]) => {

@@ -19,7 +19,8 @@ export class NotificationServiceImpl implements NotificationService {
     private initializeChannels(): void {
         this.config.activeChannels.forEach(channelType => {
             try {
-                switch (channelType) {                    case 'telegram':
+                switch (channelType) {
+                    case 'telegram':
                         if (this.config.telegram && this.config.telegram.botToken && this.config.telegram.chatId) {
                             const telegramAdapter = new TelegramAdapter(
                                 {
@@ -34,16 +35,17 @@ export class NotificationServiceImpl implements NotificationService {
                             this.logger.warn('Telegram configuration incomplete, skipping channel');
                         }
                         break;
-                    case 'email':                        if (this.config.email && this.config.email.user && this.config.email.to) {
-                            this.channels.push(new EmailChannel(this.config.email));
-                            this.logger.info('Email notification channel initialized');
-                        } else {
-                            this.logger.warn('Email configuration incomplete, skipping channel');
-                        }
+                    case 'email': if (this.config.email && this.config.email.user && this.config.email.to) {
+                        this.channels.push(new EmailChannel(this.config.email));
+                        this.logger.info('Email notification channel initialized');
+                    } else {
+                        this.logger.warn('Email configuration incomplete, skipping channel');
+                    }
                         break;
                     default:
                         this.logger.warn(`Unknown notification channel type: ${channelType}`);
-                }            } catch (error) {
+                }
+            } catch (error) {
                 this.logger.error(`Error initializing notification channel ${channelType}:`, error);
             }
         });
@@ -51,13 +53,13 @@ export class NotificationServiceImpl implements NotificationService {
         if (this.channels.length === 0) {
             this.logger.warn('No notification channels were initialized');
         }
-    }    async notify(message: NotificationMessage): Promise<void> {
+    } async notify(message: NotificationMessage): Promise<void> {
         if (this.channels.length === 0) {
             this.logger.warn('No notification channels available, skipping notification');
             return;
         }
 
-        const promises = this.channels.map(channel => 
+        const promises = this.channels.map(channel =>
             channel.send(message).catch(error => {
                 this.logger.error('Notification channel error:', error);
             })

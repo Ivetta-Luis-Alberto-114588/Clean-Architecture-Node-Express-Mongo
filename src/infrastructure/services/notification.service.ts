@@ -18,7 +18,8 @@ export class NotificationServiceImpl implements NotificationService {
 
     private initializeChannels(): void {
         this.config.activeChannels.forEach(channelType => {
-            switch (channelType) {                case 'telegram':
+            switch (channelType) {
+                case 'telegram':
                     if (this.config.telegram) {
                         const telegramAdapter = new TelegramAdapter(
                             {
@@ -30,13 +31,14 @@ export class NotificationServiceImpl implements NotificationService {
                         this.channels.push(new TelegramChannel(telegramAdapter));
                         this.logger.info('Telegram notification channel initialized');
                     }
-                    break;                case 'email':
+                    break; case 'email':
                     if (this.config.email) {
                         this.channels.push(new EmailChannel(this.config.email));
                         this.logger.info('Email notification channel initialized');
                     }
                     break;
-            }        });
+            }
+        });
 
         this.logger.info(`Notification service initialized with ${this.channels.length} channels`);
     }
@@ -47,7 +49,7 @@ export class NotificationServiceImpl implements NotificationService {
             return;
         }
 
-        const promises = this.channels.map(channel => 
+        const promises = this.channels.map(channel =>
             channel.send(message).catch(error => {
                 this.logger.error('Notification channel error:', error);
                 // No lanzamos el error para que otros canales puedan funcionar
@@ -68,7 +70,8 @@ export class NotificationServiceImpl implements NotificationService {
             quantity: number;
             price: number;
         }>;
-        orderDate: Date;    }): Promise<void> {
+        orderDate: Date;
+    }): Promise<void> {
         const itemsList = orderData.items
             .map(item => `${item.productName} (x${item.quantity}) - $${item.price}`)
             .join('\n');

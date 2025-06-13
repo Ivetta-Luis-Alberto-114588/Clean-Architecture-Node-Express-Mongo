@@ -19,8 +19,9 @@ import { GetPaymentByOrderUseCase } from "../../domain/use-cases/payment/get-pay
 import { GetAllPaymentsUseCase } from "../../domain/use-cases/payment/get-all-payments.use-case";
 import { PaymentEntity, PaymentProvider } from "../../domain/entities/payment/payment.entity"; // Importar PaymentEntity y PaymentProvider
 import { MercadoPagoItem, MercadoPagoPayer, MercadoPagoPayment } from "../../domain/interfaces/payment/mercado-pago.interface"; // Importar interfaces de MP
+import { IPaymentService } from "../../domain/interfaces/payment.service";
+import { ILogger } from "../../domain/interfaces/logger.interface";
 import { envs } from "../../configs/envs";
-import { MercadoPagoAdapter } from "../../infrastructure/adapters/mercado-pago.adapter";
 import { PaymentModel } from "../../data/mongodb/models/payment/payment.model";
 import { v4 as uuidv4 } from 'uuid';
 // <<<--- FIN IMPORTACIONES --- >>>
@@ -29,15 +30,16 @@ export class PaymentController {
   constructor(
     private readonly paymentRepository: PaymentRepository,
     private readonly orderRepository: OrderRepository,
-    private readonly customerRepository: CustomerRepository
+    private readonly customerRepository: CustomerRepository,
+    private readonly paymentService: IPaymentService,
+    private readonly logger: ILogger
   ) { }
-
   private handleError = (error: unknown, res: Response) => {
     if (error instanceof CustomError) {
       return res.status(error.statusCode).json({ error: error.message });
     }
 
-    console.log("Error en PaymentController:", error);
+    this.logger.error("Error en PaymentController:", error);
     return res.status(500).json({ error: "Error interno del servidor" });
   };
 
@@ -155,9 +157,26 @@ export class PaymentController {
         ]
       };
 
-      const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
-      // <<<--- Pasar preferenceBody al adaptador --- >>>
-      const preference = await mercadoPagoAdapter.preferencePrueba(preferenceBody); // Pasar el body correcto
+      // Usar el servicio de pagos abstracted
+      const paymentPreference = {
+        items: [{
+          id: saleId,
+          title: `Compra #${saleId.substring(0, 8)}`,
+          quantity: 1,
+          unitPrice: sale.total
+        }],
+        backUrls: {
+          failure: "/failure",
+          pending: "/pending",
+          success: "/success"
+        },
+        notificationUrl: "https://5wl9804f-3000.brs.devtunnels.ms/webHook",
+        autoReturn: "approved" as const,
+        statementDescriptor: "Negocio startUp",
+        metadata: { uuid: uuidv4() }
+      };
+
+      const preference = await this.paymentService.createPreference(paymentPreference);
 
       const newPayment = await PaymentModel.create({
         saleId: saleId,
@@ -200,11 +219,10 @@ export class PaymentController {
         });
 
       res.json({
-        payment: populatedPayment,
-        preference: {
+        payment: populatedPayment, preference: {
           id: preference.id,
-          init_point: preference.init_point,
-          sandbox_init_point: preference.sandbox_init_point
+          init_point: preference.initPoint,
+          sandbox_init_point: preference.sandboxInitPoint
         }
       });
     } catch (error) {
@@ -324,14 +342,11 @@ export class PaymentController {
       if (!payment) {
         res.status(404).json({ error: `No se encontró ningún pago con preferenceId: ${preferenceId}` });
         return;
-      }
+      } const preferenceInfo = await this.paymentService.getPreference(preferenceId);
 
-      const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
-      const preferenceInfo = await mercadoPagoAdapter.getPreference(preferenceId);
-
-      let paymentInfo: MercadoPagoPayment | null = null; // Definir tipo explícito
+      let paymentInfo = null;
       if (payment.providerPaymentId) {
-        paymentInfo = await mercadoPagoAdapter.getPayment(payment.providerPaymentId);
+        paymentInfo = await this.paymentService.getPayment(payment.providerPaymentId);
       }
 
       res.json({
@@ -363,7 +378,7 @@ export class PaymentController {
 
   processWebhook = async (req: Request, res: Response): Promise<void> => {
     try {
-      console.log('Webhook recibido:', { query: req.query, body: req.body, headers: req.headers });
+      this.logger.info('Webhook recibido:', { query: req.query, body: req.body, headers: req.headers });
 
       let paymentId;
 
@@ -371,7 +386,7 @@ export class PaymentController {
         const topic = req.query.topic as string;
         paymentId = req.query.id as string;
         if (topic !== 'payment') {
-          console.log(`Ignorando notificación de tipo: ${topic}`);
+          this.logger.info(`Ignorando notificación de tipo: ${topic}`);
           res.status(200).json({ message: 'Notificación recibida pero ignorada (topic no relevante)' });
           return;
         }
@@ -380,31 +395,28 @@ export class PaymentController {
         const type = req.body.type as string;
         paymentId = req.body.data.id as string;
         if (type !== 'payment') {
-          console.log(`Ignorando notificación de tipo: ${type}`);
+          this.logger.info(`Ignorando notificación de tipo: ${type}`);
           res.status(200).json({ message: 'Notificación recibida pero ignorada (type no relevante)' });
           return;
         }
       } else {
-        console.log('Formato de notificación no reconocido');
+        this.logger.warn('Formato de notificación no reconocido');
         res.status(400).json({ message: 'Formato de notificación no reconocido' });
         return;
       }
 
       if (!paymentId) {
-        console.log('ID de pago no encontrado en la notificación');
+        this.logger.warn('ID de pago no encontrado en la notificación');
         res.status(400).json({ message: 'ID de pago no encontrado en la notificación' });
         return;
-      }
-
-      const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
-      const paymentInfo = await mercadoPagoAdapter.getPayment(paymentId);
+      } const paymentInfo = await this.paymentService.getPayment(paymentId);
 
       const payment = await this.paymentRepository.getPaymentByExternalReference(
-        paymentInfo.external_reference
+        paymentInfo.externalReference
       );
 
       if (!payment) {
-        console.log(`Pago no encontrado para external_reference: ${paymentInfo.external_reference}`);
+        this.logger.warn(`Pago no encontrado para external_reference: ${paymentInfo.externalReference}`);
         // Respondemos 200 OK aunque no lo encontremos para evitar reintentos de MP
         res.status(200).json({ message: 'Pago no encontrado en DB, notificación ignorada.' });
         return;
@@ -419,7 +431,7 @@ export class PaymentController {
 
       // <<<--- Manejar error del DTO --- >>>
       if (dtoError) {
-        console.error('Error creando DTO para actualizar estado:', dtoError);
+        this.logger.error('Error creando DTO para actualizar estado', { error: dtoError });
         // Respondemos 200 OK para evitar reintentos, pero logueamos el error
         res.status(200).json({ status: 'error', message: `Error interno al procesar DTO: ${dtoError}` });
         return;
@@ -437,7 +449,7 @@ export class PaymentController {
         paymentStatus: paymentInfo.status
       });
     } catch (error) {
-      console.error('Error procesando webhook:', error);
+      this.logger.error('Error procesando webhook', { error });
       res.status(200).json({ status: 'error', message: 'Error procesando webhook' });
     }
   };
@@ -446,7 +458,7 @@ export class PaymentController {
   paymentSuccess = async (req: Request, res: Response): Promise<void> => {
     try {
       const { saleId, payment_id, external_reference, status } = req.query;
-      console.log('Pago exitoso:', { saleId, payment_id, external_reference, status });
+      this.logger.info('Pago exitoso:', { saleId, payment_id, external_reference, status });
 
       if (payment_id && (external_reference || saleId)) { // Asegurar que tenemos una referencia
         const paymentIdForVerification = external_reference?.toString() || saleId?.toString();
@@ -474,16 +486,16 @@ export class PaymentController {
                   this.orderRepository
                 );
                 verifyPaymentUseCase.execute(verifyDtoCorrected)
-                  .then(result => console.log('Pago verificado correctamente en success:', result.payment.id))
-                  .catch(error => console.error('Error al verificar pago en success:', error));
+                  .then(result => this.logger.info('Pago verificado correctamente en success', { paymentId: result.payment.id }))
+                  .catch(error => this.logger.error('Error al verificar pago en success', { error }));
               } else {
-                console.error('Error creando DTO de verificación corregido:', errorCorrected);
+                this.logger.error('Error creando DTO de verificación corregido', { error: errorCorrected });
               }
             } else {
               console.warn(`No se encontró pago local para external_reference: ${paymentIdForVerification} en callback success`);
             }
           } else {
-            console.error('Error creando DTO de verificación inicial:', error);
+            this.logger.error('Error creando DTO de verificación inicial', { error });
           }
         } else {
           console.warn('No se pudo determinar una referencia válida (external_reference o saleId) en callback success');
@@ -493,7 +505,7 @@ export class PaymentController {
       const redirectUrl = `${envs.FRONTEND_URL}/payment/success?saleId=${saleId || external_reference || ''}`;
       res.redirect(302, redirectUrl); // Usar 302 para redirección temporal
     } catch (error) {
-      console.error('Error en paymentSuccess:', error);
+      this.logger.error('Error en paymentSuccess', { error });
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
       res.redirect(302, redirectUrl);
     }
@@ -502,12 +514,12 @@ export class PaymentController {
   paymentFailure = async (req: Request, res: Response): Promise<void> => {
     try {
       const { saleId, external_reference } = req.query; // Capturar también external_reference
-      console.log('Pago fallido:', req.query);
+      this.logger.info('Pago fallido', { query: req.query });
       const reference = saleId || external_reference || '';
       const redirectUrl = `${envs.FRONTEND_URL}/payment/failure?saleId=${reference}`;
       res.redirect(302, redirectUrl);
     } catch (error) {
-      console.error('Error en paymentFailure:', error);
+      this.logger.error('Error en paymentFailure', { error });
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
       res.redirect(302, redirectUrl);
     }
@@ -516,12 +528,12 @@ export class PaymentController {
   paymentPending = async (req: Request, res: Response): Promise<void> => {
     try {
       const { saleId, external_reference } = req.query; // Capturar también external_reference
-      console.log('Pago pendiente:', req.query);
+      this.logger.info('Pago pendiente', { query: req.query });
       const reference = saleId || external_reference || '';
       const redirectUrl = `${envs.FRONTEND_URL}/payment/pending?saleId=${reference}`;
       res.redirect(302, redirectUrl);
     } catch (error) {
-      console.error('Error en paymentPending:', error);
+      this.logger.error('Error en paymentPending', { error });
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
       res.redirect(302, redirectUrl);
     }
@@ -530,20 +542,23 @@ export class PaymentController {
 
   getAllMercadoPagoPayments = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { page = 1, limit = 10, status, startDate, endDate } = req.query;
-
-      const filters: any = {};
+      const { page = 1, limit = 10, status, startDate, endDate } = req.query; const filters: any = {};
       if (status) filters.status = status;
       if (startDate) filters.begin_date = new Date(startDate as string).toISOString(); // Asegurar formato ISO
       if (endDate) filters.end_date = new Date(endDate as string).toISOString(); // Asegurar formato ISO
 
       const offset = (Number(page) - 1) * Number(limit);
 
-      const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
-      const paymentsData = await mercadoPagoAdapter.getAllPayments(Number(limit), offset, filters);
+      const searchFilters = {
+        status: status as string,
+        beginDate: startDate ? new Date(startDate as string).toISOString() : undefined,
+        endDate: endDate ? new Date(endDate as string).toISOString() : undefined,
+      };
+
+      const paymentsData = await this.paymentService.searchPayments(searchFilters, Number(limit), offset);
 
       const enhancedPayments = await Promise.all(
-        paymentsData.results.map(async (payment: any) => { // Tipar payment como any temporalmente
+        paymentsData.results.map(async (payment) => {
           const localPayment = await this.paymentRepository.getPaymentByProviderPaymentId(
             payment.id.toString()
           );
@@ -571,16 +586,19 @@ export class PaymentController {
       const filters: any = {};
       if (status) filters.status = status;
       if (startDate) filters.begin_date = new Date(startDate as string).toISOString(); // Asegurar formato ISO
-      if (endDate) filters.end_date = new Date(endDate as string).toISOString(); // Asegurar formato ISO
-      // filters.operation_type = 'regular_payment'; // Descomentar si solo quieres cobros
+      if (endDate) filters.end_date = new Date(endDate as string).toISOString(); // Asegurar formato ISO      // filters.operation_type = 'regular_payment'; // Descomentar si solo quieres cobros
 
       const offset = (Number(page) - 1) * Number(limit);
 
-      const mercadoPagoAdapter = MercadoPagoAdapter.getInstance();
-      const chargesData = await mercadoPagoAdapter.getAllPayments(Number(limit), offset, filters);
+      const searchFilters = {
+        status: status as string,
+        beginDate: startDate ? new Date(startDate as string).toISOString() : undefined,
+        endDate: endDate ? new Date(endDate as string).toISOString() : undefined,
+        operationType: 'regular_payment'
+      };
 
-      const enhancedCharges = await Promise.all(
-        chargesData.results.map(async (charge: any) => { // Tipar charge como any temporalmente
+      const chargesData = await this.paymentService.searchPayments(searchFilters, Number(limit), offset); const enhancedCharges = await Promise.all(
+        chargesData.results.map(async (charge) => {
           const localPayment = await this.paymentRepository.getPaymentByProviderPaymentId(
             charge.id.toString()
           );

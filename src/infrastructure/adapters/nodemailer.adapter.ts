@@ -32,8 +32,10 @@ export class NodemailerAdapter implements EmailService { // <<<--- Asegúrate qu
             });
             logger.info(`Servicio de Email (${envs.EMAIL_SERVICE}) configurado para enviar desde ${this.senderEmail}`);
 
-            // Verificar conexión (opcional pero recomendado)
-            this.verifyConnection();
+            // Verificar conexión solo si no estamos en modo test
+            if (process.env.NODE_ENV !== 'test') {
+                this.verifyConnection();
+            }
 
         } catch (error) {
             logger.error('Error configurando Nodemailer transporter:', { error });

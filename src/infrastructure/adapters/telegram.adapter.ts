@@ -26,7 +26,7 @@ export class TelegramAdapter implements ITelegramService {
         }
 
         const chatId = message.chatId || this.config.defaultChatId;
-        
+
         if (!chatId) {
             this.logger.error('No chat ID provided and no default chat ID configured');
             return { success: false, error: 'No chat ID available' };
@@ -43,28 +43,28 @@ export class TelegramAdapter implements ITelegramService {
 
             if (response.data.ok) {
                 this.logger.info(`Telegram message sent successfully to chat ${chatId}`);
-                return { 
-                    success: true, 
-                    messageId: response.data.result.message_id 
+                return {
+                    success: true,
+                    messageId: response.data.result.message_id
                 };
             } else {
                 this.logger.error('Telegram API returned error:', response.data);
-                return { 
-                    success: false, 
-                    error: response.data.description || 'Unknown Telegram API error' 
+                return {
+                    success: false,
+                    error: response.data.description || 'Unknown Telegram API error'
                 };
             }
         } catch (error) {
             this.logger.error('Error sending Telegram message:', error);
-            return { 
-                success: false, 
-                error: error instanceof Error ? error.message : 'Unknown error' 
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error'
             };
         }
     }
 
     async sendMessageToDefaultChat(
-        text: string, 
+        text: string,
         parseMode: 'HTML' | 'Markdown' | 'MarkdownV2' = 'HTML'
     ): Promise<TelegramResponse> {
         return this.sendMessage({
