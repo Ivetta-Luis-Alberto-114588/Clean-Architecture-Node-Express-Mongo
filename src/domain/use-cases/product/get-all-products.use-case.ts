@@ -3,7 +3,7 @@ import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { ProductEntity } from "../../entities/products/product.entity";
 import { CustomError } from "../../errors/custom.error";
 import { ProductRepository } from "../../repositories/products/product.repository";
-import logger from "../../../configs/logger"; // Importar logger
+import { ILogger } from "../../interfaces/logger.interface";
 
 // --- INTERFAZ MODIFICADA ---
 interface IGetAllProductsUseCase {
@@ -15,6 +15,7 @@ export class GetAllProductsUseCase implements IGetAllProductsUseCase {
 
     constructor(
         private readonly productRepository: ProductRepository,
+        private readonly logger: ILogger
     ) { }
 
     // --- MÉTODO EXECUTE MODIFICADO ---
@@ -32,7 +33,7 @@ export class GetAllProductsUseCase implements IGetAllProductsUseCase {
             if (error instanceof CustomError) {
                 throw error;
             }
-            logger.error("Error en GetAllProductsUseCase:", { error }); // Usar logger
+            this.logger.error("Error en GetAllProductsUseCase:", { error }); // Usar logger
             throw CustomError.internalServerError("Error al obtener todos los productos");
         }
     }

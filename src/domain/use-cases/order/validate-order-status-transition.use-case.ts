@@ -1,7 +1,7 @@
 // src/domain/use-cases/order/validate-order-status-transition.use-case.ts
 import { CustomError } from "../../errors/custom.error";
 import { OrderStatusRepository } from "../../repositories/order/order-status.repository";
-import logger from "../../../configs/logger";
+import { ILogger } from "../../interfaces/logger.interface";
 
 interface IValidateOrderStatusTransitionUseCase {
     execute(fromStatusId: string, toStatusId: string): Promise<boolean>;
@@ -9,7 +9,8 @@ interface IValidateOrderStatusTransitionUseCase {
 
 export class ValidateOrderStatusTransitionUseCase implements IValidateOrderStatusTransitionUseCase {
     constructor(
-        private readonly orderStatusRepository: OrderStatusRepository
+        private readonly orderStatusRepository: OrderStatusRepository,
+        private readonly logger: ILogger
     ) { }
 
     async execute(fromStatusId: string, toStatusId: string): Promise<boolean> {
@@ -31,16 +32,14 @@ export class ValidateOrderStatusTransitionUseCase implements IValidateOrderStatu
             // Verificar que el estado de destino esté activo
             if (!toStatus.isActive) {
                 throw CustomError.badRequest('No se puede transicionar a un estado inactivo');
-            }
-
-            // Validar la transición
+            }            // Validar la transición
             const isValidTransition = await this.orderStatusRepository.validateTransition(fromStatusId, toStatusId);
 
-            logger.info(`Validación de transición ${fromStatus.code} -> ${toStatus.code}: ${isValidTransition ? 'permitida' : 'denegada'}`);
+            this.logger.info(`Validación de transición ${fromStatus.code} -> ${toStatus.code}: ${isValidTransition ? 'permitida' : 'denegada'}`);
             return isValidTransition;
 
         } catch (error) {
-            logger.error('Error en ValidateOrderStatusTransitionUseCase:', error);
+            this.logger.error('Error en ValidateOrderStatusTransitionUseCase:', error);
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError('Error interno del servidor al validar transición de estado');
         }

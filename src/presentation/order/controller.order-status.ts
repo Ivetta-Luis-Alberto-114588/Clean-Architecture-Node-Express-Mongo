@@ -11,7 +11,7 @@ import { UpdateOrderStatusDataUseCase } from "../../domain/use-cases/order/updat
 import { DeleteOrderStatusUseCase } from "../../domain/use-cases/order/delete-order-status.use-case";
 import { ValidateOrderStatusTransitionUseCase } from "../../domain/use-cases/order/validate-order-status-transition.use-case";
 import { UpdateOrderStatusTransitionsUseCaseImpl } from "../../domain/use-cases/order/update-order-status-transitions.use-case";
-import logger from "../../configs/logger";
+import { loggerAdapter } from "../../infrastructure/adapters/winston-logger.adapter";
 
 export class OrderStatusController {
     constructor(
@@ -20,10 +20,10 @@ export class OrderStatusController {
 
     private handleError = (error: unknown, res: Response): void => {
         if (error instanceof Error) {
-            logger.error(`Error en OrderStatusController: ${error.message}`, { stack: error.stack });
+            loggerAdapter.error(`Error en OrderStatusController: ${error.message}`, { stack: error.stack });
             res.status(500).json({ error: error.message });
         } else {
-            logger.error('Error desconocido en OrderStatusController', { error });
+            loggerAdapter.error('Error desconocido en OrderStatusController', { error });
             res.status(500).json({ error: "Error interno del servidor" });
         }
     };
@@ -52,7 +52,7 @@ export class OrderStatusController {
 
         if (error) {
             res.status(400).json({ error });
-            logger.warn('Error en validación de CreateOrderStatusDto', { error, body: req.body });
+            loggerAdapter.warn('Error en validación de CreateOrderStatusDto', { error, body: req.body });
             return;
         }
 
@@ -78,11 +78,11 @@ export class OrderStatusController {
         const [error, updateOrderStatusDataDto] = UpdateOrderStatusDataDto.update(req.body);
         if (error) {
             res.status(400).json({ error });
-            logger.warn(`Error en validación de UpdateOrderStatusDataDto para ID ${id}`, { error, body: req.body });
+            loggerAdapter.warn(`Error en validación de UpdateOrderStatusDataDto para ID ${id}`, { error, body: req.body });
             return;
         }
 
-        new UpdateOrderStatusDataUseCase(this.orderStatusRepository)
+        new UpdateOrderStatusDataUseCase(this.orderStatusRepository, loggerAdapter)
             .execute(id, updateOrderStatusDataDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
@@ -150,7 +150,7 @@ export class OrderStatusController {
             return;
         }
 
-        new ValidateOrderStatusTransitionUseCase(this.orderStatusRepository)
+        new ValidateOrderStatusTransitionUseCase(this.orderStatusRepository, loggerAdapter)
             .execute(fromStatusId, toStatusId)
             .then(isValid => res.json({ isValid }))
             .catch(err => this.handleError(err, res));
@@ -163,11 +163,11 @@ export class OrderStatusController {
         const [error, updateOrderStatusTransitionsDto] = UpdateOrderStatusTransitionsDto.create(req.body);
         if (error) {
             res.status(400).json({ error });
-            logger.warn(`Error en validación de UpdateOrderStatusTransitionsDto para ID ${id}`, { error, body: req.body });
+            loggerAdapter.warn(`Error en validación de UpdateOrderStatusTransitionsDto para ID ${id}`, { error, body: req.body });
             return;
         }
 
-        new UpdateOrderStatusTransitionsUseCaseImpl(this.orderStatusRepository)
+        new UpdateOrderStatusTransitionsUseCaseImpl(this.orderStatusRepository, loggerAdapter)
             .execute(id, updateOrderStatusTransitionsDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));

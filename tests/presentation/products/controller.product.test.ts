@@ -258,8 +258,7 @@ describe('ProductController', () => {
     });
   });
 
-  describe('getAllProducts', () => {
-    // Prueba de obtención exitosa
+  describe('getAllProducts', () => {    // Prueba de obtención exitosa
     test('should get all products successfully', async () => {
       // Preparar request y response con valores válidos
       const req = mockRequest({ query: { page: '1', limit: '10' } });
@@ -269,13 +268,11 @@ describe('ProductController', () => {
       await productController.getAllProducts(req as any, res as any);
 
       // Verificaciones
-      expect(GetAllProductsUseCase).toHaveBeenCalledWith(mockProductRepository);
+      expect(GetAllProductsUseCase).toHaveBeenCalledWith(mockProductRepository, expect.any(Object));
       expect(mockGetAllExecute).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith([mockProduct]);
       expect(res.status).not.toHaveBeenCalled();
-    });
-
-    // Prueba con valores predeterminados
+    });    // Prueba con valores predeterminados
     test('should use default pagination when no parameters are provided', async () => {
       // Preparar request sin parámetros
       const req = mockRequest({ query: {} });
@@ -285,7 +282,7 @@ describe('ProductController', () => {
       await productController.getAllProducts(req as any, res as any);
 
       // Verificaciones
-      expect(GetAllProductsUseCase).toHaveBeenCalledWith(mockProductRepository);
+      expect(GetAllProductsUseCase).toHaveBeenCalledWith(mockProductRepository, expect.any(Object));
       expect(mockGetAllExecute).toHaveBeenCalled();
       expect(res.json).toHaveBeenCalledWith([mockProduct]);
       expect(res.status).not.toHaveBeenCalled();

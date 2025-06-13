@@ -5,7 +5,7 @@ import { UpdateOrderStatusTransitionsDto } from "../../dtos/order/update-order-s
 import { UpdateOrderStatusDataDto } from "../../dtos/order/update-order-status-data.dto";
 import { CustomError } from "../../errors/custom.error";
 import mongoose from "mongoose";
-import logger from "../../../configs/logger";
+import { ILogger } from "../../interfaces/logger.interface";
 
 export interface UpdateOrderStatusTransitionsUseCase {
     execute(id: string, dto: UpdateOrderStatusTransitionsDto): Promise<OrderStatusEntity>;
@@ -13,7 +13,8 @@ export interface UpdateOrderStatusTransitionsUseCase {
 
 export class UpdateOrderStatusTransitionsUseCaseImpl implements UpdateOrderStatusTransitionsUseCase {
     constructor(
-        private readonly orderStatusRepository: OrderStatusRepository
+        private readonly orderStatusRepository: OrderStatusRepository,
+        private readonly logger: ILogger
     ) { }
 
     async execute(id: string, dto: UpdateOrderStatusTransitionsDto): Promise<OrderStatusEntity> {
@@ -26,7 +27,7 @@ export class UpdateOrderStatusTransitionsUseCaseImpl implements UpdateOrderStatu
 
             // Convertir códigos de estado a ObjectIds si es necesario
             const transitionIds: string[] = [];
-            
+
             for (const transition of dto.canTransitionTo) {
                 // Verificar si es un ObjectId válido
                 if (mongoose.Types.ObjectId.isValid(transition)) {
@@ -61,15 +62,13 @@ export class UpdateOrderStatusTransitionsUseCaseImpl implements UpdateOrderStatu
                 existingStatus.isActive,
                 existingStatus.isDefault,
                 transitionIds
-            );
+            ); const updatedStatus = await this.orderStatusRepository.update(id, updateDto);
 
-            const updatedStatus = await this.orderStatusRepository.update(id, updateDto);
-            
-            logger.info(`Transiciones actualizadas para estado: ${existingStatus.code}`);
+            this.logger.info(`Transiciones actualizadas para estado: ${existingStatus.code}`);
             return updatedStatus;
 
         } catch (error) {
-            logger.error('Error en UpdateOrderStatusTransitionsUseCaseImpl:', error);
+            this.logger.error('Error en UpdateOrderStatusTransitionsUseCaseImpl:', error);
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError('Error interno del servidor al actualizar transiciones de estado');
         }

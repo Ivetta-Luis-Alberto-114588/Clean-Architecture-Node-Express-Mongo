@@ -1,7 +1,7 @@
 // src/domain/use-cases/notifications/notify-order.use-case.ts
 import { NotificationService, NotificationMessage } from '../../interfaces/notification.interface';
 import { OrderEntity } from '../../entities/order/order.entity';
-import logger from '../../../configs/logger';
+import { ILogger } from '../../interfaces/logger.interface';
 
 export interface OrderNotificationData {
     orderId: string;
@@ -21,7 +21,10 @@ export interface INotifyOrderUseCase {
 }
 
 export class NotifyOrderUseCase implements INotifyOrderUseCase {
-    constructor(private notificationService: NotificationService) {}
+    constructor(
+        private notificationService: NotificationService,
+        private logger: ILogger
+    ) { }
 
     async execute(orderData: OrderNotificationData): Promise<void> {
         try {
@@ -33,7 +36,7 @@ export class NotifyOrderUseCase implements INotifyOrderUseCase {
                     'Cliente': orderData.customerName,
                     'Email': orderData.customerEmail,
                     'Total': `$${orderData.total.toFixed(2)}`,
-                    'Productos': orderData.items.map(item => 
+                    'Productos': orderData.items.map(item =>
                         `${item.name} (x${item.quantity}) - $${(item.price * item.quantity).toFixed(2)}`
                     ).join(', '),
                     'Fecha': orderData.createdAt.toLocaleString('es-AR', {
@@ -45,12 +48,10 @@ export class NotifyOrderUseCase implements INotifyOrderUseCase {
                         minute: '2-digit'
                     })
                 }
-            };
-
-            await this.notificationService.notify(message);
-            logger.info(`Order notification sent for order ${orderData.orderId}`);
+            }; await this.notificationService.notify(message);
+            this.logger.info(`Order notification sent for order ${orderData.orderId}`);
         } catch (error) {
-            logger.error(`Error sending order notification for order ${orderData.orderId}:`, error);
+            this.logger.error(`Error sending order notification for order ${orderData.orderId}:`, error);
             // No lanzamos el error para que no afecte la creación de la orden
         }
     }

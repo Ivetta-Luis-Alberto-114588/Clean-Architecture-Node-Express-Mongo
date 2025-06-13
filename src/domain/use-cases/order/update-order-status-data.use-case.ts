@@ -3,7 +3,7 @@ import { UpdateOrderStatusDataDto } from "../../dtos/order/update-order-status-d
 import { OrderStatusEntity } from "../../entities/order/order-status.entity";
 import { CustomError } from "../../errors/custom.error";
 import { OrderStatusRepository } from "../../repositories/order/order-status.repository";
-import logger from "../../../configs/logger";
+import { ILogger } from "../../interfaces/logger.interface";
 import mongoose from "mongoose";
 
 interface IUpdateOrderStatusDataUseCase {
@@ -12,8 +12,9 @@ interface IUpdateOrderStatusDataUseCase {
 
 export class UpdateOrderStatusDataUseCase implements IUpdateOrderStatusDataUseCase {
     constructor(
-        private readonly orderStatusRepository: OrderStatusRepository
-    ) { }    async execute(id: string, updateOrderStatusDataDto: UpdateOrderStatusDataDto): Promise<OrderStatusEntity> {
+        private readonly orderStatusRepository: OrderStatusRepository,
+        private readonly logger: ILogger
+    ) { } async execute(id: string, updateOrderStatusDataDto: UpdateOrderStatusDataDto): Promise<OrderStatusEntity> {
         try {
             // Verificar que el estado exista
             const existingStatus = await this.orderStatusRepository.findById(id);
@@ -33,7 +34,7 @@ export class UpdateOrderStatusDataUseCase implements IUpdateOrderStatusDataUseCa
             let processedDto = updateOrderStatusDataDto;
             if (updateOrderStatusDataDto.canTransitionTo && updateOrderStatusDataDto.canTransitionTo.length > 0) {
                 const transitionIds: string[] = [];
-                
+
                 for (const transition of updateOrderStatusDataDto.canTransitionTo) {
                     // Si ya es un ObjectId válido, usarlo directamente
                     if (mongoose.Types.ObjectId.isValid(transition)) {
@@ -59,15 +60,13 @@ export class UpdateOrderStatusDataUseCase implements IUpdateOrderStatusDataUseCa
                     updateOrderStatusDataDto.isDefault,
                     transitionIds
                 );
-            }
+            } const updatedStatus = await this.orderStatusRepository.update(id, processedDto);
 
-            const updatedStatus = await this.orderStatusRepository.update(id, processedDto);
-
-            logger.info(`Estado de pedido actualizado exitosamente: ${updatedStatus.code}`);
+            this.logger.info(`Estado de pedido actualizado exitosamente: ${updatedStatus.code}`);
             return updatedStatus;
 
         } catch (error) {
-            logger.error('Error en UpdateOrderStatusDataUseCase:', error);
+            this.logger.error('Error en UpdateOrderStatusDataUseCase:', error);
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError('Error interno del servidor al actualizar estado de pedido');
         }
