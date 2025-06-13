@@ -13,6 +13,7 @@ import { CategoryRepository } from "../../domain/repositories/products/categroy.
 import { UpdateProductUseCase } from "../../domain/use-cases/product/update-product.use-case";
 import { UpdateProductDto } from "../../domain/dtos/products/update-product.dto";
 import { CloudinaryAdapter } from "../../infrastructure/adapters/cloudinary.adapter";
+import { fileStorageAdapter } from "../../infrastructure/adapters/cloudinary-file-storage.adapter";
 import fs from 'fs';
 import { SearchProductsDto } from "../../domain/dtos/products/search-product.dto";
 import { SearchProductsUseCase } from "../../domain/use-cases/product/search-products.use-case";
@@ -21,12 +22,13 @@ import { loggerAdapter } from "../../infrastructure/adapters/winston-logger.adap
 
 export class ProductController {
 
-    private readonly cloudinaryAdapter = CloudinaryAdapter.getInstance();
+    // Usando la nueva abstracción en lugar del singleton
+    // private readonly cloudinaryAdapter = CloudinaryAdapter.getInstance();
 
     constructor(
         private readonly productRepository: ProductRepository,
         private readonly categoryRepository: CategoryRepository
-    ) { } private handleError = (error: unknown, res: Response) => {
+    ) { }private handleError = (error: unknown, res: Response) => {
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ error: error.message });
         }
@@ -48,12 +50,11 @@ export class ProductController {
     createProduct = async (req: Request, res: Response) => {
         let uploadedImageUrl: string | null = null;
         try {
-            loggerAdapter.debug("createProduct - Request body:", { body: req.body });
-
-            let imgUrl = '';
+            loggerAdapter.debug("createProduct - Request body:", { body: req.body });            let imgUrl = '';
             if ((req as any).file) {
-                uploadedImageUrl = await this.cloudinaryAdapter.uploadImage((req as any).file.path);
-                imgUrl = uploadedImageUrl;
+                const uploadResult = await fileStorageAdapter.uploadFile((req as any).file.path);
+                uploadedImageUrl = uploadResult.url;
+                imgUrl = uploadResult.url;
                 fs.unlink((req as any).file.path, (err) => {
                     if (err) console.error('Error eliminando archivo temporal:', err);
                 });
@@ -78,9 +79,9 @@ export class ProductController {
                 loggerAdapter.warn("Error creando CreateProductDto:", { error, data: productData });
                 if (uploadedImageUrl) {
                     try {
-                        const publicId = this.cloudinaryAdapter.getPublicIdFromUrl(uploadedImageUrl);
+                        const publicId = fileStorageAdapter.getPublicIdFromUrl(uploadedImageUrl);
                         if (publicId) {
-                            await this.cloudinaryAdapter.deleteImage(publicId);
+                            await fileStorageAdapter.deleteFile(publicId);
                             loggerAdapter.warn(`Imagen ${publicId} eliminada debido a fallo en DTO de creación.`);
                         }
                     } catch (cleanupError) {
@@ -94,9 +95,9 @@ export class ProductController {
         } catch (err) {
             if (uploadedImageUrl && !(err instanceof CustomError && err.statusCode === 400)) {
                 try {
-                    const publicId = this.cloudinaryAdapter.getPublicIdFromUrl(uploadedImageUrl);
+                    const publicId = fileStorageAdapter.getPublicIdFromUrl(uploadedImageUrl);
                     if (publicId) {
-                        await this.cloudinaryAdapter.deleteImage(publicId);
+                        await fileStorageAdapter.deleteFile(publicId);
                         loggerAdapter.warn(`Imagen ${publicId} eliminada debido a fallo en creación de producto.`);
                     }
                 } catch (cleanupError) {
@@ -149,9 +150,9 @@ export class ProductController {
             const deletedProduct = await new DeleteProductUseCase(this.productRepository).execute(id);
             if (imageUrlToDelete) {
                 try {
-                    const publicId = this.cloudinaryAdapter.getPublicIdFromUrl(imageUrlToDelete);
+                    const publicId = fileStorageAdapter.getPublicIdFromUrl(imageUrlToDelete);
                     if (publicId) {
-                        await this.cloudinaryAdapter.deleteImage(publicId);
+                        await fileStorageAdapter.deleteFile(publicId);
                         loggerAdapter.info(`Imagen ${publicId} eliminada para producto ${id}`);
                     }
                 } catch (deleteImgError) {
@@ -209,18 +210,18 @@ export class ProductController {
             existingProduct = await this.productRepository.findById(id);
             finalImgUrl = existingProduct.imgUrl;
             if (existingProduct.imgUrl) {
-                oldPublicId = this.cloudinaryAdapter.getPublicIdFromUrl(existingProduct.imgUrl);
-            }
-            if ((req as any).file) {
-                newUploadedImageUrl = await this.cloudinaryAdapter.uploadImage((req as any).file.path);
-                finalImgUrl = newUploadedImageUrl;
+                oldPublicId = fileStorageAdapter.getPublicIdFromUrl(existingProduct.imgUrl);
+            }            if ((req as any).file) {
+                const uploadResult = await fileStorageAdapter.uploadFile((req as any).file.path);
+                newUploadedImageUrl = uploadResult.url;
+                finalImgUrl = uploadResult.url;
                 loggerAdapter.info(`Nueva imagen subida para producto ${id}: ${finalImgUrl}`);
                 fs.unlink((req as any).file.path, (err) => {
                     if (err) console.error('Error eliminando archivo temporal:', err);
                 });
                 if (oldPublicId) {
                     try {
-                        await this.cloudinaryAdapter.deleteImage(oldPublicId);
+                        await fileStorageAdapter.deleteFile(oldPublicId);
                         loggerAdapter.info(`Imagen anterior (${oldPublicId}) eliminada para producto ${id}`);
                     } catch (deleteError) {
                         loggerAdapter.error(`Error eliminando imagen antigua ${oldPublicId} de Cloudinary:`, deleteError);
@@ -228,7 +229,7 @@ export class ProductController {
                 }
             } else if (req.body.imgUrl === '' && oldPublicId) {
                 try {
-                    await this.cloudinaryAdapter.deleteImage(oldPublicId);
+                    await fileStorageAdapter.deleteFile(oldPublicId);
                     loggerAdapter.info(`Imagen existente (${oldPublicId}) eliminada explícitamente para producto ${id}`);
                     finalImgUrl = '';
                 } catch (deleteError) {
@@ -249,9 +250,9 @@ export class ProductController {
                 loggerAdapter.warn("Error creando UpdateProductDto:", { error, data: productData });
                 if (newUploadedImageUrl) {
                     try {
-                        const publicIdToDelete = this.cloudinaryAdapter.getPublicIdFromUrl(newUploadedImageUrl);
+                        const publicIdToDelete = fileStorageAdapter.getPublicIdFromUrl(newUploadedImageUrl);
                         if (publicIdToDelete) {
-                            await this.cloudinaryAdapter.deleteImage(publicIdToDelete);
+                            await fileStorageAdapter.deleteFile(publicIdToDelete);
                             loggerAdapter.warn(`Imagen nueva ${publicIdToDelete} eliminada por fallo en DTO de actualización.`);
                         }
                     } catch (cleanupError) {
@@ -266,9 +267,9 @@ export class ProductController {
         } catch (err) {
             if (newUploadedImageUrl && !(err instanceof CustomError && err.statusCode === 400)) {
                 try {
-                    const publicIdToDelete = this.cloudinaryAdapter.getPublicIdFromUrl(newUploadedImageUrl);
+                    const publicIdToDelete = fileStorageAdapter.getPublicIdFromUrl(newUploadedImageUrl);
                     if (publicIdToDelete) {
-                        await this.cloudinaryAdapter.deleteImage(publicIdToDelete);
+                        await fileStorageAdapter.deleteFile(publicIdToDelete);
                         loggerAdapter.warn(`Imagen ${publicIdToDelete} eliminada debido a fallo en actualización de producto.`);
                     }
                 } catch (cleanupError) {
