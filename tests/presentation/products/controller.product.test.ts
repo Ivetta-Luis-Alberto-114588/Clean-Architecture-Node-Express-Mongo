@@ -191,7 +191,7 @@ describe('ProductController', () => {
 
       // Ejecutar el controlador
       await productController.createProduct(req as any, res as any);      // Verificaciones
-      expect(CreateProductUseCase).toHaveBeenCalledWith(mockProductRepository);
+      expect(CreateProductUseCase).toHaveBeenCalledWith(mockProductRepository, expect.any(Object));
       expect(mockCreateExecute).toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(mockProduct);

@@ -158,3 +158,6 @@ class Logger {
 
 // Exportamos una instancia única global
 export default new Logger();
+
+// Exportamos también el adapter para uso en Use Cases  
+export { loggerAdapter as loggerService } from '../infrastructure/adapters/winston-logger.adapter';

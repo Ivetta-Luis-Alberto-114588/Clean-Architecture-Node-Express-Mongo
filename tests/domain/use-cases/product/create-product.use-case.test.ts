@@ -6,6 +6,7 @@ import { ProductEntity } from '../../../../src/domain/entities/products/product.
 import { CategoryEntity } from '../../../../src/domain/entities/products/category.entity';
 import { UnitEntity } from '../../../../src/domain/entities/products/unit.entity';
 import { CustomError } from '../../../../src/domain/errors/custom.error';
+import { ILogger } from '../../../../src/domain/interfaces/logger.interface';
 
 describe('CreateProductUseCase', () => {
   // Mock del ProductRepository
@@ -20,6 +21,15 @@ describe('CreateProductUseCase', () => {
     findByCategory: jest.fn(),
     findByUnit: jest.fn(),
     search: jest.fn(),
+  };
+
+  // Mock del Logger
+  const mockLogger: jest.Mocked<ILogger> = {
+    info: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    http: jest.fn(),
   };
 
   // Inicialización del caso de uso a probar
@@ -74,11 +84,10 @@ describe('CreateProductUseCase', () => {
     21, // taxRate
     121, // priceWithTax (100 + 21% tax)
   );
-
   // Configuración previa a cada prueba
   beforeEach(() => {
     jest.resetAllMocks();
-    createProductUseCase = new CreateProductUseCase(mockProductRepository);
+    createProductUseCase = new CreateProductUseCase(mockProductRepository, mockLogger);
 
     // Configurar el comportamiento por defecto de los mocks
     mockProductRepository.findByNameForCreate.mockResolvedValue(null); // El producto no existe

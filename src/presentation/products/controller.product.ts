@@ -18,7 +18,7 @@ import fs from 'fs';
 import { SearchProductsDto } from "../../domain/dtos/products/search-product.dto";
 import { SearchProductsUseCase } from "../../domain/use-cases/product/search-products.use-case";
 import { ProductEntity } from "../../domain/entities/products/product.entity";
-import { loggerAdapter } from "../../infrastructure/adapters/winston-logger.adapter";
+import { loggerService } from "../../configs/logger";
 
 export class ProductController {
 
@@ -32,16 +32,16 @@ export class ProductController {
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ error: error.message });
         }
-        loggerAdapter.error("Error en ProductController:", { error: error instanceof Error ? { message: error.message, stack: error.stack } : error });
+        loggerService.error("Error en ProductController:", { error: error instanceof Error ? { message: error.message, stack: error.stack } : error });
         return res.status(500).json({ error: "Error interno del servidor" });
     }
 
     searchProducts = (req: Request, res: Response) => {
         const searchParams = req.query; const [error, searchDto] = SearchProductsDto.create(searchParams);
         if (error) {
-            loggerAdapter.warn("Error de validación en searchProducts DTO:", { error, query: req.query });
+            loggerService.warn("Error de validación en searchProducts DTO:", { error, query: req.query });
             return res.status(400).json({ error });
-        } new SearchProductsUseCase(this.productRepository, loggerAdapter)
+        } new SearchProductsUseCase(this.productRepository, loggerService)
             .execute(searchDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
@@ -50,7 +50,7 @@ export class ProductController {
     createProduct = async (req: Request, res: Response) => {
         let uploadedImageUrl: string | null = null;
         try {
-            loggerAdapter.debug("createProduct - Request body:", { body: req.body }); let imgUrl = '';
+            loggerService.debug("createProduct - Request body:", { body: req.body }); let imgUrl = '';
             if ((req as any).file) {
                 const uploadResult = await fileStorageAdapter.uploadFile((req as any).file.path);
                 uploadedImageUrl = uploadResult.url;
@@ -61,36 +61,36 @@ export class ProductController {
             }
 
             const productData = { ...req.body, imgUrl: imgUrl || req.body.imgUrl || '' };
-            loggerAdapter.debug("createProduct - Product data after processing:", { productData });
+            loggerService.debug("createProduct - Product data after processing:", { productData });
 
             // Validar IDs de category y unit
             if (!productData.category || !mongoose.Types.ObjectId.isValid(productData.category)) {
-                loggerAdapter.warn("createProduct - Invalid category ID:", { category: productData.category });
+                loggerService.warn("createProduct - Invalid category ID:", { category: productData.category });
                 throw CustomError.badRequest('ID de categoría inválido o faltante');
             }
             if (!productData.unit || !mongoose.Types.ObjectId.isValid(productData.unit)) {
-                loggerAdapter.warn("createProduct - Invalid unit ID:", { unit: productData.unit });
+                loggerService.warn("createProduct - Invalid unit ID:", { unit: productData.unit });
                 throw CustomError.badRequest('ID de unidad inválido o faltante');
             }
 
-            loggerAdapter.debug("createProduct - About to create DTO with data:", { productData });
+            loggerService.debug("createProduct - About to create DTO with data:", { productData });
             const [error, createProductDto] = CreateProductDto.create(productData);
             if (error) {
-                loggerAdapter.warn("Error creando CreateProductDto:", { error, data: productData });
+                loggerService.warn("Error creando CreateProductDto:", { error, data: productData });
                 if (uploadedImageUrl) {
                     try {
                         const publicId = fileStorageAdapter.getPublicIdFromUrl(uploadedImageUrl);
                         if (publicId) {
                             await fileStorageAdapter.deleteFile(publicId);
-                            loggerAdapter.warn(`Imagen ${publicId} eliminada debido a fallo en DTO de creación.`);
+                            loggerService.warn(`Imagen ${publicId} eliminada debido a fallo en DTO de creación.`);
                         }
                     } catch (cleanupError) {
-                        loggerAdapter.error(`Error limpiando imagen ${uploadedImageUrl} tras fallo en DTO de creación:`, cleanupError);
+                        loggerService.error(`Error limpiando imagen ${uploadedImageUrl} tras fallo en DTO de creación:`, cleanupError);
                     }
                 }
                 return res.status(400).json({ error });
-            } const product = await new CreateProductUseCase(this.productRepository).execute(createProductDto!);
-            loggerAdapter.info(`Producto creado: ${product.id} - ${product.name}`);
+            }            const product = await new CreateProductUseCase(this.productRepository, loggerService).execute(createProductDto!);
+            loggerService.info(`Producto creado: ${product.id} - ${product.name}`);
             return res.status(201).json(product);
         } catch (err) {
             if (uploadedImageUrl && !(err instanceof CustomError && err.statusCode === 400)) {
@@ -98,10 +98,10 @@ export class ProductController {
                     const publicId = fileStorageAdapter.getPublicIdFromUrl(uploadedImageUrl);
                     if (publicId) {
                         await fileStorageAdapter.deleteFile(publicId);
-                        loggerAdapter.warn(`Imagen ${publicId} eliminada debido a fallo en creación de producto.`);
+                        loggerService.warn(`Imagen ${publicId} eliminada debido a fallo en creación de producto.`);
                     }
                 } catch (cleanupError) {
-                    loggerAdapter.error(`Error limpiando imagen ${uploadedImageUrl} tras fallo en creación:`, cleanupError);
+                    loggerService.error(`Error limpiando imagen ${uploadedImageUrl} tras fallo en creación:`, cleanupError);
                 }
             }
             return this.handleError(err, res);
@@ -127,11 +127,11 @@ export class ProductController {
             const { page = 1, limit = 10 } = req.query;
             const [error, paginationDto] = PaginationDto.create(Number(page), Number(limit));
             if (error) {
-                loggerAdapter.warn("Error en paginación para getAllProducts:", { error, query: req.query });
+                loggerService.warn("Error en paginación para getAllProducts:", { error, query: req.query });
                 return res.status(400).json({ error });
             }
             // El Use Case ahora devuelve { total, products } y se envía directamente
-            const data = await new GetAllProductsUseCase(this.productRepository, loggerAdapter).execute(paginationDto!);
+            const data = await new GetAllProductsUseCase(this.productRepository, loggerService).execute(paginationDto!);
             return res.json(data);
         } catch (err) {
             return this.handleError(err, res);
@@ -153,10 +153,10 @@ export class ProductController {
                     const publicId = fileStorageAdapter.getPublicIdFromUrl(imageUrlToDelete);
                     if (publicId) {
                         await fileStorageAdapter.deleteFile(publicId);
-                        loggerAdapter.info(`Imagen ${publicId} eliminada para producto ${id}`);
+                        loggerService.info(`Imagen ${publicId} eliminada para producto ${id}`);
                     }
                 } catch (deleteImgError) {
-                    loggerAdapter.error(`Error eliminando imagen ${imageUrlToDelete} de Cloudinary para producto ${id}:`, deleteImgError);
+                    loggerService.error(`Error eliminando imagen ${imageUrlToDelete} de Cloudinary para producto ${id}:`, deleteImgError);
                 }
             }
             return res.json(deletedProduct);
@@ -167,32 +167,32 @@ export class ProductController {
 
     getProductsByCategory = async (req: Request, res: Response) => {
         try {
-            loggerAdapter.debug("getProductsByCategory called with params:", { params: req.params, query: req.query });
+            loggerService.debug("getProductsByCategory called with params:", { params: req.params, query: req.query });
             const { categoryId } = req.params;
-            loggerAdapter.debug("Extracted categoryId:", { categoryId });
+            loggerService.debug("Extracted categoryId:", { categoryId });
 
             if (!mongoose.Types.ObjectId.isValid(categoryId)) {
-                loggerAdapter.warn("Invalid categoryId:", { categoryId });
+                loggerService.warn("Invalid categoryId:", { categoryId });
                 return res.status(400).json({ error: 'ID de categoría inválido' });
             }
 
             const { page = 1, limit = 10 } = req.query;
             const [error, paginationDto] = PaginationDto.create(Number(page), Number(limit));
             if (error) {
-                loggerAdapter.warn("Error en paginación para getProductsByCategory:", { error, query: req.query });
+                loggerService.warn("Error en paginación para getProductsByCategory:", { error, query: req.query });
                 return res.status(400).json({ error });
             }
 
-            loggerAdapter.debug("About to execute GetProductByCategoryUseCase with:", { categoryId, paginationDto });
+            loggerService.debug("About to execute GetProductByCategoryUseCase with:", { categoryId, paginationDto });
             const result = await new GetProductByCategoryUseCase(
                 this.productRepository,
                 this.categoryRepository
             ).execute(categoryId, paginationDto!);
 
-            loggerAdapter.debug("getProductsByCategory result:", { result });
+            loggerService.debug("getProductsByCategory result:", { result });
             return res.json(result);
         } catch (err) {
-            loggerAdapter.error("Error in getProductsByCategory:", { error: err });
+            loggerService.error("Error in getProductsByCategory:", { error: err });
             return this.handleError(err, res);
         }
     }
@@ -215,25 +215,25 @@ export class ProductController {
                 const uploadResult = await fileStorageAdapter.uploadFile((req as any).file.path);
                 newUploadedImageUrl = uploadResult.url;
                 finalImgUrl = uploadResult.url;
-                loggerAdapter.info(`Nueva imagen subida para producto ${id}: ${finalImgUrl}`);
+                loggerService.info(`Nueva imagen subida para producto ${id}: ${finalImgUrl}`);
                 fs.unlink((req as any).file.path, (err) => {
                     if (err) console.error('Error eliminando archivo temporal:', err);
                 });
                 if (oldPublicId) {
                     try {
                         await fileStorageAdapter.deleteFile(oldPublicId);
-                        loggerAdapter.info(`Imagen anterior (${oldPublicId}) eliminada para producto ${id}`);
+                        loggerService.info(`Imagen anterior (${oldPublicId}) eliminada para producto ${id}`);
                     } catch (deleteError) {
-                        loggerAdapter.error(`Error eliminando imagen antigua ${oldPublicId} de Cloudinary:`, deleteError);
+                        loggerService.error(`Error eliminando imagen antigua ${oldPublicId} de Cloudinary:`, deleteError);
                     }
                 }
             } else if (req.body.imgUrl === '' && oldPublicId) {
                 try {
                     await fileStorageAdapter.deleteFile(oldPublicId);
-                    loggerAdapter.info(`Imagen existente (${oldPublicId}) eliminada explícitamente para producto ${id}`);
+                    loggerService.info(`Imagen existente (${oldPublicId}) eliminada explícitamente para producto ${id}`);
                     finalImgUrl = '';
                 } catch (deleteError) {
-                    loggerAdapter.error(`Error eliminando imagen ${oldPublicId} explícitamente:`, deleteError);
+                    loggerService.error(`Error eliminando imagen ${oldPublicId} explícitamente:`, deleteError);
                 }
             } else {
                 finalImgUrl = req.body.imgUrl !== undefined ? req.body.imgUrl : existingProduct.imgUrl;
@@ -247,22 +247,22 @@ export class ProductController {
             }
             const [error, updateProductDto] = UpdateProductDto.create(productData);
             if (error) {
-                loggerAdapter.warn("Error creando UpdateProductDto:", { error, data: productData });
+                loggerService.warn("Error creando UpdateProductDto:", { error, data: productData });
                 if (newUploadedImageUrl) {
                     try {
                         const publicIdToDelete = fileStorageAdapter.getPublicIdFromUrl(newUploadedImageUrl);
                         if (publicIdToDelete) {
                             await fileStorageAdapter.deleteFile(publicIdToDelete);
-                            loggerAdapter.warn(`Imagen nueva ${publicIdToDelete} eliminada por fallo en DTO de actualización.`);
+                            loggerService.warn(`Imagen nueva ${publicIdToDelete} eliminada por fallo en DTO de actualización.`);
                         }
                     } catch (cleanupError) {
-                        loggerAdapter.error(`Error limpiando imagen nueva ${newUploadedImageUrl} tras fallo DTO:`, cleanupError);
+                        loggerService.error(`Error limpiando imagen nueva ${newUploadedImageUrl} tras fallo DTO:`, cleanupError);
                     }
                 }
                 return res.status(400).json({ error });
             }
             const product = await new UpdateProductUseCase(this.productRepository).execute(id, updateProductDto!);
-            loggerAdapter.info(`Producto actualizado: ${product.id} - ${product.name}`);
+            loggerService.info(`Producto actualizado: ${product.id} - ${product.name}`);
             return res.json(product);
         } catch (err) {
             if (newUploadedImageUrl && !(err instanceof CustomError && err.statusCode === 400)) {
@@ -270,10 +270,10 @@ export class ProductController {
                     const publicIdToDelete = fileStorageAdapter.getPublicIdFromUrl(newUploadedImageUrl);
                     if (publicIdToDelete) {
                         await fileStorageAdapter.deleteFile(publicIdToDelete);
-                        loggerAdapter.warn(`Imagen ${publicIdToDelete} eliminada debido a fallo en actualización de producto.`);
+                        loggerService.warn(`Imagen ${publicIdToDelete} eliminada debido a fallo en actualización de producto.`);
                     }
                 } catch (cleanupError) {
-                    loggerAdapter.error(`Error limpiando imagen ${newUploadedImageUrl} tras fallo en actualización:`, cleanupError);
+                    loggerService.error(`Error limpiando imagen ${newUploadedImageUrl} tras fallo en actualización:`, cleanupError);
                 }
             }
             return this.handleError(err, res);
