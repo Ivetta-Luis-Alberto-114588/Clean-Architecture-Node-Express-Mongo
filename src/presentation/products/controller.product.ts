@@ -28,7 +28,7 @@ export class ProductController {
     constructor(
         private readonly productRepository: ProductRepository,
         private readonly categoryRepository: CategoryRepository
-    ) { }private handleError = (error: unknown, res: Response) => {
+    ) { } private handleError = (error: unknown, res: Response) => {
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ error: error.message });
         }
@@ -50,7 +50,7 @@ export class ProductController {
     createProduct = async (req: Request, res: Response) => {
         let uploadedImageUrl: string | null = null;
         try {
-            loggerAdapter.debug("createProduct - Request body:", { body: req.body });            let imgUrl = '';
+            loggerAdapter.debug("createProduct - Request body:", { body: req.body }); let imgUrl = '';
             if ((req as any).file) {
                 const uploadResult = await fileStorageAdapter.uploadFile((req as any).file.path);
                 uploadedImageUrl = uploadResult.url;
@@ -211,7 +211,7 @@ export class ProductController {
             finalImgUrl = existingProduct.imgUrl;
             if (existingProduct.imgUrl) {
                 oldPublicId = fileStorageAdapter.getPublicIdFromUrl(existingProduct.imgUrl);
-            }            if ((req as any).file) {
+            } if ((req as any).file) {
                 const uploadResult = await fileStorageAdapter.uploadFile((req as any).file.path);
                 newUploadedImageUrl = uploadResult.url;
                 finalImgUrl = uploadResult.url;

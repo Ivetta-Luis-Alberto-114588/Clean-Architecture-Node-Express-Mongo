@@ -1,32 +1,19 @@
 // src/infrastructure/notifications/telegram.channel.ts
 import { NotificationChannel, NotificationMessage } from '../../domain/interfaces/notification.interface';
-import { TelegramConfig } from '../../configs/notification.config';
-import axios from 'axios';
-import logger from '../../configs/logger';
+import { ITelegramService } from '../../domain/interfaces/telegram.service';
 
 export class TelegramChannel implements NotificationChannel {
-    constructor(private config: TelegramConfig) {}
-
-    async send(message: NotificationMessage): Promise<void> {
-        if (!this.config.botToken || !this.config.chatId) {
-            logger.warn('Telegram configuration is missing, skipping notification');
+    constructor(private telegramService: ITelegramService) {}    async send(message: NotificationMessage): Promise<void> {
+        if (!this.telegramService.isConfigured()) {
             return;
         }
 
         const telegramMessage = this.formatMessage(message);
-        const url = `https://api.telegram.org/bot${this.config.botToken}/sendMessage`;
-
-        try {
-            await axios.post(url, {
-                chat_id: this.config.chatId,
-                text: telegramMessage,
-                parse_mode: 'HTML'
-            });
-            
-            logger.info('Telegram notification sent successfully');
-        } catch (error) {
-            logger.error('Error sending Telegram notification:', error);
-            throw new Error('Failed to send Telegram notification');
+        
+        const result = await this.telegramService.sendMessageToDefaultChat(telegramMessage, 'HTML');
+        
+        if (!result.success) {
+            throw new Error(`Failed to send Telegram notification: ${result.error}`);
         }
     }
 
