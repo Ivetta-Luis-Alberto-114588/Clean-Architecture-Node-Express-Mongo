@@ -4,14 +4,14 @@
 //se hace para que no este ligada a la bd y no haya 
 //problemas si se modifica la bd
 export class UserEntity {
-    
+
     constructor(
-        public id: string, 
+        public id: string,
         public name: string,
         public email: string,
         public password: string,
         public role: string[], // Mantengo 'role' como estaba originalmente
         public img?: string
 
-    ){}
+    ) { }
 }

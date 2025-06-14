@@ -7,9 +7,10 @@ import { CustomError } from "../../domain/errors/custom.error";
 import logger from "../../configs/logger";
 import { UserMapper } from "../../infrastructure/mappers/user.mapper"; // <<<--- Asegurar importación
 
-export class AuthMiddleware {    static validateJwt = async (req: Request, res: Response, next: NextFunction) => {
+export class AuthMiddleware {
+    static validateJwt = async (req: Request, res: Response, next: NextFunction) => {
         logger.debug("validateJwt middleware started");
-        
+
         const authorization = req.header('Authorization');
         logger.debug("Authorization header", { authorization: authorization ? `Bearer ${authorization.substring(0, 20)}...` : 'missing' });
 
@@ -22,20 +23,20 @@ export class AuthMiddleware {    static validateJwt = async (req: Request, res: 
         try {
             const payload = await JwtAdapter.validateToken<{ id: string }>(token);
             logger.debug("Token validation result", { payloadExists: !!payload, userId: payload?.id });
-            
+
             if (!payload) return next(CustomError.unauthorized("Invalid token"));
 
             const user = await UserModel.findById(payload.id);
             logger.debug("User lookup result", { userFound: !!user, userId: user?._id, userEmail: user?.email });
-            
+
             if (!user) return next(CustomError.unauthorized("Invalid token - user not found"));
 
             // Añadir la entidad mapeada, no el documento Mongoose directamente
             const mappedUser = UserMapper.fromObjectToUserEntity(user);
-            logger.debug("JWT validation successful", { 
-                userId: mappedUser.id, 
+            logger.debug("JWT validation successful", {
+                userId: mappedUser.id,
                 userEmail: mappedUser.email,
-                userRoles: mappedUser.role 
+                userRoles: mappedUser.role
             });
             req.body.user = mappedUser;
             next();
@@ -49,8 +50,8 @@ export class AuthMiddleware {    static validateJwt = async (req: Request, res: 
     static checkRole = (allowedRoles: string[]) => {
         return (req: Request, res: Response, next: NextFunction) => {
             logger.debug("checkRole middleware started", { allowedRoles });
-            
-            const user = req.body.user as UserEntity;            logger.debug("User from req.body.user", { 
+
+            const user = req.body.user as UserEntity; logger.debug("User from req.body.user", {
                 userExists: !!user,
                 userId: user?.id,
                 userEmail: user?.email,
@@ -65,10 +66,10 @@ export class AuthMiddleware {    static validateJwt = async (req: Request, res: 
             }
 
             const hasRequiredRole = user.role.some(role => allowedRoles.includes(role));
-            logger.debug("Role check result", { 
+            logger.debug("Role check result", {
                 hasRequiredRole,
                 userRoles: user.role,
-                allowedRoles 
+                allowedRoles
             });
 
             if (!hasRequiredRole) {

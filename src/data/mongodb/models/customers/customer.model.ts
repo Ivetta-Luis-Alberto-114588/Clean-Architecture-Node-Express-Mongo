@@ -7,7 +7,7 @@ const customerSchema = new mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: 'User', // Referencia al modelo User
         required: false, // No requerido para permitir invitados
-        unique: true,    // Un usuario solo puede tener un perfil de cliente
+        // Removido unique: true para permitir múltiples clientes invitados con userId: null
         sparse: true,    // Permite múltiples documentos con valor null/undefined (para invitados)
         index: true,     // Indexar para búsquedas rápidas
     },
