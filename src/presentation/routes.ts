@@ -17,6 +17,7 @@ import { AdminRoutes } from "./admin/routes.admin";
 import { TagRoutes } from "./products/routes.tag";
 import { OrderStatusRoutes } from "./order/routes.order-status";
 import { PaymentMethodRoutes } from "./payment/routes.payment-method";
+import mongoose from "mongoose";
 
 export class MainRoutes {
 
@@ -39,6 +40,35 @@ export class MainRoutes {
             res.status(200).send('pong');
         });
 
+        // Health Check endpoints
+        router.get('/api/health', (req: Request, res: Response) => {
+            res.status(200).json({
+                status: 'OK',
+                timestamp: new Date().toISOString(),
+                service: 'E-commerce Backend API',
+                version: '1.0.0'
+            });
+        });
+
+        router.get('/api/health/db', (req: Request, res: Response) => {
+            const dbState = mongoose.connection.readyState;
+            const dbStatus = dbState === 1 ? 'connected' : dbState === 2 ? 'connecting' : 'disconnected';
+
+            if (dbState === 1) {
+                res.status(200).json({
+                    database: 'connected',
+                    dbName: mongoose.connection.db?.databaseName || 'unknown',
+                    timestamp: new Date().toISOString()
+                });
+            } else {
+                res.status(503).json({
+                    database: dbStatus,
+                    error: 'Database not available',
+                    timestamp: new Date().toISOString()
+                });
+            }
+        });
+
         // Rutas Públicas / de Usuario
         router.use("/api/auth", AuthRoutes.getAuthRoutes);
         router.use("/api/products", ProductRoutes.getProductRoutes);
@@ -49,7 +79,7 @@ export class MainRoutes {
         router.use("/api/neighborhoods", NeighborhoodRoutes.getNeighborhoodRoutes);
         router.use("/api/customers", CustomerRoutes.getCustomerRoutes);
         router.use("/api/addresses", AddressRoutes.getRoutes);
-        router.use("/api/sales", OrderRoutes.getOrderRoutes);        router.use("/api/payments", PaymentRoutes.getPaymentRoutes);
+        router.use("/api/sales", OrderRoutes.getOrderRoutes); router.use("/api/payments", PaymentRoutes.getPaymentRoutes);
         router.use("/api/payment-methods", PaymentMethodRoutes.routes);
         router.use("/api/chatbot", ChatbotRoutes.getChatbotRoutes); router.use("/api/cart", CartRoutes.getCartRoutes);
         router.use("/api/coupons", CouponRoutes.getCouponRoutes);
