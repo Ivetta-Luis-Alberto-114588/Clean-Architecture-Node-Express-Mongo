@@ -1622,8 +1622,388 @@ describe('Health Check - Smoke Tests', () => {
             if (response.status === 200) {
                 expect(Array.isArray(response.body)).toBe(true);
                 // Debería devolver array vacío para páginas que no existen
-                expect(response.body.length).toBeGreaterThanOrEqual(0);
-            }
+                expect(response.body.length).toBeGreaterThanOrEqual(0);            }
+        });
+    });
+
+    describe('Categories & Units - Smoke Tests', () => {
+        let testCategoryId: string;
+        let testUnitId: string;
+
+        describe('Categories Management', () => {
+            it('should get all categories with pagination', async () => {
+                const response = await request(app)
+                    .get('/api/categories?page=1&limit=10')
+                    .expect((res) => {
+                        // Aceptar 200 (OK), 400 (error), o 404 (no hay categorías) como respuestas válidas
+                        expect([200, 400, 404]).toContain(res.status);
+                    });
+
+                // Solo verificar estructura si la respuesta es 200
+                if (response.status === 200) {
+                    expect(Array.isArray(response.body)).toBe(true);
+                    expect(response.body.length).toBeLessThanOrEqual(10);
+                }
+            });
+
+            it('should handle missing pagination parameters for categories', async () => {
+                const response = await request(app)
+                    .get('/api/categories')
+                    .expect((res) => {
+                        // Puede devolver 200 (con defaults) o 400 (error de validación)
+                        expect([200, 400]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    expect(Array.isArray(response.body)).toBe(true);
+                } else if (response.status === 400) {
+                    expect(response.body.error).toBeDefined();
+                }
+            });
+
+            it('should create new category', async () => {
+                const categoryData = {
+                    name: `Smoke Test Category ${Date.now()}`,
+                    description: 'Categoría de prueba para smoke tests',
+                    isActive: true
+                };
+
+                const response = await request(app)
+                    .post('/api/categories')
+                    .send(categoryData)
+                    .expect(200);
+
+                // Verificar que la categoría se creó correctamente
+                expect(response.body.id).toBeDefined();
+                expect(response.body.name).toBe(categoryData.name.toLowerCase());
+                expect(response.body.description).toBe(categoryData.description.toLowerCase());
+                expect(response.body.isActive).toBe(categoryData.isActive);
+
+                // Guardar ID para otros tests
+                testCategoryId = response.body.id;
+            });
+
+            it('should reject category creation with missing required fields', async () => {
+                // Test sin name
+                await request(app)
+                    .post('/api/categories')
+                    .send({
+                        description: 'Sin nombre',
+                        isActive: true
+                    })
+                    .expect(400);
+
+                // Test sin description
+                await request(app)
+                    .post('/api/categories')
+                    .send({
+                        name: 'Sin descripción',
+                        isActive: true
+                    })
+                    .expect(400);
+
+                // Test sin isActive
+                await request(app)
+                    .post('/api/categories')
+                    .send({
+                        name: 'Sin isActive',
+                        description: 'Sin campo isActive'
+                    })
+                    .expect(400);
+            });
+
+            it('should reject category creation with invalid data types', async () => {
+                await request(app)
+                    .post('/api/categories')
+                    .send({
+                        name: 'Test Category',
+                        description: 'Test Description',
+                        isActive: 'not_boolean' // Tipo inválido
+                    })
+                    .expect(400);
+            });
+
+            it('should get category by ID', async () => {
+                if (!testCategoryId) {
+                    // Crear una categoría si no existe
+                    const createResponse = await request(app)
+                        .post('/api/categories')
+                        .send({
+                            name: `Get Test Category ${Date.now()}`,
+                            description: 'Categoría para test de obtención',
+                            isActive: true
+                        })
+                        .expect(200);
+
+                    testCategoryId = createResponse.body.id;
+                }
+
+                const response = await request(app)
+                    .get(`/api/categories/${testCategoryId}`)
+                    .expect(200);
+
+                expect(response.body.id).toBe(testCategoryId);
+                expect(response.body.name).toBeDefined();
+                expect(response.body.description).toBeDefined();
+                expect(typeof response.body.isActive).toBe('boolean');
+            });
+
+            it('should return 404 for non-existent category', async () => {
+                const fakeId = '507f1f77bcf86cd799439011';
+                await request(app)
+                    .get(`/api/categories/${fakeId}`)
+                    .expect(404);
+            });            it('should return 400 or 500 for invalid category ID format', async () => {
+                await request(app)
+                    .get('/api/categories/invalid-id-format')
+                    .expect((res) => {
+                        // Aceptar tanto 400 (validación) como 500 (error interno)
+                        expect([400, 500]).toContain(res.status);
+                    });
+            });
+
+            it('should update category', async () => {
+                if (!testCategoryId) {
+                    // Crear una categoría si no existe
+                    const createResponse = await request(app)
+                        .post('/api/categories')
+                        .send({
+                            name: `Update Test Category ${Date.now()}`,
+                            description: 'Categoría para test de actualización',
+                            isActive: true
+                        })
+                        .expect(200);
+
+                    testCategoryId = createResponse.body.id;
+                }
+
+                const updateData = {
+                    name: 'Updated Category Name',
+                    description: 'Updated category description',
+                    isActive: false
+                };
+
+                const response = await request(app)
+                    .put(`/api/categories/${testCategoryId}`)
+                    .send(updateData)
+                    .expect(200);
+
+                expect(response.body.name).toBe(updateData.name.toLowerCase());
+                expect(response.body.description).toBe(updateData.description.toLowerCase());
+                expect(response.body.isActive).toBe(updateData.isActive);
+            });
+
+            it('should delete category', async () => {
+                // Crear una categoría específica para eliminar
+                const createResponse = await request(app)
+                    .post('/api/categories')
+                    .send({
+                        name: `Delete Test Category ${Date.now()}`,
+                        description: 'Categoría para eliminar',
+                        isActive: true
+                    })
+                    .expect(200);
+
+                const categoryToDeleteId = createResponse.body.id;
+
+                // Eliminar la categoría
+                await request(app)
+                    .delete(`/api/categories/${categoryToDeleteId}`)
+                    .expect(200);
+
+                // Verificar que ya no existe
+                await request(app)
+                    .get(`/api/categories/${categoryToDeleteId}`)
+                    .expect(404);
+            });
+        });
+
+        describe('Units Management', () => {
+            it('should get all units with pagination', async () => {
+                const response = await request(app)
+                    .get('/api/units?page=1&limit=10')
+                    .expect((res) => {
+                        // Aceptar 200 (OK), 400 (error), o 404 (no hay unidades) como respuestas válidas
+                        expect([200, 400, 404]).toContain(res.status);
+                    });
+
+                // Solo verificar estructura si la respuesta es 200
+                if (response.status === 200) {
+                    expect(Array.isArray(response.body)).toBe(true);
+                    expect(response.body.length).toBeLessThanOrEqual(10);
+                }
+            });
+
+            it('should handle missing pagination parameters for units', async () => {
+                const response = await request(app)
+                    .get('/api/units')
+                    .expect((res) => {
+                        // Puede devolver 200 (con defaults) o 400 (error de validación)
+                        expect([200, 400]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    expect(Array.isArray(response.body)).toBe(true);
+                } else if (response.status === 400) {
+                    expect(response.body.error).toBeDefined();
+                }
+            });
+
+            it('should create new unit', async () => {
+                const unitData = {
+                    name: `Smoke Test Unit ${Date.now()}`,
+                    description: 'Unidad de prueba para smoke tests',
+                    isActive: true
+                };
+
+                const response = await request(app)
+                    .post('/api/units')
+                    .send(unitData)
+                    .expect(200);
+
+                // Verificar que la unidad se creó correctamente
+                expect(response.body.id).toBeDefined();
+                expect(response.body.name).toBe(unitData.name.toLowerCase());
+                expect(response.body.description).toBe(unitData.description.toLowerCase());
+                expect(response.body.isActive).toBe(unitData.isActive);
+
+                // Guardar ID para otros tests
+                testUnitId = response.body.id;
+            });
+
+            it('should reject unit creation with missing required fields', async () => {
+                // Test sin name
+                await request(app)
+                    .post('/api/units')
+                    .send({
+                        description: 'Sin nombre',
+                        isActive: true
+                    })
+                    .expect(400);
+
+                // Test sin description
+                await request(app)
+                    .post('/api/units')
+                    .send({
+                        name: 'Sin descripción',
+                        isActive: true
+                    })
+                    .expect(400);
+
+                // Test sin isActive
+                await request(app)
+                    .post('/api/units')
+                    .send({
+                        name: 'Sin isActive',
+                        description: 'Sin campo isActive'
+                    })
+                    .expect(400);
+            });
+
+            it('should reject unit creation with invalid data types', async () => {
+                await request(app)
+                    .post('/api/units')
+                    .send({
+                        name: 'Test Unit',
+                        description: 'Test Description',
+                        isActive: 'not_boolean' // Tipo inválido
+                    })
+                    .expect(400);
+            });
+
+            it('should get unit by ID', async () => {
+                if (!testUnitId) {
+                    // Crear una unidad si no existe
+                    const createResponse = await request(app)
+                        .post('/api/units')
+                        .send({
+                            name: `Get Test Unit ${Date.now()}`,
+                            description: 'Unidad para test de obtención',
+                            isActive: true
+                        })
+                        .expect(200);
+
+                    testUnitId = createResponse.body.id;
+                }
+
+                const response = await request(app)
+                    .get(`/api/units/${testUnitId}`)
+                    .expect(200);
+
+                expect(response.body.id).toBe(testUnitId);
+                expect(response.body.name).toBeDefined();
+                expect(response.body.description).toBeDefined();
+                expect(typeof response.body.isActive).toBe('boolean');
+            });
+
+            it('should return 404 for non-existent unit', async () => {
+                const fakeId = '507f1f77bcf86cd799439011';
+                await request(app)
+                    .get(`/api/units/${fakeId}`)
+                    .expect(404);
+            });            it('should return 400 or 500 for invalid unit ID format', async () => {
+                await request(app)
+                    .get('/api/units/invalid-id-format')
+                    .expect((res) => {
+                        // Aceptar tanto 400 (validación) como 500 (error interno)
+                        expect([400, 500]).toContain(res.status);
+                    });
+            });
+
+            it('should update unit', async () => {
+                if (!testUnitId) {
+                    // Crear una unidad si no existe
+                    const createResponse = await request(app)
+                        .post('/api/units')
+                        .send({
+                            name: `Update Test Unit ${Date.now()}`,
+                            description: 'Unidad para test de actualización',
+                            isActive: true
+                        })
+                        .expect(200);
+
+                    testUnitId = createResponse.body.id;
+                }
+
+                const updateData = {
+                    name: 'Updated Unit Name',
+                    description: 'Updated unit description',
+                    isActive: false
+                };
+
+                const response = await request(app)
+                    .put(`/api/units/${testUnitId}`)
+                    .send(updateData)
+                    .expect(200);
+
+                expect(response.body.name).toBe(updateData.name.toLowerCase());
+                expect(response.body.description).toBe(updateData.description.toLowerCase());
+                expect(response.body.isActive).toBe(updateData.isActive);
+            });
+
+            it('should delete unit', async () => {
+                // Crear una unidad específica para eliminar
+                const createResponse = await request(app)
+                    .post('/api/units')
+                    .send({
+                        name: `Delete Test Unit ${Date.now()}`,
+                        description: 'Unidad para eliminar',
+                        isActive: true
+                    })
+                    .expect(200);
+
+                const unitToDeleteId = createResponse.body.id;
+
+                // Eliminar la unidad
+                await request(app)
+                    .delete(`/api/units/${unitToDeleteId}`)
+                    .expect(200);
+
+                // Verificar que ya no existe
+                await request(app)
+                    .get(`/api/units/${unitToDeleteId}`)
+                    .expect(404);
+            });
         });
     });
 });
