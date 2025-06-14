@@ -1,0 +1,307 @@
+/**
+ * Configuración de Artillery para tests de carga avanzados
+ * 
+ * Artillery permite crear escenarios más complejos y realistas
+ * para simular el comportamiento real de usuarios
+ */
+
+export default {
+  config: {
+    target: '{{ $processEnvironment.PERFORMANCE_TARGET || "https://sistema-mongo.onrender.com" }}',
+    phases: [
+      // Warmup phase - crítico para Render
+      {
+        duration: 60, // 1 minuto de warmup
+        arrivalRate: 1, // 1 usuario por segundo
+        name: 'Warmup Phase'
+      },
+      // Ramp up phase
+      {
+        duration: 30, // 30 segundos
+        arrivalRate: 1,
+        rampTo: 10, // Subir gradualmente a 10 usuarios/segundo
+        name: 'Ramp Up Phase'
+      },
+      // Sustained load phase
+      {
+        duration: 120, // 2 minutos de carga sostenida
+        arrivalRate: 10, // 10 usuarios por segundo
+        name: 'Sustained Load Phase'
+      },
+      // Peak load phase
+      {
+        duration: 60, // 1 minuto de pico
+        arrivalRate: 15, // Pico de 15 usuarios/segundo
+        name: 'Peak Load Phase'
+      },
+      // Cool down phase
+      {
+        duration: 30, // 30 segundos de enfriamiento
+        arrivalRate: 15,
+        rampTo: 1, // Bajar gradualmente
+        name: 'Cool Down Phase'
+      }
+    ],
+    defaults: {
+      headers: {
+        'User-Agent': 'Artillery-Performance-Test'
+      }
+    },
+    // Variables para personalizar los tests
+    variables: {
+      testUserEmail: 'test-{{ $randomString() }}@performance.test',
+      testUserPassword: 'TestPassword123!',
+      testUserName: 'Artillery Test User {{ $randomString() }}'
+    },
+    // Plugins para métricas adicionales
+    plugins: {
+      'artillery-plugin-metrics-by-endpoint': {
+        useOnlyRequestNames: true
+      }
+    },
+    // Configuración específica para Render
+    http: {
+      timeout: 60, // 60 segundos timeout
+      pool: 50,    // Pool de conexiones
+      keepAlive: true
+    }
+  },
+  scenarios: [
+    // Escenario 1: Usuario anónimo navegando productos
+    {
+      name: 'Anonymous Product Browsing',
+      weight: 40, // 40% del tráfico
+      flow: [
+        {
+          get: {
+            url: '/api/health',
+            capture: {
+              json: '$.status',
+              as: 'healthStatus'
+            }
+          }
+        },
+        {
+          think: 2 // Pausa de 2 segundos (pensando)
+        },
+        {
+          get: {
+            url: '/api/products',
+            capture: {
+              json: '$.total',
+              as: 'totalProducts'
+            }
+          }
+        },
+        {
+          think: 3
+        },
+        {
+          get: {
+            url: '/api/products/categories'
+          }
+        },
+        {
+          think: 2
+        },
+        // Simular navegación por páginas de productos
+        {
+          get: {
+            url: '/api/products?page=2&limit=10'
+          }
+        },
+        {
+          think: 1
+        },
+        {
+          get: {
+            url: '/api/products?page=3&limit=10'
+          }
+        }
+      ]
+    },
+    
+    // Escenario 2: Usuario registrado con autenticación
+    {
+      name: 'Authenticated User Journey',
+      weight: 30, // 30% del tráfico
+      flow: [
+        // Primero intentar login, si falla, registrarse
+        {
+          post: {
+            url: '/api/auth/login',
+            json: {
+              email: '{{ testUserEmail }}',
+              password: '{{ testUserPassword }}'
+            },
+            capture: [
+              {
+                json: '$.token',
+                as: 'authToken'
+              },
+              {
+                json: '$.user.id',
+                as: 'userId'
+              }
+            ],
+            expect: [
+              {
+                statusCode: [200, 400, 401] // Aceptar tanto éxito como fallo
+              }
+            ]
+          }
+        },
+        // Si el login falló, registrarse
+        {
+          post: {
+            url: '/api/auth/register',
+            ifTrue: '{{ authToken === undefined }}',
+            json: {
+              email: '{{ testUserEmail }}',
+              password: '{{ testUserPassword }}',
+              name: '{{ testUserName }}'
+            },
+            capture: [
+              {
+                json: '$.token',
+                as: 'authToken'
+              },
+              {
+                json: '$.user.id',
+                as: 'userId'
+              }
+            ]
+          }
+        },
+        {
+          think: 2
+        },
+        // Navegar por productos autenticado
+        {
+          get: {
+            url: '/api/products',
+            headers: {
+              'Authorization': 'Bearer {{ authToken }}'
+            }
+          }
+        },
+        {
+          think: 3
+        },
+        // Obtener carrito
+        {
+          get: {
+            url: '/api/cart',
+            headers: {
+              'Authorization': 'Bearer {{ authToken }}'
+            },
+            capture: {
+              json: '$.items',
+              as: 'cartItems'
+            }
+          }
+        },
+        {
+          think: 2
+        }
+      ]
+    },
+    
+    // Escenario 3: Operaciones de carrito intensivas
+    {
+      name: 'Shopping Cart Operations',
+      weight: 20, // 20% del tráfico
+      flow: [
+        // Autenticación rápida
+        {
+          post: {
+            url: '/api/auth/register',
+            json: {
+              email: 'cart-{{ $randomString() }}@test.com',
+              password: 'TestPassword123!',
+              name: 'Cart Test User'
+            },
+            capture: {
+              json: '$.token',
+              as: 'authToken'
+            }
+          }
+        },
+        {
+          think: 1
+        },
+        // Múltiples operaciones de carrito
+        {
+          get: {
+            url: '/api/cart',
+            headers: {
+              'Authorization': 'Bearer {{ authToken }}'
+            }
+          }
+        },
+        {
+          think: 1
+        },
+        // Simular agregar producto (esto podría fallar si no hay productos)
+        {
+          post: {
+            url: '/api/cart/add',
+            headers: {
+              'Authorization': 'Bearer {{ authToken }}'
+            },
+            json: {
+              productId: '507f1f77bcf86cd799439011', // ID de ejemplo
+              quantity: 1
+            },
+            expect: [
+              {
+                statusCode: [200, 201, 400, 404] // Aceptar varios códigos
+              }
+            ]
+          }
+        },
+        {
+          think: 2
+        },
+        // Obtener carrito actualizado
+        {
+          get: {
+            url: '/api/cart',
+            headers: {
+              'Authorization': 'Bearer {{ authToken }}'
+            }
+          }
+        }
+      ]
+    },
+    
+    // Escenario 4: Solo health checks y endpoints básicos
+    {
+      name: 'Basic Health Monitoring',
+      weight: 10, // 10% del tráfico
+      flow: [
+        {
+          get: {
+            url: '/api/health'
+          }
+        },
+        {
+          think: 5
+        },
+        {
+          get: {
+            url: '/api/products/categories'
+          }
+        },
+        {
+          think: 3
+        },
+        {
+          get: {
+            url: '/api/health'
+          }
+        }
+      ]
+    }
+  ]
+};

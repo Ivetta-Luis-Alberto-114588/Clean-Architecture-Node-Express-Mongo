@@ -2,6 +2,7 @@
 *.log
 *audit.json
 *.html
+*html
 node_modules/
 dist/
 build/
