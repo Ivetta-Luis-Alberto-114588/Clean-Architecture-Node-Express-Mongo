@@ -50,8 +50,7 @@ export class AuthMiddleware {    static validateJwt = async (req: Request, res: 
         return (req: Request, res: Response, next: NextFunction) => {
             logger.debug("checkRole middleware started", { allowedRoles });
             
-            const user = req.body.user as UserEntity;
-            logger.debug("User from req.body.user", { 
+            const user = req.body.user as UserEntity;            logger.debug("User from req.body.user", { 
                 userExists: !!user,
                 userId: user?.id,
                 userEmail: user?.email,
