@@ -1,6 +1,7 @@
 .env
 *.log
 *audit.json
+*.html
 node_modules/
 dist/
 build/

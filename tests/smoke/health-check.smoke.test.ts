@@ -2830,14 +2830,499 @@ describe('Health Check - Smoke Tests', () => {
                     .expect((res) => {
                         expect([404, 500]).toContain(res.status);
                     });
-            });
-
-            it('should handle deletion of non-existent neighborhood', async () => {
+            }); it('should handle deletion of non-existent neighborhood', async () => {
                 await request(app)
                     .delete('/api/neighborhoods/507f1f77bcf86cd799439011') // Valid MongoDB ID that doesn't exist
                     .expect((res) => {
                         expect([404, 500]).toContain(res.status);
                     });
+            });
+        });
+    });
+
+    describe('Payment Methods - Smoke Tests', () => {
+        let testPaymentMethodId: string | null = null;
+        let testOrderStatusId: string | null = null;
+
+        beforeAll(async () => {
+            try {
+                // Get or create a test order status for payment method
+                const { OrderStatusModel } = require('../../src/data/mongodb/models/order/order-status.model');
+                const existingStatus = await OrderStatusModel.findOne({ isActive: true });
+
+                if (existingStatus) {
+                    testOrderStatusId = existingStatus._id.toString();
+                } else {
+                    // Create a test order status if none exists
+                    const newStatus = await OrderStatusModel.create({
+                        name: 'Test Payment Status',
+                        code: 'TEST_PAYMENT',
+                        description: 'Test status for payment method testing',
+                        isActive: true,
+                        isDefault: false
+                    });
+                    testOrderStatusId = newStatus._id.toString();
+                }
+
+                console.log('Payment methods test setup completed - Order status ID:', testOrderStatusId);
+            } catch (error) {
+                console.error('Error setting up payment methods tests:', error);
+            }
+        });
+
+        describe('Public Payment Methods Endpoints', () => {
+            it('should get active payment methods (public endpoint)', async () => {
+                const response = await request(app)
+                    .get('/api/payment-methods/active')
+                    .expect(200);
+
+                // The API returns a direct array of active payment methods
+                expect(Array.isArray(response.body)).toBe(true);
+
+                // If there are payment methods, verify structure
+                if (response.body.length > 0) {
+                    expect(response.body[0]).toHaveProperty('id');
+                    expect(response.body[0]).toHaveProperty('name');
+                    expect(response.body[0]).toHaveProperty('code');
+                    expect(response.body[0]).toHaveProperty('description');
+                    expect(response.body[0].isActive).toBe(true);
+                }
+            });
+
+            it('should get payment method by code (public endpoint)', async () => {
+                // Try with common payment method codes
+                const commonCodes = ['CASH', 'CARD', 'TRANSFER', 'MP']; // MercadoPago
+                let foundPaymentMethod = false;
+
+                for (const code of commonCodes) {
+                    const response = await request(app)
+                        .get(`/api/payment-methods/code/${code}`)
+                        .expect((res) => {
+                            expect([200, 404]).toContain(res.status);
+                        });
+
+                    if (response.status === 200) {
+                        expect(response.body).toHaveProperty('id');
+                        expect(response.body).toHaveProperty('name');
+                        expect(response.body.code).toBe(code);
+                        expect(response.body).toHaveProperty('description');
+                        foundPaymentMethod = true;
+                        break;
+                    }
+                }
+
+                // At least one common payment method should exist or all should return 404
+                if (!foundPaymentMethod) {
+                    console.log('No common payment methods found - this may be expected for new installations');
+                }
+            });
+
+            it('should return 404 for non-existent payment method code', async () => {
+                await request(app)
+                    .get('/api/payment-methods/code/NONEXISTENT')
+                    .expect(404);
+            });
+        });
+
+        describe('Admin Payment Methods Endpoints', () => {
+            beforeAll(async () => {
+                // We need admin token for these tests
+                if (!adminToken) {
+                    console.log('Admin token not available - skipping admin payment method tests');
+                }
+            });
+
+            it('should require admin authentication for payment methods management', async () => {
+                // Test without token
+                await request(app)
+                    .get('/api/payment-methods')
+                    .expect(401);
+
+                // Test with invalid token
+                await request(app)
+                    .get('/api/payment-methods')
+                    .set('Authorization', 'Bearer invalid-token')
+                    .expect(401);
+            });
+
+            it('should get all payment methods as admin', async () => {
+                if (!adminToken) {
+                    console.log('Skipping admin payment methods list test - no admin token');
+                    return;
+                }
+
+                const response = await request(app)
+                    .get('/api/payment-methods?page=1&limit=10')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect(200);
+
+                expect(response.body).toHaveProperty('total');
+                expect(response.body).toHaveProperty('paymentMethods');
+                expect(Array.isArray(response.body.paymentMethods)).toBe(true);
+                expect(typeof response.body.total).toBe('number');
+            });
+
+            it('should get all payment methods without pagination as admin', async () => {
+                if (!adminToken) {
+                    console.log('Skipping admin payment methods test - no admin token');
+                    return;
+                }
+
+                const response = await request(app)
+                    .get('/api/payment-methods')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect(200);
+
+                expect(response.body).toHaveProperty('total');
+                expect(response.body).toHaveProperty('paymentMethods');
+                expect(Array.isArray(response.body.paymentMethods)).toBe(true);
+            });
+
+            it('should filter active payment methods as admin', async () => {
+                if (!adminToken) {
+                    console.log('Skipping admin active payment methods test - no admin token');
+                    return;
+                }
+
+                const response = await request(app)
+                    .get('/api/payment-methods?activeOnly=true&page=1&limit=5')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect(200);
+
+                expect(response.body).toHaveProperty('total');
+                expect(response.body).toHaveProperty('paymentMethods');
+                expect(Array.isArray(response.body.paymentMethods)).toBe(true);
+
+                // All returned payment methods should be active
+                response.body.paymentMethods.forEach((pm: any) => {
+                    expect(pm.isActive).toBe(true);
+                });
+            });
+
+            it('should create new payment method as admin', async () => {
+                if (!adminToken || !testOrderStatusId) {
+                    console.log('Skipping payment method creation test - missing admin token or order status');
+                    return;
+                }
+
+                const paymentMethodData = {
+                    code: `SMOKE_TEST_${Date.now()}`,
+                    name: 'Smoke Test Payment Method',
+                    description: 'Payment method created for smoke testing',
+                    isActive: true,
+                    defaultOrderStatusId: testOrderStatusId,
+                    requiresOnlinePayment: false
+                };
+
+                const response = await request(app)
+                    .post('/api/payment-methods')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send(paymentMethodData)
+                    .expect(201);
+
+                expect(response.body).toHaveProperty('id');
+                expect(response.body.code).toBe(paymentMethodData.code);
+                expect(response.body.name).toBe(paymentMethodData.name);
+                expect(response.body.description).toBe(paymentMethodData.description);
+                expect(response.body.isActive).toBe(paymentMethodData.isActive);
+                expect(response.body.requiresOnlinePayment).toBe(paymentMethodData.requiresOnlinePayment);
+
+                testPaymentMethodId = response.body.id;
+            });
+
+            it('should validate required fields when creating payment method', async () => {
+                if (!adminToken) {
+                    console.log('Skipping payment method validation test - no admin token');
+                    return;
+                }
+
+                // Test missing code
+                await request(app)
+                    .post('/api/payment-methods')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({
+                        name: 'Test Payment',
+                        description: 'Missing code',
+                        isActive: true,
+                        defaultOrderStatusId: testOrderStatusId,
+                        requiresOnlinePayment: false
+                    })
+                    .expect(400);
+
+                // Test missing name
+                await request(app)
+                    .post('/api/payment-methods')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({
+                        code: 'TEST',
+                        description: 'Missing name',
+                        isActive: true,
+                        defaultOrderStatusId: testOrderStatusId,
+                        requiresOnlinePayment: false
+                    })
+                    .expect(400);
+
+                // Test missing description
+                await request(app)
+                    .post('/api/payment-methods')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({
+                        code: 'TEST',
+                        name: 'Test Payment',
+                        isActive: true,
+                        defaultOrderStatusId: testOrderStatusId,
+                        requiresOnlinePayment: false
+                    })
+                    .expect(400);
+
+                // Test missing defaultOrderStatusId
+                await request(app)
+                    .post('/api/payment-methods')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({
+                        code: 'TEST',
+                        name: 'Test Payment',
+                        description: 'Missing order status',
+                        isActive: true,
+                        requiresOnlinePayment: false
+                    })
+                    .expect(400);
+            });
+
+            it('should get payment method by ID as admin', async () => {
+                if (!adminToken || !testPaymentMethodId) {
+                    console.log('Skipping get payment method by ID test - missing admin token or payment method ID');
+                    return;
+                }
+
+                const response = await request(app)
+                    .get(`/api/payment-methods/${testPaymentMethodId}`)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect(200);
+
+                expect(response.body).toHaveProperty('id');
+                expect(response.body.id).toBe(testPaymentMethodId);
+                expect(response.body).toHaveProperty('code');
+                expect(response.body).toHaveProperty('name');
+                expect(response.body).toHaveProperty('description');
+                expect(typeof response.body.isActive).toBe('boolean');
+            });
+
+            it('should return 404 for non-existent payment method ID as admin', async () => {
+                if (!adminToken) {
+                    console.log('Skipping non-existent payment method test - no admin token');
+                    return;
+                }
+
+                const fakeId = '507f1f77bcf86cd799439011';
+                await request(app)
+                    .get(`/api/payment-methods/${fakeId}`)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect(404);
+            });
+
+            it('should handle invalid payment method ID format as admin', async () => {
+                if (!adminToken) {
+                    console.log('Skipping invalid payment method ID test - no admin token');
+                    return;
+                }
+
+                await request(app)
+                    .get('/api/payment-methods/invalid-id-format')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect((res) => {
+                        expect([400, 404, 500]).toContain(res.status);
+                    });
+            });
+
+            it('should update payment method as admin', async () => {
+                if (!adminToken || !testPaymentMethodId || !testOrderStatusId) {
+                    console.log('Skipping payment method update test - missing dependencies');
+                    return;
+                }
+
+                const updateData = {
+                    name: 'Updated Smoke Test Payment Method',
+                    description: 'Updated description for smoke testing',
+                    isActive: false,
+                    requiresOnlinePayment: true
+                };
+
+                const response = await request(app)
+                    .put(`/api/payment-methods/${testPaymentMethodId}`)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send(updateData)
+                    .expect(200);
+
+                expect(response.body).toHaveProperty('id');
+                expect(response.body.name).toBe(updateData.name);
+                expect(response.body.description).toBe(updateData.description);
+                expect(response.body.isActive).toBe(updateData.isActive);
+                expect(response.body.requiresOnlinePayment).toBe(updateData.requiresOnlinePayment);
+            });
+
+            it('should delete payment method as admin', async () => {
+                if (!adminToken) {
+                    console.log('Skipping payment method deletion test - no admin token');
+                    return;
+                }
+
+                // Create a specific payment method to delete
+                if (!testOrderStatusId) {
+                    console.log('Skipping payment method deletion test - no order status ID');
+                    return;
+                }
+
+                const createResponse = await request(app)
+                    .post('/api/payment-methods')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send({
+                        code: `DELETE_TEST_${Date.now()}`,
+                        name: 'Payment Method to Delete',
+                        description: 'Payment method for deletion testing',
+                        isActive: true,
+                        defaultOrderStatusId: testOrderStatusId,
+                        requiresOnlinePayment: false
+                    })
+                    .expect(201);
+
+                const paymentMethodToDeleteId = createResponse.body.id;
+
+                // Delete the payment method
+                await request(app)
+                    .delete(`/api/payment-methods/${paymentMethodToDeleteId}`)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect(200);
+
+                // Verify it's deleted
+                await request(app)
+                    .get(`/api/payment-methods/${paymentMethodToDeleteId}`)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect(404);
+            });
+
+            it('should handle deletion of non-existent payment method', async () => {
+                if (!adminToken) {
+                    console.log('Skipping non-existent payment method deletion test - no admin token');
+                    return;
+                }
+
+                const fakeId = '507f1f77bcf86cd799439011';
+                await request(app)
+                    .delete(`/api/payment-methods/${fakeId}`)
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect((res) => {
+                        expect([404, 500]).toContain(res.status);
+                    });
+            });
+        });
+
+        describe('Payment Methods Error Handling', () => {
+            it('should handle invalid JSON in request body', async () => {
+                if (!adminToken) {
+                    console.log('Skipping invalid JSON test - no admin token');
+                    return;
+                }
+
+                // This test depends on how Express handles malformed JSON
+                // Typically it should return 400
+                const response = await request(app)
+                    .post('/api/payment-methods')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .set('Content-Type', 'application/json')
+                    .send('{"invalid": json}') // Malformed JSON
+                    .expect((res) => {
+                        expect([400]).toContain(res.status);
+                    });
+            });
+
+            it('should handle concurrent payment method creation', async () => {
+                if (!adminToken || !testOrderStatusId) {
+                    console.log('Skipping concurrent creation test - missing dependencies');
+                    return;
+                }
+
+                const paymentMethodData = {
+                    code: `CONCURRENT_TEST_${Date.now()}`,
+                    name: 'Concurrent Test Payment Method',
+                    description: 'Payment method for concurrent testing',
+                    isActive: true,
+                    defaultOrderStatusId: testOrderStatusId,
+                    requiresOnlinePayment: false
+                };
+
+                // Send two requests simultaneously
+                const promises = [
+                    request(app)
+                        .post('/api/payment-methods')
+                        .set('Authorization', `Bearer ${adminToken}`)
+                        .send(paymentMethodData),
+                    request(app)
+                        .post('/api/payment-methods')
+                        .set('Authorization', `Bearer ${adminToken}`)
+                        .send({ ...paymentMethodData, code: paymentMethodData.code + '_2' })
+                ];
+
+                const results = await Promise.all(promises);
+
+                // At least one should succeed
+                const successfulResults = results.filter(res => res.status === 201);
+                expect(successfulResults.length).toBeGreaterThan(0);
+            });
+        });
+
+        describe('Payment Methods Integration', () => {
+            it('should work with order creation workflow', async () => {
+                if (!adminToken) {
+                    console.log('Skipping integration test - no admin token');
+                    return;
+                }
+
+                // Get active payment methods
+                const pmResponse = await request(app)
+                    .get('/api/payment-methods/active')
+                    .expect(200);
+
+                expect(Array.isArray(pmResponse.body)).toBe(true);
+
+                // The integration with orders would be tested in the orders section
+                // Here we just verify that payment methods are available for order creation
+                console.log(`Found ${pmResponse.body.length} active payment methods for order integration`);
+            });
+
+            it('should have consistent data structure between endpoints', async () => {
+                if (!adminToken) {
+                    console.log('Skipping data structure consistency test - no admin token');
+                    return;
+                }
+
+                // Get payment methods from public endpoint
+                const publicResponse = await request(app)
+                    .get('/api/payment-methods/active')
+                    .expect(200);
+
+                // Get payment methods from admin endpoint
+                const adminResponse = await request(app)
+                    .get('/api/payment-methods?activeOnly=true')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .expect(200);
+
+                // Both should return payment methods with consistent structure
+                if (publicResponse.body.length > 0 && adminResponse.body.paymentMethods.length > 0) {
+                    const publicPM = publicResponse.body[0];
+                    const adminPM = adminResponse.body.paymentMethods[0];
+
+                    // Should have the same basic structure
+                    expect(publicPM).toHaveProperty('id');
+                    expect(publicPM).toHaveProperty('code');
+                    expect(publicPM).toHaveProperty('name');
+                    expect(publicPM).toHaveProperty('description');
+
+                    expect(adminPM).toHaveProperty('id');
+                    expect(adminPM).toHaveProperty('code');
+                    expect(adminPM).toHaveProperty('name');
+                    expect(adminPM).toHaveProperty('description');
+                }
             });
         });
     });
