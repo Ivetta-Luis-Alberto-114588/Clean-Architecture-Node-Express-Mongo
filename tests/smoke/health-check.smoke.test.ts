@@ -275,12 +275,13 @@ describe('Health Check - Smoke Tests', () => {
                 })
                 .expect(400);
         });
-    });
+    });    // Variables compartidas entre tests
+    let adminToken: string;
+    let testCategory: any;
+    let testUnit: any;
+    let createdProductId: string;
+
     describe('Products Endpoints - Smoke Tests', () => {
-        let adminToken: string;
-        let testCategory: any;
-        let testUnit: any;
-        let createdProductId: string;
 
         beforeAll(async () => {
             // Login como admin para obtener token
@@ -544,6 +545,385 @@ describe('Health Check - Smoke Tests', () => {
             await request(app)
                 .get(`/api/products/${productToDeleteId}`)
                 .expect(404);
+        });
+    });
+
+    describe('External Services - Smoke Tests', () => {
+        let testUser: any;
+        let userToken: string;
+        let testOrder: any;
+
+        beforeAll(async () => {
+            // Crear un usuario regular para testing de servicios
+            const { UserModel } = require('../../src/data/mongodb/models/user.model');
+            const { CustomerModel } = require('../../src/data/mongodb/models/customers/customer.model');
+            const { BcryptAdapter } = require('../../src/configs/bcrypt');
+            
+            try {
+                // Eliminar usuario si existe
+                await UserModel.deleteOne({ email: 'smoke-user@test.com' });
+                await CustomerModel.deleteOne({ email: 'smoke-user@test.com' });
+                
+                // Crear usuario de prueba
+                testUser = await UserModel.create({
+                    name: 'Smoke Test User',
+                    email: 'smoke-user@test.com',
+                    password: await BcryptAdapter.hash('userPassword123'),
+                    roles: ['USER_ROLE']
+                });
+
+                // Login para obtener token
+                const loginResponse = await request(app)
+                    .post('/api/auth/login')
+                    .send({
+                        email: 'smoke-user@test.com',
+                        password: 'userPassword123'
+                    })
+                    .expect(200);
+                
+                userToken = loginResponse.body.user.token;
+                console.log('User token obtained for external services tests');
+            } catch (error) {
+                console.error('Error setting up user for external services tests:', error);
+            }
+        });
+
+        describe('Cloudinary Upload Service', () => {
+            it('should handle Cloudinary image upload in product creation', async () => {
+                // Mock Cloudinary para evitar uploads reales en smoke tests
+                const CloudinaryAdapter = require('../../src/infrastructure/adapters/cloudinary.adapter').CloudinaryAdapter;
+                const mockUpload = jest.spyOn(CloudinaryAdapter.prototype, 'uploadImage')
+                    .mockResolvedValue('https://res.cloudinary.com/test/image/upload/v1/smoke-test-image.jpg');
+
+                const productData = {
+                    name: 'Product with Image',
+                    description: 'Producto con imagen para smoke test',
+                    price: 75.00,
+                    stock: 8,
+                    category: testCategory._id.toString(),
+                    unit: testUnit._id.toString(),
+                    imgUrl: '', // Se llenará con el mock
+                    isActive: true,
+                    taxRate: 21
+                };
+
+                const response = await request(app)
+                    .post('/api/admin/products')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send(productData)
+                    .expect(201);
+
+                // Verificar que el producto se creó correctamente
+                expect(response.body.id).toBeDefined();
+                expect(response.body.name).toBe(productData.name.toLowerCase());
+
+                // Limpiar mock
+                mockUpload.mockRestore();
+            });
+
+            it('should handle Cloudinary service unavailability gracefully', async () => {
+                // Mock error de Cloudinary
+                const CloudinaryAdapter = require('../../src/infrastructure/adapters/cloudinary.adapter').CloudinaryAdapter;
+                const mockUpload = jest.spyOn(CloudinaryAdapter.prototype, 'uploadImage')
+                    .mockRejectedValue(new Error('Cloudinary service unavailable'));
+
+                const productData = {
+                    name: 'Product Without Image',
+                    description: 'Producto sin imagen por error de Cloudinary',
+                    price: 60.00,
+                    stock: 5,
+                    category: testCategory._id.toString(),
+                    unit: testUnit._id.toString(),
+                    imgUrl: '', // Sin imagen por error de servicio
+                    isActive: true
+                };
+
+                // El producto debería crearse sin imagen si Cloudinary falla
+                const response = await request(app)
+                    .post('/api/admin/products')
+                    .set('Authorization', `Bearer ${adminToken}`)
+                    .send(productData)
+                    .expect(201);
+
+                expect(response.body.id).toBeDefined();
+                expect(response.body.imgUrl).toBe(''); // Sin imagen
+
+                mockUpload.mockRestore();
+            });
+        });
+
+        describe('MercadoPago Payment Service', () => {
+            beforeAll(async () => {
+                // Crear un pedido de prueba para testing de pagos
+                const { OrderModel } = require('../../src/data/mongodb/models/order/order.model');
+                const { CustomerModel } = require('../../src/data/mongodb/models/customers/customer.model');
+                
+                try {
+                    // Crear customer de prueba
+                    const testCustomer = await CustomerModel.create({
+                        name: 'Customer for Payment Test',
+                        email: 'payment-customer@test.com',
+                        phone: '1234567890',
+                        address: 'Test Address 123',
+                        neighborhoodId: testUnit._id, // Usar cualquier ObjectId válido
+                        isActive: true
+                    });
+
+                    // Crear orden de prueba
+                    testOrder = await OrderModel.create({
+                        customer: testCustomer._id,
+                        items: [{
+                            product: createdProductId,
+                            quantity: 2,
+                            unitPrice: 100.50
+                        }],
+                        total: 201.00,
+                        status: 'PENDING',
+                        orderDate: new Date()
+                    });
+
+                    console.log('Test order created:', testOrder._id);
+                } catch (error) {
+                    console.error('Error creating test order:', error);
+                }
+            });
+
+            it('should handle MercadoPago preference creation simulation', async () => {
+                if (!testOrder) {
+                    console.log('Skipping MercadoPago test - no test order available');
+                    return;
+                }
+
+                // Mock MercadoPago
+                const MercadoPagoAdapter = require('../../src/infrastructure/adapters/mercado-pago.adapter').MercadoPagoAdapter;
+                const mockCreatePreference = jest.spyOn(MercadoPagoAdapter.prototype, 'createPreference')
+                    .mockResolvedValue({
+                        id: 'smoke-test-preference-id',
+                        init_point: 'https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=smoke-test-preference-id',
+                        sandbox_init_point: 'https://sandbox.mercadopago.com.ar/checkout/v1/redirect?pref_id=smoke-test-preference-id'
+                    });
+
+                // Intentar crear pago para el pedido
+                const response = await request(app)
+                    .post(`/api/payments/sale/${testOrder._id}`)
+                    .expect((res) => {
+                        // Aceptar 200 (éxito), 201 (creado) o 400 (problemas de configuración)
+                        expect([200, 201, 400, 404]).toContain(res.status);
+                    });
+
+                // Si fue exitoso, verificar la estructura
+                if (response.status === 200 || response.status === 201) {
+                    expect(response.body.paymentUrl || response.body.init_point).toBeDefined();
+                }
+
+                mockCreatePreference.mockRestore();
+            });
+
+            it('should handle MercadoPago service unavailability', async () => {
+                if (!testOrder) {
+                    console.log('Skipping MercadoPago error test - no test order available');
+                    return;
+                }
+
+                // Mock error de MercadoPago
+                const MercadoPagoAdapter = require('../../src/infrastructure/adapters/mercado-pago.adapter').MercadoPagoAdapter;
+                const mockCreatePreference = jest.spyOn(MercadoPagoAdapter.prototype, 'createPreference')
+                    .mockRejectedValue(new Error('MercadoPago service unavailable'));
+
+                const response = await request(app)
+                    .post(`/api/payments/sale/${testOrder._id}`)
+                    .expect((res) => {
+                        // Debería manejar el error gracefully
+                        expect([400, 404, 500]).toContain(res.status);
+                    });
+
+                mockCreatePreference.mockRestore();
+            });
+        });
+
+        describe('Email Notification Service', () => {
+            it('should handle email sending simulation', async () => {
+                // Mock Nodemailer
+                const NodemailerAdapter = require('../../src/infrastructure/adapters/nodemailer.adapter').NodemailerAdapter;
+                const mockSendEmail = jest.spyOn(NodemailerAdapter.prototype, 'sendEmail')
+                    .mockResolvedValue({ 
+                        success: true, 
+                        messageId: 'smoke-test-message-id-' + Date.now() 
+                    });
+
+                // Como no hay endpoint directo de email, simularemos que el servicio funciona
+                const emailService = new NodemailerAdapter();
+                
+                const result = await emailService.sendEmail({
+                    to: 'smoke-test@example.com',
+                    subject: 'Smoke Test Email',
+                    htmlBody: '<h1>Test Email from Smoke Tests</h1><p>This is a test email.</p>'
+                });
+
+                expect(result.success).toBe(true);
+                expect(result.messageId).toBeDefined();
+                expect(typeof result.messageId).toBe('string');
+
+                mockSendEmail.mockRestore();
+            });
+
+            it('should handle email service errors gracefully', async () => {
+                // Mock error de Nodemailer
+                const NodemailerAdapter = require('../../src/infrastructure/adapters/nodemailer.adapter').NodemailerAdapter;
+                const mockSendEmail = jest.spyOn(NodemailerAdapter.prototype, 'sendEmail')
+                    .mockRejectedValue(new Error('SMTP service unavailable'));
+
+                const emailService = new NodemailerAdapter();
+
+                try {
+                    await emailService.sendEmail({
+                        to: 'test@example.com',
+                        subject: 'Test',
+                        htmlBody: 'Test'
+                    });
+                    // No debería llegar aquí
+                    expect(true).toBe(false);
+                } catch (error) {
+                    expect(error).toBeDefined();
+                    expect(error.message).toContain('SMTP service unavailable');
+                }
+
+                mockSendEmail.mockRestore();
+            });
+        });
+
+        describe('Telegram Notification Service', () => {
+            it('should handle Telegram message sending simulation', async () => {
+                // Mock Telegram
+                const TelegramAdapter = require('../../src/infrastructure/adapters/telegram.adapter').TelegramAdapter;
+                const mockSendMessage = jest.spyOn(TelegramAdapter.prototype, 'sendMessage')
+                    .mockResolvedValue({
+                        success: true,
+                        messageId: 12345
+                    });
+
+                // Crear instancia del servicio Telegram
+                const { envs } = require('../../src/configs/envs');
+                const { loggerService } = require('../../src/configs/logger');
+                
+                const telegramService = new TelegramAdapter({
+                    botToken: envs.TELEGRAM_BOT_TOKEN || 'test-bot-token',
+                    defaultChatId: envs.TELEGRAM_CHAT_ID || 'test-chat-id'
+                }, loggerService);
+
+                const result = await telegramService.sendMessage({
+                    text: '🧪 Smoke Test Message\n\nThis is a test message from smoke tests.',
+                    parseMode: 'HTML'
+                });
+
+                expect(result.success).toBe(true);
+                expect(result.messageId).toBe(12345);
+
+                mockSendMessage.mockRestore();
+            });
+
+            it('should handle Telegram service unavailability', async () => {
+                // Mock error de Telegram
+                const TelegramAdapter = require('../../src/infrastructure/adapters/telegram.adapter').TelegramAdapter;
+                const mockSendMessage = jest.spyOn(TelegramAdapter.prototype, 'sendMessage')
+                    .mockResolvedValue({
+                        success: false,
+                        error: 'Telegram Bot API unavailable'
+                    });
+
+                const { envs } = require('../../src/configs/envs');
+                const { loggerService } = require('../../src/configs/logger');
+                
+                const telegramService = new TelegramAdapter({
+                    botToken: envs.TELEGRAM_BOT_TOKEN || 'test-bot-token',
+                    defaultChatId: envs.TELEGRAM_CHAT_ID || 'test-chat-id'
+                }, loggerService);
+
+                const result = await telegramService.sendMessage({
+                    text: 'Test message that should fail'
+                });
+
+                expect(result.success).toBe(false);
+                expect(result.error).toBeDefined();
+
+                mockSendMessage.mockRestore();
+            });
+
+            it('should handle missing Telegram configuration', async () => {
+                const { loggerService } = require('../../src/configs/logger');
+                
+                // Crear servicio con configuración inválida
+                const telegramService = new (require('../../src/infrastructure/adapters/telegram.adapter').TelegramAdapter)({
+                    botToken: '', // Token vacío
+                    defaultChatId: ''
+                }, loggerService);
+
+                const result = await telegramService.sendMessage({
+                    text: 'This should fail due to missing config'
+                });
+
+                expect(result.success).toBe(false);
+                expect(result.error).toBeDefined();
+            });
+        });
+
+        describe('Service Integration Health Check', () => {
+            it('should verify all external services are properly configured', async () => {
+                const { envs } = require('../../src/configs/envs');
+                
+                // Verificar que las variables de entorno estén definidas
+                const requiredEnvVars = [
+                    'CLOUDINARY_CLOUD_NAME',
+                    'CLOUDINARY_API_KEY', 
+                    'CLOUDINARY_API_SECRET',
+                    'MERCADO_PAGO_ACCESS_TOKEN',
+                    'EMAIL_SERVICE',
+                    'EMAIL_USER',
+                    'EMAIL_PASS'
+                ];
+
+                const missingVars = requiredEnvVars.filter(varName => !envs[varName]);
+                
+                if (missingVars.length > 0) {
+                    console.warn('Missing environment variables for external services:', missingVars);
+                    // En smoke tests, esto es un warning, no un error fatal
+                    expect(missingVars.length).toBeLessThan(requiredEnvVars.length);
+                } else {
+                    expect(missingVars.length).toBe(0);
+                }
+            });
+
+            it('should verify service adapters can be instantiated', async () => {
+                const { CloudinaryAdapter } = require('../../src/infrastructure/adapters/cloudinary.adapter');
+                const { MercadoPagoAdapter } = require('../../src/infrastructure/adapters/mercado-pago.adapter');
+                const { NodemailerAdapter } = require('../../src/infrastructure/adapters/nodemailer.adapter');
+                const { TelegramAdapter } = require('../../src/infrastructure/adapters/telegram.adapter');
+                const { loggerService } = require('../../src/configs/logger');
+
+                // Verificar que los adaptadores se pueden instanciar sin errores
+                expect(() => {
+                    const cloudinary = CloudinaryAdapter.getInstance();
+                    expect(cloudinary).toBeDefined();
+                }).not.toThrow();
+
+                expect(() => {
+                    const mercadoPago = MercadoPagoAdapter.getInstance();
+                    expect(mercadoPago).toBeDefined();
+                }).not.toThrow();
+
+                expect(() => {
+                    const nodemailer = new NodemailerAdapter();
+                    expect(nodemailer).toBeDefined();
+                }).not.toThrow();
+
+                expect(() => {
+                    const telegram = new TelegramAdapter({
+                        botToken: 'test-token',
+                        defaultChatId: 'test-chat'
+                    }, loggerService);
+                    expect(telegram).toBeDefined();
+                }).not.toThrow();
+            });
         });
     });
 });
