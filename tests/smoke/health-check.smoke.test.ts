@@ -1622,7 +1622,8 @@ describe('Health Check - Smoke Tests', () => {
             if (response.status === 200) {
                 expect(Array.isArray(response.body)).toBe(true);
                 // Debería devolver array vacío para páginas que no existen
-                expect(response.body.length).toBeGreaterThanOrEqual(0);            }
+                expect(response.body.length).toBeGreaterThanOrEqual(0);
+            }
         });
     });
 
@@ -1753,7 +1754,7 @@ describe('Health Check - Smoke Tests', () => {
                 await request(app)
                     .get(`/api/categories/${fakeId}`)
                     .expect(404);
-            });            it('should return 400 or 500 for invalid category ID format', async () => {
+            }); it('should return 400 or 500 for invalid category ID format', async () => {
                 await request(app)
                     .get('/api/categories/invalid-id-format')
                     .expect((res) => {
@@ -1941,7 +1942,7 @@ describe('Health Check - Smoke Tests', () => {
                 await request(app)
                     .get(`/api/units/${fakeId}`)
                     .expect(404);
-            });            it('should return 400 or 500 for invalid unit ID format', async () => {
+            }); it('should return 400 or 500 for invalid unit ID format', async () => {
                 await request(app)
                     .get('/api/units/invalid-id-format')
                     .expect((res) => {
@@ -1986,7 +1987,7 @@ describe('Health Check - Smoke Tests', () => {
                 const createResponse = await request(app)
                     .post('/api/units')
                     .send({
-                        name: `Delete Test Unit ${Date.now()}`,                        description: 'Unidad para eliminar',
+                        name: `Delete Test Unit ${Date.now()}`, description: 'Unidad para eliminar',
                         isActive: true
                     })
                     .expect(200);
@@ -2018,7 +2019,7 @@ describe('Health Check - Smoke Tests', () => {
         // Setup data before tests
         beforeAll(async () => {
             console.log("Setting up Orders/Sales test data...");
-            
+
             // 1. Create a test user and get auth token
             const userData = {
                 name: `Test User Orders ${Date.now()}`,
@@ -2042,7 +2043,7 @@ describe('Health Check - Smoke Tests', () => {
                         email: userData.email,
                         password: userData.password
                     });
-                
+
                 if (loginResponse.status === 200) {
                     testUserId = loginResponse.body.user?.id;
                     authToken = loginResponse.body.token;
@@ -2117,18 +2118,18 @@ describe('Health Check - Smoke Tests', () => {
                     .get('/api/order-statuses/active')
                     .expect((res) => {
                         expect([200, 404]).toContain(res.status);
-                    });                if (response.status === 200) {
-                    // Response body has pagination structure with orderStatuses array
-                    expect(response.body).toHaveProperty('total');
-                    expect(response.body).toHaveProperty('orderStatuses');
-                    expect(Array.isArray(response.body.orderStatuses)).toBe(true);
-                    if (response.body.orderStatuses.length > 0) {
-                        expect(response.body.orderStatuses[0]).toHaveProperty('id');
-                        expect(response.body.orderStatuses[0]).toHaveProperty('name');
-                        expect(response.body.orderStatuses[0]).toHaveProperty('code');
-                        expect(response.body.orderStatuses[0].isActive).toBe(true);
+                    }); if (response.status === 200) {
+                        // Response body has pagination structure with orderStatuses array
+                        expect(response.body).toHaveProperty('total');
+                        expect(response.body).toHaveProperty('orderStatuses');
+                        expect(Array.isArray(response.body.orderStatuses)).toBe(true);
+                        if (response.body.orderStatuses.length > 0) {
+                            expect(response.body.orderStatuses[0]).toHaveProperty('id');
+                            expect(response.body.orderStatuses[0]).toHaveProperty('name');
+                            expect(response.body.orderStatuses[0]).toHaveProperty('code');
+                            expect(response.body.orderStatuses[0].isActive).toBe(true);
+                        }
                     }
-                }
             });
 
             it('should get default order status', async () => {
@@ -2168,12 +2169,12 @@ describe('Health Check - Smoke Tests', () => {
                     .get('/api/sales?page=1&limit=10')
                     .expect((res) => {
                         expect([200, 400]).toContain(res.status);
-                    });                if (response.status === 200) {
-                    expect(response.body).toHaveProperty('total');
-                    expect(response.body).toHaveProperty('orders'); // API uses 'orders' not 'items'
-                    expect(Array.isArray(response.body.orders)).toBe(true);
-                    expect(response.body.orders.length).toBeLessThanOrEqual(10);
-                }
+                    }); if (response.status === 200) {
+                        expect(response.body).toHaveProperty('total');
+                        expect(response.body).toHaveProperty('orders'); // API uses 'orders' not 'items'
+                        expect(Array.isArray(response.body.orders)).toBe(true);
+                        expect(response.body.orders.length).toBeLessThanOrEqual(10);
+                    }
             });
 
             it('should handle missing pagination parameters for sales', async () => {
@@ -2181,13 +2182,13 @@ describe('Health Check - Smoke Tests', () => {
                     .get('/api/sales')
                     .expect((res) => {
                         expect([200, 400]).toContain(res.status);
-                    });                if (response.status === 200) {
-                    expect(response.body).toHaveProperty('total');
-                    expect(response.body).toHaveProperty('orders'); // API uses 'orders' not 'items'
-                    expect(Array.isArray(response.body.orders)).toBe(true);
-                } else if (response.status === 400) {
-                    expect(response.body.error).toBeDefined();
-                }
+                    }); if (response.status === 200) {
+                        expect(response.body).toHaveProperty('total');
+                        expect(response.body).toHaveProperty('orders'); // API uses 'orders' not 'items'
+                        expect(Array.isArray(response.body.orders)).toBe(true);
+                    } else if (response.status === 400) {
+                        expect(response.body.error).toBeDefined();
+                    }
             });
 
             it('should require authentication for creating orders', async () => {
@@ -2240,18 +2241,18 @@ describe('Health Check - Smoke Tests', () => {
                     .send(orderData)
                     .expect((res) => {
                         expect([200, 201, 400]).toContain(res.status);
-                    });                if (response.status === 200 || response.status === 201) {
-                    expect(response.body).toHaveProperty('id');
-                    expect(response.body).toHaveProperty('items');
-                    expect(response.body).toHaveProperty('total');
-                    expect(response.body.items.length).toBe(1);
-                    testOrderId = response.body.id;
-                    
-                    // Save customer ID for later tests
-                    if (response.body.customer?.id) {
-                        testCustomerId = response.body.customer.id;
+                    }); if (response.status === 200 || response.status === 201) {
+                        expect(response.body).toHaveProperty('id');
+                        expect(response.body).toHaveProperty('items');
+                        expect(response.body).toHaveProperty('total');
+                        expect(response.body.items.length).toBe(1);
+                        testOrderId = response.body.id;
+
+                        // Save customer ID for later tests
+                        if (response.body.customer?.id) {
+                            testCustomerId = response.body.customer.id;
+                        }
                     }
-                }
             });
 
             it('should create order for guest user with complete data', async () => {
@@ -2282,17 +2283,17 @@ describe('Health Check - Smoke Tests', () => {
                     .send(guestOrderData)
                     .expect((res) => {
                         expect([200, 201, 400]).toContain(res.status);
-                    });                if (response.status === 200 || response.status === 201) {
-                    expect(response.body).toHaveProperty('id');
-                    expect(response.body).toHaveProperty('items');
-                    expect(response.body).toHaveProperty('customer');
-                    expect(response.body.customer.email).toBe(guestOrderData.customerEmail);
-                    
-                    // Save customer ID if not already set
-                    if (!testCustomerId && response.body.customer?.id) {
-                        testCustomerId = response.body.customer.id;
+                    }); if (response.status === 200 || response.status === 201) {
+                        expect(response.body).toHaveProperty('id');
+                        expect(response.body).toHaveProperty('items');
+                        expect(response.body).toHaveProperty('customer');
+                        expect(response.body.customer.email).toBe(guestOrderData.customerEmail);
+
+                        // Save customer ID if not already set
+                        if (!testCustomerId && response.body.customer?.id) {
+                            testCustomerId = response.body.customer.id;
+                        }
                     }
-                }
             });
 
             it('should reject order creation with invalid data', async () => {
@@ -2370,7 +2371,7 @@ describe('Health Check - Smoke Tests', () => {
                 await request(app)
                     .get(`/api/sales/${fakeId}`)
                     .expect(404);
-            });            it('should return 400, 404 or 500 for invalid order ID format', async () => {
+            }); it('should return 400, 404 or 500 for invalid order ID format', async () => {
                 await request(app)
                     .get('/api/sales/invalid-id-format')
                     .expect((res) => {
@@ -2426,7 +2427,7 @@ describe('Health Check - Smoke Tests', () => {
                     expect(response.body).toHaveProperty('id');
                     expect(response.body).toHaveProperty('status');
                 }
-            });            it('should get orders by date range', async () => {
+            }); it('should get orders by date range', async () => {
                 const dateRangeData = {
                     startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
                     endDate: new Date().toISOString() // now
