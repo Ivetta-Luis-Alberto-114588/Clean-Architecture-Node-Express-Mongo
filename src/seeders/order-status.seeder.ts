@@ -18,19 +18,39 @@ const orderStatusSeeds: OrderStatusSeed[] = [
     {
         code: 'PENDING',
         name: 'Pendiente',
-        description: 'El pedido ha sido creado y está pendiente de procesamiento',
+        description: 'El pedido está pendiente de procesamiento',
         color: '#ffc107',
         order: 1,
         isActive: true,
         isDefault: true,
+        canTransitionTo: ['CONFIRMED', 'AWAITING_PAYMENT', 'CANCELLED']
+    },
+    {
+        code: 'CONFIRMED',
+        name: 'Confirmado',
+        description: 'El pedido ha sido confirmado pero no pagado',
+        color: '#17a2b8',
+        order: 2,
+        isActive: true,
+        isDefault: false,
+        canTransitionTo: ['AWAITING_PAYMENT', 'COMPLETED', 'CANCELLED']
+    },
+    {
+        code: 'AWAITING_PAYMENT',
+        name: 'Esperando Pago',
+        description: 'El pedido está esperando confirmación de pago',
+        color: '#fd7e14',
+        order: 3,
+        isActive: true,
+        isDefault: false,
         canTransitionTo: ['COMPLETED', 'CANCELLED']
     },
     {
         code: 'COMPLETED',
         name: 'Completado',
-        description: 'El pedido ha sido procesado y entregado exitosamente',
+        description: 'El pedido ha sido pagado y completado',
         color: '#28a745',
-        order: 2,
+        order: 4,
         isActive: true,
         isDefault: false,
         canTransitionTo: ['CANCELLED']
@@ -40,7 +60,7 @@ const orderStatusSeeds: OrderStatusSeed[] = [
         name: 'Cancelado',
         description: 'El pedido ha sido cancelado',
         color: '#dc3545',
-        order: 3,
+        order: 5,
         isActive: true,
         isDefault: false,
         canTransitionTo: []

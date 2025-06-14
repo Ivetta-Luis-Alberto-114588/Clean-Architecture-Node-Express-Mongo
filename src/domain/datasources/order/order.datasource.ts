@@ -37,8 +37,13 @@ export abstract class OrderDataSource {
     abstract findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }>;
     // --- FIN FIRMA MODIFICADA ---
 
-    abstract findByStatus(statusId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }>; // NUEVO
-
-    // Nuevo método para actualización completa de pedido
+    abstract findByStatus(statusId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }>; // NUEVO    // Nuevo método para actualización completa de pedido
     abstract updateOrder(id: string, updateDto: import("../../dtos/order/update-order.dto").UpdateOrderDto): Promise<OrderEntity>;
+
+    // Nuevo método para actualizar método de pago y estado
+    abstract updatePaymentMethod(orderId: string, updateData: {
+        paymentMethodId: string;
+        statusId: string;
+        notes?: string;
+    }): Promise<OrderEntity>;
 }

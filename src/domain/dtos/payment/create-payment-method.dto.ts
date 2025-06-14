@@ -7,11 +7,20 @@ export class CreatePaymentMethodDto {
         public readonly description: string,
         public readonly isActive: boolean,
         public readonly defaultOrderStatusId: string,
-        public readonly requiresOnlinePayment: boolean
+        public readonly requiresOnlinePayment: boolean,
+        public readonly allowsManualConfirmation: boolean
     ) {}
 
     static create(props: { [key: string]: any }): [string?, CreatePaymentMethodDto?] {
-        const { code, name, description, isActive, defaultOrderStatusId, requiresOnlinePayment } = props;
+        const { 
+            code, 
+            name, 
+            description, 
+            isActive, 
+            defaultOrderStatusId, 
+            requiresOnlinePayment,
+            allowsManualConfirmation 
+        } = props;
 
         if (!code) return ['Code is required'];
         if (!name) return ['Name is required'];
@@ -19,6 +28,7 @@ export class CreatePaymentMethodDto {
         if (isActive === undefined || isActive === null) return ['isActive is required'];
         if (!defaultOrderStatusId) return ['Default order status ID is required'];
         if (requiresOnlinePayment === undefined || requiresOnlinePayment === null) return ['requiresOnlinePayment is required'];
+        if (allowsManualConfirmation === undefined || allowsManualConfirmation === null) return ['allowsManualConfirmation is required'];
 
         return [undefined, new CreatePaymentMethodDto(
             code.toUpperCase().trim(),
@@ -26,7 +36,8 @@ export class CreatePaymentMethodDto {
             description.trim(),
             Boolean(isActive),
             defaultOrderStatusId.trim(),
-            Boolean(requiresOnlinePayment)
+            Boolean(requiresOnlinePayment),
+            Boolean(allowsManualConfirmation)
         )];
     }
 }

@@ -1,6 +1,7 @@
 // src/seeders/index.ts
 import mongoose from 'mongoose';
 import { seedOrderStatuses } from './order-status.seeder';
+import { seedPaymentMethods } from './payment-method.seeder';
 import logger from '../configs/logger';
 
 async function runAllSeeders(): Promise<void> {
@@ -12,8 +13,9 @@ async function runAllSeeders(): Promise<void> {
         await mongoose.connect(mongoUrl);
         logger.info('✅ Conectado a MongoDB');
 
-        // Run seeders in order
+        // Run seeders in order (OrderStatuses first because PaymentMethods reference them)
         await seedOrderStatuses();
+        await seedPaymentMethods();
 
         logger.info('🎉 Todos los seeders completados exitosamente');
 

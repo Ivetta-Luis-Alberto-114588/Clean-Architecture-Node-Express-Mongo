@@ -16,8 +16,8 @@ const orderSchema = new Schema({
     discountRate: { type: Number, default: 0, min: 0, max: 100 },
     discountAmount: { type: Number, required: true },
     total: { type: Number, required: true, index: true },
-    date: { type: Date, default: Date.now, index: true },
-    status: { type: Schema.Types.ObjectId, ref: 'OrderStatus', required: true, index: true },
+    date: { type: Date, default: Date.now, index: true },    status: { type: Schema.Types.ObjectId, ref: 'OrderStatus', required: true, index: true },
+    paymentMethod: { type: Schema.Types.ObjectId, ref: 'PaymentMethod', required: false, index: true },
     notes: { type: String, default: "" },
 
     // <<<--- CAMPOS SHIPPING DETAILS ACTUALIZADOS --- >>>

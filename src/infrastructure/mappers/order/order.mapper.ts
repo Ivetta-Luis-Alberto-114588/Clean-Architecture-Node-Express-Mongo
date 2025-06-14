@@ -3,21 +3,21 @@ import { CustomerEntity } from "../../../domain/entities/customers/customer";
 import { ProductEntity } from "../../../domain/entities/products/product.entity";
 import { OrderEntity, OrderItemEntity, ShippingDetailsEntity } from "../../../domain/entities/order/order.entity";
 import { OrderStatusEntity } from "../../../domain/entities/order/order-status.entity";
+import { PaymentMethodEntity } from "../../../domain/entities/payment/payment-method.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
 import { CustomerMapper } from "../customers/customer.mapper";
 import { ProductMapper } from "../products/product.mapper";
 import { OrderStatusMapper } from "./order-status.mapper";
+import { PaymentMethodMapper } from "../payment/payment-method.mapper";
 import logger from "../../../configs/logger";
 import { CityEntity } from "../../../domain/entities/customers/citiy"; // <<<--- AÑADIR
 import { NeighborhoodEntity } from "../../../domain/entities/customers/neighborhood"; // <<<--- AÑADIR
 
-export class OrderMapper {
-
-    static fromObjectToSaleEntity(object: any): OrderEntity {
+export class OrderMapper {    static fromObjectToSaleEntity(object: any): OrderEntity {
         if (!object) throw CustomError.badRequest('SaleMapper: object is null or undefined');
         const {
             _id, id, customer, items = [], subtotal, taxRate, taxAmount,
-            discountRate, discountAmount, total, date, status, notes,
+            discountRate, discountAmount, total, date, status, paymentMethod, notes,
             shippingDetails
         } = object;
 
@@ -100,8 +100,7 @@ export class OrderMapper {
                     false,
                     []
                 );
-            }
-        } catch (error) {
+            }        } catch (error) {
             logger.error('Error mapping status in OrderMapper:', { error, status });
             // Default fallback status
             statusEntity = new OrderStatusEntity(
@@ -117,19 +116,34 @@ export class OrderMapper {
             );
         }
 
+        // Handle PaymentMethod mapping
+        let paymentMethodEntity: PaymentMethodEntity | undefined;
+        try {
+            if (typeof paymentMethod === 'object' && paymentMethod !== null) {
+                paymentMethodEntity = PaymentMethodMapper.fromObjectToEntity(paymentMethod);
+            } else {
+                paymentMethodEntity = undefined; // No payment method selected yet
+            }
+        } catch (error) {
+            logger.error('Error mapping paymentMethod in OrderMapper:', { error, paymentMethod });
+            paymentMethodEntity = undefined; // Fallback to undefined
+        }
+
         return new OrderEntity(
             _id?.toString() || id?.toString(),
             customerEntity, saleItems,
             Number(subtotal) || 0, Number(taxRate ?? 0), Number(taxAmount) || 0,
             Number(discountRate ?? 0), Number(discountAmount ?? 0), Number(total) || 0,
-            new Date(date || Date.now()), statusEntity, notes || "",
+            new Date(date || Date.now()), statusEntity, paymentMethodEntity, notes || "",
             finalShippingDetails
         );
-    } static fromSaleEntityToObject(entity: OrderEntity): any { /* ... código sin cambios ... */
+    }    static fromSaleEntityToObject(entity: OrderEntity): any { /* ... código sin cambios ... */
         return {
             customer: entity.customer.id,
             items: entity.items.map(item => ({ product: item.product.id, quantity: item.quantity, unitPrice: item.unitPrice, subtotal: item.subtotal })),
-            subtotal: entity.subtotal, taxAmount: entity.taxAmount, discountRate: entity.discountRate, discountAmount: entity.discountAmount, total: entity.total, date: entity.date, status: entity.status.id, notes: entity.notes,
+            subtotal: entity.subtotal, taxAmount: entity.taxAmount, discountRate: entity.discountRate, discountAmount: entity.discountAmount, total: entity.total, date: entity.date, status: entity.status.id, 
+            paymentMethod: entity.paymentMethod?.id,
+            notes: entity.notes,
             shippingDetails: entity.shippingDetails ? {
                 recipientName: entity.shippingDetails.recipientName, phone: entity.shippingDetails.phone, streetAddress: entity.shippingDetails.streetAddress,
                 postalCode: entity.shippingDetails.postalCode, neighborhoodName: entity.shippingDetails.neighborhoodName, cityName: entity.shippingDetails.cityName,

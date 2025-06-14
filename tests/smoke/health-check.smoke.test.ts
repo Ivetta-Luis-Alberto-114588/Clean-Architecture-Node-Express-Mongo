@@ -3003,15 +3003,14 @@ describe('Health Check - Smoke Tests', () => {
                 if (!adminToken || !testOrderStatusId) {
                     console.log('Skipping payment method creation test - missing admin token or order status');
                     return;
-                }
-
-                const paymentMethodData = {
+                }                const paymentMethodData = {
                     code: `SMOKE_TEST_${Date.now()}`,
                     name: 'Smoke Test Payment Method',
                     description: 'Payment method created for smoke testing',
                     isActive: true,
                     defaultOrderStatusId: testOrderStatusId,
-                    requiresOnlinePayment: false
+                    requiresOnlinePayment: false,
+                    allowsManualConfirmation: true
                 };
 
                 const response = await request(app)
@@ -3171,9 +3170,7 @@ describe('Health Check - Smoke Tests', () => {
                 if (!testOrderStatusId) {
                     console.log('Skipping payment method deletion test - no order status ID');
                     return;
-                }
-
-                const createResponse = await request(app)
+                }                const createResponse = await request(app)
                     .post('/api/payment-methods')
                     .set('Authorization', `Bearer ${adminToken}`)
                     .send({
@@ -3182,7 +3179,8 @@ describe('Health Check - Smoke Tests', () => {
                         description: 'Payment method for deletion testing',
                         isActive: true,
                         defaultOrderStatusId: testOrderStatusId,
-                        requiresOnlinePayment: false
+                        requiresOnlinePayment: false,
+                        allowsManualConfirmation: true
                     })
                     .expect(201);
 
@@ -3240,15 +3238,14 @@ describe('Health Check - Smoke Tests', () => {
                 if (!adminToken || !testOrderStatusId) {
                     console.log('Skipping concurrent creation test - missing dependencies');
                     return;
-                }
-
-                const paymentMethodData = {
+                }                const paymentMethodData = {
                     code: `CONCURRENT_TEST_${Date.now()}`,
                     name: 'Concurrent Test Payment Method',
                     description: 'Payment method for concurrent testing',
                     isActive: true,
                     defaultOrderStatusId: testOrderStatusId,
-                    requiresOnlinePayment: false
+                    requiresOnlinePayment: false,
+                    allowsManualConfirmation: true
                 };
 
                 // Send two requests simultaneously

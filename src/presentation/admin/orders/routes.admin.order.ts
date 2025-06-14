@@ -15,6 +15,8 @@ import { CityMongoDataSourceImpl } from "../../../infrastructure/datasources/cus
 import { CityRepositoryImpl } from "../../../infrastructure/repositories/customers/city.repository.impl";
 import { OrderStatusMongoDataSourceImpl } from "../../../infrastructure/datasources/order/order-status.mongo.datasource.impl";
 import { OrderStatusRepositoryImpl } from "../../../infrastructure/repositories/order/order-status.repository.impl";
+import { PaymentMethodMongoDataSourceImpl } from "../../../infrastructure/datasources/payment/payment-method.mongo.datasource.impl";
+import { PaymentMethodRepositoryImpl } from "../../../infrastructure/repositories/payment/payment-method.repository.impl";
 import { UpdateOrderUseCase } from "../../../domain/use-cases/order/update-order.use-case";
 import { loggerService } from "../../../configs/logger";
 import { notificationService } from "../../../configs/notification";
@@ -28,8 +30,8 @@ export class AdminOrderRoutes {
         const productDatasource = new ProductMongoDataSourceImpl();
         const couponDatasource = new CouponMongoDataSourceImpl();
         const neighborhoodDatasource = new NeighborhoodMongoDataSourceImpl();
-        const cityDatasource = new CityMongoDataSourceImpl();
-        const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
+        const cityDatasource = new CityMongoDataSourceImpl();        const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
+        const paymentMethodDatasource = new PaymentMethodMongoDataSourceImpl();
 
         // Repositorios
         const orderRepository = new OrderRepositoryImpl(orderDatasource);
@@ -38,10 +40,9 @@ export class AdminOrderRoutes {
         const couponRepository = new CouponRepositoryImpl(couponDatasource);
         const neighborhoodRepository = new NeighborhoodRepositoryImpl(neighborhoodDatasource);
         const cityRepository = new CityRepositoryImpl(cityDatasource);
-        const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);        // Use case para actualizar pedidos
-        const updateOrderUseCase = new UpdateOrderUseCase(orderRepository);
-
-        // Controller con todas las dependencias
+        const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);
+        const paymentMethodRepository = new PaymentMethodRepositoryImpl(paymentMethodDatasource);// Use case para actualizar pedidos
+        const updateOrderUseCase = new UpdateOrderUseCase(orderRepository);        // Controller con todas las dependencias
         const controller = new OrderController(
             orderRepository,
             customerRepository,
@@ -50,6 +51,8 @@ export class AdminOrderRoutes {
             neighborhoodRepository,
             cityRepository,
             orderStatusRepository,
+            paymentMethodRepository,
+            loggerService,
             updateOrderUseCase
         );// --- Rutas de gestión de pedidos para Admin ---
         router.get('/', controller.getAllSales);

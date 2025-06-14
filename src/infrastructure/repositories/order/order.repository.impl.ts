@@ -56,10 +56,17 @@ export class OrderRepositoryImpl implements OrderRepository {
 
     async findByStatus(statusId: string, paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         return this.orderDataSource.findByStatus(statusId, paginationDto);
-    }
-
-    // Nuevo: full update de pedido
+    }    // Nuevo: full update de pedido
     async updateOrder(id: string, updateDto: import("../../../domain/dtos/order/update-order.dto").UpdateOrderDto): Promise<OrderEntity> {
         return this.orderDataSource.updateOrder(id, updateDto);
+    }
+
+    // Nuevo: actualizar método de pago y estado
+    async updatePaymentMethod(orderId: string, updateData: {
+        paymentMethodId: string;
+        statusId: string;
+        notes?: string;
+    }): Promise<OrderEntity> {
+        return this.orderDataSource.updatePaymentMethod(orderId, updateData);
     }
 }

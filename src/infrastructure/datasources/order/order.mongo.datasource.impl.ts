@@ -534,8 +534,72 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
         .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
         .populate({ path: 'status', model: 'OrderStatus' })
         .populate({ path: 'items.product', model: 'Product', populate: [{ path: 'category' }, { path: 'unit' }] })
-        .lean();
-      if (!doc) throw CustomError.notFound(`Pedido ${id} no encontrado`);
+        .lean();      if (!doc) throw CustomError.notFound(`Pedido ${id} no encontrado`);
       return OrderMapper.fromObjectToSaleEntity(doc);
+    }
+
+    // --- NUEVO: updatePaymentMethod ---
+    async updatePaymentMethod(orderId: string, updateData: {
+        paymentMethodId: string;
+        statusId: string;
+        notes?: string;
+    }): Promise<OrderEntity> {
+        try {
+            logger.info(`[OrderDS] updatePaymentMethod: Updating order ${orderId} with payment method ${updateData.paymentMethodId}`);
+
+            // Validar ObjectIds
+            if (!mongoose.Types.ObjectId.isValid(orderId)) {
+                throw CustomError.badRequest(`ID de orden inválido: ${orderId}`);
+            }
+            if (!mongoose.Types.ObjectId.isValid(updateData.paymentMethodId)) {
+                throw CustomError.badRequest(`ID de método de pago inválido: ${updateData.paymentMethodId}`);
+            }
+            if (!mongoose.Types.ObjectId.isValid(updateData.statusId)) {
+                throw CustomError.badRequest(`ID de estado inválido: ${updateData.statusId}`);
+            }
+
+            const updateFields: any = {
+                paymentMethod: new mongoose.Types.ObjectId(updateData.paymentMethodId),
+                status: new mongoose.Types.ObjectId(updateData.statusId)
+            };
+
+            if (updateData.notes) {
+                updateFields.notes = updateData.notes;
+            }
+
+            const doc = await OrderModel.findByIdAndUpdate(
+                orderId,
+                { $set: updateFields },
+                { new: true }
+            )
+            .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+            .populate({ path: 'status', model: 'OrderStatus' })
+            .populate({ path: 'paymentMethod', model: 'PaymentMethod' })
+            .populate({
+                path: 'items.product',
+                model: 'Product',
+                populate: [
+                    { path: 'category', model: 'Category' },
+                    { path: 'unit', model: 'Unit' }
+                ]
+            })
+            .lean();
+
+            if (!doc) {
+                throw CustomError.notFound(`Orden ${orderId} no encontrada`);
+            }
+
+            logger.info(`[OrderDS] updatePaymentMethod: Order ${orderId} updated successfully`);
+            return OrderMapper.fromObjectToSaleEntity(doc);
+
+        } catch (error) {
+            logger.error(`[OrderDS] updatePaymentMethod: Error updating order ${orderId}:`, error);
+            if (error instanceof CustomError) {
+                throw error;
+            }
+            throw CustomError.internalServerError(
+                `Error actualizando método de pago: ${error instanceof Error ? error.message : String(error)}`
+            );
+        }
     }
 }

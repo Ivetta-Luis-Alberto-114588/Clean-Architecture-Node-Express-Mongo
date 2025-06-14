@@ -16,6 +16,8 @@ import { CityMongoDataSourceImpl } from "../../infrastructure/datasources/custom
 import { CityRepositoryImpl } from "../../infrastructure/repositories/customers/city.repository.impl";
 import { OrderStatusMongoDataSourceImpl } from "../../infrastructure/datasources/order/order-status.mongo.datasource.impl";
 import { OrderStatusRepositoryImpl } from "../../infrastructure/repositories/order/order-status.repository.impl";
+import { PaymentMethodMongoDataSourceImpl } from "../../infrastructure/datasources/payment/payment-method.mongo.datasource.impl";
+import { PaymentMethodRepositoryImpl } from "../../infrastructure/repositories/payment/payment-method.repository.impl";
 import { UpdateOrderUseCase } from "../../domain/use-cases/order/update-order.use-case";
 import { loggerService } from "../../configs/logger";
 import { notificationService } from "../../configs/notification";
@@ -30,8 +32,9 @@ export class OrderRoutes {
         const productDatasource = new ProductMongoDataSourceImpl();
         const couponDatasource = new CouponMongoDataSourceImpl();
         const neighborhoodDatasource = new NeighborhoodMongoDataSourceImpl();
-        const cityDatasource = new CityMongoDataSourceImpl();
-        const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
+        const cityDatasource = new CityMongoDataSourceImpl();        const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
+        const paymentMethodDatasource = new PaymentMethodMongoDataSourceImpl();
+        
         // Repositorios
         const orderRepository = new OrderRepositoryImpl(orderDatasource);
         const customerRepository = new CustomerRepositoryImpl(customerDatasource);
@@ -40,11 +43,10 @@ export class OrderRoutes {
         const neighborhoodRepository = new NeighborhoodRepositoryImpl(neighborhoodDatasource);
         const cityRepository = new CityRepositoryImpl(cityDatasource);
         const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);
+        const paymentMethodRepository = new PaymentMethodRepositoryImpl(paymentMethodDatasource);
 
         // Use cases
-        const updateOrderUseCase = new UpdateOrderUseCase(orderRepository);
-
-        // Controller con todas las dependencias
+        const updateOrderUseCase = new UpdateOrderUseCase(orderRepository);        // Controller con todas las dependencias
         const controller = new OrderController(
             orderRepository,
             customerRepository,
@@ -53,18 +55,21 @@ export class OrderRoutes {
             neighborhoodRepository,
             cityRepository,
             orderStatusRepository,
+            paymentMethodRepository,
+            loggerService,
             updateOrderUseCase
-        );
-
-        // Rutas
+        );        // Rutas
         router.post('/', [AuthMiddleware.validateJwt], controller.createSale);
         router.get('/my-orders', [AuthMiddleware.validateJwt], controller.getMyOrders);
         router.get('/', controller.getAllSales);
         router.get('/:id', controller.getSaleById);
         router.patch('/:id/status', controller.updateSaleStatus);
         router.get('/by-customer/:customerId', controller.getSalesByCustomer);
-        router.post('/by-date-range', controller.getSalesByDateRange);        // NUEVO: endpoint para actualizar completamente un pedido
+        router.post('/by-date-range', controller.getSalesByDateRange);        
+        // NUEVO: endpoint para actualizar completamente un pedido
         router.put('/:id', [AuthMiddleware.validateJwt], controller.updateSale);
+        // NUEVO: endpoint para seleccionar método de pago
+        router.patch('/:orderId/payment-method', [AuthMiddleware.validateJwt], controller.selectPaymentMethod);
 
         return router;
     }

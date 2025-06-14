@@ -23,6 +23,10 @@ import { OrderStatusRepository } from "../../domain/repositories/order/order-sta
 import { GetOrdersForDashboardUseCase } from './../../domain/use-cases/order/get-orders-for-dashboard.use-case';
 import { UpdateOrderDto } from "../../domain/dtos/order/update-order.dto";
 import { UpdateOrderUseCase } from "../../domain/use-cases/order/update-order.use-case";
+import { SelectPaymentMethodDto } from "../../domain/dtos/order/select-payment-method.dto";
+import { SelectPaymentMethodUseCase } from "../../domain/use-cases/order/select-payment-method.use-case";
+import { PaymentMethodRepository } from "../../domain/repositories/payment/payment-method.repository";
+import { ILogger } from "../../domain/interfaces/logger.interface";
 
 export class OrderController {
     constructor(
@@ -33,6 +37,8 @@ export class OrderController {
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
         private readonly orderStatusRepository: OrderStatusRepository,
+        private readonly paymentMethodRepository: PaymentMethodRepository,
+        private readonly logger: ILogger,
         private readonly updateOrderUseCase: UpdateOrderUseCase
     ) { }
 
@@ -204,9 +210,7 @@ export class OrderController {
             .execute(id, updateSaleStatusDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
-    };
-
-    /**
+    };    /**
      * Full update of an order
      */
     updateSale = (req: Request, res: Response): void => {
@@ -219,5 +223,46 @@ export class OrderController {
         this.updateOrderUseCase.execute(id, updateDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
+    };
+
+    /**
+     * Select payment method for an order
+     */
+    selectPaymentMethod = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { orderId } = req.params;
+            const { paymentMethodCode, notes } = req.body;
+
+            // Validar el DTO
+            const [error, selectPaymentMethodDto] = SelectPaymentMethodDto.create({
+                orderId,
+                paymentMethodCode,
+                notes
+            });
+
+            if (error) {
+                res.status(400).json({ error });
+                return;
+            }
+
+            // Ejecutar el use case
+            const useCase = new SelectPaymentMethodUseCase(
+                this.orderRepository,
+                this.paymentMethodRepository,
+                this.orderStatusRepository,
+                this.logger
+            );
+
+            const updatedOrder = await useCase.execute(selectPaymentMethodDto!);
+
+            res.json({
+                success: true,
+                message: 'Método de pago seleccionado exitosamente',
+                data: updatedOrder
+            });
+
+        } catch (error) {
+            this.handleError(error, res);
+        }
     };
 }

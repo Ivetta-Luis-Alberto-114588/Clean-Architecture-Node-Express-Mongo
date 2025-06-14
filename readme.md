@@ -2001,6 +2001,7 @@ Para configurar Telegram:
       "color": "string"
     },
     "requiresOnlinePayment": "boolean",
+    "allowsManualConfirmation": "boolean",
     "createdAt": "string (ISO date)",
     "updatedAt": "string (ISO date)"
   }
@@ -2029,6 +2030,7 @@ Para configurar Telegram:
     "color": "string"
   },
   "requiresOnlinePayment": "boolean",
+  "allowsManualConfirmation": "boolean",
   "createdAt": "string (ISO date)",
   "updatedAt": "string (ISO date)"
 }
@@ -2059,8 +2061,8 @@ Para configurar Telegram:
         "name": "string",
         "description": "string",
         "color": "string"
-      },
-      "requiresOnlinePayment": "boolean",
+      },      "requiresOnlinePayment": "boolean",
+      "allowsManualConfirmation": "boolean",
       "createdAt": "string (ISO date)",
       "updatedAt": "string (ISO date)"
     }
@@ -2090,6 +2092,7 @@ Para configurar Telegram:
     "color": "string"
   },
   "requiresOnlinePayment": "boolean",
+  "allowsManualConfirmation": "boolean",
   "createdAt": "string (ISO date)",
   "updatedAt": "string (ISO date)"
 }
@@ -2106,9 +2109,10 @@ Para configurar Telegram:
   "code": "string (requerido, único, ej: 'CASH', 'CREDIT_CARD')",
   "name": "string (requerido)",
   "description": "string (requerido)",
-  "isActive": "boolean (opcional, default: true)",
+  "isActive": "boolean (requerido)",
   "defaultOrderStatusId": "string (requerido, ObjectId de estado de pedido existente)",
-  "requiresOnlinePayment": "boolean (opcional, default: false)"
+  "requiresOnlinePayment": "boolean (requerido)",
+  "allowsManualConfirmation": "boolean (requerido)"
 }
 ```
 
@@ -2128,7 +2132,8 @@ Para configurar Telegram:
   "description": "string (opcional)",
   "isActive": "boolean (opcional)",
   "defaultOrderStatusId": "string (opcional, ObjectId de estado de pedido existente)",
-  "requiresOnlinePayment": "boolean (opcional)"
+  "requiresOnlinePayment": "boolean (opcional)",
+  "allowsManualConfirmation": "boolean (opcional)"
 }
 ```
 
@@ -2167,6 +2172,7 @@ Para configurar Telegram:
 #### **Campos Especiales**
 
 - **requiresOnlinePayment**: Indica si el método requiere procesamiento de pago online (true) o si es offline como efectivo (false)
+- **allowsManualConfirmation**: Indica si el método de pago permite confirmación manual por parte del administrador (true) o si el pago se procesa automáticamente (false)
 - **defaultOrderStatusId**: Estado de pedido que se asignará automáticamente cuando se use este método de pago
 - **isActive**: Permite habilitar/deshabilitar métodos de pago sin eliminarlos del sistema
 
@@ -3793,6 +3799,313 @@ Para configurar Telegram:
   "message": "Neighborhood deleted successfully"
 }
 ```
+
+##### **GET /by-city/:cityId**
+
+- **Descripción**: Lista barrios por ciudad con paginación
+- **Query Parameters**: `page`, `limit`
+- **Respuesta exitosa (200)**: Mismo formato que GET /
+
+---
+
+### Cupones (**/api/coupons**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
+#### **POST /**
+
+- **Descripción**: Crea un nuevo cupón de descuento.
+- **Autenticación**: JWT requerido
+- **Cuerpo de la petición**:
+
+```json
+{
+  "code": "string (requerido, mínimo 3 caracteres, único)",
+  "discountType": "string (requerido: 'PERCENTAGE' o 'FIXED')",
+  "discountValue": "number (requerido, > 0)",
+  "description": "string (opcional)",
+  "isActive": "boolean (opcional, default: true)",
+  "validFrom": "string (opcional, fecha ISO)",
+  "validUntil": "string (opcional, fecha ISO)",
+  "minPurchaseAmount": "number (opcional, monto mínimo de compra)",
+  "usageLimit": "number (opcional, límite de usos)"
+}
+```
+
+- **Respuesta exitosa (201)**:
+
+```json
+{
+  "id": "string",
+  "code": "string",
+  "discountType": "string",
+  "discountValue": "number",
+  "description": "string",
+  "isActive": "boolean",
+  "validFrom": "string (ISO date)",
+  "validUntil": "string (ISO date)",
+  "minPurchaseAmount": "number",
+  "usageLimit": "number",
+  "usageCount": "number",
+  "createdAt": "string (ISO date)",
+  "updatedAt": "string (ISO date)"
+}
+```
+
+#### **GET /**
+
+- **Descripción**: Lista todos los cupones con paginación.
+- **Autenticación**: JWT requerido
+- **Query Parameters**:
+  - `page`: number (opcional, default: 1)
+  - `limit`: number (opcional, default: 10)
+  - `activeOnly`: boolean (opcional, mostrar solo cupones activos)
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "total": "number",
+  "coupons": [
+    {
+      "id": "string",
+      "code": "string",
+      "discountType": "string",
+      "discountValue": "number",
+      "description": "string",
+      "isActive": "boolean",
+      "validFrom": "string (ISO date)",
+      "validUntil": "string (ISO date)",
+      "minPurchaseAmount": "number",
+      "usageLimit": "number",
+      "usageCount": "number",
+      "createdAt": "string (ISO date)",
+      "updatedAt": "string (ISO date)"
+    }
+  ]
+}
+```
+
+#### **GET /:id**
+
+- **Descripción**: Obtiene los detalles de un cupón específico por su ID.
+- **Autenticación**: JWT requerido
+- **Parámetros de ruta**: `id` (ObjectId del cupón)
+- **Respuesta exitosa (200)**: Misma estructura que POST /
+
+#### **PUT /:id**
+
+- **Descripción**: Actualiza un cupón existente.
+- **Autenticación**: JWT requerido
+- **Parámetros de ruta**: `id` (ObjectId del cupón)
+- **Cuerpo de la petición**: Mismos campos que POST (todos opcionales)
+- **Respuesta exitosa (200)**: Misma estructura que POST /
+
+#### **DELETE /:id**
+
+- **Descripción**: Elimina un cupón del sistema.
+- **Autenticación**: JWT requerido
+- **Parámetros de ruta**: `id` (ObjectId del cupón)
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "message": "Cupón eliminado exitosamente",
+  "coupon": {
+    "id": "string",
+    "code": "string"
+  }
+}
+```
+
+#### **Tipos de Descuento**
+
+- **PERCENTAGE**: Descuento porcentual (ej: 10% = 10)
+- **FIXED**: Descuento de monto fijo (ej: $100 = 100)
+
+#### **Validaciones**
+
+- El código del cupón debe ser único en el sistema
+- Para descuentos porcentuales, el valor no puede exceder 100
+- La fecha `validFrom` debe ser anterior a `validUntil` si ambas están definidas
+- El `minPurchaseAmount` debe ser positivo si se especifica
+- El `usageLimit` debe ser positivo si se especifica
+
+---
+
+### Chatbot (**/api/chatbot**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
+#### **POST /query**
+
+- **Descripción**: Envía una consulta al chatbot para obtener una respuesta basada en RAG.
+- **Autenticación**: No requerida
+- **Cuerpo de la petición**:
+
+```json
+{
+  "message": "string (requerido)",
+  "sessionId": "string (opcional, para continuar una conversación)",
+  "mode": "string (opcional: 'customer' o 'owner', default: 'customer')"
+}
+```
+
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "response": "string (respuesta del chatbot)",
+  "sessionId": "string (ID de la sesión de chat)",
+  "metadata": {
+    "llmUsed": "string",
+    "processingTime": "number",
+    "relevantDocuments": ["array de documentos relevantes"]
+  }
+}
+```
+
+#### **POST /session**
+
+- **Descripción**: Crea una nueva sesión de chat.
+- **Autenticación**: No requerida
+- **Cuerpo de la petición**:
+
+```json
+{
+  "mode": "string (opcional: 'customer' o 'owner', default: 'customer')"
+}
+```
+
+- **Respuesta exitosa (201)**:
+
+```json
+{
+  "sessionId": "string",
+  "mode": "string",
+  "createdAt": "string (ISO date)"
+}
+```
+
+#### **GET /session/:sessionId**
+
+- **Descripción**: Obtiene el historial de una sesión de chat específica.
+- **Autenticación**: No requerida
+- **Parámetros de ruta**: `sessionId` (ID de la sesión)
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "sessionId": "string",
+  "mode": "string",
+  "messages": [
+    {
+      "role": "string ('user' o 'assistant')",
+      "content": "string",
+      "timestamp": "string (ISO date)"
+    }
+  ],
+  "createdAt": "string (ISO date)",
+  "updatedAt": "string (ISO date)"
+}
+```
+
+#### **GET /sessions**
+
+- **Descripción**: Lista todas las sesiones de chat (para administradores).
+- **Autenticación**: JWT requerido (admin)
+- **Query Parameters**:
+  - `page`: number (opcional, default: 1)
+  - `limit`: number (opcional, default: 10)
+  - `mode`: string (opcional, filtrar por modo)
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "total": "number",
+  "sessions": [
+    {
+      "sessionId": "string",
+      "mode": "string",
+      "messageCount": "number",
+      "createdAt": "string (ISO date)",
+      "updatedAt": "string (ISO date)"
+    }
+  ]
+}
+```
+
+#### **POST /generate-embeddings**
+
+- **Descripción**: Genera embeddings para la base de conocimiento del chatbot.
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "message": "Embeddings generados exitosamente",
+  "stats": {
+    "documentsProcessed": "number",
+    "embeddingsGenerated": "number",
+    "processingTime": "number"
+  }
+}
+```
+
+#### **GET /current-llm**
+
+- **Descripción**: Obtiene información sobre el modelo LLM actualmente activo.
+- **Autenticación**: No requerida
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "currentLLM": "string",
+  "availableLLMs": ["array de LLMs disponibles"],
+  "configuration": {
+    "temperature": "number",
+    "maxTokens": "number"
+  }
+}
+```
+
+#### **POST /change-llm**
+
+- **Descripción**: Cambia el modelo LLM utilizado por el chatbot.
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Cuerpo de la petición**:
+
+```json
+{
+  "llmProvider": "string (requerido: 'openai' o 'anthropic')"
+}
+```
+
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "message": "LLM cambiado exitosamente",
+  "newLLM": "string",
+  "previousLLM": "string"
+}
+```
+
+#### **GET /validate-embeddings**
+
+- **Descripción**: Valida el estado de los embeddings en la base de conocimiento.
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "isValid": "boolean",
+  "embeddingCount": "number",
+  "lastGenerated": "string (ISO date)",
+  "recommendations": ["array de recomendaciones"]
+}
+```
+
+---
 
 ##### **GET /by-city/:cityId**
 

@@ -28,10 +28,13 @@ const paymentMethodSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'OrderStatus',
         required: true
-    },
-    requiresOnlinePayment: {
+    },    requiresOnlinePayment: {
         type: Boolean,
         required: true
+    },
+    allowsManualConfirmation: {
+        type: Boolean,
+        default: true
     }
 }, {
     timestamps: true,
