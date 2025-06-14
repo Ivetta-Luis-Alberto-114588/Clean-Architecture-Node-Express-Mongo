@@ -2482,4 +2482,363 @@ describe('Health Check - Smoke Tests', () => {
             });
         });
     });
+
+    describe('Cities & Neighborhoods - Location Management', () => {
+        let testCityId: string | null = null;
+        let testNeighborhoodId: string | null = null;
+
+        describe('Cities Endpoints', () => {
+            it('should get all cities with pagination', async () => {
+                const response = await request(app)
+                    .get('/api/cities?page=1&limit=5')
+                    .expect(200);
+
+                // La API devuelve un array directo de ciudades
+                expect(Array.isArray(response.body)).toBe(true);
+            });
+
+            it('should get all cities without pagination parameters', async () => {
+                const response = await request(app)
+                    .get('/api/cities')
+                    .expect(200);
+
+                // La API devuelve un array directo de ciudades
+                expect(Array.isArray(response.body)).toBe(true);
+            });
+
+            it('should create a new city', async () => {
+                const cityData = {
+                    name: 'Test City Smoke',
+                    description: 'Test city for smoke testing',
+                    isActive: true
+                };
+
+                const response = await request(app)
+                    .post('/api/cities')
+                    .send(cityData)
+                    .expect((res) => {
+                        expect([200, 201]).toContain(res.status);
+                    });
+
+                if (response.status === 200 || response.status === 201) {
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body).toHaveProperty('name');
+                    expect(response.body.name).toBe(cityData.name.toLowerCase());
+                    testCityId = response.body.id;
+                }
+            });
+
+            it('should validate required fields when creating city', async () => {
+                await request(app)
+                    .post('/api/cities')
+                    .send({})
+                    .expect(400);
+
+                await request(app)
+                    .post('/api/cities')
+                    .send({ name: 'ab' }) // Too short
+                    .expect(400);
+
+                await request(app)
+                    .post('/api/cities')
+                    .send({ name: 'Valid Name' }) // Missing description
+                    .expect(400);
+            });
+
+            it('should get city by ID', async () => {
+                if (!testCityId) {
+                    console.log('Skipping city by ID test - no city ID');
+                    return;
+                }
+
+                const response = await request(app)
+                    .get(`/api/cities/${testCityId}`)
+                    .expect(200);
+
+                expect(response.body).toHaveProperty('id');
+                expect(response.body).toHaveProperty('name');
+                expect(response.body.id).toBe(testCityId);
+            });
+
+            it('should handle invalid city ID', async () => {
+                await request(app)
+                    .get('/api/cities/invalid-id')
+                    .expect((res) => {
+                        expect([400, 404, 500]).toContain(res.status);
+                    });
+            });
+
+            it('should update city', async () => {
+                if (!testCityId) {
+                    console.log('Skipping city update test - no city ID');
+                    return;
+                }
+
+                const updateData = {
+                    name: 'Updated Test City',
+                    description: 'Updated description',
+                    isActive: true
+                };
+
+                const response = await request(app)
+                    .put(`/api/cities/${testCityId}`)
+                    .send(updateData)
+                    .expect((res) => {
+                        expect([200, 201]).toContain(res.status);
+                    });
+
+                if (response.status === 200 || response.status === 201) {
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body.name).toBe(updateData.name.toLowerCase());
+                }
+            }); it('should find city by name', async () => {
+                const response = await request(app)
+                    .get('/api/cities/by-name/test?page=1&limit=5')
+                    .expect((res) => {
+                        expect([200, 404]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    // El endpoint devuelve una sola ciudad, no un array
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body).toHaveProperty('name');
+                }
+            });
+
+            it('should find city by name without pagination parameters', async () => {
+                const response = await request(app)
+                    .get('/api/cities/by-name/test')
+                    .expect((res) => {
+                        expect([200, 404]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    // El endpoint devuelve una sola ciudad, no un array
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body).toHaveProperty('name');
+                }
+            });
+        });
+
+        describe('Neighborhoods Endpoints', () => {
+            it('should get all neighborhoods with pagination', async () => {
+                const response = await request(app)
+                    .get('/api/neighborhoods?page=1&limit=5')
+                    .expect(200);
+
+                // La API devuelve un array directo de neighborhoods
+                expect(Array.isArray(response.body)).toBe(true);
+            });
+
+            it('should get all neighborhoods without pagination parameters', async () => {
+                const response = await request(app)
+                    .get('/api/neighborhoods')
+                    .expect(200);
+
+                // La API devuelve un array directo de neighborhoods
+                expect(Array.isArray(response.body)).toBe(true);
+            });
+
+            it('should create a new neighborhood', async () => {
+                if (!testCityId) {
+                    console.log('Skipping neighborhood creation - no city ID available');
+                    return;
+                }
+
+                const neighborhoodData = {
+                    name: 'Test Neighborhood Smoke',
+                    description: 'Test neighborhood for smoke testing',
+                    cityId: testCityId,
+                    isActive: true
+                };
+
+                const response = await request(app)
+                    .post('/api/neighborhoods')
+                    .send(neighborhoodData)
+                    .expect((res) => {
+                        expect([200, 201]).toContain(res.status);
+                    }); if (response.status === 200 || response.status === 201) {
+                        expect(response.body).toHaveProperty('id');
+                        expect(response.body).toHaveProperty('name');
+                        expect(response.body).toHaveProperty('city'); // Es un objeto city poblado, no cityId
+                        expect(response.body.name).toBe(neighborhoodData.name.toLowerCase());
+                        expect(response.body.city.id).toBe(testCityId); // Verificamos el ID dentro del objeto city
+                        testNeighborhoodId = response.body.id;
+                    }
+            });
+
+            it('should validate required fields when creating neighborhood', async () => {
+                await request(app)
+                    .post('/api/neighborhoods')
+                    .send({})
+                    .expect(400);
+
+                await request(app)
+                    .post('/api/neighborhoods')
+                    .send({ name: 'ab' }) // Too short
+                    .expect(400);
+
+                await request(app)
+                    .post('/api/neighborhoods')
+                    .send({
+                        name: 'Valid Name',
+                        description: 'Valid description'
+                    }) // Missing cityId
+                    .expect(400);
+
+                await request(app)
+                    .post('/api/neighborhoods')
+                    .send({
+                        name: 'Valid Name',
+                        description: 'Valid description',
+                        cityId: 'invalid-id'
+                    }) // Invalid cityId format
+                    .expect(400);
+            });
+
+            it('should get neighborhood by ID', async () => {
+                if (!testNeighborhoodId) {
+                    console.log('Skipping neighborhood by ID test - no neighborhood ID');
+                    return;
+                } const response = await request(app)
+                    .get(`/api/neighborhoods/${testNeighborhoodId}`)
+                    .expect(200);
+
+                expect(response.body).toHaveProperty('id');
+                expect(response.body).toHaveProperty('name');
+                expect(response.body).toHaveProperty('city'); // Es un objeto city poblado
+                expect(response.body.id).toBe(testNeighborhoodId);
+            });
+
+            it('should handle invalid neighborhood ID', async () => {
+                await request(app)
+                    .get('/api/neighborhoods/invalid-id')
+                    .expect((res) => {
+                        expect([400, 404, 500]).toContain(res.status);
+                    });
+            });
+
+            it('should update neighborhood', async () => {
+                if (!testNeighborhoodId || !testCityId) {
+                    console.log('Skipping neighborhood update test - missing IDs');
+                    return;
+                }
+
+                const updateData = {
+                    name: 'Updated Test Neighborhood',
+                    description: 'Updated description',
+                    cityId: testCityId,
+                    isActive: true
+                };
+
+                const response = await request(app)
+                    .put(`/api/neighborhoods/${testNeighborhoodId}`)
+                    .send(updateData)
+                    .expect((res) => {
+                        expect([200, 201]).toContain(res.status);
+                    }); if (response.status === 200 || response.status === 201) {
+                        expect(response.body).toHaveProperty('id');
+                        expect(response.body.name).toBe(updateData.name.toLowerCase());
+                        expect(response.body.city.id).toBe(testCityId); // Verificamos el ID dentro del objeto city poblado
+                    }
+            });
+
+            it('should get neighborhoods by city', async () => {
+                if (!testCityId) {
+                    console.log('Skipping neighborhoods by city test - no city ID');
+                    return;
+                } const response = await request(app)
+                    .get(`/api/neighborhoods/by-city/${testCityId}?page=1&limit=5`)
+                    .expect(200);
+
+                // La API devuelve un array directo de neighborhoods
+                expect(Array.isArray(response.body)).toBe(true);
+
+                // Si hay neighborhoods, verificamos que pertenezcan a la ciudad correcta
+                if (response.body.length > 0) {
+                    response.body.forEach((neighborhood: any) => {
+                        expect(neighborhood.city.id).toBe(testCityId);
+                    });
+                }
+            });
+
+            it('should get neighborhoods by city without pagination parameters', async () => {
+                if (!testCityId) {
+                    console.log('Skipping neighborhoods by city test - no city ID');
+                    return;
+                } const response = await request(app)
+                    .get(`/api/neighborhoods/by-city/${testCityId}`)
+                    .expect(200);
+
+                // La API devuelve un array directo de neighborhoods
+                expect(Array.isArray(response.body)).toBe(true);
+            });
+
+            it('should handle invalid city ID when getting neighborhoods by city', async () => {
+                await request(app)
+                    .get('/api/neighborhoods/by-city/invalid-id')
+                    .expect((res) => {
+                        expect([400, 404, 500]).toContain(res.status);
+                    });
+            });
+        });
+
+        describe('Cities & Neighborhoods - Cleanup', () => {
+            it('should delete test neighborhood', async () => {
+                if (!testNeighborhoodId) {
+                    console.log('Skipping neighborhood deletion - no neighborhood ID');
+                    return;
+                }
+
+                const response = await request(app)
+                    .delete(`/api/neighborhoods/${testNeighborhoodId}`)
+                    .expect((res) => {
+                        expect([200, 204]).toContain(res.status);
+                    });
+
+                // Verify deletion
+                await request(app)
+                    .get(`/api/neighborhoods/${testNeighborhoodId}`)
+                    .expect((res) => {
+                        expect([404, 500]).toContain(res.status);
+                    });
+            });
+
+            it('should delete test city', async () => {
+                if (!testCityId) {
+                    console.log('Skipping city deletion - no city ID');
+                    return;
+                }
+
+                const response = await request(app)
+                    .delete(`/api/cities/${testCityId}`)
+                    .expect((res) => {
+                        expect([200, 204]).toContain(res.status);
+                    });
+
+                // Verify deletion
+                await request(app)
+                    .get(`/api/cities/${testCityId}`)
+                    .expect((res) => {
+                        expect([404, 500]).toContain(res.status);
+                    });
+            });
+
+            it('should handle deletion of non-existent city', async () => {
+                await request(app)
+                    .delete('/api/cities/507f1f77bcf86cd799439011') // Valid MongoDB ID that doesn't exist
+                    .expect((res) => {
+                        expect([404, 500]).toContain(res.status);
+                    });
+            });
+
+            it('should handle deletion of non-existent neighborhood', async () => {
+                await request(app)
+                    .delete('/api/neighborhoods/507f1f77bcf86cd799439011') // Valid MongoDB ID that doesn't exist
+                    .expect((res) => {
+                        expect([404, 500]).toContain(res.status);
+                    });
+            });
+        });
+    });
 });
