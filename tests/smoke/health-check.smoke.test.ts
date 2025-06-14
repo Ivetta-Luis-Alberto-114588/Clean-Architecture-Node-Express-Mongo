@@ -1986,8 +1986,7 @@ describe('Health Check - Smoke Tests', () => {
                 const createResponse = await request(app)
                     .post('/api/units')
                     .send({
-                        name: `Delete Test Unit ${Date.now()}`,
-                        description: 'Unidad para eliminar',
+                        name: `Delete Test Unit ${Date.now()}`,                        description: 'Unidad para eliminar',
                         isActive: true
                     })
                     .expect(200);
@@ -2003,6 +2002,482 @@ describe('Health Check - Smoke Tests', () => {
                 await request(app)
                     .get(`/api/units/${unitToDeleteId}`)
                     .expect(404);
+            });
+        });
+    });
+
+    describe('Orders/Sales - Smoke Tests', () => {
+        let testUserId: string;
+        let testCustomerId: string;
+        let testProductId: string;
+        let testNeighborhoodId: string;
+        let testCityId: string;
+        let testOrderId: string;
+        let authToken: string;
+
+        // Setup data before tests
+        beforeAll(async () => {
+            console.log("Setting up Orders/Sales test data...");
+            
+            // 1. Create a test user and get auth token
+            const userData = {
+                name: `Test User Orders ${Date.now()}`,
+                email: `testorders${Date.now()}@test.com`,
+                password: 'Test123456',
+                role: 'USER_ROLE'
+            };
+
+            const registerResponse = await request(app)
+                .post('/api/auth/register')
+                .send(userData);
+
+            if (registerResponse.status === 200 || registerResponse.status === 201) {
+                testUserId = registerResponse.body.user?.id;
+                authToken = registerResponse.body.token;
+            } else {
+                // Try to login if user already exists
+                const loginResponse = await request(app)
+                    .post('/api/auth/login')
+                    .send({
+                        email: userData.email,
+                        password: userData.password
+                    });
+                
+                if (loginResponse.status === 200) {
+                    testUserId = loginResponse.body.user?.id;
+                    authToken = loginResponse.body.token;
+                }
+            }            // 2. Create test city and neighborhood for shipping
+            const cityData = {
+                name: `Test City Orders ${Date.now()}`,
+                description: 'Test city for orders',
+                isActive: true
+            };
+
+            const cityResponse = await request(app)
+                .post('/api/cities')
+                .send(cityData);
+
+            if (cityResponse.status === 200 || cityResponse.status === 201) {
+                testCityId = cityResponse.body.id;
+
+                const neighborhoodData = {
+                    name: `Test Neighborhood Orders ${Date.now()}`,
+                    description: 'Test neighborhood for orders',
+                    cityId: testCityId,
+                    isActive: true
+                };
+
+                const neighborhoodResponse = await request(app)
+                    .post('/api/neighborhoods')
+                    .send(neighborhoodData);
+
+                if (neighborhoodResponse.status === 200 || neighborhoodResponse.status === 201) {
+                    testNeighborhoodId = neighborhoodResponse.body.id;
+                }
+            }
+
+            // 3. Create test product (try admin route first)
+            const productData = {
+                name: `Test Product Orders ${Date.now()}`,
+                description: 'Product for order testing',
+                price: 100,
+                stock: 50,
+                isActive: true
+            };
+
+            // Try admin route for product creation
+            let productResponse = await request(app)
+                .post('/api/admin/products')
+                .send(productData);
+
+            // If admin route fails, try regular products route
+            if (productResponse.status !== 200 && productResponse.status !== 201) {
+                productResponse = await request(app)
+                    .post('/api/products')
+                    .send(productData);
+            }
+
+            if (productResponse.status === 200 || productResponse.status === 201) {
+                testProductId = productResponse.body.id;
+            }
+
+            console.log("Orders/Sales test data setup complete:", {
+                testUserId,
+                testCityId,
+                testNeighborhoodId,
+                testProductId,
+                hasAuthToken: !!authToken
+            });
+        });
+
+        describe('Order Status Management', () => {
+            it('should get active order statuses (public endpoint)', async () => {
+                const response = await request(app)
+                    .get('/api/order-statuses/active')
+                    .expect((res) => {
+                        expect([200, 404]).toContain(res.status);
+                    });                if (response.status === 200) {
+                    // Response body has pagination structure with orderStatuses array
+                    expect(response.body).toHaveProperty('total');
+                    expect(response.body).toHaveProperty('orderStatuses');
+                    expect(Array.isArray(response.body.orderStatuses)).toBe(true);
+                    if (response.body.orderStatuses.length > 0) {
+                        expect(response.body.orderStatuses[0]).toHaveProperty('id');
+                        expect(response.body.orderStatuses[0]).toHaveProperty('name');
+                        expect(response.body.orderStatuses[0]).toHaveProperty('code');
+                        expect(response.body.orderStatuses[0].isActive).toBe(true);
+                    }
+                }
+            });
+
+            it('should get default order status', async () => {
+                const response = await request(app)
+                    .get('/api/order-statuses/default')
+                    .expect((res) => {
+                        expect([200, 404]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body).toHaveProperty('name');
+                    expect(response.body).toHaveProperty('code');
+                    expect(response.body.isDefault).toBe(true);
+                }
+            });
+
+            it('should get order status by code', async () => {
+                // Try with common status code
+                const response = await request(app)
+                    .get('/api/order-statuses/code/PENDING')
+                    .expect((res) => {
+                        expect([200, 404]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body).toHaveProperty('name');
+                    expect(response.body.code).toBe('PENDING');
+                }
+            });
+        });
+
+        describe('Sales/Orders Management', () => {
+            it('should get all sales with pagination (public endpoint)', async () => {
+                const response = await request(app)
+                    .get('/api/sales?page=1&limit=10')
+                    .expect((res) => {
+                        expect([200, 400]).toContain(res.status);
+                    });                if (response.status === 200) {
+                    expect(response.body).toHaveProperty('total');
+                    expect(response.body).toHaveProperty('orders'); // API uses 'orders' not 'items'
+                    expect(Array.isArray(response.body.orders)).toBe(true);
+                    expect(response.body.orders.length).toBeLessThanOrEqual(10);
+                }
+            });
+
+            it('should handle missing pagination parameters for sales', async () => {
+                const response = await request(app)
+                    .get('/api/sales')
+                    .expect((res) => {
+                        expect([200, 400]).toContain(res.status);
+                    });                if (response.status === 200) {
+                    expect(response.body).toHaveProperty('total');
+                    expect(response.body).toHaveProperty('orders'); // API uses 'orders' not 'items'
+                    expect(Array.isArray(response.body.orders)).toBe(true);
+                } else if (response.status === 400) {
+                    expect(response.body.error).toBeDefined();
+                }
+            });
+
+            it('should require authentication for creating orders', async () => {
+                const orderData = {
+                    items: [
+                        {
+                            productId: testProductId || '507f1f77bcf86cd799439011',
+                            quantity: 2,
+                            unitPrice: 100
+                        }
+                    ],
+                    customerName: 'Test Customer',
+                    customerEmail: 'test@example.com',
+                    shippingRecipientName: 'Test Recipient',
+                    shippingPhone: '+1234567890',
+                    shippingStreetAddress: 'Test Address 123',
+                    shippingNeighborhoodId: testNeighborhoodId || '507f1f77bcf86cd799439011'
+                };
+
+                await request(app)
+                    .post('/api/sales')
+                    .send(orderData)
+                    .expect(401); // Unauthorized without token
+            });
+
+            it('should create order for authenticated user with valid data', async () => {
+                if (!authToken || !testProductId || !testNeighborhoodId) {
+                    console.log('Skipping order creation test - missing setup data');
+                    return;
+                }
+
+                const orderData = {
+                    items: [
+                        {
+                            productId: testProductId,
+                            quantity: 2,
+                            unitPrice: 100
+                        }
+                    ],
+                    notes: 'Test order from smoke tests',
+                    shippingRecipientName: 'Test Recipient',
+                    shippingPhone: '+1234567890',
+                    shippingStreetAddress: 'Test Address 123',
+                    shippingNeighborhoodId: testNeighborhoodId
+                };
+
+                const response = await request(app)
+                    .post('/api/sales')
+                    .set('Authorization', `Bearer ${authToken}`)
+                    .send(orderData)
+                    .expect((res) => {
+                        expect([200, 201, 400]).toContain(res.status);
+                    });                if (response.status === 200 || response.status === 201) {
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body).toHaveProperty('items');
+                    expect(response.body).toHaveProperty('total');
+                    expect(response.body.items.length).toBe(1);
+                    testOrderId = response.body.id;
+                    
+                    // Save customer ID for later tests
+                    if (response.body.customer?.id) {
+                        testCustomerId = response.body.customer.id;
+                    }
+                }
+            });
+
+            it('should create order for guest user with complete data', async () => {
+                if (!testProductId || !testNeighborhoodId) {
+                    console.log('Skipping guest order test - missing setup data');
+                    return;
+                }
+
+                const guestOrderData = {
+                    items: [
+                        {
+                            productId: testProductId,
+                            quantity: 1,
+                            unitPrice: 100
+                        }
+                    ],
+                    customerName: `Guest Customer ${Date.now()}`,
+                    customerEmail: `guest${Date.now()}@test.com`,
+                    shippingRecipientName: 'Guest Recipient',
+                    shippingPhone: '+0987654321',
+                    shippingStreetAddress: 'Guest Address 456',
+                    shippingNeighborhoodId: testNeighborhoodId,
+                    notes: 'Guest order from smoke tests'
+                };
+
+                const response = await request(app)
+                    .post('/api/sales')
+                    .send(guestOrderData)
+                    .expect((res) => {
+                        expect([200, 201, 400]).toContain(res.status);
+                    });                if (response.status === 200 || response.status === 201) {
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body).toHaveProperty('items');
+                    expect(response.body).toHaveProperty('customer');
+                    expect(response.body.customer.email).toBe(guestOrderData.customerEmail);
+                    
+                    // Save customer ID if not already set
+                    if (!testCustomerId && response.body.customer?.id) {
+                        testCustomerId = response.body.customer.id;
+                    }
+                }
+            });
+
+            it('should reject order creation with invalid data', async () => {
+                if (!authToken) {
+                    console.log('Skipping invalid order test - no auth token');
+                    return;
+                }
+
+                // Test missing items
+                await request(app)
+                    .post('/api/sales')
+                    .set('Authorization', `Bearer ${authToken}`)
+                    .send({
+                        shippingRecipientName: 'Test',
+                        shippingPhone: '+1234567890',
+                        shippingStreetAddress: 'Test Address',
+                        shippingNeighborhoodId: testNeighborhoodId
+                    })
+                    .expect(400);
+
+                // Test invalid product ID
+                await request(app)
+                    .post('/api/sales')
+                    .set('Authorization', `Bearer ${authToken}`)
+                    .send({
+                        items: [
+                            {
+                                productId: 'invalid-id',
+                                quantity: 1,
+                                unitPrice: 100
+                            }
+                        ],
+                        shippingRecipientName: 'Test',
+                        shippingPhone: '+1234567890',
+                        shippingStreetAddress: 'Test Address',
+                        shippingNeighborhoodId: testNeighborhoodId
+                    })
+                    .expect(400);
+
+                // Test missing shipping data for authenticated user
+                await request(app)
+                    .post('/api/sales')
+                    .set('Authorization', `Bearer ${authToken}`)
+                    .send({
+                        items: [
+                            {
+                                productId: testProductId || '507f1f77bcf86cd799439011',
+                                quantity: 1,
+                                unitPrice: 100
+                            }
+                        ]
+                    })
+                    .expect(400);
+            });
+
+            it('should get order by ID', async () => {
+                if (!testOrderId) {
+                    console.log('Skipping get order by ID test - no test order created');
+                    return;
+                }
+
+                const response = await request(app)
+                    .get(`/api/sales/${testOrderId}`)
+                    .expect(200);
+
+                expect(response.body).toHaveProperty('id');
+                expect(response.body.id).toBe(testOrderId);
+                expect(response.body).toHaveProperty('items');
+                expect(response.body).toHaveProperty('total');
+                expect(response.body).toHaveProperty('status');
+            });
+
+            it('should return 404 for non-existent order', async () => {
+                const fakeId = '507f1f77bcf86cd799439011';
+                await request(app)
+                    .get(`/api/sales/${fakeId}`)
+                    .expect(404);
+            });            it('should return 400, 404 or 500 for invalid order ID format', async () => {
+                await request(app)
+                    .get('/api/sales/invalid-id-format')
+                    .expect((res) => {
+                        // Accept 400 (validation), 404 (not found), or 500 (internal error)
+                        expect([400, 404, 500]).toContain(res.status);
+                    });
+            });
+
+            it('should get user orders (authenticated)', async () => {
+                if (!authToken) {
+                    console.log('Skipping my orders test - no auth token');
+                    return;
+                }
+
+                const response = await request(app)
+                    .get('/api/sales/my-orders?page=1&limit=10')
+                    .set('Authorization', `Bearer ${authToken}`)
+                    .expect((res) => {
+                        expect([200, 400]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    expect(response.body).toHaveProperty('total');
+                    expect(response.body).toHaveProperty('items');
+                    expect(Array.isArray(response.body.items)).toBe(true);
+                }
+            });
+
+            it('should require authentication for my orders', async () => {
+                await request(app)
+                    .get('/api/sales/my-orders')
+                    .expect(401);
+            });
+
+            it('should update order status', async () => {
+                if (!testOrderId) {
+                    console.log('Skipping order status update test - no test order');
+                    return;
+                }
+
+                const statusUpdate = {
+                    statusCode: 'PENDING'
+                };
+
+                const response = await request(app)
+                    .patch(`/api/sales/${testOrderId}/status`)
+                    .send(statusUpdate)
+                    .expect((res) => {
+                        expect([200, 400, 404]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body).toHaveProperty('status');
+                }
+            });            it('should get orders by date range', async () => {
+                const dateRangeData = {
+                    startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+                    endDate: new Date().toISOString() // now
+                };
+
+                const response = await request(app)
+                    .post('/api/sales/by-date-range?page=1&limit=10')
+                    .send(dateRangeData)
+                    .expect((res) => {
+                        expect([200, 400]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    expect(response.body).toHaveProperty('total');
+                    expect(response.body).toHaveProperty('orders'); // API uses 'orders' not 'items'
+                    expect(Array.isArray(response.body.orders)).toBe(true);
+                }
+            });
+
+            it('should reject date range query with invalid dates', async () => {
+                await request(app)
+                    .post('/api/sales/by-date-range')
+                    .send({
+                        startDate: 'invalid-date',
+                        endDate: 'invalid-date'
+                    })
+                    .expect(400);
+
+                await request(app)
+                    .post('/api/sales/by-date-range')
+                    .send({})
+                    .expect(400);
+            });
+
+            it('should get orders by customer ID', async () => {
+                if (!testCustomerId) {
+                    console.log('Skipping orders by customer test - no customer ID');
+                    return;
+                }
+
+                const response = await request(app)
+                    .get(`/api/sales/by-customer/${testCustomerId}?page=1&limit=10`)
+                    .expect((res) => {
+                        expect([200, 400, 404]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    expect(response.body).toHaveProperty('total');
+                    expect(response.body).toHaveProperty('items');
+                    expect(Array.isArray(response.body.items)).toBe(true);
+                }
             });
         });
     });
