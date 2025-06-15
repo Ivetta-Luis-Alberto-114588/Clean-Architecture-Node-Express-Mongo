@@ -17,6 +17,7 @@ import { AdminRoutes } from "./admin/routes.admin";
 import { TagRoutes } from "./products/routes.tag";
 import { OrderStatusRoutes } from "./order/routes.order-status";
 import { PaymentMethodRoutes } from "./payment/routes.payment-method";
+import { MonitoringRoutes } from "./monitoring/routes.monitoring";
 import mongoose from "mongoose";
 
 export class MainRoutes {
@@ -83,10 +84,11 @@ export class MainRoutes {
         router.use("/api/payment-methods", PaymentMethodRoutes.routes);
         router.use("/api/chatbot", ChatbotRoutes.getChatbotRoutes); router.use("/api/cart", CartRoutes.getCartRoutes);
         router.use("/api/coupons", CouponRoutes.getCouponRoutes);
-        router.use("/api/order-statuses", OrderStatusRoutes.routes);
-
-        // Rutas de Administración
+        router.use("/api/order-statuses", OrderStatusRoutes.routes);        // Rutas de Administración
         router.use("/api/admin", AdminRoutes.getAdminRoutes);
+
+        // Rutas de Monitoreo
+        router.use("/api/monitoring", MonitoringRoutes.routes);
 
         return router
     }
