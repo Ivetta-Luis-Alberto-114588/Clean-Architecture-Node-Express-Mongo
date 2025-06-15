@@ -54,6 +54,7 @@
 ### 🔧 Utilidades y Admin
 - [🤖 IA y Chatbot (/api/chatbot)](#chatbot-apichatbot)
 - [⚙️ Panel de Administración (/api/admin)](#administración-apiadmin)
+- [📊 Sistema de Monitoreo (/api/monitoring)](#sistema-de-monitoreo-apimonitoring)
 
 ---
 
@@ -4100,10 +4101,235 @@ Para configurar Telegram:
 {
   "isValid": "boolean",
   "embeddingCount": "number",
-  "lastGenerated": "string (ISO date)",
-  "recommendations": ["array de recomendaciones"]
+  "lastGenerated": "string (ISO date)",  "recommendations": ["array de recomendaciones"]
 }
 ```
+
+---
+
+### Sistema de Monitoreo (**/api/monitoring**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
+El sistema de monitoreo proporciona información detallada sobre el estado y rendimiento de la aplicación, incluyendo métricas de MongoDB, Render.com y alertas del sistema.
+
+#### **Características del Sistema de Monitoreo:**
+
+- **Salud General**: Endpoint público para verificar el estado básico del servicio
+- **Monitoreo de MongoDB**: Métricas detalladas de uso de base de datos (requiere admin)
+- **Monitoreo de Render**: Información sobre recursos del servidor (requiere admin) 
+- **Reportes Completos**: Vista consolidada de todos los servicios (requiere admin)
+- **Sistema de Alertas**: Notificaciones sobre problemas detectados (requiere admin)
+
+#### **GET /health**
+
+- **Descripción**: Obtiene el estado general de salud del sistema (público)
+- **Autenticación**: No requerida
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "status": "healthy | degraded | unhealthy",
+  "timestamp": "2025-06-14T22:20:00.000Z",
+  "uptime": "0m 30s",
+  "services": {
+    "mongodb": {
+      "status": "connected | disconnected",
+      "storageUsage": {
+        "percentage": 15,
+        "mb": 75
+      },
+      "connections": 5,
+      "recommendations": ["✅ MongoDB está funcionando correctamente"]
+    },
+    "render": {
+      "status": "healthy | warning | critical",
+      "memoryUsage": {
+        "percentage": 45,
+        "free": 8900,
+        "used": 7400,
+        "total": 16300
+      },
+      "hoursUsage": {
+        "used": 112,
+        "remaining": 638,
+        "percentage": 14.93
+      },
+      "recommendations": ["✅ Uso de Render dentro de límites normales"]
+    }
+  }
+}
+```
+
+#### **GET /mongodb** 🔒
+
+- **Descripción**: Obtiene métricas detalladas de MongoDB
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "data": {
+    "cluster": "test-db",
+    "storageUsed": {
+      "bytes": 134217728,
+      "mb": 128,
+      "percentage": 25
+    },
+    "limits": {
+      "maxStorage": 512,
+      "maxConnections": 500
+    },
+    "currentConnections": 12,
+    "collections": [
+      {
+        "name": "products",
+        "documentCount": 150,
+        "storageSize": 45678,
+        "indexSize": 12345
+      },
+      {
+        "name": "users",
+        "documentCount": 89,
+        "storageSize": 23456,
+        "indexSize": 5678
+      }
+    ],
+    "recommendations": [
+      "✅ MongoDB está funcionando dentro de los límites normales",
+      "💡 Considere agregar índices para consultas frecuentes"
+    ],
+    "timestamp": "2025-06-14T22:20:00.000Z"
+  },
+  "service": "MongoDB Atlas",
+  "timestamp": "2025-06-14T22:20:00.000Z"
+}
+```
+
+#### **GET /render** 🔒
+
+- **Descripción**: Obtiene métricas detalladas de Render.com
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "data": {
+    "service": "Render.com",
+    "plan": "Free Tier",
+    "currentInstance": {
+      "environment": "production",
+      "uptime": "2h 15m",
+      "cpuUsage": 12,
+      "memoryUsage": {
+        "free": 8953,
+        "total": 16310,
+        "used": 7357,
+        "percentage": 45
+      }
+    },
+    "currentMonth": {
+      "hoursUsed": 112,
+      "hoursRemaining": 638,
+      "percentage": 14.93
+    },
+    "limits": {
+      "monthlyHours": 750,
+      "sleepAfterMinutes": 15,
+      "coldStartTime": "30-60 seconds"
+    },
+    "recommendations": [
+      "✅ Uso de Render dentro de límites normales",
+      "💡 Configure notificaciones cuando queden menos de 100 horas",
+      "💡 Implemente métricas de uso para monitoreo continuo"
+    ],
+    "timestamp": "2025-06-14T22:20:00.000Z"
+  },
+  "service": "Render.com",
+  "timestamp": "2025-06-14T22:20:00.000Z"
+}
+```
+
+#### **GET /complete** 🔒
+
+- **Descripción**: Obtiene un reporte completo de todos los servicios monitoreados
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "services": {
+    "mongodb": {
+      "status": "healthy",
+      "storageUsage": { "percentage": 25 },
+      "connections": 12,
+      "alerts": []
+    },
+    "render": {
+      "status": "healthy", 
+      "memoryUsage": { "percentage": 45 },
+      "hoursUsage": { "percentage": 14.93 },
+      "alerts": []
+    }
+  },
+  "summary": {
+    "overallStatus": "healthy | warning | critical",
+    "criticalAlerts": [],
+    "totalServices": 2,
+    "healthyServices": 2,
+    "degradedServices": 0,
+    "unhealthyServices": 0
+  },
+  "timestamp": "2025-06-14T22:20:00.000Z"
+}
+```
+
+#### **GET /alerts** 🔒
+
+- **Descripción**: Obtiene las alertas actuales del sistema
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "alerts": [
+    {
+      "id": "alert_001",
+      "type": "warning | critical | info",
+      "service": "mongodb | render | system",
+      "message": "Uso de memoria superior al 80%",
+      "timestamp": "2025-06-14T22:15:00.000Z",
+      "resolved": false,
+      "details": {
+        "metric": "memory_usage",
+        "currentValue": 85,
+        "threshold": 80,
+        "unit": "percentage"
+      }
+    }
+  ],
+  "totalAlerts": 1,
+  "criticalCount": 0,
+  "warningCount": 1,
+  "timestamp": "2025-06-14T22:20:00.000Z"
+}
+```
+
+#### **Notas sobre el Sistema de Monitoreo:**
+
+- **🔒 Endpoints Protegidos**: Todos los endpoints excepto `/health` requieren autenticación JWT y rol `ADMIN_ROLE`
+- **📊 Métricas en Tiempo Real**: Los datos se actualizan en tiempo real al momento de la consulta
+- **🚨 Sistema de Alertas**: Detecta automáticamente problemas y genera recomendaciones
+- **📱 Integración**: Diseñado para integrarse fácilmente con dashboards de monitoreo
+- **⚡ Performance**: Optimizado para no impactar el rendimiento de la aplicación principal
+
+#### **Casos de Uso:**
+
+- **Dashboard de Administración**: Mostrar métricas en tiempo real
+- **Health Checks**: Verificar estado del servicio desde balanceadores de carga
+- **Alertas Proactivas**: Detectar problemas antes de que afecten a los usuarios
+- **Planificación de Recursos**: Analizar tendencias de uso para escalar servicios
+- **Troubleshooting**: Diagnosticar problemas de rendimiento o disponibilidad
 
 ---
 
