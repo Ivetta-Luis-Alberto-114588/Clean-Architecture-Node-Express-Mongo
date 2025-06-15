@@ -39,7 +39,7 @@ export class OrderEntity {
         public taxAmount: number,
         public discountRate: number,
         public discountAmount: number,
-        public total: number,        public date: Date,
+        public total: number, public date: Date,
         public status: OrderStatusEntity,
         public paymentMethod?: PaymentMethodEntity,
         public notes?: string,

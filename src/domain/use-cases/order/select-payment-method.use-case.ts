@@ -18,7 +18,7 @@ export class SelectPaymentMethodUseCase implements ISelectPaymentMethodUseCase {
         private readonly paymentMethodRepository: PaymentMethodRepository,
         private readonly orderStatusRepository: OrderStatusRepository,
         private readonly loggerService: ILogger
-    ) {}
+    ) { }
 
     async execute(selectPaymentMethodDto: SelectPaymentMethodDto): Promise<OrderEntity> {
         const { orderId, paymentMethodCode, notes } = selectPaymentMethodDto;
@@ -50,7 +50,7 @@ export class SelectPaymentMethodUseCase implements ISelectPaymentMethodUseCase {
 
             // 4. Determinar el nuevo estado de la orden según el método de pago
             let newStatusCode: string;
-            
+
             switch (paymentMethodCode) {
                 case 'MERCADO_PAGO':
                     newStatusCode = 'AWAITING_PAYMENT'; // Esperando el pago online
@@ -103,16 +103,16 @@ export class SelectPaymentMethodUseCase implements ISelectPaymentMethodUseCase {
             this.loggerService.error(`Error al seleccionar método de pago: ${error}`);
             throw error;
         }
-    }    private isEligibleForCashPayment(order: OrderEntity): boolean {
+    } private isEligibleForCashPayment(order: OrderEntity): boolean {
         // Lógica de validación para pago en efectivo
         // Ejemplo: solo órdenes locales, monto máximo, etc.
         const maxCashAmount = 5000;
-        
+
         // Asumimos que si hay detalles de envío con ciudad local, es entrega local
         // Esto se puede personalizar según la lógica de negocio específica
-        const hasLocalDelivery = order.shippingDetails?.cityName === 'Ciudad Local' || 
-                                order.total <= maxCashAmount; // Ejemplo alternativo
-        
+        const hasLocalDelivery = order.shippingDetails?.cityName === 'Ciudad Local' ||
+            order.total <= maxCashAmount; // Ejemplo alternativo
+
         return order.total <= maxCashAmount && hasLocalDelivery;
     }
 }

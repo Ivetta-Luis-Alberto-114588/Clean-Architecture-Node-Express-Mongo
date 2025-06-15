@@ -13,7 +13,8 @@ import logger from "../../../configs/logger";
 import { CityEntity } from "../../../domain/entities/customers/citiy"; // <<<--- AÑADIR
 import { NeighborhoodEntity } from "../../../domain/entities/customers/neighborhood"; // <<<--- AÑADIR
 
-export class OrderMapper {    static fromObjectToSaleEntity(object: any): OrderEntity {
+export class OrderMapper {
+    static fromObjectToSaleEntity(object: any): OrderEntity {
         if (!object) throw CustomError.badRequest('SaleMapper: object is null or undefined');
         const {
             _id, id, customer, items = [], subtotal, taxRate, taxAmount,
@@ -100,7 +101,8 @@ export class OrderMapper {    static fromObjectToSaleEntity(object: any): OrderE
                     false,
                     []
                 );
-            }        } catch (error) {
+            }
+        } catch (error) {
             logger.error('Error mapping status in OrderMapper:', { error, status });
             // Default fallback status
             statusEntity = new OrderStatusEntity(
@@ -137,11 +139,11 @@ export class OrderMapper {    static fromObjectToSaleEntity(object: any): OrderE
             new Date(date || Date.now()), statusEntity, paymentMethodEntity, notes || "",
             finalShippingDetails
         );
-    }    static fromSaleEntityToObject(entity: OrderEntity): any { /* ... código sin cambios ... */
+    } static fromSaleEntityToObject(entity: OrderEntity): any { /* ... código sin cambios ... */
         return {
             customer: entity.customer.id,
             items: entity.items.map(item => ({ product: item.product.id, quantity: item.quantity, unitPrice: item.unitPrice, subtotal: item.subtotal })),
-            subtotal: entity.subtotal, taxAmount: entity.taxAmount, discountRate: entity.discountRate, discountAmount: entity.discountAmount, total: entity.total, date: entity.date, status: entity.status.id, 
+            subtotal: entity.subtotal, taxAmount: entity.taxAmount, discountRate: entity.discountRate, discountAmount: entity.discountAmount, total: entity.total, date: entity.date, status: entity.status.id,
             paymentMethod: entity.paymentMethod?.id,
             notes: entity.notes,
             shippingDetails: entity.shippingDetails ? {

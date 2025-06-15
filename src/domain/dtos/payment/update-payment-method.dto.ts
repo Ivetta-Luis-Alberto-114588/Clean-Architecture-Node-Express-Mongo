@@ -9,17 +9,17 @@ export class UpdatePaymentMethodDto {
         public readonly defaultOrderStatusId?: string,
         public readonly requiresOnlinePayment?: boolean,
         public readonly allowsManualConfirmation?: boolean
-    ) {}
+    ) { }
 
     static create(props: { [key: string]: any }): [string?, UpdatePaymentMethodDto?] {
-        const { 
-            code, 
-            name, 
-            description, 
-            isActive, 
-            defaultOrderStatusId, 
+        const {
+            code,
+            name,
+            description,
+            isActive,
+            defaultOrderStatusId,
             requiresOnlinePayment,
-            allowsManualConfirmation 
+            allowsManualConfirmation
         } = props;
 
         return [undefined, new UpdatePaymentMethodDto(

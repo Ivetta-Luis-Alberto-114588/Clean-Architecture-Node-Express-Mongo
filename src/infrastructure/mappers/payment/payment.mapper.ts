@@ -77,7 +77,7 @@ export class PaymentMapper {
 
       // Mapeamos la venta si está poblada
       const sale = typeof saleId === 'object' && saleId !== null
-        ? OrderMapper.fromObjectToSaleEntity(saleId)        : new OrderEntity(
+        ? OrderMapper.fromObjectToSaleEntity(saleId) : new OrderEntity(
           saleId.toString(),
           customer,
           [], // items vacíos

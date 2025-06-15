@@ -12,7 +12,7 @@ export class PaymentMethodEntity {
         public readonly allowsManualConfirmation: boolean,
         public readonly createdAt: Date,
         public readonly updatedAt: Date
-    ) {}
+    ) { }
 
     // Métodos de conveniencia
     get isCash(): boolean {
@@ -28,18 +28,18 @@ export class PaymentMethodEntity {
     }
 
     static fromObject(object: { [key: string]: any }): PaymentMethodEntity {
-        const { 
-            id, 
-            _id, 
-            code, 
-            name, 
-            description, 
-            isActive, 
-            defaultOrderStatusId, 
-            requiresOnlinePayment, 
+        const {
+            id,
+            _id,
+            code,
+            name,
+            description,
+            isActive,
+            defaultOrderStatusId,
+            requiresOnlinePayment,
             allowsManualConfirmation,
-            createdAt, 
-            updatedAt 
+            createdAt,
+            updatedAt
         } = object;
 
         return new PaymentMethodEntity(

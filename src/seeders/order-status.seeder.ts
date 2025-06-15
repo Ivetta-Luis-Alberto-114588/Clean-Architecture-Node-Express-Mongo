@@ -73,7 +73,7 @@ export async function seedOrderStatuses(): Promise<void> {
         const existingCount = await OrderStatusModel.countDocuments();
         if (existingCount > 0) {
             logger.info(`Ya existen ${existingCount} estados de pedido. Verificando estado por defecto...`);
-            
+
             // Check if there's a default status
             const defaultStatus = await OrderStatusModel.findOne({ isDefault: true });
             if (!defaultStatus) {

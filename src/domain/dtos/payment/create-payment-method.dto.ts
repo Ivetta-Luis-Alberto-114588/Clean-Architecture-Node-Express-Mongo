@@ -9,17 +9,17 @@ export class CreatePaymentMethodDto {
         public readonly defaultOrderStatusId: string,
         public readonly requiresOnlinePayment: boolean,
         public readonly allowsManualConfirmation: boolean
-    ) {}
+    ) { }
 
     static create(props: { [key: string]: any }): [string?, CreatePaymentMethodDto?] {
-        const { 
-            code, 
-            name, 
-            description, 
-            isActive, 
-            defaultOrderStatusId, 
+        const {
+            code,
+            name,
+            description,
+            isActive,
+            defaultOrderStatusId,
             requiresOnlinePayment,
-            allowsManualConfirmation 
+            allowsManualConfirmation
         } = props;
 
         if (!code) return ['Code is required'];

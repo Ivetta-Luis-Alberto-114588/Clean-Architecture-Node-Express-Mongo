@@ -504,38 +504,38 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
 
     // --- MÉTODO updateOrder ---
     async updateOrder(id: string, dto: import('../../../domain/dtos/order/update-order.dto').UpdateOrderDto): Promise<OrderEntity> {
-      // TODO: recalcular totales si cambian items
-      const updateData: any = {};
-      if (dto.data.items) {
-        updateData.items = dto.data.items.map(i => ({
-          product: i.productId,
-          quantity: i.quantity,
-          unitPrice: i.unitPrice,
-          subtotal: +(i.unitPrice * i.quantity).toFixed(2)
-        }));
-      }
-      if (dto.data.shippingDetails) {
-        updateData.shippingDetails = {
-          recipientName: dto.data.shippingDetails.recipientName,
-          phone: dto.data.shippingDetails.phone,
-          streetAddress: dto.data.shippingDetails.streetAddress,
-          postalCode: dto.data.shippingDetails.postalCode,
-          neighborhoodName: undefined, // revisar mapping a entity
-          cityName: undefined,
-          additionalInfo: dto.data.shippingDetails.additionalInfo,
-          originalNeighborhoodId: dto.data.shippingDetails.neighborhoodId ? new mongoose.Types.ObjectId(dto.data.shippingDetails.neighborhoodId) : undefined,
-          originalCityId: dto.data.shippingDetails.cityId ? new mongoose.Types.ObjectId(dto.data.shippingDetails.cityId) : undefined
-        };
-      }
-      if (dto.data.notes !== undefined) updateData.notes = dto.data.notes;
-      if (dto.data.couponCode !== undefined) updateData['metadata.couponCodeUsed'] = dto.data.couponCode;
+        // TODO: recalcular totales si cambian items
+        const updateData: any = {};
+        if (dto.data.items) {
+            updateData.items = dto.data.items.map(i => ({
+                product: i.productId,
+                quantity: i.quantity,
+                unitPrice: i.unitPrice,
+                subtotal: +(i.unitPrice * i.quantity).toFixed(2)
+            }));
+        }
+        if (dto.data.shippingDetails) {
+            updateData.shippingDetails = {
+                recipientName: dto.data.shippingDetails.recipientName,
+                phone: dto.data.shippingDetails.phone,
+                streetAddress: dto.data.shippingDetails.streetAddress,
+                postalCode: dto.data.shippingDetails.postalCode,
+                neighborhoodName: undefined, // revisar mapping a entity
+                cityName: undefined,
+                additionalInfo: dto.data.shippingDetails.additionalInfo,
+                originalNeighborhoodId: dto.data.shippingDetails.neighborhoodId ? new mongoose.Types.ObjectId(dto.data.shippingDetails.neighborhoodId) : undefined,
+                originalCityId: dto.data.shippingDetails.cityId ? new mongoose.Types.ObjectId(dto.data.shippingDetails.cityId) : undefined
+            };
+        }
+        if (dto.data.notes !== undefined) updateData.notes = dto.data.notes;
+        if (dto.data.couponCode !== undefined) updateData['metadata.couponCodeUsed'] = dto.data.couponCode;
 
-      const doc = await OrderModel.findByIdAndUpdate(id, { $set: updateData }, { new: true })
-        .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-        .populate({ path: 'status', model: 'OrderStatus' })
-        .populate({ path: 'items.product', model: 'Product', populate: [{ path: 'category' }, { path: 'unit' }] })
-        .lean();      if (!doc) throw CustomError.notFound(`Pedido ${id} no encontrado`);
-      return OrderMapper.fromObjectToSaleEntity(doc);
+        const doc = await OrderModel.findByIdAndUpdate(id, { $set: updateData }, { new: true })
+            .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+            .populate({ path: 'status', model: 'OrderStatus' })
+            .populate({ path: 'items.product', model: 'Product', populate: [{ path: 'category' }, { path: 'unit' }] })
+            .lean(); if (!doc) throw CustomError.notFound(`Pedido ${id} no encontrado`);
+        return OrderMapper.fromObjectToSaleEntity(doc);
     }
 
     // --- NUEVO: updatePaymentMethod ---
@@ -572,18 +572,18 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 { $set: updateFields },
                 { new: true }
             )
-            .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
-            .populate({ path: 'status', model: 'OrderStatus' })
-            .populate({ path: 'paymentMethod', model: 'PaymentMethod' })
-            .populate({
-                path: 'items.product',
-                model: 'Product',
-                populate: [
-                    { path: 'category', model: 'Category' },
-                    { path: 'unit', model: 'Unit' }
-                ]
-            })
-            .lean();
+                .populate({ path: 'customer', populate: { path: 'neighborhood', populate: { path: 'city' } } })
+                .populate({ path: 'status', model: 'OrderStatus' })
+                .populate({ path: 'paymentMethod', model: 'PaymentMethod' })
+                .populate({
+                    path: 'items.product',
+                    model: 'Product',
+                    populate: [
+                        { path: 'category', model: 'Category' },
+                        { path: 'unit', model: 'Unit' }
+                    ]
+                })
+                .lean();
 
             if (!doc) {
                 throw CustomError.notFound(`Orden ${orderId} no encontrada`);

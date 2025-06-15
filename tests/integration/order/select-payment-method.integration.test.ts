@@ -14,9 +14,9 @@ import { CityModel } from '../../../src/data/mongodb/models/customers/city.model
 import { JwtAdapter } from '../../../src/configs/jwt';
 
 describe('Order Payment Method Integration Tests', () => {
-    let mongoServer: MongoMemoryServer;    let testServer: server;
+    let mongoServer: MongoMemoryServer; let testServer: server;
     let app: any;
-    let adminToken: string;    let testUserId: string;
+    let adminToken: string; let testUserId: string;
     let testOrderId: string;
     let testCustomerId: string;
     let testCityId: string;
@@ -25,7 +25,7 @@ describe('Order Payment Method Integration Tests', () => {
     let confirmedStatusId: string;
     let awaitingPaymentStatusId: string;
     let cashPaymentMethodId: string;
-    let mercadoPagoPaymentMethodId: string;    beforeAll(async () => {
+    let mercadoPagoPaymentMethodId: string; beforeAll(async () => {
         // Disconnect existing connection if any
         if (mongoose.connection.readyState !== 0) {
             await mongoose.disconnect();
@@ -37,7 +37,8 @@ describe('Order Payment Method Integration Tests', () => {
         await mongoose.connect(mongoUri);        // Setup server
         testServer = new server({
             p_port: 3001,
-            p_routes: MainRoutes.getMainRoutes        });
+            p_routes: MainRoutes.getMainRoutes
+        });
         app = testServer.app;
 
         // Setup test data
@@ -56,11 +57,11 @@ describe('Order Payment Method Integration Tests', () => {
 
     afterEach(async () => {
         // Reset order status after each test
-        await OrderModel.findByIdAndUpdate(testOrderId, { 
-            status: pendingStatusId, 
-            paymentMethod: undefined 
+        await OrderModel.findByIdAndUpdate(testOrderId, {
+            status: pendingStatusId,
+            paymentMethod: undefined
         });
-    });    const setupTestData = async () => {
+    }); const setupTestData = async () => {
         // Create test user first
         const testUser = await UserModel.create({
             name: 'Test Admin',
@@ -68,14 +69,15 @@ describe('Order Payment Method Integration Tests', () => {
             password: 'hashedpassword123',
             role: ['ADMIN_ROLE'],
             emailValidated: true,
-            isActive: true        });
+            isActive: true
+        });
         testUserId = testUser._id.toString();        // Create test city and neighborhood
         const testCity = await CityModel.create({
             name: 'Ciudad Local',
             description: 'Ciudad Local para pruebas',
             isActive: true
         });
-        testCityId = testCity._id.toString();        const testNeighborhood = await NeighborhoodModel.create({
+        testCityId = testCity._id.toString(); const testNeighborhood = await NeighborhoodModel.create({
             name: 'Barrio Test',
             description: 'Barrio de pruebas',
             city: testCityId,
@@ -164,7 +166,7 @@ describe('Order Payment Method Integration Tests', () => {
             subtotal: 1000,
             taxAmount: 0,
             discountRate: 0,
-            discountAmount: 0,            total: 1000,
+            discountAmount: 0, total: 1000,
             status: pendingStatusId,
             shippingDetails: {
                 recipientName: 'Test Recipient',
@@ -177,7 +179,7 @@ describe('Order Payment Method Integration Tests', () => {
             }
         });
         testOrderId = order._id.toString();
-    };    describe('PATCH /api/sales/:orderId/payment-method', () => {
+    }; describe('PATCH /api/sales/:orderId/payment-method', () => {
         it('should successfully select CASH payment method', async () => {
             const response = await request(app)
                 .patch(`/api/sales/${testOrderId}/payment-method`)
@@ -199,7 +201,7 @@ describe('Order Payment Method Integration Tests', () => {
             const updatedOrder = await OrderModel.findById(testOrderId);
             expect(updatedOrder?.paymentMethod?.toString()).toBe(cashPaymentMethodId);
             expect(updatedOrder?.status?.toString()).toBe(confirmedStatusId);
-        });        it('should successfully select MERCADO_PAGO payment method', async () => {
+        }); it('should successfully select MERCADO_PAGO payment method', async () => {
             const response = await request(app)
                 .patch(`/api/sales/${testOrderId}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
@@ -216,7 +218,7 @@ describe('Order Payment Method Integration Tests', () => {
             const updatedOrder = await OrderModel.findById(testOrderId);
             expect(updatedOrder?.paymentMethod?.toString()).toBe(mercadoPagoPaymentMethodId);
             expect(updatedOrder?.status?.toString()).toBe(awaitingPaymentStatusId);
-        });        it('should return 400 for invalid order ID', async () => {
+        }); it('should return 400 for invalid order ID', async () => {
             const response = await request(app)
                 .patch('/api/sales/invalid-id/payment-method')
                 .set('Authorization', `Bearer ${adminToken}`)
@@ -226,7 +228,7 @@ describe('Order Payment Method Integration Tests', () => {
                 .expect(400);
 
             expect(response.body.error).toContain('ID de orden inválido');
-        });        it('should return 400 for missing payment method code', async () => {
+        }); it('should return 400 for missing payment method code', async () => {
             const response = await request(app)
                 .patch(`/api/sales/${testOrderId}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
@@ -234,9 +236,9 @@ describe('Order Payment Method Integration Tests', () => {
                 .expect(400);
 
             expect(response.body.error).toContain('paymentMethodCode');
-        });        it('should return 404 for non-existent order', async () => {
+        }); it('should return 404 for non-existent order', async () => {
             const nonExistentId = new mongoose.Types.ObjectId().toString();
-            
+
             const response = await request(app)
                 .patch(`/api/sales/${nonExistentId}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
@@ -246,7 +248,7 @@ describe('Order Payment Method Integration Tests', () => {
                 .expect(404);
 
             expect(response.body.error).toContain('no encontrada');
-        });        it('should return 400 for invalid payment method code', async () => {
+        }); it('should return 400 for invalid payment method code', async () => {
             const response = await request(app)
                 .patch(`/api/sales/${testOrderId}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
@@ -256,7 +258,7 @@ describe('Order Payment Method Integration Tests', () => {
                 .expect(400);
 
             expect(response.body.error).toContain('paymentMethodCode debe ser uno de');
-        });it('should return 401 without authentication', async () => {
+        }); it('should return 401 without authentication', async () => {
             await request(app)
                 .patch(`/api/sales/${testOrderId}/payment-method`)
                 .send({
@@ -280,7 +282,7 @@ describe('Order Payment Method Integration Tests', () => {
                 discountRate: 0,
                 discountAmount: 0,
                 total: 10000,
-                status: pendingStatusId,                shippingDetails: {
+                status: pendingStatusId, shippingDetails: {
                     recipientName: 'Test Recipient',
                     phone: '123456789',
                     streetAddress: 'Test Street',
@@ -289,7 +291,7 @@ describe('Order Payment Method Integration Tests', () => {
                     originalNeighborhoodId: testNeighborhoodId,
                     originalCityId: testCityId
                 }
-            });            const response = await request(app)
+            }); const response = await request(app)
                 .patch(`/api/sales/${highAmountOrder._id}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
@@ -298,7 +300,7 @@ describe('Order Payment Method Integration Tests', () => {
                 .expect(400);
 
             expect(response.body.error).toContain('no es elegible para pago en efectivo');
-            
+
             // Cleanup
             await OrderModel.findByIdAndDelete(highAmountOrder._id);
         });
@@ -318,7 +320,7 @@ describe('Order Payment Method Integration Tests', () => {
                 discountRate: 0,
                 discountAmount: 0,
                 total: 50,
-                status: pendingStatusId,                shippingDetails: {
+                status: pendingStatusId, shippingDetails: {
                     recipientName: 'Test Recipient',
                     phone: '123456789',
                     streetAddress: 'Test Street',
@@ -327,7 +329,7 @@ describe('Order Payment Method Integration Tests', () => {
                     originalNeighborhoodId: testNeighborhoodId,
                     originalCityId: testCityId
                 }
-            });            const response = await request(app)
+            }); const response = await request(app)
                 .patch(`/api/sales/${lowAmountOrder._id}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
@@ -336,7 +338,7 @@ describe('Order Payment Method Integration Tests', () => {
                 .expect(400);
 
             expect(response.body.error).toContain('monto mínimo para Mercado Pago');
-            
+
             // Cleanup
             await OrderModel.findByIdAndDelete(lowAmountOrder._id);
         });

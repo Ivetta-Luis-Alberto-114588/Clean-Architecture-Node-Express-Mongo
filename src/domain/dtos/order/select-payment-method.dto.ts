@@ -6,7 +6,7 @@ export class SelectPaymentMethodDto {
         public readonly orderId: string,
         public readonly paymentMethodCode: string,
         public readonly notes?: string
-    ) {}
+    ) { }
 
     static create(object: { [key: string]: any }): [string?, SelectPaymentMethodDto?] {
         const { orderId, paymentMethodCode, notes } = object;
@@ -30,8 +30,8 @@ export class SelectPaymentMethodDto {
         if (notes !== undefined && typeof notes !== 'string') return ['notes debe ser un string'];
 
         return [undefined, new SelectPaymentMethodDto(
-            orderId, 
-            paymentMethodCode.toUpperCase(), 
+            orderId,
+            paymentMethodCode.toUpperCase(),
             notes
         )];
     }

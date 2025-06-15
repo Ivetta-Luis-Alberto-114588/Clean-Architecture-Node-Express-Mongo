@@ -22,15 +22,15 @@ describe('SelectPaymentMethodUseCase', () => {
             findById: jest.fn(),
             updatePaymentMethod: jest.fn(),
         } as any;
-        
+
         mockPaymentMethodRepository = {
             findByCode: jest.fn(),
         } as any;
-        
+
         mockOrderStatusRepository = {
             findByCode: jest.fn(),
         } as any;
-          mockLogger = {
+        mockLogger = {
             info: jest.fn(),
             error: jest.fn(),
             warn: jest.fn(),
@@ -44,7 +44,7 @@ describe('SelectPaymentMethodUseCase', () => {
             mockOrderStatusRepository,
             mockLogger
         );
-    });    const createMockOrder = (status: string = 'PENDING', total: number = 1000): OrderEntity => {
+    }); const createMockOrder = (status: string = 'PENDING', total: number = 1000): OrderEntity => {
         const mockOrder = new OrderEntity(
             'order-123',
             {} as any, // customer
@@ -83,7 +83,7 @@ describe('SelectPaymentMethodUseCase', () => {
 
     describe('execute', () => {
         it('should successfully select CASH payment method for pending order', async () => {
-            const selectDto = { orderId: 'order-123', paymentMethodCode: 'CASH' } as SelectPaymentMethodDto;            const mockOrder = createMockOrder('PENDING', 500); // Within cash limit
+            const selectDto = { orderId: 'order-123', paymentMethodCode: 'CASH' } as SelectPaymentMethodDto; const mockOrder = createMockOrder('PENDING', 500); // Within cash limit
             const mockPaymentMethod = createMockPaymentMethod('CASH');
             const mockNewStatus = createMockOrderStatus('CONFIRMED');
             const mockUpdatedOrder = createMockOrder('CONFIRMED', 500);
@@ -108,7 +108,7 @@ describe('SelectPaymentMethodUseCase', () => {
         });
 
         it('should successfully select MERCADO_PAGO payment method', async () => {
-            const selectDto = { orderId: 'order-123', paymentMethodCode: 'MERCADO_PAGO' } as SelectPaymentMethodDto;            const mockOrder = createMockOrder('PENDING', 1000);
+            const selectDto = { orderId: 'order-123', paymentMethodCode: 'MERCADO_PAGO' } as SelectPaymentMethodDto; const mockOrder = createMockOrder('PENDING', 1000);
             const mockPaymentMethod = createMockPaymentMethod('MERCADO_PAGO');
             const mockNewStatus = createMockOrderStatus('AWAITING_PAYMENT');
             const mockUpdatedOrder = createMockOrder('AWAITING_PAYMENT', 1000);
@@ -192,11 +192,11 @@ describe('SelectPaymentMethodUseCase', () => {
         });
 
         it('should include custom notes when provided', async () => {
-            const selectDto = { 
-                orderId: 'order-123', 
+            const selectDto = {
+                orderId: 'order-123',
                 paymentMethodCode: 'CASH',
                 notes: 'Custom payment notes'
-            } as SelectPaymentMethodDto;            const mockOrder = createMockOrder('PENDING', 500);
+            } as SelectPaymentMethodDto; const mockOrder = createMockOrder('PENDING', 500);
             const mockPaymentMethod = createMockPaymentMethod('CASH');
             const mockNewStatus = createMockOrderStatus('CONFIRMED');
             const mockUpdatedOrder = createMockOrder('CONFIRMED', 500);

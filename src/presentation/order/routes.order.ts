@@ -32,9 +32,9 @@ export class OrderRoutes {
         const productDatasource = new ProductMongoDataSourceImpl();
         const couponDatasource = new CouponMongoDataSourceImpl();
         const neighborhoodDatasource = new NeighborhoodMongoDataSourceImpl();
-        const cityDatasource = new CityMongoDataSourceImpl();        const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
+        const cityDatasource = new CityMongoDataSourceImpl(); const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
         const paymentMethodDatasource = new PaymentMethodMongoDataSourceImpl();
-        
+
         // Repositorios
         const orderRepository = new OrderRepositoryImpl(orderDatasource);
         const customerRepository = new CustomerRepositoryImpl(customerDatasource);
@@ -65,7 +65,7 @@ export class OrderRoutes {
         router.get('/:id', controller.getSaleById);
         router.patch('/:id/status', controller.updateSaleStatus);
         router.get('/by-customer/:customerId', controller.getSalesByCustomer);
-        router.post('/by-date-range', controller.getSalesByDateRange);        
+        router.post('/by-date-range', controller.getSalesByDateRange);
         // NUEVO: endpoint para actualizar completamente un pedido
         router.put('/:id', [AuthMiddleware.validateJwt], controller.updateSale);
         // NUEVO: endpoint para seleccionar método de pago

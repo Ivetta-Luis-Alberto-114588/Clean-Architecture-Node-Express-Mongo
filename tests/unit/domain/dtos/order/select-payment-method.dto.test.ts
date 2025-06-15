@@ -56,7 +56,7 @@ describe('SelectPaymentMethodDto', () => {
             expect(error).toBeDefined();
             expect(error).toContain('paymentMethodCode');
             expect(dto).toBeUndefined();
-        });        it('should return error when orderId is invalid', () => {
+        }); it('should return error when orderId is invalid', () => {
             const invalidData = {
                 orderId: 'not-a-valid-mongodb-id',
                 paymentMethodCode: 'CASH'

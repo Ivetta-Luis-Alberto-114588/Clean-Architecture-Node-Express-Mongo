@@ -30,7 +30,7 @@ export class AdminOrderRoutes {
         const productDatasource = new ProductMongoDataSourceImpl();
         const couponDatasource = new CouponMongoDataSourceImpl();
         const neighborhoodDatasource = new NeighborhoodMongoDataSourceImpl();
-        const cityDatasource = new CityMongoDataSourceImpl();        const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
+        const cityDatasource = new CityMongoDataSourceImpl(); const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
         const paymentMethodDatasource = new PaymentMethodMongoDataSourceImpl();
 
         // Repositorios

@@ -2,23 +2,24 @@
 import { PaymentMethodEntity } from "../../../domain/entities/payment/payment-method.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
 
-export class PaymentMethodMapper {    static fromObjectToEntity(object: any): PaymentMethodEntity {
+export class PaymentMethodMapper {
+    static fromObjectToEntity(object: any): PaymentMethodEntity {
         if (!object) {
             throw CustomError.badRequest('PaymentMethodMapper: object is null or undefined');
         }
 
-        const { 
-            _id, 
-            id, 
-            code, 
-            name, 
-            description, 
-            isActive, 
-            defaultOrderStatusId, 
-            requiresOnlinePayment, 
+        const {
+            _id,
+            id,
+            code,
+            name,
+            description,
+            isActive,
+            defaultOrderStatusId,
+            requiresOnlinePayment,
             allowsManualConfirmation,
-            createdAt, 
-            updatedAt 
+            createdAt,
+            updatedAt
         } = object;
 
         if (!_id && !id) {
@@ -37,7 +38,7 @@ export class PaymentMethodMapper {    static fromObjectToEntity(object: any): Pa
             createdAt || new Date(),
             updatedAt || new Date()
         );
-    }    static fromEntityToObject(entity: PaymentMethodEntity): any {
+    } static fromEntityToObject(entity: PaymentMethodEntity): any {
         return {
             code: entity.code,
             name: entity.name,

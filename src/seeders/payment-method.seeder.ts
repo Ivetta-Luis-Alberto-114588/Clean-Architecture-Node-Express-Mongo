@@ -67,17 +67,17 @@ export async function seedPaymentMethods(): Promise<void> {
         // Get all order statuses to resolve references
         const orderStatuses = await OrderStatusModel.find({}).lean();
         const statusCodeToId = new Map<string, mongoose.Types.ObjectId>();
-        
+
         for (const status of orderStatuses) {
             statusCodeToId.set(status.code, status._id);
         }
 
         // Create payment methods
         const createdMethods: any[] = [];
-        
+
         for (const methodSeed of paymentMethodSeeds) {
             const { defaultOrderStatusCode, ...methodData } = methodSeed;
-            
+
             // Resolve order status code to ObjectId
             const defaultOrderStatusId = statusCodeToId.get(defaultOrderStatusCode);
             if (!defaultOrderStatusId) {
