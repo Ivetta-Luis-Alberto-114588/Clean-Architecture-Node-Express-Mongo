@@ -15,11 +15,16 @@ module.exports = {
     '/node_modules/',
     '/dist/',
     '/tests/performance/'
-  ], collectCoverageFrom: [
+  ],
+  collectCoverageFrom: [
     'src/**/*.{js,ts}',
     '!src/presentation/server.ts',
     '!src/app.ts',
-  ],    // Configuración de proyectos separados
+  ],
+  // Configuración para evitar problemas de timing
+  testTimeout: 30000,
+  maxWorkers: 1, // Forzar ejecución secuencial
+  // Configuración de proyectos separados
   projects: [
     {
       displayName: 'unit-integration',
@@ -34,6 +39,8 @@ module.exports = {
       setupFilesAfterEnv: ['<rootDir>/tests/utils/setup.ts'],
       globalSetup: '<rootDir>/tests/utils/global-setup.ts',
       globalTeardown: '<rootDir>/tests/utils/global-teardown.ts',
+      testTimeout: 30000,
+      maxWorkers: 1,
     },
     {
       displayName: 'performance',
@@ -44,6 +51,8 @@ module.exports = {
       setupFilesAfterEnv: ['<rootDir>/tests/utils/setup.ts'],
       globalSetup: '<rootDir>/tests/utils/global-setup.ts',
       globalTeardown: '<rootDir>/tests/utils/global-teardown.ts',
+      testTimeout: 30000,
+      maxWorkers: 1,
     }
   ],
   coverageThreshold: {
@@ -68,5 +77,4 @@ module.exports = {
       },
     ],
   ],
-  testTimeout: 30000,
 };

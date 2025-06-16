@@ -16,7 +16,7 @@
     "test:integration": "jest --testPathPattern=tests/integration --runInBand",
     "test:smoke": "jest --testPathPattern=tests/smoke --detectOpenHandles --forceExit",
     "test:watch": "jest --watch --selectProjects unit-integration",
-    "test:coverage": "jest --coverage --selectProjects unit-integration",
+    "test:coverage": "jest --coverage --runInBand --detectOpenHandles --selectProjects unit-integration",
     "test:all": "jest --runInBand --detectOpenHandles",
     "test:performance": "cross-env PERFORMANCE_TARGET=render jest --selectProjects performance --detectOpenHandles --forceExit --runInBand",
     "test:performance:local": "jest --selectProjects performance --detectOpenHandles --forceExit --runInBand",

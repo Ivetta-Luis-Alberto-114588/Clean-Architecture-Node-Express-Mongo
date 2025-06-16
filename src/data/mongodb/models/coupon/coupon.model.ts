@@ -14,7 +14,8 @@ export interface ICoupon extends Document {
     minPurchaseAmount?: number | null; // Monto mínimo de compra para aplicar (opcional, null si no aplica)
     usageLimit?: number | null; // Límite máximo de usos totales (opcional, null si no hay límite)
     timesUsed: number;          // Contador de veces que se ha usado el cupón
-    // createdAt y updatedAt son añadidos automáticamente por timestamps: true
+    createdAt: Date;            // Fecha de creación (agregado por timestamps: true)
+    updatedAt: Date;            // Fecha de última actualización (agregado por timestamps: true)
 }
 // --- Fin Interfaz ICoupon ---
 
