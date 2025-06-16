@@ -33,12 +33,11 @@ export class MCPRoutes {
             orderRepository
         );
         const mcpRepository = new MCPRepositoryImpl(mcpDataSource);
-        const controller = new MCPController(mcpRepository);
-
-        // Rutas públicas (puedes agregar autenticación si es necesario)
+        const controller = new MCPController(mcpRepository);        // Rutas públicas (puedes agregar autenticación si es necesario)
         router.get('/health', controller.healthCheck);
         router.get('/tools', controller.listTools);
         router.post('/call', controller.callTool);
+        router.post('/anthropic', controller.anthropicProxy);
 
         return router;
     }

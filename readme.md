@@ -1,4 +1,4 @@
-# cStartUp E-commerce API (Backend)
+# StartUp E-commerce API (Backend)
 
 **Este es el backend para una aplicación de E-commerce completa, construida con Node.js, TypeScript, Express y MongoDB. Incorpora características modernas como autenticación JWT, integración con pasarelas de pago, gestión de productos/clientes (con** **búsqueda y filtrado avanzados**, **gestión de direcciones**), un carrito de compras, sistema de cupones, un **panel de administración API**, **un chatbot inteligente basado en RAG (Retrieval-Augmented Generation)** **y soporte para el protocolo MCP (Model Context Protocol) para integración con herramientas de IA externas.**
 
@@ -4246,6 +4246,104 @@ En nuestro backend de E-commerce, MCP permite que agentes de IA externos (como C
 }
 ```
 
+#### POST /api/mcp/anthropic
+
+**Descripción:** Endpoint proxy que permite a aplicaciones frontend realizar llamadas a la API de Anthropic Claude sin problemas de CORS. Actúa como intermediario entre tu frontend y la API de Anthropic.
+
+
+**¿Por qué se usa este endpoint?**
+
+1. **Solución a CORS** : Las APIs de modelos de IA como Anthropic no permiten llamadas directas desde navegadores por políticas de seguridad (CORS)
+2. **Seguridad de API Keys** : Mantiene la API key de Anthropic protegida en el servidor backend, sin exposerla al frontend
+3. **Control centralizado** : Permite monitoreo, logging y control de todas las llamadas a servicios de IA desde un punto central
+4. **Flexibilidad** : Habilita que múltiples aplicaciones frontend (Angular, React, Vue, etc.) puedan usar el mismo servicio de IA
+
+
+
+**Headers requeridos:**
+
+```json
+Content-Type: application/json
+```
+
+
+**Estructura del request:**
+
+```json
+{
+  "model": "claude-3-haiku-20240307",
+  "max_tokens": 1000,
+  "messages": [
+    {
+      "role": "user",
+      "content": "Analiza estos datos de productos y dame un resumen: [datos]"
+    }
+  ]
+}
+```
+
+
+**Ejemplo de respuesta:**
+
+```json
+{
+  "id": "msg_abc123",
+  "type": "message",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "text",
+      "text": "Basándome en los datos proporcionados, puedo ver que tienes 16 productos en total..."
+    }
+  ],
+  "model": "claude-3-haiku-20240307",
+  "usage": {
+    "input_tokens": 150,
+    "output_tokens": 200
+  }
+}
+```
+
+
+**Casos de uso típicos:**
+
+* Análisis inteligente de datos de productos obtenidos via MCP
+* Generación de respuestas conversacionales en chatbots
+* Procesamiento de consultas en lenguaje natural sobre el e-commerce
+* Integración con interfaces de chat que combinan datos reales + análisis de IA
+
+**Ejemplo de uso desde Angular:**
+
+```json
+	// Combinar MCP + Anthropic para análisis inteligente
+async analyzeProducts() {
+  // 1. Obtener datos via MCP
+  const products = await this.http.post('/api/mcp/call', {
+    toolName: 'get_products',
+    arguments: { limit: 10 }
+  }).toPromise();
+
+  // 2. Analizar con Claude via proxy
+  const analysis = await this.http.post('/api/mcp/anthropic', {
+    model: 'claude-3-haiku-20240307',
+    max_tokens: 500,
+    messages: [{
+      role: 'user',
+      content: `Analiza estos productos: ${JSON.stringify(products)}`
+    }]
+  }).toPromise();
+
+  return analysis;
+}
+```
+
+
+**Configuración requerida:**
+
+* Variable de entorno `ANTHROPIC_API_KEY` configurada en el servidor
+* El endpoint requiere que el backend tenga acceso a internet para conectarse a la API de Anthropic
+
+
 #### **POST /call**
 
 - **Descripción**: Ejecuta una herramienta específica del protocolo MCP
@@ -4630,7 +4728,7 @@ export class DashboardComponent implements OnInit {
         placeholder="Buscar productos..."
         (keyup.enter)="searchProducts(searchInput.value)">
       <button (click)="searchProducts(searchInput.value)">Buscar</button>
-      
+    
       <div class="price-filter">
         <input #minPrice type="number" placeholder="Precio mín." min="0">
         <input #maxPrice type="number" placeholder="Precio máx." min="0">
@@ -4639,7 +4737,7 @@ export class DashboardComponent implements OnInit {
         </button>
       </div>
     </div>
-    
+  
     <div class="products-content" *ngIf="products">
       <pre>{{ products }}</pre>
     </div>
