@@ -83,32 +83,51 @@ describe('Monitoring Routes Integration Tests', () => {
             const response = await request(app)
                 .get('/api/monitoring/mongodb')
                 .set('Authorization', `Bearer ${adminToken}`)
-                .expect(200);
-
-            // La respuesta tiene la estructura: { data: {...}, service: "...", timestamp: "..." }
+                .expect(200);            // La respuesta tiene la estructura: { data: {...}, service: "...", timestamp: "..." }
             expect(response.body).toHaveProperty('data');
             expect(response.body).toHaveProperty('service');
             expect(response.body).toHaveProperty('timestamp');
 
             // Verificar propiedades dentro de data
             expect(response.body.data).toHaveProperty('cluster');
-            expect(response.body.data).toHaveProperty('storageUsed');
-            expect(response.body.data).toHaveProperty('limits');
-            expect(response.body.data).toHaveProperty('currentConnections');
+            expect(response.body.data).toHaveProperty('storage');
+            expect(response.body.data).toHaveProperty('connections');
             expect(response.body.data).toHaveProperty('collections');
             expect(response.body.data).toHaveProperty('recommendations');
+            expect(response.body.data).toHaveProperty('status');
             expect(response.body.data).toHaveProperty('timestamp');
+
             // Verificar estructura de storage
-            expect(response.body.data.storageUsed).toHaveProperty('bytes');
-            expect(response.body.data.storageUsed).toHaveProperty('mb');
-            expect(response.body.data.storageUsed).toHaveProperty('percentage');
+            expect(response.body.data.storage).toHaveProperty('used');
+            expect(response.body.data.storage).toHaveProperty('limits');
+            expect(response.body.data.storage).toHaveProperty('remaining');
 
-            // Verificar límites
-            expect(response.body.data.limits).toHaveProperty('maxStorage');
-            expect(response.body.data.limits).toHaveProperty('maxConnections');
+            // Verificar storage.used
+            expect(response.body.data.storage.used).toHaveProperty('mb');
+            expect(response.body.data.storage.used).toHaveProperty('gb');
+            expect(response.body.data.storage.used).toHaveProperty('percentage');
 
-            // Verificar que las colecciones son un array
+            // Verificar storage.limits
+            expect(response.body.data.storage.limits).toHaveProperty('maxStorage');
+            expect(response.body.data.storage.limits).toHaveProperty('maxConnections');            // Verificar que las colecciones son un array
             expect(Array.isArray(response.body.data.collections)).toBe(true);
+
+            // Verificar estructura de cada colección
+            if (response.body.data.collections.length > 0) {
+                const firstCollection = response.body.data.collections[0];
+                expect(firstCollection).toHaveProperty('name');
+                expect(firstCollection).toHaveProperty('documentCount');
+                expect(firstCollection).toHaveProperty('storage');
+                expect(firstCollection.storage).toHaveProperty('sizeMB');
+                expect(firstCollection.storage).toHaveProperty('indexMB');
+                expect(firstCollection.storage).toHaveProperty('totalMB');
+            }
+
+            // Verificar conexiones
+            expect(response.body.data.connections).toHaveProperty('current');
+            expect(response.body.data.connections).toHaveProperty('limit');
+            expect(response.body.data.connections).toHaveProperty('available');
+            expect(response.body.data.connections).toHaveProperty('percentage');
 
             // Verificar que las recomendaciones son un array
             expect(Array.isArray(response.body.data.recommendations)).toBe(true);

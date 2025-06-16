@@ -4124,8 +4124,21 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 
 #### **GET /health**
 
-- **Descripción**: Obtiene el estado general de salud del sistema (público)
-- **Autenticación**: No requerida
+- **Descripción**: Obtiene el estado general de salud del sistema de forma pública para monitoreo básico
+- **Autenticación**: No requerida (endpoint público)
+- **Propósito**: 
+  - Verificación rápida del estado de todos los servicios críticos
+  - Ideal para health checks de balanceadores de carga y monitoreo externo
+  - Proporciona vista consolidada sin datos sensibles
+- **Estados del sistema**:
+  - `healthy`: Todos los servicios funcionan correctamente
+  - `degraded`: Algunos servicios tienen warnings pero funcionan
+  - `unhealthy`: Hay servicios con problemas críticos
+- **Interpretación de métricas**:
+  - `storageUsage`: Porcentaje de almacenamiento usado
+  - `hoursUsage`: Porcentaje de horas mensuales consumidas (Render)
+  - `memoryUsage`: Porcentaje de memoria RAM en uso
+  - `transformationsUsage`: Porcentaje de transformaciones de imágenes usadas
 - **Respuesta exitosa (200)**:
 
 ```json
@@ -4266,10 +4279,100 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 }
 ```
 
+#### **GET /cloudinary** 🔒
+
+- **Descripción**: Obtiene métricas detalladas de Cloudinary para monitoreo de almacenamiento de imágenes, bandwidth y transformaciones
+- **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Casos de uso**: Evaluar el uso del servicio de imágenes, detectar posibles límites, optimizar costos
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "data": {
+    "cloudName": "diwctpwax",
+    "plan": "Free",
+    "resources": {
+      "totalImages": 89,
+      "totalVideos": 3,
+      "totalOtherFiles": 12,
+      "totalSize": 257695744,
+      "sizeMB": 245.8,
+      "sizeGB": 0.24
+    },
+    "currentMonth": {
+      "transformations": 1250,
+      "bandwidth": 163840000,
+      "bandwidthMB": 156.2,
+      "bandwidthGB": 0.15,
+      "requests": 312
+    },
+    "folders": [
+      {
+        "name": "products",
+        "resourceCount": 67
+      },
+      {
+        "name": "users",
+        "resourceCount": 15
+      },
+      {
+        "name": "categories",
+        "resourceCount": 7
+      }
+    ],
+    "limits": {
+      "plan": "Free",
+      "maxStorage": 25,
+      "maxTransformations": 25000,
+      "maxBandwidth": 25,
+      "maxRequests": 1000000
+    },
+    "usageProjections": {
+      "storage": {
+        "currentGB": 0.24,
+        "projectedMonthlyGB": 0.24,
+        "status": "OK"
+      },
+      "bandwidth": {
+        "currentGB": 0.15,
+        "projectedMonthlyGB": 0.45,
+        "status": "OK"
+      },
+      "transformations": {
+        "current": 1250,
+        "projectedMonthly": 3750,
+        "status": "OK"
+      }
+    },
+    "status": "healthy",
+    "recommendations": [
+      "✅ Almacenamiento dentro de límites normales",
+      "✅ Bandwidth dentro de límites normales",
+      "✅ Transformaciones dentro de límites normales",
+      "📊 Considerar implementar CDN para mejorar rendimiento"
+    ],
+    "timestamp": "2025-06-16T12:20:00.000Z"
+  },
+  "service": "Cloudinary",
+  "timestamp": "2025-06-16T12:20:00.000Z"
+}
+```
+
 #### **GET /complete** 🔒
 
-- **Descripción**: Obtiene un reporte completo de todos los servicios monitoreados con métricas detalladas en formato humanamente legible
+- **Descripción**: Obtiene un reporte detallado y completo de todos los servicios monitoreados con métricas en formato humanamente legible
 - **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Propósito**: 
+  - Dashboard administrativo con métricas detalladas de todos los servicios
+  - Análisis profundo del uso de recursos y tendencias
+  - Planificación de capacidad y optimización de costos
+- **Métricas incluidas**:
+  - **MongoDB**: Almacenamiento (MB/GB), conexiones, colecciones individuales
+  - **Render**: Horas mensuales, memoria RAM, proyecciones de tráfico
+  - **Cloudinary**: Almacenamiento de imágenes, bandwidth, transformaciones, proyecciones
+- **Formato de medidas**: Todas las medidas están en MB/GB para fácil interpretación humana
+- **Alertas**: Cada servicio incluye su nivel de alerta actual (healthy/warning/critical)
+- **Proyecciones**: Estimaciones de uso futuro basadas en patrones actuales
 - **Respuesta exitosa (200)**:
 
 ```json
@@ -4394,19 +4497,52 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 
 #### **GET /alerts** 🔒
 
-- **Descripción**: Obtiene alertas inteligentes del sistema con información detallada
+- **Descripción**: Sistema de alertas inteligente que proporciona notificaciones proactivas sobre el estado de todos los servicios
 - **Autenticación**: JWT + ADMIN_ROLE requerido
+- **Propósito**:
+  - Detectar problemas antes de que se vuelvan críticos
+  - Proporcionar acciones específicas para resolver cada alerta
+  - Mantener informado sobre el estado del sistema incluso cuando está saludable
 - **Características**:
-  - **Alertas Multinivel**: Critical, Warning e Info
-  - **Siempre Informativo**: Nunca devuelve respuesta vacía
-  - **Estado del Sistema**: Incluye información cuando todo está saludable
-  - **Umbrales Inteligentes**: Detecta problemas antes de que se vuelvan críticos
+  - **Alertas Multinivel**: Critical (crítico), Warning (advertencia), Info (informativo)
+  - **Siempre Informativo**: Nunca devuelve respuesta vacía, siempre proporciona información útil
+  - **Estado del Sistema**: Incluye información detallada cuando todo está saludable
+  - **Umbrales Inteligentes**: Detecta problemas antes de que afecten a los usuarios
+  - **Acciones Específicas**: Cada alerta incluye pasos concretos para resolver el problema
+- **Interpretación de niveles**:
+  - **Critical**: Requiere acción inmediata para evitar interrupciones del servicio
+  - **Warning**: Situación que requiere monitoreo y posible acción preventiva
+  - **Info**: Estado saludable con información adicional para planificación
 
-**Umbrales de Alertas:**
-- **MongoDB Critical**: Almacenamiento > 85% O Conexiones > 450
-- **MongoDB Warning**: Almacenamiento > 70% O Conexiones > 350  
-- **Render Critical**: Uso mensual > 90% O Memoria > 90%
-- **Render Warning**: Uso mensual > 75% O Memoria > 80%
+**Umbrales de Alertas (Configuración Inteligente):**
+
+**MongoDB (Base de Datos)**:
+- **Critical**: Almacenamiento > 85% O Conexiones > 450
+  - *Riesgo*: Base de datos podría llenarse o saturarse
+  - *Acción*: Limpieza inmediata o migración a tier pago
+- **Warning**: Almacenamiento > 70% O Conexiones > 350
+  - *Riesgo*: Acercándose a límites críticos
+  - *Acción*: Monitoreo y planificación de limpieza
+
+**Render (Servidor de Aplicación)**:
+- **Critical**: Uso mensual > 90% O Memoria > 90%
+  - *Riesgo*: Servicio podría suspenderse por límites de tier gratuito
+  - *Acción*: Migración a plan pago o optimización inmediata
+- **Warning**: Uso mensual > 75% O Memoria > 80%
+  - *Riesgo*: Consumo alto que requiere monitoreo
+  - *Acción*: Revisar optimizaciones y proyecciones
+
+**Cloudinary (Almacenamiento de Imágenes)**:
+- **Critical**: Almacenamiento > 90% O Bandwidth > 90% O Transformaciones > 90%
+  - *Riesgo*: Servicio de imágenes podría suspenderse
+  - *Acción*: Eliminar imágenes no utilizadas o migrar a plan pago
+- **Warning**: Almacenamiento > 75% O Bandwidth > 75% O Transformaciones > 75%
+  - *Riesgo*: Alto consumo de recursos de imágenes  - *Acción*: Optimización de imágenes y revisión de transformaciones
+
+**Ejemplos de Respuesta:**
+
+**Escenario 1: Sistema con problemas que requieren atención**
+*Este ejemplo muestra cómo se ven las alertas cuando hay problemas detectados que requieren acción administrativa.*
 
 **Respuesta cuando hay alertas críticas (200)**:
 ```json
@@ -4425,28 +4561,42 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
     },
     {
       "service": "Render",
-      "level": "warning",
-      "message": "Horas usadas: 78%",
+      "level": "warning",      "message": "Horas usadas: 78%",
       "action": "Monitorear el uso",
       "details": {
         "hoursUsed": 585,
         "hoursRemaining": 165,
         "percentage": 78
       }
+    },
+    {
+      "service": "Cloudinary",
+      "level": "warning",
+      "message": "Transformaciones altas: 78%",
+      "action": "Revisar transformaciones innecesarias",
+      "details": {
+        "transformations": 19500,
+        "limit": 25000,
+        "percentage": 78
+      }
     }
   ],
   "timestamp": "2025-06-16T12:10:04.842Z",
-  "totalAlerts": 2,
+  "totalAlerts": 3,
   "criticalCount": 1,
-  "warningCount": 1,
+  "warningCount": 2,
   "infoCount": 0,
   "systemStatus": {
     "mongodb": "critical",
     "render": "warning",
+    "cloudinary": "warning",
     "overall": "critical"
   }
 }
 ```
+
+**Escenario 2: Sistema funcionando correctamente**
+*Este ejemplo muestra cómo el sistema proporciona información útil incluso cuando todo está funcionando bien, incluyendo proyecciones y métricas para planificación.*
 
 **Respuesta cuando el sistema está saludable (200)**:
 ```json
@@ -4503,19 +4653,55 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
           "used": 11410,
           "free": 4900,
           "total": 16310,
-          "percentage": 70
+          "percentage": 70        }
+      }
+    },
+    {
+      "service": "Cloudinary",
+      "level": "info",
+      "message": "Sistema saludable - Almacenamiento: 0.96%, Bandwidth: 0.6%, Transformaciones: 5%",
+      "action": "Continuar monitoreo regular",
+      "details": {
+        "status": "healthy",
+        "resources": {
+          "totalImages": 89,
+          "sizeMB": 245.8,
+          "sizeGB": 0.24
+        },
+        "usage": {
+          "transformations": 1250,
+          "bandwidthMB": 156.2,
+          "bandwidthGB": 0.15
+        },
+        "projections": {
+          "storage": {
+            "currentGB": 0.24,
+            "projectedMonthlyGB": 0.24,
+            "status": "OK"
+          },
+          "bandwidth": {
+            "currentGB": 0.15,
+            "projectedMonthlyGB": 0.45,
+            "status": "OK"
+          },
+          "transformations": {
+            "current": 1250,
+            "projectedMonthly": 3750,
+            "status": "OK"
+          }
         }
       }
     }
   ],
   "timestamp": "2025-06-16T12:10:04.842Z",
-  "totalAlerts": 2,
+  "totalAlerts": 3,
   "criticalCount": 0,
   "warningCount": 0,
-  "infoCount": 2,
+  "infoCount": 3,
   "systemStatus": {
     "mongodb": "healthy",
     "render": "healthy",
+    "cloudinary": "healthy",
     "overall": "healthy"
   }
 }
@@ -4528,14 +4714,18 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 - **🚨 Sistema de Alertas**: Detecta automáticamente problemas y genera recomendaciones
 - **📱 Integración**: Diseñado para integrarse fácilmente con dashboards de monitoreo
 - **⚡ Performance**: Optimizado para no impactar el rendimiento de la aplicación principal
+- **🖼️ Monitoreo de Cloudinary**: Incluye métricas de almacenamiento de imágenes, bandwidth y transformaciones con proyecciones de uso
+- **📏 Medidas Humanamente Legibles**: Todas las métricas se muestran en MB/GB y porcentajes para fácil interpretación
 
 #### **Casos de Uso:**
 
-- **Dashboard de Administración**: Mostrar métricas en tiempo real
+- **Dashboard de Administración**: Mostrar métricas en tiempo real de todos los servicios
 - **Health Checks**: Verificar estado del servicio desde balanceadores de carga
 - **Alertas Proactivas**: Detectar problemas antes de que afecten a los usuarios
 - **Planificación de Recursos**: Analizar tendencias de uso para escalar servicios
 - **Troubleshooting**: Diagnosticar problemas de rendimiento o disponibilidad
+- **Optimización de Costos**: Monitorear uso de servicios de terceros (Cloudinary, Render) para evitar sorpresas en facturación
+- **Gestión de Imágenes**: Controlar almacenamiento y transformaciones de Cloudinary para optimizar performance
 
 ---
 
