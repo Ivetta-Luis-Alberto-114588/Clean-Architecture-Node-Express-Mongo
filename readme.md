@@ -4111,13 +4111,14 @@ Para configurar Telegram:
 
 [⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
 
-El sistema de monitoreo proporciona información detallada sobre el estado y rendimiento de la aplicación, incluyendo métricas de MongoDB, Render.com y alertas del sistema.
+El sistema de monitoreo proporciona información detallada sobre el estado y rendimiento de la aplicación, incluyendo métricas de MongoDB, Render.com, Cloudinary y alertas del sistema.
 
 #### **Características del Sistema de Monitoreo:**
 
 - **Salud General**: Endpoint público para verificar el estado básico del servicio
 - **Monitoreo de MongoDB**: Métricas detalladas de uso de base de datos (requiere admin)
 - **Monitoreo de Render**: Información sobre recursos del servidor (requiere admin) 
+- **Monitoreo de Cloudinary**: Métricas de almacenamiento de imágenes y uso de transformaciones (requiere admin)
 - **Reportes Completos**: Vista consolidada de todos los servicios (requiere admin)
 - **Sistema de Alertas**: Notificaciones sobre problemas detectados (requiere admin)
 
@@ -4130,32 +4131,28 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 ```json
 {
   "status": "healthy | degraded | unhealthy",
-  "timestamp": "2025-06-14T22:20:00.000Z",
-  "uptime": "0m 30s",
+  "timestamp": "2025-06-16T12:20:00.000Z",
+  "uptime": 1800,
   "services": {
     "mongodb": {
       "status": "connected | disconnected",
-      "storageUsage": {
-        "percentage": 15,
-        "mb": 75
-      },
+      "storageUsage": 15.2,
       "connections": 5,
       "recommendations": ["✅ MongoDB está funcionando correctamente"]
     },
     "render": {
       "status": "healthy | warning | critical",
-      "memoryUsage": {
-        "percentage": 45,
-        "free": 8900,
-        "used": 7400,
-        "total": 16300
-      },
-      "hoursUsage": {
-        "used": 112,
-        "remaining": 638,
-        "percentage": 14.93
-      },
+      "hoursUsage": 14.93,
+      "memoryUsage": 45.3,
       "recommendations": ["✅ Uso de Render dentro de límites normales"]
+    },
+    "cloudinary": {
+      "status": "healthy | warning | critical",
+      "storageUsage": 0.96,
+      "bandwidthUsage": 0.6,
+      "transformationsUsage": 5.0,
+      "totalImages": 89,
+      "recommendations": ["✅ Cloudinary funcionando correctamente"]
     }
   }
 }
@@ -4163,7 +4160,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 
 #### **GET /mongodb** 🔒
 
-- **Descripción**: Obtiene métricas detalladas de MongoDB
+- **Descripción**: Obtiene métricas detalladas de MongoDB con medidas en formato humanamente legible
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Respuesta exitosa (200)**:
 
@@ -4171,35 +4168,54 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 {
   "data": {
     "cluster": "test-db",
-    "storageUsed": {
-      "bytes": 134217728,
-      "mb": 128,
-      "percentage": 25
+    "storage": {
+      "used": {
+        "mb": 128.5,
+        "gb": 0.13,
+        "percentage": 25.1
+      },
+      "limits": {
+        "maxStorage": 512,
+        "maxStorageGB": 0.5,
+        "maxConnections": 500
+      },
+      "remaining": {
+        "mb": 383.5,
+        "gb": 0.37
+      }
     },
-    "limits": {
-      "maxStorage": 512,
-      "maxConnections": 500
+    "connections": {
+      "current": 12,
+      "percentage": 2.4,
+      "limit": 500,
+      "available": 488
     },
-    "currentConnections": 12,
     "collections": [
       {
         "name": "products",
         "documentCount": 150,
-        "storageSize": 45678,
-        "indexSize": 12345
+        "storage": {
+          "sizeMB": 43.5,
+          "indexMB": 11.8,
+          "totalMB": 55.3
+        }
       },
       {
         "name": "users",
         "documentCount": 89,
-        "storageSize": 23456,
-        "indexSize": 5678
+        "storage": {
+          "sizeMB": 22.4,
+          "indexMB": 5.4,
+          "totalMB": 27.8
+        }
       }
     ],
+    "status": "healthy",
     "recommendations": [
       "✅ MongoDB está funcionando dentro de los límites normales",
       "💡 Considere agregar índices para consultas frecuentes"
     ],
-    "timestamp": "2025-06-14T22:20:00.000Z"
+    "timestamp": "2025-06-16T12:20:00.000Z"
   },
   "service": "MongoDB Atlas",
   "timestamp": "2025-06-14T22:20:00.000Z"
@@ -4252,7 +4268,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 
 #### **GET /complete** 🔒
 
-- **Descripción**: Obtiene un reporte completo de todos los servicios monitoreados
+- **Descripción**: Obtiene un reporte completo de todos los servicios monitoreados con métricas detalladas en formato humanamente legible
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Respuesta exitosa (200)**:
 
@@ -4261,57 +4277,247 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
   "services": {
     "mongodb": {
       "status": "healthy",
-      "storageUsage": { "percentage": 25 },
-      "connections": 12,
+      "storage": {
+        "used": 128.5,
+        "usedGB": 0.13,
+        "percentage": 25.1,
+        "limit": 512,
+        "limitGB": 0.5,
+        "remaining": 383.5,
+        "remainingGB": 0.37
+      },
+      "connections": {
+        "current": 12,
+        "percentage": 2.4,
+        "limit": 500
+      },
+      "recommendations": ["✅ MongoDB funcionando correctamente"],
       "alerts": []
     },
     "render": {
-      "status": "healthy", 
-      "memoryUsage": { "percentage": 45 },
-      "hoursUsage": { "percentage": 14.93 },
+      "status": "healthy",
+      "monthlyHours": {
+        "used": 112.5,
+        "percentage": 15.0,
+        "remaining": 637.5,
+        "limit": 750
+      },
+      "memory": {
+        "used": 7.2,
+        "free": 8.7,
+        "total": 15.9,
+        "percentage": 45.3
+      },
+      "trafficProjections": {
+        "esporadico": {
+          "hoursPerDay": 1.5,
+          "monthlyTotal": 45,
+          "remaining": 705,
+          "status": "sobran"
+        },
+        "normal": {
+          "hoursPerDay": 4,
+          "monthlyTotal": 120,
+          "remaining": 630,
+          "status": "sobran"
+        },
+        "fuerte": {
+          "hoursPerDay": 8,
+          "monthlyTotal": 240,
+          "remaining": 510,
+          "status": "sobran"
+        }
+      },
+      "recommendations": ["✅ Uso de Render dentro de límites normales"],
+      "alerts": []
+    },
+    "cloudinary": {
+      "status": "healthy",
+      "storage": {
+        "used": 245.8,
+        "usedGB": 0.24,
+        "percentage": 0.96,
+        "limit": 25,
+        "remaining": 24.76
+      },
+      "bandwidth": {
+        "used": 156.2,
+        "usedGB": 0.15,
+        "percentage": 0.6,
+        "limit": 25,
+        "remaining": 24.85
+      },
+      "transformations": {
+        "used": 1250,
+        "percentage": 5.0,
+        "limit": 25000,
+        "remaining": 23750
+      },
+      "resources": {
+        "totalImages": 89,
+        "totalVideos": 3,
+        "totalOthers": 12,
+        "totalFiles": 104
+      },
+      "projections": {
+        "storage": {
+          "currentGB": 0.24,
+          "projectedMonthlyGB": 0.24,
+          "status": "OK"
+        },
+        "bandwidth": {
+          "currentGB": 0.15,
+          "projectedMonthlyGB": 0.45,
+          "status": "OK"
+        },
+        "transformations": {
+          "current": 1250,
+          "projectedMonthly": 3750,
+          "status": "OK"
+        }
+      },
+      "recommendations": ["✅ Cloudinary funcionando correctamente"],
       "alerts": []
     }
   },
   "summary": {
-    "overallStatus": "healthy | warning | critical",
+    "overallStatus": "healthy",
     "criticalAlerts": [],
-    "totalServices": 2,
-    "healthyServices": 2,
+    "totalServices": 3,
+    "healthyServices": 3,
     "degradedServices": 0,
     "unhealthyServices": 0
   },
-  "timestamp": "2025-06-14T22:20:00.000Z"
+  "timestamp": "2025-06-16T12:20:00.000Z"
 }
 ```
 
 #### **GET /alerts** 🔒
 
-- **Descripción**: Obtiene las alertas actuales del sistema
+- **Descripción**: Obtiene alertas inteligentes del sistema con información detallada
 - **Autenticación**: JWT + ADMIN_ROLE requerido
-- **Respuesta exitosa (200)**:
+- **Características**:
+  - **Alertas Multinivel**: Critical, Warning e Info
+  - **Siempre Informativo**: Nunca devuelve respuesta vacía
+  - **Estado del Sistema**: Incluye información cuando todo está saludable
+  - **Umbrales Inteligentes**: Detecta problemas antes de que se vuelvan críticos
 
+**Umbrales de Alertas:**
+- **MongoDB Critical**: Almacenamiento > 85% O Conexiones > 450
+- **MongoDB Warning**: Almacenamiento > 70% O Conexiones > 350  
+- **Render Critical**: Uso mensual > 90% O Memoria > 90%
+- **Render Warning**: Uso mensual > 75% O Memoria > 80%
+
+**Respuesta cuando hay alertas críticas (200)**:
 ```json
 {
   "alerts": [
     {
-      "id": "alert_001",
-      "type": "warning | critical | info",
-      "service": "mongodb | render | system",
-      "message": "Uso de memoria superior al 80%",
-      "timestamp": "2025-06-14T22:15:00.000Z",
-      "resolved": false,
+      "service": "MongoDB",
+      "level": "critical",
+      "message": "Almacenamiento al 88%",
+      "action": "Limpiar datos o migrar a tier pago",
       "details": {
-        "metric": "memory_usage",
-        "currentValue": 85,
-        "threshold": 80,
-        "unit": "percentage"
+        "bytes": 471859200,
+        "mb": 450,
+        "percentage": 88
+      }
+    },
+    {
+      "service": "Render",
+      "level": "warning",
+      "message": "Horas usadas: 78%",
+      "action": "Monitorear el uso",
+      "details": {
+        "hoursUsed": 585,
+        "hoursRemaining": 165,
+        "percentage": 78
       }
     }
   ],
-  "totalAlerts": 1,
-  "criticalCount": 0,
+  "timestamp": "2025-06-16T12:10:04.842Z",
+  "totalAlerts": 2,
+  "criticalCount": 1,
   "warningCount": 1,
-  "timestamp": "2025-06-14T22:20:00.000Z"
+  "infoCount": 0,
+  "systemStatus": {
+    "mongodb": "critical",
+    "render": "warning",
+    "overall": "critical"
+  }
+}
+```
+
+**Respuesta cuando el sistema está saludable (200)**:
+```json
+{
+  "alerts": [
+    {
+      "service": "MongoDB",
+      "level": "info",
+      "message": "Sistema saludable - Almacenamiento: 0.02%",
+      "action": "Continuar monitoreo regular",
+      "details": {
+        "status": "healthy",
+        "storage": {
+          "bytes": 80896,
+          "mb": 0.08,
+          "percentage": 0.02
+        },
+        "connections": 1
+      }
+    },
+    {
+      "service": "Render",
+      "level": "info",
+      "message": "Sistema saludable - Horas: 8.53%, Memoria: 70%",
+      "action": "Continuar monitoreo regular",
+      "details": {
+        "status": "healthy",
+        "monthly": {
+          "hoursUsed": 64,
+          "hoursRemaining": 686,
+          "percentage": 8.53,
+          "trafficProjections": {
+            "esporadico": {
+              "hoursPerDay": 1.5,
+              "monthlyTotal": 45,
+              "remaining": 705,
+              "status": "sobran"
+            },
+            "normal": {
+              "hoursPerDay": 4,
+              "monthlyTotal": 120,
+              "remaining": 630,
+              "status": "sobran"
+            },
+            "fuerte": {
+              "hoursPerDay": 8,
+              "monthlyTotal": 240,
+              "remaining": 510,
+              "status": "sobran"
+            }
+          }
+        },
+        "memory": {
+          "used": 11410,
+          "free": 4900,
+          "total": 16310,
+          "percentage": 70
+        }
+      }
+    }
+  ],
+  "timestamp": "2025-06-16T12:10:04.842Z",
+  "totalAlerts": 2,
+  "criticalCount": 0,
+  "warningCount": 0,
+  "infoCount": 2,
+  "systemStatus": {
+    "mongodb": "healthy",
+    "render": "healthy",
+    "overall": "healthy"
+  }
 }
 ```
 

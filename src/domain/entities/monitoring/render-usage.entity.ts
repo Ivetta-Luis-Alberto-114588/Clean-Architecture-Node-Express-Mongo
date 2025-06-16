@@ -9,6 +9,28 @@ export interface RenderMonthlyUsage {
     hoursRemaining: number;
     percentage: number;
     estimatedDepleteDate?: string;
+    trafficProjections?: RenderTrafficProjections;
+}
+
+export interface RenderTrafficProjections {
+    esporadico: {
+        hoursPerDay: number;
+        monthlyTotal: number;
+        remaining: number;
+        status: 'sobran' | 'faltan';
+    };
+    normal: {
+        hoursPerDay: number;
+        monthlyTotal: number;
+        remaining: number;
+        status: 'sobran' | 'faltan';
+    };
+    fuerte: {
+        hoursPerDay: number;
+        monthlyTotal: number;
+        remaining: number;
+        status: 'sobran' | 'faltan';
+    };
 }
 
 export interface RenderInstanceInfo {

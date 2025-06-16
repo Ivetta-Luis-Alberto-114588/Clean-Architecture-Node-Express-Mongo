@@ -1,5 +1,5 @@
 import { CustomError } from "../../errors/custom.error";
-import { RenderUsageEntity, RenderMonthlyUsage, RenderInstanceInfo } from "../../entities/monitoring/render-usage.entity";
+import { RenderUsageEntity, RenderMonthlyUsage, RenderInstanceInfo, RenderTrafficProjections } from "../../entities/monitoring/render-usage.entity";
 import os from 'os';
 import process from 'process';
 
@@ -10,24 +10,29 @@ export class MonitorRenderUsageUseCase {
             const now = new Date();
             const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            const daysPassed = now.getDate();
-
-            // Estimar horas usadas basado en uptime y patrón de uso
+            const daysPassed = now.getDate();            // Estimar horas usadas basado en uptime y patrón de uso
             const uptimeSeconds = process.uptime();
             const uptimeHours = uptimeSeconds / 3600;
 
-            // Estimación conservadora: asumimos que la app está activa 8 horas por día promedio
-            const estimatedDailyHours = 8;
-            const estimatedHoursUsed = Math.min(daysPassed * estimatedDailyHours, 750);
+            // En tier gratuito, con auto-sleep cada 15 min:
+            // - Si tienes tráfico esporádico: ~1-2 horas/día
+            // - Si tienes tráfico normal: ~4 horas/día
+            // - Si tienes tráfico fuerte: ~8 horas/día
 
-            const hoursRemaining = 750 - estimatedHoursUsed;
+            // Estimación más realista considerando auto-sleep
+            const estimatedDailyHours = 4; // Promedio realista con auto-sleep
+            const estimatedHoursUsed = Math.min(daysPassed * estimatedDailyHours, 750);            const hoursRemaining = 750 - estimatedHoursUsed;
             const usagePercentage = (estimatedHoursUsed / 750) * 100;
+
+            // Calcular proyecciones de tráfico
+            const trafficProjections = this.calculateTrafficProjections(daysInMonth);
 
             const currentMonth: RenderMonthlyUsage = {
                 hoursUsed: Math.round(estimatedHoursUsed * 100) / 100,
                 hoursRemaining: Math.round(hoursRemaining * 100) / 100,
                 percentage: Math.round(usagePercentage * 100) / 100,
-                estimatedDepleteDate: this.calculateDepleteDate(hoursRemaining, daysInMonth - daysPassed)
+                estimatedDepleteDate: this.calculateDepleteDate(hoursRemaining, daysInMonth - daysPassed),
+                trafficProjections
             };
 
             // Información del sistema
@@ -39,15 +44,14 @@ export class MonitorRenderUsageUseCase {
                 memoryUsage: memInfo,
                 cpuUsage: Math.round(cpuUsage * 100) / 100,
                 environment: process.env.NODE_ENV || 'unknown'
-            };
-
-            // Generar recomendaciones
+            };            // Generar recomendaciones (ahora incluye proyecciones)
             const recommendations = this.generateRecommendations(
                 usagePercentage,
                 hoursRemaining,
                 daysPassed,
                 daysInMonth,
-                memInfo.percentage
+                memInfo.percentage,
+                trafficProjections
             );
 
             return RenderUsageEntity.create({
@@ -117,16 +121,22 @@ export class MonitorRenderUsageUseCase {
         depleteDate.setDate(depleteDate.getDate() + daysUntilDepletion);
 
         return depleteDate.toISOString().split('T')[0];
-    }
-
-    private generateRecommendations(
+    }    private generateRecommendations(
         usagePercentage: number,
         hoursRemaining: number,
         daysPassed: number,
         daysInMonth: number,
-        memoryPercentage: number
+        memoryPercentage: number,
+        trafficProjections: RenderTrafficProjections
     ): string[] {
         const recommendations: string[] = [];
+
+        // Agregar información sobre proyecciones de tráfico
+        recommendations.push('📊 Proyecciones de tráfico tier gratuito (750h/mes):');
+        recommendations.push(`   • Tráfico esporádico (1-2h/día): ${trafficProjections.esporadico.monthlyTotal.toFixed(1)}h/mes - ${trafficProjections.esporadico.status} ${trafficProjections.esporadico.remaining.toFixed(1)}h`);
+        recommendations.push(`   • Tráfico normal (4h/día): ${trafficProjections.normal.monthlyTotal.toFixed(1)}h/mes - ${trafficProjections.normal.status} ${trafficProjections.normal.remaining.toFixed(1)}h`);
+        recommendations.push(`   • Tráfico fuerte (8h/día): ${trafficProjections.fuerte.monthlyTotal.toFixed(1)}h/mes - ${trafficProjections.fuerte.status} ${trafficProjections.fuerte.remaining.toFixed(1)}h`);
+        recommendations.push(''); // Línea en blanco
 
         // Recomendaciones de uso de horas
         if (usagePercentage > 90) {
@@ -159,8 +169,46 @@ export class MonitorRenderUsageUseCase {
         }
 
         recommendations.push('💡 Configure notificaciones cuando queden menos de 100 horas.');
-        recommendations.push('💡 Implemente métricas de uso para monitoreo continuo.');
+        recommendations.push('💡 Implemente métricas de uso para monitoreo continuo.');        return recommendations;
+    }    private calculateTrafficProjections(daysInMonth: number): RenderTrafficProjections {
+        const monthlyLimit = 750; // Horas mensuales del tier gratuito
 
-        return recommendations;
+        // En tier gratuito, con auto-sleep cada 15 min:
+        const esporadico = {
+            hoursPerDay: 1.5, // ~1-2 horas/día
+            monthlyTotal: 1.5 * daysInMonth,
+            remaining: 0,
+            status: 'sobran' as 'sobran' | 'faltan'
+        };
+
+        const normal = {
+            hoursPerDay: 4, // ~4 horas/día
+            monthlyTotal: 4 * daysInMonth,
+            remaining: 0,
+            status: 'sobran' as 'sobran' | 'faltan'
+        };
+
+        const fuerte = {
+            hoursPerDay: 8, // ~8 horas/día
+            monthlyTotal: 8 * daysInMonth,
+            remaining: 0,
+            status: 'sobran' as 'sobran' | 'faltan'
+        };
+
+        // Calcular sobrantes o faltantes
+        esporadico.remaining = Math.abs(monthlyLimit - esporadico.monthlyTotal);
+        esporadico.status = esporadico.monthlyTotal <= monthlyLimit ? 'sobran' : 'faltan';
+
+        normal.remaining = Math.abs(monthlyLimit - normal.monthlyTotal);
+        normal.status = normal.monthlyTotal <= monthlyLimit ? 'sobran' : 'faltan';
+
+        fuerte.remaining = Math.abs(monthlyLimit - fuerte.monthlyTotal);
+        fuerte.status = fuerte.monthlyTotal <= monthlyLimit ? 'sobran' : 'faltan';
+
+        return {
+            esporadico,
+            normal,
+            fuerte
+        };
     }
 }
