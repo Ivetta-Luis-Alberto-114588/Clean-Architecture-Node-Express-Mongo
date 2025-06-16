@@ -6,6 +6,7 @@ import logger from "../configs/logger" // Importamos el logger
 import cors from "cors"
 import { envs } from "../configs/envs"
 import path from "path"
+import { Server } from "http"
 
 interface IOptions {
     p_port: number,
@@ -16,6 +17,7 @@ export class server {
     public readonly app = express()
     public readonly port: number
     public readonly routes: Router
+    private httpServer?: Server
 
     constructor(options: IOptions) {
         const { p_port, p_routes } = options
@@ -105,10 +107,8 @@ export class server {
                 }
             } catch (error) {
                 logger.warn("No se pudo crear el directorio de logs", { error });
-            }
-
-            // Start the server
-            this.app.listen(this.port, () => {
+            }            // Start the server
+            this.httpServer = this.app.listen(this.port, () => {
                 logger.info(`🚀 Servidor corriendo exitosamente en puerto ${this.port} (Entorno: ${envs.NODE_ENV})`);
             });
 
@@ -116,5 +116,23 @@ export class server {
             logger.error('Error al iniciar el servidor', { error });
             process.exit(1);
         }
+    }
+
+    async close(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.httpServer) {
+                this.httpServer.close((err) => {
+                    if (err) {
+                        logger.error('Error cerrando el servidor', { error: err });
+                        reject(err);
+                    } else {
+                        logger.info('Servidor cerrado exitosamente');
+                        resolve();
+                    }
+                });
+            } else {
+                resolve();
+            }
+        });
     }
 }

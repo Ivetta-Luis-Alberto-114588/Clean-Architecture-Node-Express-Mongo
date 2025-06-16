@@ -1,6 +1,6 @@
-# StartUp E-commerce API (Backend)
+# cStartUp E-commerce API (Backend)
 
-**Este es el backend para una aplicación de E-commerce completa, construida con Node.js, TypeScript, Express y MongoDB. Incorpora características modernas como autenticación JWT, integración con pasarelas de pago, gestión de productos/clientes (con** **búsqueda y filtrado avanzados**, **gestión de direcciones**), un carrito de compras, sistema de cupones, un **panel de administración API** **y un chatbot inteligente basado en RAG (Retrieval-Augmented Generation).**
+**Este es el backend para una aplicación de E-commerce completa, construida con Node.js, TypeScript, Express y MongoDB. Incorpora características modernas como autenticación JWT, integración con pasarelas de pago, gestión de productos/clientes (con** **búsqueda y filtrado avanzados**, **gestión de direcciones**), un carrito de compras, sistema de cupones, un **panel de administración API**, **un chatbot inteligente basado en RAG (Retrieval-Augmented Generation)** **y soporte para el protocolo MCP (Model Context Protocol) para integración con herramientas de IA externas.**
 
 ## 📑 Índice de Contenidos
 
@@ -22,37 +22,46 @@
 ## 🔗 Enlaces Rápidos a Endpoints
 
 ### 🔐 Autenticación y Usuarios
+
 - [👤 Autenticación (/api/auth)](#autenticación-apiauth)
 
-### 📦 Productos y Categorías  
+### 📦 Productos y Categorías
+
 - [🛍️ Gestión de Productos (/api/products)](#productos-apiproducts)
 - [📁 Gestión de Categorías (/api/categories)](#categorías-apicategories)
 - [🏷️ Gestión de Tags (/api/tags)](#tags-etiquetas-apitags)
 - [📏 Gestión de Unidades (/api/units)](#unidades-apiunits)
 
 ### 🛒 Carrito y Pedidos
+
 - [🛒 Gestión del Carrito (/api/cart)](#carrito-apicart)
 - [📦 Gestión de Pedidos (/api/sales)](#pedidosventas-apisales)
 
 ### 👥 Clientes y Direcciones
+
 - [👤 Gestión de Clientes (/api/customers)](#clientes-apicustomers)
 - [🏠 Gestión de Direcciones (/api/addresses)](#direcciones-apiaddresses)
 
 ### 🌍 Ubicaciones
+
 - [🌍 Gestión de Ciudades (/api/cities)](#ciudades-apicities)
 - [🏘️ Gestión de Barrios (/api/neighborhoods)](#barrios-apineighborhoods)
 
 ### 💰 Pagos y Descuentos
+
 - [💳 Procesamiento de Pagos (/api/payments)](#pagos-apipayments)
 - [💎 Métodos de Pago (/api/payment-methods)](#métodos-de-pago-apipayment-methods)
 - [🎫 Sistema de Cupones (/api/coupons)](#cupones-apicoupons)
 
 ### 📧 Comunicación
+
 - [📧 Notificaciones por Email](#notificaciones-por-email-nodemailer)
 - [📱 Notificaciones de Telegram](#notificaciones-de-telegram)
 
 ### 🔧 Utilidades y Admin
+
 - [🤖 IA y Chatbot (/api/chatbot)](#chatbot-apichatbot)
+- [🔌 Protocolo MCP (/api/mcp)](#protocolo-mcp-model-context-protocol-apimcp)
 - [⚙️ Panel de Administración (/api/admin)](#administración-apiadmin)
 - [📊 Sistema de Monitoreo (/api/monitoring)](#sistema-de-monitoreo-apimonitoring)
 
@@ -93,6 +102,7 @@
   * **Vaciar carrito.**
   * **Almacena precios y tasas de IVA al momento de agregar el ítem.**
 * **Gestión de Pedidos (Ventas):**
+
   * **Creación de pedidos usando dirección seleccionada, nueva o default.**
   * **Snapshot de la dirección de envío guardado en cada pedido.**
   * **Cálculo automático de subtotales, impuestos, descuentos y total.**
@@ -127,6 +137,13 @@
   * **Generación/validación de embeddings para datos clave (Productos, Categorías, Clientes, etc.).**
   * **Integración con LLMs (OpenAI GPT, Anthropic Claude).**
   * **Modos Cliente/Dueño y gestión de sesiones.**
+* **Protocolo MCP (Model Context Protocol):**
+
+  * **Estándar abierto para integración con agentes de IA externos.**
+  * **Herramientas especializadas para consultar productos, clientes, pedidos y estadísticas.**
+  * **Compatible con Claude Desktop y aplicaciones que implementen MCP.**
+  * **Acceso controlado a datos del negocio sin comprometer la seguridad.**
+  * **API pública para análisis automatizado e integración con herramientas de IA.**
 * **Panel de Administración (API):**
 
   * **Endpoints dedicados bajo** **/api/admin** **protegidos por rol** **ADMIN_ROLE**.
@@ -303,6 +320,7 @@ npm test
 El sistema incluye un **sistema de notificaciones automáticas** que se activa cuando se crea un nuevo pedido:
 
 #### ✨ **Características:**
+
 - **Activación automática:** Se dispara al crear un pedido exitosamente
 - **No bloquea la respuesta:** Las notificaciones se envían de forma asíncrona
 - **Múltiples canales:** Soporte para Email y Telegram
@@ -310,6 +328,7 @@ El sistema incluye un **sistema de notificaciones automáticas** que se activa c
 - **Manejo de errores:** Si falla la notificación, no afecta el pedido
 
 #### 📨 **Contenido del Email:**
+
 - **Asunto:** `🛒 Nueva Orden Recibida!`
 - **Información incluida:**
   - ID y número de orden
@@ -322,6 +341,7 @@ El sistema incluye un **sistema de notificaciones automáticas** que se activa c
 #### ⚙️ **Configuración:**
 
 **Variables de entorno requeridas:**
+
 ```env
 # Email (obligatorio)
 EMAIL_SMTP_HOST=smtp.gmail.com
@@ -340,7 +360,9 @@ NOTIFICATION_CHANNELS=email,telegram
 ```
 
 #### 🚀 **Uso:**
+
 Las notificaciones se envían automáticamente cuando se hace:
+
 ```
 POST /api/sales
 ```
@@ -348,7 +370,9 @@ POST /api/sales
 No requiere configuración adicional en el frontend. El sistema detecta automáticamente cuando se crea un pedido y envía las notificaciones correspondientes.
 
 #### 📱 **Telegram (Opcional):**
+
 Para configurar Telegram:
+
 1. Crear un bot con @BotFather
 2. Obtener el token del bot
 3. Obtener tu chat ID visitando: `https://api.telegram.org/bot{TOKEN}/getUpdates`
@@ -367,6 +391,7 @@ Para configurar Telegram:
 * **Sistema de Notificaciones Extensible con múltiples canales (Email, Telegram).**
 * **Panel de Administración API (**/api/admin**).**
 * **Chatbot RAG con Langchain y Transformers.js.**
+* **Protocolo MCP para integración con herramientas de IA externas.**
 * **Integraciones: Mercado Pago, Cloudinary, Nodemailer.**
 
 ## 🚧 Mejoras Futuras / TODO
@@ -4107,6 +4132,781 @@ Para configurar Telegram:
 
 ---
 
+### Protocolo MCP (Model Context Protocol) (**/api/mcp**)
+
+[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
+
+#### **¿Qué es MCP?**
+
+El **Model Context Protocol (MCP)** es un estándar abierto desarrollado por Anthropic que permite a las aplicaciones de IA interactuar de forma segura y consistente con fuentes de datos externas y herramientas. MCP actúa como un puente entre los modelos de lenguaje y los sistemas externos, proporcionando un marco estructurado para el intercambio de información.
+
+#### **¿Para qué sirve MCP en este E-commerce?**
+
+En nuestro backend de E-commerce, MCP permite que agentes de IA externos (como Claude Desktop, chatbots personalizados, o aplicaciones de terceros) puedan:
+
+- **Consultar información**: Acceder a datos de productos, clientes, pedidos y estadísticas de la tienda
+- **Realizar análisis**: Obtener insights sobre ventas, productos populares y tendencias de clientes
+- **Automatizar tareas**: Ejecutar operaciones como búsquedas avanzadas y consultas complejas
+- **Integración segura**: Proporcionar acceso controlado a los datos del negocio sin comprometer la seguridad
+
+#### **Características Principales:**
+
+- **🔧 Herramientas Especializadas**: Conjunto de tools específicas para E-commerce
+- **📊 Análisis de Datos**: Herramientas para obtener estadísticas y métricas del negocio
+- **🔍 Búsqueda Avanzada**: Capacidades de búsqueda y filtrado de productos y clientes
+- **🛡️ Acceso Seguro**: Integración controlada sin exponer datos sensibles
+- **📋 Estándar Abierto**: Compatible con cualquier cliente que implemente el protocolo MCP
+- **🏗️ Arquitectura Limpia**: Implementado siguiendo los patrones del proyecto
+
+#### **Herramientas Disponibles:**
+
+| Tool                         | Descripción                                             | Parámetros                                                               |
+| ---------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `get_products`             | Obtiene lista de productos con filtros avanzados         | `search`, `category`, `tags`, `minPrice`, `maxPrice`, `limit` |
+| `get_product_details`      | Obtiene detalles específicos de un producto             | `productId`                                                             |
+| `get_customers`            | Lista clientes con información básica                  | `search`, `limit`                                                     |
+| `get_customer_details`     | Obtiene detalles específicos de un cliente              | `customerId`                                                            |
+| `get_orders`               | Lista pedidos con filtros de estado y fecha              | `status`, `customerId`, `startDate`, `endDate`, `limit`         |
+| `get_order_details`        | Obtiene detalles específicos de un pedido               | `orderId`                                                               |
+| `get_business_stats`       | Obtiene estadísticas generales del negocio              | Ninguno                                                                   |
+| `search_products_advanced` | Búsqueda avanzada de productos con múltiples criterios | `query`, `filters`, `sort`, `limit`                               |
+
+---
+
+#### **API Endpoints:**
+
+#### **GET mcp/tools**
+
+- **Descripción**: Obtiene la lista de herramientas disponibles en el protocolo MCP
+- **Autenticación**: No requerida (endpoint público)
+- **Propósito**: Permite a los clientes MCP descubrir las herramientas disponibles y sus esquemas
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "tools": [
+    {
+      "name": "get_products",
+      "description": "Obtiene una lista de productos con filtros opcionales",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "search": {
+            "type": "string",
+            "description": "Texto para buscar en nombre y descripción"
+          },
+          "category": {
+            "type": "string",
+            "description": "ID de categoría para filtrar"
+          },
+          "tags": {
+            "type": "string",
+            "description": "Tags separados por comas"
+          },
+          "minPrice": {
+            "type": "number",
+            "description": "Precio mínimo"
+          },
+          "maxPrice": {
+            "type": "number",
+            "description": "Precio máximo"
+          },
+          "limit": {
+            "type": "number",
+            "description": "Límite de resultados (default: 10)"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_product_details",
+      "description": "Obtiene detalles específicos de un producto",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "ID del producto",
+            "required": true
+          }
+        },
+        "required": ["productId"]
+      }
+    },
+    {
+      "name": "get_business_stats",
+      "description": "Obtiene estadísticas generales del negocio",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+    // ... otras herramientas
+  ]
+}
+```
+
+#### **POST /call**
+
+- **Descripción**: Ejecuta una herramienta específica del protocolo MCP
+- **Autenticación**: No requerida (endpoint público)
+- **Cuerpo de la petición**:
+
+```json
+{
+  "name": "string (nombre de la herramienta)",
+  "arguments": {
+    // Argumentos específicos según la herramienta
+  }
+}
+```
+
+**Ejemplo - Obtener productos:**
+
+```json
+{
+  "name": "get_products",
+  "arguments": {
+    "search": "laptop",
+    "category": "electronics",
+    "maxPrice": 1000,
+    "limit": 5
+  }
+}
+```
+
+**Ejemplo - Obtener estadísticas del negocio:**
+
+```json
+{
+  "name": "get_business_stats",
+  "arguments": {}
+}
+```
+
+- **Respuesta exitosa (200)**:
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "string (resultado de la herramienta en formato legible)"
+    }
+  ]
+}
+```
+
+**Ejemplo de respuesta para get_products:**
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Encontrados 3 productos:\n\n1. **Laptop Gaming Pro** - $899.99\n   - Categoría: Electronics\n   - Tags: gaming, performance\n   - Stock: 15 unidades\n\n2. **Laptop Business** - $750.00\n   - Categoría: Electronics\n   - Tags: business, portable\n   - Stock: 8 unidades\n\n3. **Laptop Student** - $599.99\n   - Categoría: Electronics\n   - Tags: student, budget\n   - Stock: 12 unidades"
+    }
+  ]
+}
+```
+
+**Ejemplo de respuesta para get_business_stats:**
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "📊 **Estadísticas del Negocio**\n\n**Productos:**\n- Total: 156 productos\n- Categorías: 12\n- Promedio de precio: $285.50\n\n**Clientes:**\n- Total: 1,247 clientes\n- Con pedidos: 892 (71.5%)\n\n**Pedidos:**\n- Total: 2,156 pedidos\n- Completados: 1,987 (92.2%)\n- Ingresos totales: $542,180.30\n- Ticket promedio: $251.48"
+    }
+  ]
+}
+```
+
+---
+
+#### **🔧 Cómo Usar MCP**
+
+##### **1. Integración con Claude Desktop**
+
+Para usar MCP con Claude Desktop, añade esta configuración a tu archivo `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "ecommerce-backend": {
+      "command": "npx",
+      "args": ["-y", "@anthropic-ai/mcp-server-fetch"],
+      "env": {
+        "MCP_FETCH_BASE_URL": "http://localhost:3000/api/mcp"
+      }
+    }
+  }
+}
+```
+
+##### **2. Uso Programático (TypeScript/JavaScript)**
+
+```typescript
+// Instalar: npm install @anthropic-ai/mcp-client
+
+import { Client } from '@anthropic-ai/mcp-client';
+
+// Conectar al servidor MCP
+const client = new Client({
+  baseUrl: 'http://localhost:3000/api/mcp'
+});
+
+// Obtener herramientas disponibles
+const tools = await client.getTools();
+console.log('Herramientas disponibles:', tools);
+
+// Ejecutar una herramienta
+const result = await client.callTool('get_products', {
+  search: 'laptop',
+  maxPrice: 1000,
+  limit: 5
+});
+
+console.log('Productos encontrados:', result.content[0].text);
+
+// Obtener estadísticas del negocio
+const stats = await client.callTool('get_business_stats', {});
+console.log('Estadísticas:', stats.content[0].text);
+```
+
+##### **3. Integración con Angular**
+
+Para integrar MCP en una aplicación Angular, puedes crear un servicio dedicado:
+
+**1. Crear el servicio MCP (`mcp.service.ts`):**
+
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { environment } from '../environments/environment';
+
+export interface MCPTool {
+  name: string;
+  description: string;
+  inputSchema: any;
+}
+
+export interface MCPCallRequest {
+  name: string;
+  arguments: any;
+}
+
+export interface MCPCallResponse {
+  content: Array<{
+    type: string;
+    text: string;
+  }>;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class MCPService {
+  private readonly baseUrl = `${environment.apiUrl}/api/mcp`;
+  private toolsSubject = new BehaviorSubject<MCPTool[]>([]);
+  public tools$ = this.toolsSubject.asObservable();
+
+  constructor(private http: HttpClient) {
+    this.loadTools();
+  }
+
+  // Obtener herramientas disponibles
+  getTools(): Observable<{ tools: MCPTool[] }> {
+    return this.http.get<{ tools: MCPTool[] }>(`${this.baseUrl}/tools`);
+  }
+
+  // Cargar herramientas al inicializar el servicio
+  private loadTools(): void {
+    this.getTools().subscribe({
+      next: (response) => {
+        this.toolsSubject.next(response.tools);
+      },
+      error: (error) => {
+        console.error('Error loading MCP tools:', error);
+      }
+    });
+  }
+
+  // Ejecutar una herramienta
+  callTool(request: MCPCallRequest): Observable<MCPCallResponse> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post<MCPCallResponse>(
+      `${this.baseUrl}/call`, 
+      request, 
+      { headers }
+    );
+  }
+
+  // Métodos de conveniencia para herramientas específicas
+  getProducts(filters: {
+    search?: string;
+    category?: string;
+    tags?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    limit?: number;
+  } = {}): Observable<MCPCallResponse> {
+    return this.callTool({
+      name: 'get_products',
+      arguments: filters
+    });
+  }
+
+  getBusinessStats(): Observable<MCPCallResponse> {
+    return this.callTool({
+      name: 'get_business_stats',
+      arguments: {}
+    });
+  }
+
+  getCustomers(filters: {
+    search?: string;
+    limit?: number;
+  } = {}): Observable<MCPCallResponse> {
+    return this.callTool({
+      name: 'get_customers',
+      arguments: filters
+    });
+  }
+
+  getOrders(filters: {
+    status?: string;
+    customerId?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+  } = {}): Observable<MCPCallResponse> {
+    return this.callTool({
+      name: 'get_orders',
+      arguments: filters
+    });
+  }
+}
+```
+
+**2. Configurar el environment (`environment.ts`):**
+
+```typescript
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3000' // URL de tu backend
+};
+```
+
+**3. Usar el servicio en un componente (`dashboard.component.ts`):**
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { MCPService, MCPCallResponse } from '../services/mcp.service';
+
+@Component({
+  selector: 'app-dashboard',
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.css']
+})
+export class DashboardComponent implements OnInit {
+  businessStats: string = '';
+  products: string = '';
+  loading = false;
+  error: string | null = null;
+
+  constructor(private mcpService: MCPService) {}
+
+  ngOnInit(): void {
+    this.loadDashboardData();
+  }
+
+  loadDashboardData(): void {
+    this.loading = true;
+    this.error = null;
+
+    // Cargar estadísticas del negocio
+    this.mcpService.getBusinessStats().subscribe({
+      next: (response: MCPCallResponse) => {
+        this.businessStats = response.content[0]?.text || 'No data available';
+        this.loading = false;
+      },
+      error: (error) => {
+        this.error = 'Error loading business stats';
+        this.loading = false;
+        console.error('Error:', error);
+      }
+    });
+
+    // Cargar productos destacados
+    this.mcpService.getProducts({ limit: 5 }).subscribe({
+      next: (response: MCPCallResponse) => {
+        this.products = response.content[0]?.text || 'No products available';
+      },
+      error: (error) => {
+        console.error('Error loading products:', error);
+      }
+    });
+  }
+
+  searchProducts(searchTerm: string): void {
+    if (!searchTerm.trim()) return;
+
+    this.loading = true;
+    this.mcpService.getProducts({ 
+      search: searchTerm, 
+      limit: 10 
+    }).subscribe({
+      next: (response: MCPCallResponse) => {
+        this.products = response.content[0]?.text || 'No products found';
+        this.loading = false;
+      },
+      error: (error) => {
+        this.error = 'Error searching products';
+        this.loading = false;
+        console.error('Error:', error);
+      }
+    });
+  }
+
+  filterProductsByPrice(minPrice: number, maxPrice: number): void {
+    this.loading = true;
+    this.mcpService.getProducts({ 
+      minPrice, 
+      maxPrice, 
+      limit: 15 
+    }).subscribe({
+      next: (response: MCPCallResponse) => {
+        this.products = response.content[0]?.text || 'No products in price range';
+        this.loading = false;
+      },
+      error: (error) => {
+        this.error = 'Error filtering products';
+        this.loading = false;
+        console.error('Error:', error);
+      }
+    });
+  }
+}
+```
+
+**4. Template del componente (`dashboard.component.html`):**
+
+```html
+<div class="dashboard-container">
+  <h1>Dashboard de Negocio</h1>
+  
+  <!-- Loading indicator -->
+  <div *ngIf="loading" class="loading">
+    <p>Cargando datos...</p>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="error" class="error-message">
+    <p>{{ error }}</p>
+    <button (click)="loadDashboardData()">Reintentar</button>
+  </div>
+
+  <!-- Business Stats Section -->
+  <div class="stats-section" *ngIf="!loading && !error">
+    <h2>📊 Estadísticas del Negocio</h2>
+    <div class="stats-content">
+      <pre>{{ businessStats }}</pre>
+    </div>
+  </div>
+
+  <!-- Product Search Section -->
+  <div class="search-section">
+    <h2>🔍 Búsqueda de Productos</h2>
+    <div class="search-controls">
+      <input 
+        #searchInput 
+        type="text" 
+        placeholder="Buscar productos..."
+        (keyup.enter)="searchProducts(searchInput.value)">
+      <button (click)="searchProducts(searchInput.value)">Buscar</button>
+      
+      <div class="price-filter">
+        <input #minPrice type="number" placeholder="Precio mín." min="0">
+        <input #maxPrice type="number" placeholder="Precio máx." min="0">
+        <button (click)="filterProductsByPrice(minPrice.value, maxPrice.value)">
+          Filtrar por Precio
+        </button>
+      </div>
+    </div>
+    
+    <div class="products-content" *ngIf="products">
+      <pre>{{ products }}</pre>
+    </div>
+  </div>
+</div>
+```
+
+**5. Estilos del componente (`dashboard.component.css`):**
+
+```css
+.dashboard-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
+.error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+
+.stats-section, .search-section {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.stats-content, .products-content {
+  background-color: white;
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid #eee;
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.search-controls {
+  margin-bottom: 15px;
+}
+
+.search-controls input, .search-controls button {
+  margin: 5px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.search-controls button {
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+}
+
+.search-controls button:hover {
+  background-color: #0056b3;
+}
+
+.price-filter {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+```
+
+**6. No olvides importar HttpClientModule en tu app.module.ts:**
+
+```typescript
+import { HttpClientModule } from '@angular/common/http';
+
+@NgModule({
+  imports: [
+    // ... otros imports
+    HttpClientModule
+  ],
+  // ...
+})
+export class AppModule { }
+```
+
+**💡 Ejemplo de Uso Avanzado:**
+
+```typescript
+// En cualquier componente que necesite datos del MCP
+export class ProductAnalysisComponent implements OnInit {
+  
+  constructor(private mcpService: MCPService) {}
+
+  ngOnInit(): void {
+    // Combinar múltiples llamadas para análisis completo
+    this.performCompleteAnalysis();
+  }
+
+  performCompleteAnalysis(): void {
+    // Análisis de productos por categoría
+    this.mcpService.getProducts({ category: 'electronics', limit: 20 })
+      .subscribe(electronics => {
+        console.log('Electronics:', electronics.content[0].text);
+      });
+
+    // Análisis de pedidos recientes
+    this.mcpService.getOrders({ 
+      status: 'COMPLETED', 
+      startDate: '2025-06-01',
+      limit: 10 
+    }).subscribe(orders => {
+      console.log('Recent orders:', orders.content[0].text);
+    });
+
+    // Estadísticas generales
+    this.mcpService.getBusinessStats()
+      .subscribe(stats => {
+        console.log('Business stats:', stats.content[0].text);
+      });
+  }
+}
+```
+
+Esta integración te permite usar toda la potencia de MCP desde Angular de manera reactiva y tipada, aprovechando las características modernas del framework como Observables, servicios inyectables y binding de datos.
+
+##### **4. Uso con cURL**
+
+```bash
+# Obtener herramientas disponibles
+curl -X GET http://localhost:3000/api/mcp/tools
+
+# Ejecutar búsqueda de productos
+curl -X POST http://localhost:3000/api/mcp/call \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_products",
+    "arguments": {
+      "search": "smartphone",
+      "category": "electronics",
+      "limit": 3
+    }
+  }'
+
+# Obtener estadísticas del negocio
+curl -X POST http://localhost:3000/api/mcp/call \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_business_stats",
+    "arguments": {}
+  }'
+```
+
+##### **5. Casos de Uso Prácticos**
+
+**Análisis de Inventario:**
+
+```bash
+# Obtener productos con stock bajo
+curl -X POST http://localhost:3000/api/mcp/call \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_products",
+    "arguments": {
+      "limit": 20
+    }
+  }'
+```
+
+**Análisis de Clientes:**
+
+```bash
+# Obtener clientes más activos
+curl -X POST http://localhost:3000/api/mcp/call \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_customers",
+    "arguments": {
+      "limit": 10
+    }
+  }'
+```
+
+**Monitoreo de Pedidos:**
+
+```bash
+# Obtener pedidos pendientes
+curl -X POST http://localhost:3000/api/mcp/call \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_orders",
+    "arguments": {
+      "status": "PENDING",
+      "limit": 15
+    }
+  }'
+```
+
+---
+
+#### **🏗️ Arquitectura e Integración**
+
+##### **Componentes del Sistema:**
+
+- **MCP Entity**: Define la estructura de respuesta de las herramientas
+- **MCP DTO**: Valida los parámetros de entrada para las llamadas a herramientas
+- **MCP Datasource**: Interface para definir las operaciones disponibles
+- **MCP Repository**: Implementa la lógica de negocio usando repositorios existentes
+- **Use Cases**: `ListToolsUseCase` y `CallToolUseCase` para manejar las operaciones
+- **Controller**: Expone los endpoints HTTP del protocolo MCP
+
+##### **Integración con el Sistema Existente:**
+
+El sistema MCP reutiliza los repositorios y entities existentes del E-commerce:
+
+- **ProductRepository**: Para operaciones con productos
+- **CustomerRepository**: Para operaciones con clientes
+- **OrderRepository**: Para operaciones con pedidos
+
+Esta integración garantiza que MCP siempre tenga acceso a los datos más actualizados y mantiene la consistencia con el resto del sistema.
+
+##### **Seguridad y Consideraciones:**
+
+- **Endpoints públicos**: MCP no requiere autenticación para permitir integración con herramientas externas
+- **Datos no sensibles**: Solo expone información pública de productos, estadísticas generales y datos no críticos
+- **Rate limiting**: Protegido por los middlewares de rate limiting del sistema
+- **Validación estricta**: Todos los parámetros son validados usando DTOs
+- **Logging**: Todas las operaciones se registran para auditoría
+
+---
+
+#### **🧪 Testing y Desarrollo**
+
+Para probar MCP en desarrollo:
+
+```bash
+# Ejecutar tests unitarios
+npm test -- tests/unit/domain/use-cases/mcp/
+npm test -- tests/unit/infrastructure/repositories/mcp/
+
+# Ejecutar tests de integración
+npm test -- tests/integration/mcp/
+
+# Probar endpoints en desarrollo
+npm run dev
+
+# Luego usar cURL o Postman para probar:
+# GET http://localhost:3000/api/mcp/tools
+# POST http://localhost:3000/api/mcp/call
+```
+
+La implementación incluye tests completos que verifican:
+
+- Validación de DTOs
+- Funcionamiento de Use Cases
+- Integración con repositorios
+- Respuestas de endpoints HTTP
+
+---
+
 ### Sistema de Monitoreo (**/api/monitoring**)
 
 [⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
@@ -4117,7 +4917,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 
 - **Salud General**: Endpoint público para verificar el estado básico del servicio
 - **Monitoreo de MongoDB**: Métricas detalladas de uso de base de datos (requiere admin)
-- **Monitoreo de Render**: Información sobre recursos del servidor (requiere admin) 
+- **Monitoreo de Render**: Información sobre recursos del servidor (requiere admin)
 - **Monitoreo de Cloudinary**: Métricas de almacenamiento de imágenes y uso de transformaciones (requiere admin)
 - **Reportes Completos**: Vista consolidada de todos los servicios (requiere admin)
 - **Sistema de Alertas**: Notificaciones sobre problemas detectados (requiere admin)
@@ -4126,7 +4926,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 
 - **Descripción**: Obtiene el estado general de salud del sistema de forma pública para monitoreo básico
 - **Autenticación**: No requerida (endpoint público)
-- **Propósito**: 
+- **Propósito**:
   - Verificación rápida del estado de todos los servicios críticos
   - Ideal para health checks de balanceadores de carga y monitoreo externo
   - Proporciona vista consolidada sin datos sensibles
@@ -4362,7 +5162,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 
 - **Descripción**: Obtiene un reporte detallado y completo de todos los servicios monitoreados con métricas en formato humanamente legible
 - **Autenticación**: JWT + ADMIN_ROLE requerido
-- **Propósito**: 
+- **Propósito**:
   - Dashboard administrativo con métricas detalladas de todos los servicios
   - Análisis profundo del uso de recursos y tendencias
   - Planificación de capacidad y optimización de costos
@@ -4517,6 +5317,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 **Umbrales de Alertas (Configuración Inteligente):**
 
 **MongoDB (Base de Datos)**:
+
 - **Critical**: Almacenamiento > 85% O Conexiones > 450
   - *Riesgo*: Base de datos podría llenarse o saturarse
   - *Acción*: Limpieza inmediata o migración a tier pago
@@ -4525,6 +5326,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
   - *Acción*: Monitoreo y planificación de limpieza
 
 **Render (Servidor de Aplicación)**:
+
 - **Critical**: Uso mensual > 90% O Memoria > 90%
   - *Riesgo*: Servicio podría suspenderse por límites de tier gratuito
   - *Acción*: Migración a plan pago o optimización inmediata
@@ -4533,6 +5335,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
   - *Acción*: Revisar optimizaciones y proyecciones
 
 **Cloudinary (Almacenamiento de Imágenes)**:
+
 - **Critical**: Almacenamiento > 90% O Bandwidth > 90% O Transformaciones > 90%
   - *Riesgo*: Servicio de imágenes podría suspenderse
   - *Acción*: Eliminar imágenes no utilizadas o migrar a plan pago
@@ -4545,6 +5348,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 *Este ejemplo muestra cómo se ven las alertas cuando hay problemas detectados que requieren acción administrativa.*
 
 **Respuesta cuando hay alertas críticas (200)**:
+
 ```json
 {
   "alerts": [
@@ -4599,6 +5403,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 *Este ejemplo muestra cómo el sistema proporciona información útil incluso cuando todo está funcionando bien, incluyendo proyecciones y métricas para planificación.*
 
 **Respuesta cuando el sistema está saludable (200)**:
+
 ```json
 {
   "alerts": [

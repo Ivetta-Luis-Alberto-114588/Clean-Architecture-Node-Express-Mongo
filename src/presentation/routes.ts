@@ -18,6 +18,7 @@ import { TagRoutes } from "./products/routes.tag";
 import { OrderStatusRoutes } from "./order/routes.order-status";
 import { PaymentMethodRoutes } from "./payment/routes.payment-method";
 import { MonitoringRoutes } from "./monitoring/routes.monitoring";
+import { MCPRoutes } from "./mcp/routes.mcp"; // <<<--- NUEVA IMPORTACIÓN
 import mongoose from "mongoose";
 
 export class MainRoutes {
@@ -89,6 +90,9 @@ export class MainRoutes {
 
         // Rutas de Monitoreo
         router.use("/api/monitoring", MonitoringRoutes.routes);
+
+        // Rutas MCP
+        router.use("/api/mcp", MCPRoutes.getMCPRoutes); // <<<--- NUEVA RUTA
 
         return router
     }
