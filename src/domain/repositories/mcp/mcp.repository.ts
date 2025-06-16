@@ -2,6 +2,6 @@
 import { MCPToolEntity, MCPCallResult } from "../../entities/mcp/mcp.entity";
 
 export abstract class MCPRepository {
-  abstract getAvailableTools(): Promise<MCPToolEntity[]>;
-  abstract callTool(toolName: string, args: Record<string, any>): Promise<MCPCallResult>;
+    abstract getAvailableTools(): Promise<MCPToolEntity[]>;
+    abstract callTool(toolName: string, args: Record<string, any>): Promise<MCPCallResult>;
 }

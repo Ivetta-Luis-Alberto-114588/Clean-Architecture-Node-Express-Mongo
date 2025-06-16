@@ -13,33 +13,33 @@ import { CustomerRepositoryImpl } from "../../infrastructure/repositories/custom
 import { OrderRepositoryImpl } from "../../infrastructure/repositories/order/order.repository.impl";
 
 export class MCPRoutes {
-  static get getMCPRoutes(): Router {
-    const router = Router();
-    
-    // Inicializar datasources existentes
-    const productDataSource = new ProductMongoDataSourceImpl();
-    const customerDataSource = new CustomerMongoDataSourceImpl();
-    const orderDataSource = new OrderMongoDataSourceImpl();
-    
-    // Inicializar repositorios existentes
-    const productRepository = new ProductRepositoryImpl(productDataSource);
-    const customerRepository = new CustomerRepositoryImpl(customerDataSource);
-    const orderRepository = new OrderRepositoryImpl(orderDataSource);
-    
-    // Inicializar MCP
-    const mcpDataSource = new MCPDataSourceImpl(
-      productRepository,
-      customerRepository,
-      orderRepository
-    );
-    const mcpRepository = new MCPRepositoryImpl(mcpDataSource);
-    const controller = new MCPController(mcpRepository);
-    
-    // Rutas públicas (puedes agregar autenticación si es necesario)
-    router.get('/health', controller.healthCheck);
-    router.get('/tools', controller.listTools);
-    router.post('/call', controller.callTool);
-    
-    return router;
-  }
+    static get getMCPRoutes(): Router {
+        const router = Router();
+
+        // Inicializar datasources existentes
+        const productDataSource = new ProductMongoDataSourceImpl();
+        const customerDataSource = new CustomerMongoDataSourceImpl();
+        const orderDataSource = new OrderMongoDataSourceImpl();
+
+        // Inicializar repositorios existentes
+        const productRepository = new ProductRepositoryImpl(productDataSource);
+        const customerRepository = new CustomerRepositoryImpl(customerDataSource);
+        const orderRepository = new OrderRepositoryImpl(orderDataSource);
+
+        // Inicializar MCP
+        const mcpDataSource = new MCPDataSourceImpl(
+            productRepository,
+            customerRepository,
+            orderRepository
+        );
+        const mcpRepository = new MCPRepositoryImpl(mcpDataSource);
+        const controller = new MCPController(mcpRepository);
+
+        // Rutas públicas (puedes agregar autenticación si es necesario)
+        router.get('/health', controller.healthCheck);
+        router.get('/tools', controller.listTools);
+        router.post('/call', controller.callTool);
+
+        return router;
+    }
 }

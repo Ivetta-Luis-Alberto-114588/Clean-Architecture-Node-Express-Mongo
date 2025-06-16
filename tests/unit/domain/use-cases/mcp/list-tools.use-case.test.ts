@@ -4,73 +4,73 @@ import { MCPRepository } from "../../../../../src/domain/repositories/mcp/mcp.re
 import { MCPToolEntity } from "../../../../../src/domain/entities/mcp/mcp.entity";
 
 describe('ListToolsUseCase', () => {
-  let useCase: ListToolsUseCase;
-  let mockRepository: jest.Mocked<MCPRepository>;
+    let useCase: ListToolsUseCase;
+    let mockRepository: jest.Mocked<MCPRepository>;
 
-  beforeEach(() => {
-    mockRepository = {
-      getAvailableTools: jest.fn(),
-      callTool: jest.fn()
-    } as jest.Mocked<MCPRepository>;
+    beforeEach(() => {
+        mockRepository = {
+            getAvailableTools: jest.fn(),
+            callTool: jest.fn()
+        } as jest.Mocked<MCPRepository>;
 
-    useCase = new ListToolsUseCase(mockRepository);
-  });
+        useCase = new ListToolsUseCase(mockRepository);
+    });
 
-  test('should return available tools from repository', async () => {
-    // Arrange
-    const mockTools: MCPToolEntity[] = [
-      {
-        name: 'get_customers',
-        description: 'Get customers list',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            page: { type: 'number' }
-          }
-        }
-      },
-      {
-        name: 'get_products',
-        description: 'Get products list',
-        inputSchema: {
-          type: 'object',
-          properties: {
-            search: { type: 'string' }
-          }
-        }
-      }
-    ];
+    test('should return available tools from repository', async () => {
+        // Arrange
+        const mockTools: MCPToolEntity[] = [
+            {
+                name: 'get_customers',
+                description: 'Get customers list',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        page: { type: 'number' }
+                    }
+                }
+            },
+            {
+                name: 'get_products',
+                description: 'Get products list',
+                inputSchema: {
+                    type: 'object',
+                    properties: {
+                        search: { type: 'string' }
+                    }
+                }
+            }
+        ];
 
-    mockRepository.getAvailableTools.mockResolvedValue(mockTools);
+        mockRepository.getAvailableTools.mockResolvedValue(mockTools);
 
-    // Act
-    const result = await useCase.execute();
+        // Act
+        const result = await useCase.execute();
 
-    // Assert
-    expect(mockRepository.getAvailableTools).toHaveBeenCalledTimes(1);
-    expect(result).toEqual(mockTools);
-    expect(result).toHaveLength(2);
-  });
+        // Assert
+        expect(mockRepository.getAvailableTools).toHaveBeenCalledTimes(1);
+        expect(result).toEqual(mockTools);
+        expect(result).toHaveLength(2);
+    });
 
-  test('should handle repository errors', async () => {
-    // Arrange
-    const error = new Error('Repository error');
-    mockRepository.getAvailableTools.mockRejectedValue(error);
+    test('should handle repository errors', async () => {
+        // Arrange
+        const error = new Error('Repository error');
+        mockRepository.getAvailableTools.mockRejectedValue(error);
 
-    // Act & Assert
-    await expect(useCase.execute()).rejects.toThrow('Repository error');
-    expect(mockRepository.getAvailableTools).toHaveBeenCalledTimes(1);
-  });
+        // Act & Assert
+        await expect(useCase.execute()).rejects.toThrow('Repository error');
+        expect(mockRepository.getAvailableTools).toHaveBeenCalledTimes(1);
+    });
 
-  test('should return empty array when no tools available', async () => {
-    // Arrange
-    mockRepository.getAvailableTools.mockResolvedValue([]);
+    test('should return empty array when no tools available', async () => {
+        // Arrange
+        mockRepository.getAvailableTools.mockResolvedValue([]);
 
-    // Act
-    const result = await useCase.execute();
+        // Act
+        const result = await useCase.execute();
 
-    // Assert
-    expect(result).toEqual([]);
-    expect(result).toHaveLength(0);
-  });
+        // Assert
+        expect(result).toEqual([]);
+        expect(result).toHaveLength(0);
+    });
 });
