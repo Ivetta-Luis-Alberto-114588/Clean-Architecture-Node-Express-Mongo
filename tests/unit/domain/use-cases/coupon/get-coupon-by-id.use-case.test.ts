@@ -61,7 +61,7 @@ describe('GetCouponByIdUseCase', () => {
 
         it('should throw CustomError when repository.findById throws CustomError', async () => {
             const customError = CustomError.badRequest('Invalid ObjectId format');
-            
+
             mockRepository.findById.mockRejectedValue(customError);
 
             await expect(useCase.execute(couponId)).rejects.toThrow(customError);
@@ -71,7 +71,7 @@ describe('GetCouponByIdUseCase', () => {
 
         it('should throw internal server error when repository.findById throws generic error', async () => {
             const genericError = new Error('Database connection failed');
-            
+
             mockRepository.findById.mockRejectedValue(genericError);
 
             await expect(useCase.execute(couponId)).rejects.toThrow(
@@ -95,7 +95,7 @@ describe('GetCouponByIdUseCase', () => {
         it('should handle invalid ObjectId format', async () => {
             const invalidId = 'invalid-id-format';
             const error = new Error('Cast to ObjectId failed');
-            
+
             mockRepository.findById.mockRejectedValue(error);
 
             await expect(useCase.execute(invalidId)).rejects.toThrow(

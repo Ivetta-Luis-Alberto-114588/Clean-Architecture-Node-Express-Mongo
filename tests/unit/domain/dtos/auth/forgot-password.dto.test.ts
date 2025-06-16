@@ -13,7 +13,7 @@ describe('ForgotPasswordDto', () => {
             expect(error).toBeUndefined();
             expect(dto).toBeDefined();
             expect(dto!.email).toBe('test@example.com');
-        });        it('should convert email to lowercase and trim', () => {
+        }); it('should convert email to lowercase and trim', () => {
             const validData = {
                 email: 'TEST@EXAMPLE.COM'
             };
@@ -23,7 +23,7 @@ describe('ForgotPasswordDto', () => {
             expect(error).toBeUndefined();
             expect(dto).toBeDefined();
             expect(dto!.email).toBe('test@example.com');
-        });        it('should handle email with leading and trailing spaces', () => {
+        }); it('should handle email with leading and trailing spaces', () => {
             const invalidData = {
                 email: '  test@example.com  '
             };

@@ -350,6 +350,7 @@ describe('ProductController', () => {
 * **Datos de prueba**: Usar factories o fixtures para generar datos consistentes
 * **Isolación**: Cada test debe ser independiente y no depender de otros tests
 * **Naming**: Los nombres de tests deben ser descriptivos y seguir el patrón "should [acción] when [condición]"
+* En general el codigo esta bien y hay que adaptar los test
 
 ## 8. Cómo Usar Este Archivo
 

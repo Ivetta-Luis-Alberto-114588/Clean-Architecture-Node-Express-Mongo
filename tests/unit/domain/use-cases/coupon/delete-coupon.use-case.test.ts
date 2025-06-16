@@ -61,7 +61,7 @@ describe('DeleteCouponUseCase', () => {
 
         it('should throw CustomError when repository.delete throws CustomError', async () => {
             const customError = CustomError.badRequest('Cannot delete coupon in use');
-            
+
             mockRepository.delete.mockRejectedValue(customError);
 
             await expect(useCase.execute(couponId)).rejects.toThrow(customError);
@@ -71,7 +71,7 @@ describe('DeleteCouponUseCase', () => {
 
         it('should throw internal server error when repository.delete throws generic error', async () => {
             const genericError = new Error('Database connection failed');
-            
+
             mockRepository.delete.mockRejectedValue(genericError);
 
             await expect(useCase.execute(couponId)).rejects.toThrow(
@@ -95,7 +95,7 @@ describe('DeleteCouponUseCase', () => {
         it('should handle invalid ObjectId format', async () => {
             const invalidId = 'invalid-id';
             const error = new Error('Invalid ObjectId');
-            
+
             mockRepository.delete.mockRejectedValue(error);
 
             await expect(useCase.execute(invalidId)).rejects.toThrow(

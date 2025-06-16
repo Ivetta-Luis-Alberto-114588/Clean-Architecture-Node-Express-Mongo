@@ -225,7 +225,7 @@ describe('RegisterUserDto', () => {
             expect(error).toBeUndefined();
             expect(dto).toBeDefined();
             expect(dto!.password).toBe('ThisIsAVeryLongPasswordWithMoreThan20Characters!');
-        });        it('should handle names with special characters', () => {
+        }); it('should handle names with special characters', () => {
             const validData = {
                 name: 'José María',
                 email: 'jose@example.com',

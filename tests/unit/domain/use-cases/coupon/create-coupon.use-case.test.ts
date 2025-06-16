@@ -71,7 +71,7 @@ describe('CreateCouponUseCase', () => {
                 15,
                 'Existing coupon'
             );
-            
+
             mockRepository.findByCode.mockResolvedValue(existingCoupon);
 
             await expect(useCase.execute(validDto)).rejects.toThrow(
@@ -84,7 +84,7 @@ describe('CreateCouponUseCase', () => {
 
         it('should throw CustomError when repository.create throws CustomError', async () => {
             const customError = CustomError.badRequest('Validation error');
-            
+
             mockRepository.findByCode.mockResolvedValue(null);
             mockRepository.create.mockRejectedValue(customError);
 
@@ -96,7 +96,7 @@ describe('CreateCouponUseCase', () => {
 
         it('should throw internal server error when repository.create throws generic error', async () => {
             const genericError = new Error('Database connection failed');
-            
+
             mockRepository.findByCode.mockResolvedValue(null);
             mockRepository.create.mockRejectedValue(genericError);
 
@@ -110,7 +110,7 @@ describe('CreateCouponUseCase', () => {
 
         it('should throw internal server error when findByCode throws generic error', async () => {
             const genericError = new Error('Database connection failed');
-            
+
             mockRepository.findByCode.mockRejectedValue(genericError);
 
             await expect(useCase.execute(validDto)).rejects.toThrow();

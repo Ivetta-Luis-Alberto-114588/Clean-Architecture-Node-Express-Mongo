@@ -127,7 +127,7 @@ describe('UpdateCouponUseCase', () => {
             expect(mockRepository.findById).toHaveBeenCalledWith(couponId);
             expect(mockRepository.findByCode).toHaveBeenCalledWith('EXISTING_CODE');
             expect(mockRepository.update).not.toHaveBeenCalled();
-        });        it('should allow updating to same code (case insensitive)', async () => {
+        }); it('should allow updating to same code (case insensitive)', async () => {
             const updateDtoWithSameCode = {
                 ...updateDto,
                 code: 'summer20' // Same code but lowercase
@@ -143,7 +143,7 @@ describe('UpdateCouponUseCase', () => {
             expect(mockRepository.findById).toHaveBeenCalledWith(couponId);
             expect(mockRepository.findByCode).not.toHaveBeenCalled(); // No debe llamarse
             expect(result).toEqual(updatedCoupon);
-        });        it('should allow updating to same code when found coupon is the same', async () => {
+        }); it('should allow updating to same code when found coupon is the same', async () => {
             const updateDtoWithCode = {
                 ...updateDto,
                 code: 'SUMMER20'
@@ -163,7 +163,7 @@ describe('UpdateCouponUseCase', () => {
 
         it('should throw error when DTO validation fails', async () => {
             const validationError = 'Discount value cannot exceed 100% for percentage type';
-            
+
             mockRepository.findById.mockResolvedValue(existingCoupon);
             mockUpdateCouponDto.update.mockReturnValue([validationError, undefined]);
 
@@ -189,7 +189,7 @@ describe('UpdateCouponUseCase', () => {
 
         it('should throw CustomError when repository throws CustomError', async () => {
             const customError = CustomError.badRequest('Database constraint violation');
-            
+
             mockRepository.findById.mockResolvedValue(existingCoupon);
             mockUpdateCouponDto.update.mockReturnValue([undefined, updateDto]);
             mockRepository.update.mockRejectedValue(customError);
@@ -199,7 +199,7 @@ describe('UpdateCouponUseCase', () => {
 
         it('should throw internal server error when repository throws generic error', async () => {
             const genericError = new Error('Database connection failed');
-            
+
             mockRepository.findById.mockResolvedValue(existingCoupon);
             mockUpdateCouponDto.update.mockReturnValue([undefined, updateDto]);
             mockRepository.update.mockRejectedValue(genericError);
