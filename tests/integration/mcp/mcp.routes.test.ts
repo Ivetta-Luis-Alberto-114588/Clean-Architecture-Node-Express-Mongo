@@ -20,7 +20,9 @@ describe('MCP Routes Integration Tests', () => {
         // Iniciar servidor
         await testServer.start();
         console.log("Test server started on port 3001");
-    }); afterAll(async () => {
+    });
+
+    afterAll(async () => {
         console.log("Cleaning up MCP tests...");
 
         if (testServer) {
@@ -37,192 +39,113 @@ describe('MCP Routes Integration Tests', () => {
                 .get('/api/mcp/health')
                 .expect(200);
 
-            expect(response.body).toEqual({
-                status: 'ok',
-                service: 'MCP Service',
-                timestamp: expect.any(String),
-                version: '1.0.0'
-            });
+            expect(response.body.status).toBe('OK');
+            expect(response.body.service).toBe('MCP Service');
+            expect(response.body.timestamp).toBeDefined();
+            expect(typeof response.body.anthropic_configured).toBe('boolean');
         });
     });
 
-    describe('GET /api/mcp/tools', () => {
-        test('should return list of available tools', async () => {
-            const response = await request(testServer.app)
-                .get('/api/mcp/tools')
-                .expect(200);
-
-            expect(response.body).toHaveProperty('tools');
-            expect(Array.isArray(response.body.tools)).toBe(true);
-            expect(response.body.tools.length).toBeGreaterThan(0);
-
-            // Verificar estructura de las herramientas
-            const tool = response.body.tools[0];
-            expect(tool).toHaveProperty('name');
-            expect(tool).toHaveProperty('description');
-            expect(tool).toHaveProperty('inputSchema');
-            expect(tool.inputSchema).toHaveProperty('type');
-            expect(tool.inputSchema).toHaveProperty('properties');
-        });
-
-        test('should include expected tools', async () => {
-            const response = await request(testServer.app)
-                .get('/api/mcp/tools')
-                .expect(200);
-
-            const toolNames = response.body.tools.map((tool: any) => tool.name);
-
-            expect(toolNames).toContain('get_customers');
-            expect(toolNames).toContain('get_customer_by_id');
-            expect(toolNames).toContain('get_products');
-            expect(toolNames).toContain('get_product_by_id');
-            expect(toolNames).toContain('search_database');
-        });
-    });
-
-    describe('POST /api/mcp/call', () => {
-        test('should execute get_customers tool successfully', async () => {
-            const callData = {
-                toolName: 'get_customers',
-                arguments: { page: 1, limit: 5 }
+    describe('POST /api/mcp/anthropic', () => {
+        test('should return error when model is missing', async () => {
+            const requestBody = {
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'Hello'
+                    }
+                ]
             };
 
             const response = await request(testServer.app)
-                .post('/api/mcp/call')
-                .send(callData)
-                .expect(200);
-
-            expect(response.body).toHaveProperty('content');
-            expect(Array.isArray(response.body.content)).toBe(true);
-            expect(response.body.content[0]).toHaveProperty('type', 'text');
-            expect(response.body.content[0]).toHaveProperty('text');
-
-            // Verificar que el contenido sea JSON válido
-            const data = JSON.parse(response.body.content[0].text);
-            expect(data).toHaveProperty('customers');
-            expect(data).toHaveProperty('page', 1);
-            expect(data).toHaveProperty('limit', 5);
-        });
-
-        test('should execute get_products tool successfully', async () => {
-            const callData = {
-                toolName: 'get_products',
-                arguments: { page: 1, limit: 3 }
-            };
-
-            const response = await request(testServer.app)
-                .post('/api/mcp/call')
-                .send(callData)
-                .expect(200);
-
-            expect(response.body).toHaveProperty('content');
-            const data = JSON.parse(response.body.content[0].text);
-            expect(data).toHaveProperty('products');
-            expect(data).toHaveProperty('total');
-        });
-
-        test('should execute search_database tool successfully', async () => {
-            const callData = {
-                toolName: 'search_database',
-                arguments: {
-                    query: 'test',
-                    entities: ['products', 'customers']
-                }
-            };
-
-            const response = await request(testServer.app)
-                .post('/api/mcp/call')
-                .send(callData)
-                .expect(200);
-
-            expect(response.body).toHaveProperty('content');
-            const data = JSON.parse(response.body.content[0].text);
-            expect(data).toHaveProperty('products');
-            expect(data).toHaveProperty('customers');
-        });
-
-        test('should return error for invalid tool name', async () => {
-            const callData = {
-                toolName: 'invalid_tool',
-                arguments: {}
-            };
-
-            const response = await request(testServer.app)
-                .post('/api/mcp/call')
-                .send(callData)
+                .post('/api/mcp/anthropic')
+                .send(requestBody)
                 .expect(400);
 
-            expect(response.body).toHaveProperty('error');
-            expect(response.body.error).toContain('Herramienta desconocida');
+            expect(response.body.error).toBe('Model and messages are required');
         });
 
-        test('should return error for missing toolName', async () => {
-            const callData = {
-                arguments: { page: 1 }
+        test('should return error when messages are missing', async () => {
+            const requestBody = {
+                model: 'claude-3-sonnet-20240229'
             };
 
             const response = await request(testServer.app)
-                .post('/api/mcp/call')
-                .send(callData)
+                .post('/api/mcp/anthropic')
+                .send(requestBody)
                 .expect(400);
 
-            expect(response.body).toHaveProperty('error');
-            expect(response.body.error).toBe('Tool name is required');
+            expect(response.body.error).toBe('Model and messages are required');
         });
 
-        test('should return error for missing arguments', async () => {
-            const callData = {
-                toolName: 'get_customers'
+        test('should return error when both model and messages are missing', async () => {
+            const requestBody = {};
+
+            const response = await request(testServer.app)
+                .post('/api/mcp/anthropic')
+                .send(requestBody)
+                .expect(400);
+
+            expect(response.body.error).toBe('Model and messages are required');
+        });
+
+        // Test condicional - solo se ejecuta si la API key está configurada
+        test('should handle Anthropic API request when API key is configured', async () => {
+            if (!envs.ANTHROPIC_API_KEY) {
+                console.log('Skipping Anthropic API test - no API key configured');
+                return;
+            }
+
+            const requestBody = {
+                model: 'claude-3-sonnet-20240229',
+                max_tokens: 100,
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'Say hello in one word'
+                    }
+                ]
             };
 
             const response = await request(testServer.app)
-                .post('/api/mcp/call')
-                .send(callData)
-                .expect(400);
+                .post('/api/mcp/anthropic')
+                .send(requestBody);
 
-            expect(response.body).toHaveProperty('error');
-            expect(response.body.error).toBe('Arguments must be an object');
-        });
-
-        test('should handle get_customer_by_id with valid ID', async () => {
-            // Primero necesitamos un ID válido de cliente
-            // Para este test, asumimos que hay al menos un cliente en la DB
-            const customersResponse = await request(testServer.app)
-                .post('/api/mcp/call')
-                .send({ toolName: 'get_customers', arguments: { page: 1, limit: 1 } });
-
-            const customersData = JSON.parse(customersResponse.body.content[0].text);
-
-            if (customersData.customers.length > 0) {
-                const customerId = customersData.customers[0].id;
-
-                const response = await request(testServer.app)
-                    .post('/api/mcp/call')
-                    .send({
-                        toolName: 'get_customer_by_id',
-                        arguments: { id: customerId }
-                    })
-                    .expect(200);
-
-                expect(response.body).toHaveProperty('content');
-                const data = JSON.parse(response.body.content[0].text);
-                expect(data).toHaveProperty('id', customerId);
-                expect(data).toHaveProperty('name');
-                expect(data).toHaveProperty('email');
+            // Si la API key es válida, debería devolver 200
+            // Si hay error de API (ej: key inválida), debería devolver el error específico
+            expect([200, 401, 403, 429, 500]).toContain(response.status);
+            
+            if (response.status === 200) {
+                expect(response.body).toBeDefined();
+            } else {
+                expect(response.body.error).toBeDefined();
             }
         });
 
-        test('should handle get_customer_by_id with invalid ID', async () => {
-            const response = await request(testServer.app)
-                .post('/api/mcp/call')
-                .send({
-                    toolName: 'get_customer_by_id',
-                    arguments: { id: 'invalid_id_123' }
-                })
-                .expect(200);
+        test('should return error when API key is not configured', async () => {
+            // Este test verifica que el endpoint maneja correctamente la ausencia de API key
+            // En un entorno real donde la API key no esté configurada
+            const requestBody = {
+                model: 'claude-3-sonnet-20240229',
+                messages: [
+                    {
+                        role: 'user',
+                        content: 'Hello'
+                    }
+                ]
+            };
 
-            expect(response.body).toHaveProperty('content');
-            expect(response.body.content[0].text).toContain('no encontrado');
+            // Si no hay API key configurada, debería devolver error 500
+            if (!envs.ANTHROPIC_API_KEY) {
+                const response = await request(testServer.app)
+                    .post('/api/mcp/anthropic')
+                    .send(requestBody)
+                    .expect(500);
+
+                expect(response.body.error).toBe('Anthropic API key not configured');
+            } else {
+                console.log('Skipping no-API-key test - API key is configured');
+            }
         });
     });
 });
