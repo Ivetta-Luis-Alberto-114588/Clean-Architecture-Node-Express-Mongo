@@ -20,10 +20,10 @@ describe('MCPController', () => {
 
     beforeEach(() => {
         controller = new MCPController();
-        
+
         mockStatus = jest.fn().mockReturnThis();
         mockJson = jest.fn().mockReturnThis();
-        
+
         mockRequest = {};
         mockResponse = {
             status: mockStatus,
@@ -91,7 +91,7 @@ describe('MCPController', () => {
 
             // Cleanup
             (envs as any).ANTHROPIC_API_KEY = originalApiKey;
-        });        it('should include current timestamp in ISO format', async () => {
+        }); it('should include current timestamp in ISO format', async () => {
             // Arrange
             const beforeTime = Date.now();
 

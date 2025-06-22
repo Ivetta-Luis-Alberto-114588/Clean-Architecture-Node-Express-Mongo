@@ -1,0 +1,747 @@
+Date : 2025-06-22 13:48:04
+Directory : c:\Users\Usuario\Desktop\Practica Angular\14-back\tests
+Total : 524 files,  2613 codes, 2028 comments, 356 blanks, all 4997 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| JavaScript |         53 |      6,056 |      1,598 |         53 |      7,707 |
+| YAML       |          1 |        303 |          0 |          5 |        308 |
+| Markdown   |          2 |        225 |          0 |         93 |        318 |
+| TypeScript |        468 |     -3,971 |        430 |        205 |     -3,336 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                               | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                                  |        524 |      2,613 |      2,028 |        356 |      4,997 |
+| . (Files)                                                                                                                          |          1 |         28 |          5 |          8 |         41 |
+| ..                                                                                                                                 |        368 |    -19,304 |     -1,822 |     -3,465 |    -24,591 |
+| ..\src                                                                                                                             |        368 |    -19,304 |     -1,822 |     -3,465 |    -24,591 |
+| ..\src (Files)                                                                                                                     |          1 |        -16 |         -3 |         -4 |        -23 |
+| ..\src\configs                                                                                                                     |         11 |       -272 |        -57 |        -75 |       -404 |
+| ..\src\data                                                                                                                        |         18 |       -871 |        -61 |        -83 |     -1,015 |
+| ..\src\data\mongodb                                                                                                                |         18 |       -871 |        -61 |        -83 |     -1,015 |
+| ..\src\data\mongodb (Files)                                                                                                        |          1 |        -25 |          0 |         -9 |        -34 |
+| ..\src\data\mongodb\models                                                                                                         |         17 |       -846 |        -61 |        -74 |       -981 |
+| ..\src\data\mongodb\models (Files)                                                                                                 |          1 |        -33 |         -3 |         -7 |        -43 |
+| ..\src\data\mongodb\models\cart                                                                                                    |          1 |        -59 |         -6 |         -5 |        -70 |
+| ..\src\data\mongodb\models\chatbot                                                                                                 |          1 |        -74 |         -7 |         -5 |        -86 |
+| ..\src\data\mongodb\models\coupon                                                                                                  |          1 |        -83 |         -4 |         -5 |        -92 |
+| ..\src\data\mongodb\models\customers                                                                                               |          4 |       -169 |        -15 |        -12 |       -196 |
+| ..\src\data\mongodb\models\order                                                                                                   |          2 |        -99 |         -7 |        -11 |       -117 |
+| ..\src\data\mongodb\models\payment                                                                                                 |          2 |       -106 |         -9 |         -8 |       -123 |
+| ..\src\data\mongodb\models\products                                                                                                |          4 |       -141 |         -9 |        -17 |       -167 |
+| ..\src\data\mongodb\models\sales                                                                                                   |          1 |        -82 |         -1 |         -4 |        -87 |
+| ..\src\domain                                                                                                                      |        214 |     -7,020 |       -858 |     -1,409 |     -9,287 |
+| ..\src\domain\datasources                                                                                                          |         17 |       -250 |        -51 |        -63 |       -364 |
+| ..\src\domain\datasources (Files)                                                                                                  |          1 |        -12 |        -10 |         -4 |        -26 |
+| ..\src\domain\datasources\cart                                                                                                     |          1 |        -11 |         -5 |         -8 |        -24 |
+| ..\src\domain\datasources\chatbot                                                                                                  |          1 |        -11 |         -1 |         -1 |        -13 |
+| ..\src\domain\datasources\coupon                                                                                                   |          1 |        -13 |         -3 |         -3 |        -19 |
+| ..\src\domain\datasources\customers                                                                                                |          3 |        -50 |         -4 |         -4 |        -58 |
+| ..\src\domain\datasources\mcp                                                                                                      |          1 |         -5 |         -1 |         -2 |         -8 |
+| ..\src\domain\datasources\order                                                                                                    |          2 |        -45 |        -10 |        -11 |        -66 |
+| ..\src\domain\datasources\payment                                                                                                  |          2 |        -35 |        -14 |        -16 |        -65 |
+| ..\src\domain\datasources\products                                                                                                 |          4 |        -55 |         -2 |        -12 |        -69 |
+| ..\src\domain\datasources\sales                                                                                                    |          1 |        -13 |         -1 |         -2 |        -16 |
+| ..\src\domain\dtos                                                                                                                 |         43 |     -1,750 |       -175 |       -338 |     -2,263 |
+| ..\src\domain\dtos\auth                                                                                                            |          4 |        -59 |        -15 |        -33 |       -107 |
+| ..\src\domain\dtos\cart                                                                                                            |          2 |        -36 |         -3 |        -10 |        -49 |
+| ..\src\domain\dtos\chatbot                                                                                                         |          1 |        -24 |         -3 |         -5 |        -32 |
+| ..\src\domain\dtos\coupon                                                                                                          |          2 |       -174 |         -7 |        -27 |       -208 |
+| ..\src\domain\dtos\customers                                                                                                       |          8 |       -377 |        -34 |        -61 |       -472 |
+| ..\src\domain\dtos\mcp                                                                                                             |          1 |        -29 |         -2 |         -7 |        -38 |
+| ..\src\domain\dtos\order                                                                                                           |          7 |       -352 |        -30 |        -62 |       -444 |
+| ..\src\domain\dtos\payment                                                                                                         |          6 |       -212 |         -9 |        -28 |       -249 |
+| ..\src\domain\dtos\products                                                                                                        |          9 |       -395 |        -60 |        -83 |       -538 |
+| ..\src\domain\dtos\sales                                                                                                           |          2 |        -76 |         -6 |        -14 |        -96 |
+| ..\src\domain\dtos\shared                                                                                                          |          1 |        -16 |         -6 |         -8 |        -30 |
+| ..\src\domain\entities                                                                                                             |         22 |       -645 |        -62 |        -92 |       -799 |
+| ..\src\domain\entities (Files)                                                                                                     |          1 |        -10 |         -3 |         -4 |        -17 |
+| ..\src\domain\entities\cart                                                                                                        |          2 |        -30 |        -28 |        -10 |        -68 |
+| ..\src\domain\entities\chatbot                                                                                                     |          1 |        -24 |         -1 |         -2 |        -27 |
+| ..\src\domain\entities\coupon                                                                                                      |          1 |        -32 |         -3 |         -3 |        -38 |
+| ..\src\domain\entities\customers                                                                                                   |          4 |        -57 |         -5 |         -7 |        -69 |
+| ..\src\domain\entities\mcp                                                                                                         |          1 |        -21 |         -1 |         -4 |        -26 |
+| ..\src\domain\entities\monitoring                                                                                                  |          3 |       -258 |         -4 |        -34 |       -296 |
+| ..\src\domain\entities\order                                                                                                       |          2 |        -61 |        -10 |         -7 |        -78 |
+| ..\src\domain\entities\payment                                                                                                     |          2 |        -84 |         -4 |        -11 |        -99 |
+| ..\src\domain\entities\products                                                                                                    |          4 |        -44 |         -2 |         -7 |        -53 |
+| ..\src\domain\entities\sales                                                                                                       |          1 |        -24 |         -1 |         -3 |        -28 |
+| ..\src\domain\errors                                                                                                               |          1 |        -27 |          0 |         -8 |        -35 |
+| ..\src\domain\interfaces                                                                                                           |          9 |       -350 |        -50 |        -42 |       -442 |
+| ..\src\domain\interfaces (Files)                                                                                                   |          6 |       -181 |        -38 |        -34 |       -253 |
+| ..\src\domain\interfaces\payment                                                                                                   |          1 |       -146 |        -10 |         -6 |       -162 |
+| ..\src\domain\interfaces\services                                                                                                  |          2 |        -23 |         -2 |         -2 |        -27 |
+| ..\src\domain\repositories                                                                                                         |         17 |       -250 |        -41 |        -58 |       -349 |
+| ..\src\domain\repositories (Files)                                                                                                 |          1 |        -12 |         -3 |         -5 |        -20 |
+| ..\src\domain\repositories\cart                                                                                                    |          1 |        -10 |         -2 |         -6 |        -18 |
+| ..\src\domain\repositories\chatbot                                                                                                 |          1 |        -11 |         -1 |         -1 |        -13 |
+| ..\src\domain\repositories\coupon                                                                                                  |          1 |        -13 |         -2 |         -3 |        -18 |
+| ..\src\domain\repositories\customers                                                                                               |          3 |        -50 |         -4 |         -4 |        -58 |
+| ..\src\domain\repositories\mcp                                                                                                     |          1 |         -5 |         -1 |         -2 |         -8 |
+| ..\src\domain\repositories\order                                                                                                   |          2 |        -46 |        -10 |        -10 |        -66 |
+| ..\src\domain\repositories\payment                                                                                                 |          2 |        -35 |        -15 |        -18 |        -68 |
+| ..\src\domain\repositories\products                                                                                                |          4 |        -55 |         -2 |         -8 |        -65 |
+| ..\src\domain\repositories\sales                                                                                                   |          1 |        -13 |         -1 |         -1 |        -15 |
+| ..\src\domain\use-cases                                                                                                            |        105 |     -3,748 |       -479 |       -808 |     -5,035 |
+| ..\src\domain\use-cases\auth                                                                                                       |          4 |       -221 |        -63 |        -69 |       -353 |
+| ..\src\domain\use-cases\cart                                                                                                       |          5 |       -158 |        -32 |        -31 |       -221 |
+| ..\src\domain\use-cases\chatbot                                                                                                    |          2 |        -63 |         -7 |        -10 |        -80 |
+| ..\src\domain\use-cases\coupon                                                                                                     |          5 |       -123 |        -13 |        -20 |       -156 |
+| ..\src\domain\use-cases\customers                                                                                                  |         24 |       -749 |        -92 |       -137 |       -978 |
+| ..\src\domain\use-cases\mcp                                                                                                        |          2 |        -32 |         -2 |         -6 |        -40 |
+| ..\src\domain\use-cases\monitoring                                                                                                 |          3 |       -546 |        -51 |        -97 |       -694 |
+| ..\src\domain\use-cases\notification                                                                                               |          1 |        -69 |         -3 |         -7 |        -79 |
+| ..\src\domain\use-cases\notifications                                                                                              |          1 |        -66 |         -3 |         -6 |        -75 |
+| ..\src\domain\use-cases\order                                                                                                      |         16 |       -753 |       -105 |       -151 |     -1,009 |
+| ..\src\domain\use-cases\payment                                                                                                    |         13 |       -326 |        -25 |        -79 |       -430 |
+| ..\src\domain\use-cases\product                                                                                                    |         21 |       -525 |        -70 |       -157 |       -752 |
+| ..\src\domain\use-cases\product (Files)                                                                                            |         16 |       -449 |        -63 |       -139 |       -651 |
+| ..\src\domain\use-cases\product\tag                                                                                                |          5 |        -76 |         -7 |        -18 |       -101 |
+| ..\src\domain\use-cases\sales                                                                                                      |          6 |       -117 |        -13 |        -36 |       -166 |
+| ..\src\domain\use-cases\user                                                                                                       |          2 |          0 |          0 |         -2 |         -2 |
+| ..\src\infrastructure                                                                                                              |         66 |     -6,599 |       -482 |     -1,113 |     -8,194 |
+| ..\src\infrastructure\adapters                                                                                                     |         11 |     -1,059 |        -68 |       -189 |     -1,316 |
+| ..\src\infrastructure\datasources                                                                                                  |         17 |     -3,804 |       -273 |       -629 |     -4,706 |
+| ..\src\infrastructure\datasources (Files)                                                                                          |          1 |       -135 |        -13 |        -19 |       -167 |
+| ..\src\infrastructure\datasources\cart                                                                                             |          1 |       -181 |        -16 |        -32 |       -229 |
+| ..\src\infrastructure\datasources\chatbot                                                                                          |          1 |       -458 |        -53 |        -91 |       -602 |
+| ..\src\infrastructure\datasources\coupon                                                                                           |          1 |       -131 |        -10 |        -16 |       -157 |
+| ..\src\infrastructure\datasources\customers                                                                                        |          3 |       -593 |        -28 |        -71 |       -692 |
+| ..\src\infrastructure\datasources\mcp                                                                                              |          1 |       -353 |         -4 |        -35 |       -392 |
+| ..\src\infrastructure\datasources\order                                                                                            |          2 |       -661 |        -42 |       -112 |       -815 |
+| ..\src\infrastructure\datasources\payment                                                                                          |          2 |       -488 |        -28 |        -77 |       -593 |
+| ..\src\infrastructure\datasources\products                                                                                         |          4 |       -550 |        -69 |       -144 |       -763 |
+| ..\src\infrastructure\datasources\sales                                                                                            |          1 |       -254 |        -10 |        -32 |       -296 |
+| ..\src\infrastructure\mappers                                                                                                      |         17 |       -924 |       -107 |       -117 |     -1,148 |
+| ..\src\infrastructure\mappers (Files)                                                                                              |          1 |        -19 |         -4 |         -5 |        -28 |
+| ..\src\infrastructure\mappers\cart                                                                                                 |          2 |       -128 |        -27 |        -17 |       -172 |
+| ..\src\infrastructure\mappers\coupon                                                                                               |          1 |        -33 |         -2 |         -5 |        -40 |
+| ..\src\infrastructure\mappers\customers                                                                                            |          4 |       -185 |        -19 |        -30 |       -234 |
+| ..\src\infrastructure\mappers\order                                                                                                |          2 |       -160 |         -9 |        -10 |       -179 |
+| ..\src\infrastructure\mappers\payment                                                                                              |          2 |       -176 |         -7 |        -13 |       -196 |
+| ..\src\infrastructure\mappers\products                                                                                             |          4 |       -123 |        -28 |        -26 |       -177 |
+| ..\src\infrastructure\mappers\sales                                                                                                |          1 |       -100 |        -11 |        -11 |       -122 |
+| ..\src\infrastructure\notifications                                                                                                |          2 |        -88 |         -2 |        -17 |       -107 |
+| ..\src\infrastructure\repositories                                                                                                 |         17 |       -578 |        -29 |       -143 |       -750 |
+| ..\src\infrastructure\repositories (Files)                                                                                         |          1 |        -29 |         -3 |         -9 |        -41 |
+| ..\src\infrastructure\repositories\cart                                                                                            |          1 |        -25 |          0 |         -7 |        -32 |
+| ..\src\infrastructure\repositories\chatbot                                                                                         |          1 |        -30 |         -1 |         -8 |        -39 |
+| ..\src\infrastructure\repositories\coupon                                                                                          |          1 |        -32 |         -1 |         -9 |        -42 |
+| ..\src\infrastructure\repositories\customers                                                                                       |          3 |       -117 |         -6 |        -23 |       -146 |
+| ..\src\infrastructure\repositories\mcp                                                                                             |          1 |        -16 |         -1 |         -4 |        -21 |
+| ..\src\infrastructure\repositories\order                                                                                           |          2 |        -88 |        -10 |        -20 |       -118 |
+| ..\src\infrastructure\repositories\payment                                                                                         |          2 |        -81 |         -2 |        -27 |       -110 |
+| ..\src\infrastructure\repositories\products                                                                                        |          4 |       -129 |         -4 |        -28 |       -161 |
+| ..\src\infrastructure\repositories\sales                                                                                           |          1 |        -31 |         -1 |         -8 |        -40 |
+| ..\src\infrastructure\services                                                                                                     |          2 |       -146 |         -3 |        -18 |       -167 |
+| ..\src\presentation                                                                                                                |         55 |     -4,261 |       -345 |       -745 |     -5,351 |
+| ..\src\presentation (Files)                                                                                                        |          2 |       -184 |        -19 |        -34 |       -237 |
+| ..\src\presentation\admin                                                                                                          |         11 |       -283 |        -31 |        -46 |       -360 |
+| ..\src\presentation\admin (Files)                                                                                                  |          1 |        -30 |         -3 |         -4 |        -37 |
+| ..\src\presentation\admin\coupons                                                                                                  |          1 |        -18 |         -3 |         -4 |        -25 |
+| ..\src\presentation\admin\customers                                                                                                |          3 |        -66 |         -9 |        -12 |        -87 |
+| ..\src\presentation\admin\orders                                                                                                   |          1 |        -62 |         -3 |         -5 |        -70 |
+| ..\src\presentation\admin\products                                                                                                 |          3 |        -66 |         -7 |        -12 |        -85 |
+| ..\src\presentation\admin\tags                                                                                                     |          1 |        -18 |         -3 |         -4 |        -25 |
+| ..\src\presentation\admin\users                                                                                                    |          1 |        -23 |         -3 |         -5 |        -31 |
+| ..\src\presentation\auth                                                                                                           |          2 |       -172 |        -22 |        -28 |       -222 |
+| ..\src\presentation\cart                                                                                                           |          2 |       -152 |         -7 |        -24 |       -183 |
+| ..\src\presentation\chatbot                                                                                                        |          2 |       -120 |        -14 |        -27 |       -161 |
+| ..\src\presentation\coupon                                                                                                         |          2 |       -100 |         -8 |        -22 |       -130 |
+| ..\src\presentation\customers                                                                                                      |          8 |       -463 |        -20 |       -105 |       -588 |
+| ..\src\presentation\mcp                                                                                                            |          2 |        -84 |        -14 |        -25 |       -123 |
+| ..\src\presentation\middlewares                                                                                                    |          4 |       -363 |        -50 |        -66 |       -479 |
+| ..\src\presentation\monitoring                                                                                                     |          2 |       -451 |        -10 |        -34 |       -495 |
+| ..\src\presentation\order                                                                                                          |          4 |       -485 |        -32 |        -68 |       -585 |
+| ..\src\presentation\payment                                                                                                        |          4 |       -703 |        -45 |       -122 |       -870 |
+| ..\src\presentation\products                                                                                                       |          8 |       -548 |        -67 |       -113 |       -728 |
+| ..\src\presentation\sales                                                                                                          |          2 |       -153 |         -6 |        -31 |       -190 |
+| ..\src\seeders                                                                                                                     |          3 |       -265 |        -16 |        -36 |       -317 |
+| domain                                                                                                                             |         90 |     10,394 |      2,801 |      1,454 |     14,649 |
+| domain\dtos                                                                                                                        |         40 |      3,976 |      1,340 |        588 |      5,904 |
+| domain\dtos\auth                                                                                                                   |          2 |        128 |         50 |         20 |        198 |
+| domain\dtos\customers                                                                                                              |         12 |      1,058 |        390 |        156 |      1,604 |
+| domain\dtos\payment                                                                                                                |          8 |        942 |        234 |        155 |      1,331 |
+| domain\dtos\products                                                                                                               |         12 |      1,240 |        436 |        172 |      1,848 |
+| domain\dtos\sales                                                                                                                  |          4 |        507 |        184 |         68 |        759 |
+| domain\dtos\shared                                                                                                                 |          2 |        101 |         46 |         17 |        164 |
+| domain\entities                                                                                                                    |          8 |        951 |        220 |         93 |      1,264 |
+| domain\entities\customers                                                                                                          |          6 |        492 |        150 |         59 |        701 |
+| domain\entities\payment                                                                                                            |          2 |        459 |         70 |         34 |        563 |
+| domain\use-cases                                                                                                                   |         42 |      5,467 |      1,241 |        773 |      7,481 |
+| domain\use-cases\auth                                                                                                              |          2 |        199 |         39 |         28 |        266 |
+| domain\use-cases\customers                                                                                                         |         38 |      5,060 |      1,153 |        723 |      6,936 |
+| domain\use-cases\product                                                                                                           |          2 |        208 |         49 |         22 |        279 |
+| integration                                                                                                                        |         12 |      1,987 |        199 |        264 |      2,450 |
+| integration (Files)                                                                                                                |          2 |        104 |          7 |         19 |        130 |
+| integration\auth                                                                                                                   |          2 |        415 |         45 |         39 |        499 |
+| integration\mcp                                                                                                                    |          3 |        358 |         27 |         84 |        469 |
+| integration\monitoring                                                                                                             |          2 |        281 |         21 |         63 |        365 |
+| integration\order                                                                                                                  |          1 |        303 |         16 |         28 |        347 |
+| integration\products                                                                                                               |          2 |        526 |         83 |         31 |        640 |
+| performance                                                                                                                        |         12 |      1,665 |        166 |        421 |      2,252 |
+| presentation                                                                                                                       |          4 |        777 |        215 |        100 |      1,092 |
+| presentation\auth                                                                                                                  |          2 |        289 |         99 |         48 |        436 |
+| presentation\products                                                                                                              |          2 |        488 |        116 |         52 |        656 |
+| smoke                                                                                                                              |          1 |      2,661 |        202 |        464 |      3,327 |
+| unit                                                                                                                               |         28 |      4,194 |        230 |      1,087 |      5,511 |
+| unit\data                                                                                                                          |          1 |        360 |          5 |         91 |        456 |
+| unit\data\mongodb                                                                                                                  |          1 |        360 |          5 |         91 |        456 |
+| unit\data\mongodb\models                                                                                                           |          1 |        360 |          5 |         91 |        456 |
+| unit\data\mongodb\models\coupon                                                                                                    |          1 |        360 |          5 |         91 |        456 |
+| unit\domain                                                                                                                        |         21 |      3,006 |        171 |        812 |      3,989 |
+| unit\domain\dtos                                                                                                                   |          8 |      1,478 |         26 |        421 |      1,925 |
+| unit\domain\dtos\auth                                                                                                              |          4 |        589 |          4 |        166 |        759 |
+| unit\domain\dtos\coupon                                                                                                            |          2 |        714 |         20 |        197 |        931 |
+| unit\domain\dtos\mcp                                                                                                               |          1 |         95 |          1 |         37 |        133 |
+| unit\domain\dtos\order                                                                                                             |          1 |         80 |          1 |         21 |        102 |
+| unit\domain\use-cases                                                                                                              |         13 |      1,528 |        145 |        391 |      2,064 |
+| unit\domain\use-cases\coupon                                                                                                       |          5 |        647 |          9 |        175 |        831 |
+| unit\domain\use-cases\mcp                                                                                                          |          2 |        129 |         19 |         33 |        181 |
+| unit\domain\use-cases\order                                                                                                        |          1 |        181 |          1 |         38 |        220 |
+| unit\domain\use-cases\product                                                                                                      |          5 |        571 |        116 |        145 |        832 |
+| unit\domain\use-cases\product\tag                                                                                                  |          5 |        571 |        116 |        145 |        832 |
+| unit\infrastructure                                                                                                                |          5 |        749 |         37 |        163 |        949 |
+| unit\infrastructure\adapters                                                                                                       |          4 |        697 |         26 |        149 |        872 |
+| unit\infrastructure\repositories                                                                                                   |          1 |         52 |         11 |         14 |         77 |
+| unit\infrastructure\repositories\mcp                                                                                               |          1 |         52 |         11 |         14 |         77 |
+| unit\presentation                                                                                                                  |          1 |         79 |         17 |         21 |        117 |
+| unit\presentation\controllers                                                                                                      |          1 |         79 |         17 |         21 |        117 |
+| utils                                                                                                                              |          8 |        211 |         32 |         23 |        266 |
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                                                                           | language   | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\app.ts                                                                       | TypeScript |        -16 |         -3 |         -4 |        -23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\bcrypt.ts                                                            | TypeScript |        -11 |         -3 |         -2 |        -16 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\cloudinary.ts                                                        | TypeScript |         -8 |         -1 |         -2 |        -11 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\envs.ts                                                              | TypeScript |        -26 |         -5 |        -18 |        -49 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\file-storage.ts                                                      | TypeScript |         -3 |         -5 |         -2 |        -10 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\jwt-personal.ts                                                      | TypeScript |        -26 |         -7 |         -8 |        -41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\jwt.ts                                                               | TypeScript |        -31 |         -5 |         -7 |        -43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\logger.ts                                                            | TypeScript |       -118 |        -22 |        -23 |       -163 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\notification.config.ts                                               | TypeScript |        -34 |         -2 |         -6 |        -42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\notification.ts                                                      | TypeScript |         -1 |         -1 |         -1 |         -3 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\payment.ts                                                           | TypeScript |         -9 |         -5 |         -2 |        -16 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\configs\validator.ts                                                         | TypeScript |         -5 |         -1 |         -4 |        -10 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\cart\cart.model.ts                                       | TypeScript |        -59 |         -6 |         -5 |        -70 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\chatbot\chat-models.ts                                   | TypeScript |        -74 |         -7 |         -5 |        -86 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\coupon\coupon.model.ts                                   | TypeScript |        -83 |         -4 |         -5 |        -92 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\customers\address.model.ts                               | TypeScript |        -67 |         -5 |         -4 |        -76 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\customers\city.model.ts                                  | TypeScript |        -24 |          0 |         -2 |        -26 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\customers\customer.model.ts                              | TypeScript |        -49 |         -9 |         -3 |        -61 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\customers\neighborhood.model.ts                          | TypeScript |        -29 |         -1 |         -3 |        -33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\order\order-status.model.ts                              | TypeScript |        -64 |         -4 |         -5 |        -73 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\order\order.model.ts                                     | TypeScript |        -35 |         -3 |         -6 |        -44 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\payment\payment-method.model.ts                          | TypeScript |        -41 |         -3 |         -5 |        -49 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\payment\payment.model.ts                                 | TypeScript |        -65 |         -6 |         -3 |        -74 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\products\category.model.ts                               | TypeScript |        -20 |          0 |         -6 |        -26 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\products\product.model.ts                                | TypeScript |        -73 |         -8 |         -5 |        -86 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\products\tag.model.ts                                    | TypeScript |        -27 |         -1 |         -3 |        -31 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\products\unit.model.ts                                   | TypeScript |        -21 |          0 |         -3 |        -24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\sales\sale.model.ts                                      | TypeScript |        -82 |         -1 |         -4 |        -87 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\models\user.model.ts                                            | TypeScript |        -33 |         -3 |         -7 |        -43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\data\mongodb\mongo-database.ts                                               | TypeScript |        -25 |          0 |         -9 |        -34 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\auth.datasource.ts                                        | TypeScript |        -12 |        -10 |         -4 |        -26 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\cart\cart.datasource.ts                                   | TypeScript |        -11 |         -5 |         -8 |        -24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\chatbot\chat.datasource.ts                                | TypeScript |        -11 |         -1 |         -1 |        -13 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\coupon\coupon.datasource.ts                               | TypeScript |        -13 |         -3 |         -3 |        -19 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\customers\city.datasource.ts                              | TypeScript |        -13 |          0 |         -1 |        -14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\customers\customer.datasource.ts                          | TypeScript |        -23 |         -4 |         -2 |        -29 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\customers\neighborhood.datasource.ts                      | TypeScript |        -14 |          0 |         -1 |        -15 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\mcp\mcp.datasource.ts                                     | TypeScript |         -5 |         -1 |         -2 |         -8 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\order\order-status.datasource.ts                          | TypeScript |        -14 |         -1 |         -2 |        -17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\order\order.datasource.ts                                 | TypeScript |        -31 |         -9 |         -9 |        -49 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\payment\payment-method.datasource.ts                      | TypeScript |        -13 |         -1 |         -3 |        -17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\payment\payment.datasource.ts                             | TypeScript |        -22 |        -13 |        -13 |        -48 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\products\category.datasource.ts                           | TypeScript |        -13 |          0 |         -6 |        -19 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\products\product.datasource.ts                            | TypeScript |        -17 |         -1 |         -1 |        -19 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\products\tag.datasource.ts                                | TypeScript |        -12 |         -1 |         -1 |        -14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\products\unit.datasource.ts                               | TypeScript |        -13 |          0 |         -4 |        -17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\datasources\sales\sale.datasource.ts                                  | TypeScript |        -13 |         -1 |         -2 |        -16 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\auth\forgot-password.dto.ts                                      | TypeScript |        -12 |         -1 |         -5 |        -18 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\auth\login-user.dto.ts                                           | TypeScript |        -14 |         -1 |        -10 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\auth\register-user.dto.ts                                        | TypeScript |        -17 |        -12 |        -13 |        -42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\auth\reset-password.dto.ts                                       | TypeScript |        -16 |         -1 |         -5 |        -22 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\cart\add-item-to-cart.dto.ts                                     | TypeScript |        -18 |         -1 |         -5 |        -24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\cart\update-cart-item.dto.ts                                     | TypeScript |        -18 |         -2 |         -5 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\chatbot\chat-query.dto.ts                                        | TypeScript |        -24 |         -3 |         -5 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\coupon\create-coupon.dto.ts                                      | TypeScript |        -69 |         -2 |        -12 |        -83 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\coupon\update-coupon.dto.ts                                      | TypeScript |       -105 |         -5 |        -15 |       -125 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\create-address.dto.ts                                  | TypeScript |        -57 |         -5 |         -6 |        -68 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\create-city.dto.ts                                     | TypeScript |        -24 |         -4 |         -5 |        -33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\create-customer.dto.ts                                 | TypeScript |        -47 |         -7 |        -10 |        -64 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\create-neighborhood.dto.ts                             | TypeScript |        -30 |         -5 |         -7 |        -42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\update-address.dto.ts                                  | TypeScript |        -71 |         -4 |         -9 |        -84 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\update-city.dto.ts                                     | TypeScript |        -37 |         -3 |         -6 |        -46 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\update-customer.dto.ts                                 | TypeScript |        -66 |         -3 |        -11 |        -80 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\customers\update-neighborhood.dto.ts                             | TypeScript |        -45 |         -3 |         -7 |        -55 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\mcp\mcp-call.dto.ts                                              | TypeScript |        -29 |         -2 |         -7 |        -38 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\order\create-order-status.dto.ts                                 | TypeScript |        -56 |         -4 |         -8 |        -68 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\order\create-order.dto.ts                                        | TypeScript |       -108 |        -12 |        -15 |       -135 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\order\select-payment-method.dto.ts                               | TypeScript |        -27 |         -4 |         -8 |        -39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\order\update-order-status-data.dto.ts                            | TypeScript |        -76 |         -6 |        -12 |        -94 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\order\update-order-status-transitions.dto.ts                     | TypeScript |        -24 |         -1 |         -9 |        -34 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\order\update-order-status.dto.ts                                 | TypeScript |        -32 |         -2 |         -7 |        -41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\order\update-order.dto.ts                                        | TypeScript |        -29 |         -1 |         -3 |        -33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\create-payment-method.dto.ts                             | TypeScript |        -38 |         -1 |         -5 |        -44 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\create-payment.dto.ts                                    | TypeScript |        -74 |         -4 |         -9 |        -87 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\process-webhook.dto.ts                                   | TypeScript |        -24 |         -1 |         -3 |        -28 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\update-payment-method.dto.ts                             | TypeScript |        -31 |         -1 |         -4 |        -36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\update-payment-status.dto.ts                             | TypeScript |        -27 |         -1 |         -4 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\payment\verify-payment.dto.ts                                    | TypeScript |        -18 |         -1 |         -3 |        -22 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\create-category.ts                                      | TypeScript |        -15 |         -7 |         -7 |        -29 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\create-product.dto.ts                                   | TypeScript |        -57 |         -9 |        -10 |        -76 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\create-tag.dto.ts                                       | TypeScript |        -19 |         -1 |         -4 |        -24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\create-unit.dto.ts                                      | TypeScript |        -15 |         -6 |         -9 |        -30 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\search-product.dto.ts                                   | TypeScript |        -99 |        -10 |        -14 |       -123 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\udpate-unit.dto.ts                                      | TypeScript |        -34 |         -7 |        -10 |        -51 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\update-category.dto.ts                                  | TypeScript |        -28 |         -4 |         -9 |        -41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\update-product.dto.ts                                   | TypeScript |        -97 |        -15 |        -13 |       -125 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\products\update-tag.dto.ts                                       | TypeScript |        -31 |         -1 |         -7 |        -39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\sales\create-sale.dto.ts                                         | TypeScript |        -56 |         -5 |        -10 |        -71 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\sales\update-sale-status.dto.ts                                  | TypeScript |        -20 |         -1 |         -4 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\dtos\shared\pagination.dto.ts                                         | TypeScript |        -16 |         -6 |         -8 |        -30 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\cart\cart-item.entity.ts                                     | TypeScript |        -14 |        -10 |         -4 |        -28 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\cart\cart.entity.ts                                          | TypeScript |        -16 |        -18 |         -6 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\chatbot\chat-message.entity.ts                               | TypeScript |        -24 |         -1 |         -2 |        -27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\coupon\coupon.entity.ts                                      | TypeScript |        -32 |         -3 |         -3 |        -38 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\customers\address.entity.ts                                  | TypeScript |        -26 |         -2 |         -2 |        -30 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\customers\citiy.ts                                           | TypeScript |         -8 |         -1 |          0 |         -9 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\customers\customer.ts                                        | TypeScript |        -13 |         -1 |         -2 |        -16 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\customers\neighborhood.ts                                    | TypeScript |        -10 |         -1 |         -3 |        -14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\mcp\mcp.entity.ts                                            | TypeScript |        -21 |         -1 |         -4 |        -26 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\monitoring\cloudinary-usage.entity.ts                        | TypeScript |       -120 |         -4 |        -17 |       -141 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\monitoring\mongodb-usage.entity.ts                           | TypeScript |        -55 |          0 |         -8 |        -63 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\monitoring\render-usage.entity.ts                            | TypeScript |        -83 |          0 |         -9 |        -92 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\order\order-status.entity.ts                                 | TypeScript |        -18 |         -1 |         -2 |        -21 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\order\order.entity.ts                                        | TypeScript |        -43 |         -9 |         -5 |        -57 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\payment\payment-method.entity.ts                             | TypeScript |        -50 |         -2 |         -7 |        -59 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\payment\payment.entity.ts                                    | TypeScript |        -34 |         -2 |         -4 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\products\category.entity.ts                                  | TypeScript |         -8 |          0 |         -1 |         -9 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\products\product.entity.ts                                   | TypeScript |        -18 |         -1 |         -4 |        -23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\products\tag.entity.ts                                       | TypeScript |        -10 |         -1 |          0 |        -11 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\products\unit.entity.ts                                      | TypeScript |         -8 |          0 |         -2 |        -10 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\sales\sale.entity.ts                                         | TypeScript |        -24 |         -1 |         -3 |        -28 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\entities\user.entity.ts                                               | TypeScript |        -10 |         -3 |         -4 |        -17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\errors\custom.error.ts                                                | TypeScript |        -27 |          0 |         -8 |        -35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\email.service.ts                                           | TypeScript |        -25 |         -2 |         -5 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\file-storage.interface.ts                                  | TypeScript |         -9 |        -17 |         -5 |        -31 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\logger.interface.ts                                        | TypeScript |         -7 |        -16 |         -6 |        -29 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\notification.interface.ts                                  | TypeScript |        -11 |         -1 |         -3 |        -15 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\payment.service.ts                                         | TypeScript |       -112 |         -1 |        -11 |       -124 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\payment\mercado-pago.interface.ts                          | TypeScript |       -146 |        -10 |         -6 |       -162 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\services\logger.service.ts                                 | TypeScript |         -7 |         -1 |         -1 |         -9 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\services\notification.service.ts                           | TypeScript |        -16 |         -1 |         -1 |        -18 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\interfaces\telegram.service.ts                                        | TypeScript |        -17 |         -1 |         -4 |        -22 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\auth.repository.ts                                       | TypeScript |        -12 |         -3 |         -5 |        -20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\cart\cart.repository.ts                                  | TypeScript |        -10 |         -2 |         -6 |        -18 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\chatbot\chat.repository.ts                               | TypeScript |        -11 |         -1 |         -1 |        -13 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\coupon\coupon.repository.ts                              | TypeScript |        -13 |         -2 |         -3 |        -18 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\customers\city.repository.ts                             | TypeScript |        -13 |          0 |         -1 |        -14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\customers\customer.repository.ts                         | TypeScript |        -23 |         -4 |         -2 |        -29 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\customers\neighborhood.repository.ts                     | TypeScript |        -14 |          0 |         -1 |        -15 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\mcp\mcp.repository.ts                                    | TypeScript |         -5 |         -1 |         -2 |         -8 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\order\order-status.repository.ts                         | TypeScript |        -14 |         -1 |         -2 |        -17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\order\order.repository.ts                                | TypeScript |        -32 |         -9 |         -8 |        -49 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\payment\payment-method.repository.ts                     | TypeScript |        -13 |         -1 |         -3 |        -17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\payment\payment.repository.ts                            | TypeScript |        -22 |        -14 |        -15 |        -51 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\products\categroy.repository.ts                          | TypeScript |        -13 |          0 |         -4 |        -17 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\products\product.repository.ts                           | TypeScript |        -17 |         -1 |         -1 |        -19 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\products\tag.repository.ts                               | TypeScript |        -12 |         -1 |         -1 |        -14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\products\unit.repository.ts                              | TypeScript |        -13 |          0 |         -2 |        -15 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\repositories\sales\sale.repository.ts                                 | TypeScript |        -13 |         -1 |         -1 |        -15 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\auth\login-user.use-case.ts                                 | TypeScript |        -47 |        -10 |        -25 |        -82 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\auth\register-user.use-case.ts                              | TypeScript |        -88 |        -34 |        -17 |       -139 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\auth\request-password-reset.use-case.ts                     | TypeScript |        -42 |        -10 |        -13 |        -65 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\auth\reset-password.use-case.ts                             | TypeScript |        -44 |         -9 |        -14 |        -67 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\add-to-cart.use-case.ts                                | TypeScript |        -40 |        -13 |         -8 |        -61 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\clear-cart.use-case.ts                                 | TypeScript |        -19 |          0 |         -4 |        -23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\get-cart.use-case.ts                                   | TypeScript |        -19 |         -1 |         -4 |        -24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\remove-from-cart.use-case.ts                           | TypeScript |        -22 |          0 |         -5 |        -27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\cart\update-cart-item.use-case.ts                           | TypeScript |        -58 |        -18 |        -10 |        -86 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\chatbot\generate-embeddings.use-case.ts                     | TypeScript |        -18 |         -1 |         -2 |        -21 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\chatbot\query-chatbot.use-case.ts                           | TypeScript |        -45 |         -6 |         -8 |        -59 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\create-coupon.use-case.ts                            | TypeScript |        -23 |         -3 |         -4 |        -30 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\delete-coupon.use-case.ts                            | TypeScript |        -21 |         -3 |         -3 |        -27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\get-all-coupons.use-case.ts                          | TypeScript |        -19 |         -1 |         -3 |        -23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\get-coupon-by-id.use-case.ts                         | TypeScript |        -21 |         -1 |         -3 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\coupon\update-coupon.use-case.ts                            | TypeScript |        -39 |         -5 |         -7 |        -51 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\create-address.use-case.ts                        | TypeScript |        -44 |         -6 |         -6 |        -56 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\create-city.use-case.ts                           | TypeScript |        -33 |         -4 |         -8 |        -45 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\create-customer.use-case.ts                       | TypeScript |        -32 |         -4 |         -6 |        -42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\create-neighborhood.use-case.ts                   | TypeScript |        -39 |         -4 |         -8 |        -51 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\delete-address.use-case.ts                        | TypeScript |        -29 |         -6 |         -4 |        -39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\delete-city.use-case.ts                           | TypeScript |        -26 |         -3 |         -6 |        -35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\delete-customer.use-case.ts                       | TypeScript |        -26 |         -3 |         -6 |        -35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\delete-neighborhood.use-case.ts                   | TypeScript |        -26 |         -3 |         -6 |        -35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\find-city-by-name.use-case.ts                     | TypeScript |        -28 |         -3 |         -6 |        -37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\find-customers-by-neighborhood.use-case.ts        | TypeScript |        -31 |         -3 |         -6 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\find-neighborhoods-by-city.use-case.ts            | TypeScript |        -31 |         -3 |         -6 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-all-cities.use-case.ts                        | TypeScript |        -28 |         -3 |         -5 |        -36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-all-customers.use-case.ts                     | TypeScript |        -28 |         -3 |         -5 |        -36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-all-neighborhoods.use-case.ts                 | TypeScript |        -28 |         -3 |         -5 |        -36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-city-by-id..use-case.ts                       | TypeScript |        -25 |         -2 |         -5 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-customer-by-email.use-case.ts                 | TypeScript |        -26 |         -3 |         -5 |        -34 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-customer-by-id.use-case.ts                    | TypeScript |        -25 |         -2 |         -5 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-my-addresses.use-case.ts                      | TypeScript |        -29 |         -7 |         -5 |        -41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\get-neighborhood-by-id.use-case.ts                | TypeScript |        -25 |         -2 |         -5 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\set-default-address.use-case.ts                   | TypeScript |        -39 |         -7 |         -7 |        -53 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\update-address.use-case.ts                        | TypeScript |        -54 |         -9 |         -7 |        -70 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\update-city.use-case.ts                           | TypeScript |        -27 |         -2 |         -4 |        -33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\update-customer.use-case.ts                       | TypeScript |        -38 |         -4 |         -6 |        -48 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\customers\update-neighborhood.use-case.ts                   | TypeScript |        -32 |         -3 |         -5 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\mcp\call-tool.use-case.ts                                   | TypeScript |        -22 |         -1 |         -3 |        -26 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\mcp\list-tools.use-case.ts                                  | TypeScript |        -10 |         -1 |         -3 |        -14 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\monitoring\monitor-cloudinary-usage.use-case.ts             | TypeScript |       -240 |        -21 |        -38 |       -299 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\monitoring\monitor-mongodb-usage.use-case.ts                | TypeScript |       -141 |        -16 |        -23 |       -180 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\monitoring\monitor-render-usage.use-case.ts                 | TypeScript |       -165 |        -14 |        -36 |       -215 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\notification\notify-order.use-case.ts                       | TypeScript |        -69 |         -3 |         -7 |        -79 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\notifications\notify-order.use-case.ts                      | TypeScript |        -66 |         -3 |         -6 |        -75 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\create-order-status.use-case.ts                       | TypeScript |        -28 |         -2 |         -7 |        -37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\create-order.use-case.ts                              | TypeScript |       -176 |        -11 |        -20 |       -207 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\delete-order-status.use-case.ts                       | TypeScript |        -30 |         -3 |         -8 |        -41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\find-order-by-customer.use-case.ts                    | TypeScript |        -28 |         -8 |         -7 |        -43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\find-order-by-date-range.use-case.ts                  | TypeScript |        -28 |         -8 |         -7 |        -43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\get-all-order-statuses.use-case.ts                    | TypeScript |        -24 |         -1 |         -6 |        -31 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\get-all-order.use-case.ts                             | TypeScript |        -25 |         -8 |         -5 |        -38 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\get-my-orders.use-case.ts                             | TypeScript |        -36 |         -8 |         -9 |        -53 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\get-order-by-id.use-case.ts                           | TypeScript |        -25 |         -2 |         -5 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\get-orders-for-dashboard.use-case.ts                  | TypeScript |        -52 |        -18 |        -17 |        -87 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\select-payment-method.use-case.ts                     | TypeScript |        -85 |        -14 |        -20 |       -119 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\update-order-status-data.use-case.ts                  | TypeScript |        -59 |         -7 |         -9 |        -75 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\update-order-status-transitions.use-case.ts           | TypeScript |        -59 |         -8 |        -10 |        -77 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\update-order-status.use-case.ts                       | TypeScript |        -53 |         -4 |        -10 |        -67 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\update-order.use-case.ts                              | TypeScript |         -9 |          0 |         -2 |        -11 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\order\validate-order-status-transition.use-case.ts          | TypeScript |        -36 |         -3 |         -9 |        -48 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\create-payment-method.use-case.ts                   | TypeScript |        -14 |         -1 |         -6 |        -21 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\create-payment.use-case.ts                          | TypeScript |        -68 |         -8 |        -11 |        -87 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\delete-payment-method.use-case.ts                   | TypeScript |        -13 |         -1 |         -6 |        -20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-active-payment-methods.use-case.ts              | TypeScript |        -13 |         -1 |         -6 |        -20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-all-payments.use-case.ts                        | TypeScript |        -21 |          0 |         -3 |        -24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-payment-by-order.use-case.ts                    | TypeScript |        -29 |         -2 |         -5 |        -36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-payment-method-by-code.use-case.ts              | TypeScript |        -13 |         -1 |         -6 |        -20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-payment-method-by-id.use-case.ts                | TypeScript |        -13 |         -1 |         -6 |        -20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-payment-methods.use-case.ts                     | TypeScript |        -14 |         -1 |         -6 |        -21 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\get-payment.use-case.ts                             | TypeScript |        -20 |          0 |         -3 |        -23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\process-webhook.use-case.ts                         | TypeScript |        -32 |         -2 |         -5 |        -39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\update-payment-method.use-case.ts                   | TypeScript |        -14 |         -1 |         -6 |        -21 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\payment\verify-payment.use-case.ts                          | TypeScript |        -62 |         -6 |        -10 |        -78 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\create-category.use-case.ts                         | TypeScript |        -33 |         -4 |        -15 |        -52 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\create-product.use-case.ts                          | TypeScript |        -41 |         -6 |        -17 |        -64 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\create-unit.use-case.ts                             | TypeScript |        -31 |         -5 |        -13 |        -49 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\delete-category.use-case.ts                         | TypeScript |        -26 |         -3 |         -9 |        -38 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\delete-product.use-case.ts                          | TypeScript |        -24 |         -5 |        -10 |        -39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\delete-unit.use-case.ts                             | TypeScript |        -26 |         -4 |        -10 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-all-category.use-case.ts                        | TypeScript |        -28 |         -3 |         -9 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-all-products.use-case.ts                        | TypeScript |        -26 |         -8 |         -7 |        -41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-all-unit.use-case.ts                            | TypeScript |        -28 |         -3 |         -9 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-category-by-id.use-case.ts                      | TypeScript |        -25 |         -2 |         -5 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-product-by-category.use-case.ts                 | TypeScript |        -27 |         -7 |         -6 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\get-unit-by-id.use-case.ts                          | TypeScript |        -26 |         -2 |         -5 |        -33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\search-products.use-case.ts                         | TypeScript |        -26 |         -2 |         -3 |        -31 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\tag\create-tag.use-case.ts                          | TypeScript |        -15 |         -1 |         -4 |        -20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\tag\delete-tag.use-case.ts                          | TypeScript |        -14 |         -2 |         -3 |        -19 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\tag\get-all-tags.use-case.ts                        | TypeScript |        -12 |         -1 |         -3 |        -16 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\tag\get-tag-by-id.use-case.ts                       | TypeScript |        -14 |         -1 |         -3 |        -18 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\tag\update-tag.use-case.ts                          | TypeScript |        -21 |         -2 |         -5 |        -28 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\update-category.use-case.ts                         | TypeScript |        -27 |         -2 |         -7 |        -36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\update-product.use-case.ts                          | TypeScript |        -28 |         -5 |         -8 |        -41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\product\update-unit.use-case.ts                             | TypeScript |        -27 |         -2 |         -6 |        -35 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\sales\create-sale.use-case.ts                               | TypeScript |        -32 |         -5 |         -8 |        -45 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\sales\get-all-sales.use-case.ts                             | TypeScript |        -14 |         -1 |         -5 |        -20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\sales\get-sale-by-id.use-case.ts                            | TypeScript |        -18 |         -1 |         -5 |        -24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\sales\get-sales-by-customer.use-case.ts                     | TypeScript |        -14 |         -1 |         -5 |        -20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\sales\get-sales-by-status.use-case.ts                       | TypeScript |        -14 |         -1 |         -5 |        -20 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\sales\update-sale-status.use-case.ts                        | TypeScript |        -25 |         -4 |         -8 |        -37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\user\delete-user.use-case.ts                                | TypeScript |          0 |          0 |         -1 |         -1 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\domain\use-cases\user\update-user.use-case.ts                                | TypeScript |          0 |          0 |         -1 |         -1 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\cloudinary-file-storage.adapter.ts                   | TypeScript |        -55 |         -5 |        -13 |        -73 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\cloudinary.adapter.ts                                | TypeScript |        -50 |         -6 |        -10 |        -66 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\langchain.adapter.ts                                 | TypeScript |       -144 |        -12 |        -19 |       -175 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\llm.adapter.ts                                       | TypeScript |       -100 |         -6 |        -17 |       -123 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\mercado-pago-payment.adapter.ts                      | TypeScript |       -233 |         -4 |        -38 |       -275 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\mercado-pago.adapter.ts                              | TypeScript |       -154 |        -13 |        -30 |       -197 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\nodemailer.adapter.ts                                | TypeScript |        -75 |        -15 |        -13 |       -103 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\telegram-notification.adapter.ts                     | TypeScript |        -89 |         -2 |        -16 |       -107 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\telegram.adapter.ts                                  | TypeScript |        -67 |         -1 |        -12 |        -80 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\transformers.adapter.ts                              | TypeScript |        -63 |         -1 |        -13 |        -77 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\adapters\winston-logger.adapter.ts                            | TypeScript |        -29 |         -3 |         -8 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\auth.mongo.datasource.impl.ts                     | TypeScript |       -135 |        -13 |        -19 |       -167 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\cart\cart.mongo.datasource.impl.ts                | TypeScript |       -181 |        -16 |        -32 |       -229 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\chatbot\chat.mongo.datasource.impl.ts             | TypeScript |       -458 |        -53 |        -91 |       -602 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\coupon\coupon.mongo.datasource.impl.ts            | TypeScript |       -131 |        -10 |        -16 |       -157 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\customers\city.mongo.datasource.impl.ts           | TypeScript |        -97 |         -5 |        -17 |       -119 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\customers\customer.mongo.datasource.impl.ts       | TypeScript |       -370 |        -16 |        -28 |       -414 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\customers\neighborhood.mongo.datasource.impl.ts   | TypeScript |       -126 |         -7 |        -26 |       -159 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\mcp\mcp.datasource.impl.ts                        | TypeScript |       -353 |         -4 |        -35 |       -392 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\order\order-status.mongo.datasource.impl.ts       | TypeScript |       -162 |         -7 |        -41 |       -210 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\order\order.mongo.datasource.impl.ts              | TypeScript |       -499 |        -35 |        -71 |       -605 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\payment\payment-method.mongo.datasource.impl.ts   | TypeScript |       -145 |         -6 |        -34 |       -185 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\payment\payment.mongo.datasource.impl.ts          | TypeScript |       -343 |        -22 |        -43 |       -408 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\products\category.mongo.datasource.impl.ts        | TypeScript |        -88 |        -22 |        -54 |       -164 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\products\product.mongo.datasource.impl.ts         | TypeScript |       -263 |        -17 |        -25 |       -305 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\products\tag.mongo.datasource.impl.ts             | TypeScript |       -104 |         -6 |        -13 |       -123 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\products\unit.mongo.datasource.impl.ts            | TypeScript |        -95 |        -24 |        -52 |       -171 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\datasources\sales\sale.mongo.datasource.impl.ts               | TypeScript |       -254 |        -10 |        -32 |       -296 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\cart\cart-item.mapper.ts                              | TypeScript |        -74 |        -20 |        -10 |       -104 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\cart\cart.mapper.ts                                   | TypeScript |        -54 |         -7 |         -7 |        -68 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\coupon\coupon.mapper.ts                               | TypeScript |        -33 |         -2 |         -5 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\customers\address.mapper.ts                           | TypeScript |        -73 |         -2 |         -7 |        -82 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\customers\city.mapper.ts                              | TypeScript |        -25 |         -3 |         -6 |        -34 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\customers\customer.mapper.ts                          | TypeScript |        -55 |        -10 |        -10 |        -75 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\customers\neighborhood.mapper.ts                      | TypeScript |        -32 |         -4 |         -7 |        -43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\order\order-status.mapper.ts                          | TypeScript |        -19 |         -1 |         -3 |        -23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\order\order.mapper.ts                                 | TypeScript |       -141 |         -8 |         -7 |       -156 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\payment\payment-method.mapper.ts                      | TypeScript |        -49 |         -1 |         -5 |        -55 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\payment\payment.mapper.ts                             | TypeScript |       -127 |         -6 |         -8 |       -141 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\products\category.mapper.ts                           | TypeScript |        -17 |         -7 |         -7 |        -31 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\products\product.mapper.ts                            | TypeScript |        -72 |        -13 |        -11 |        -96 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\products\tag.mapper.ts                                | TypeScript |        -17 |         -1 |         -3 |        -21 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\products\unit.mapper.ts                               | TypeScript |        -17 |         -7 |         -5 |        -29 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\sales\sale.mapper.ts                                  | TypeScript |       -100 |        -11 |        -11 |       -122 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\mappers\user.mapper.ts                                        | TypeScript |        -19 |         -4 |         -5 |        -28 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\notifications\email.channel.ts                                | TypeScript |        -64 |         -1 |         -9 |        -74 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\notifications\telegram.channel.ts                             | TypeScript |        -24 |         -1 |         -8 |        -33 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\auth.repository.impl.ts                          | TypeScript |        -29 |         -3 |         -9 |        -41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\cart\cart.repository.impl.ts                     | TypeScript |        -25 |          0 |         -7 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\chatbot\chat.repository.impl.ts                  | TypeScript |        -30 |         -1 |         -8 |        -39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\coupon\coupon.repository.impl.ts                 | TypeScript |        -32 |         -1 |         -9 |        -42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\customers\city.repository.impl.ts                | TypeScript |        -30 |         -1 |         -9 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\customers\customer.repository.impl.ts            | TypeScript |        -54 |         -4 |         -4 |        -62 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\customers\neighborhood.repository.impl.ts        | TypeScript |        -33 |         -1 |        -10 |        -44 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\mcp\mcp.repository.impl.ts                       | TypeScript |        -16 |         -1 |         -4 |        -21 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\order\order-status.repository.impl.ts            | TypeScript |        -35 |         -1 |        -10 |        -46 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\order\order.repository.impl.ts                   | TypeScript |        -53 |         -9 |        -10 |        -72 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\payment\payment-method.repository.impl.ts        | TypeScript |        -30 |         -1 |        -11 |        -42 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\payment\payment.repository.impl.ts               | TypeScript |        -51 |         -1 |        -16 |        -68 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\products\category.respository.impl.ts            | TypeScript |        -32 |          0 |        -13 |        -45 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\products\product.repository.impl.ts              | TypeScript |        -40 |         -3 |         -4 |        -47 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\products\tag.repository.impl.ts                  | TypeScript |        -27 |         -1 |         -2 |        -30 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\products\unit.repository.impl.ts                 | TypeScript |        -30 |          0 |         -9 |        -39 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\repositories\sales\sale.repository.impl.ts                    | TypeScript |        -31 |         -1 |         -8 |        -40 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\services\notification.service.impl.ts                         | TypeScript |        -64 |         -1 |         -7 |        -72 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\infrastructure\services\notification.service.ts                              | TypeScript |        -82 |         -2 |        -11 |        -95 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\coupons\routes.admin.coupon.ts                            | TypeScript |        -18 |         -3 |         -4 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\customers\routes.admin.city.ts                            | TypeScript |        -19 |         -3 |         -4 |        -26 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\customers\routes.admin.customer.ts                        | TypeScript |        -24 |         -3 |         -4 |        -31 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\customers\routes.admin.neighborhood.ts                    | TypeScript |        -23 |         -3 |         -4 |        -30 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\orders\routes.admin.order.ts                              | TypeScript |        -62 |         -3 |         -5 |        -70 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\products\routes.admin.category.ts                         | TypeScript |        -18 |         -1 |         -3 |        -22 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\products\routes.admin.product.ts                          | TypeScript |        -30 |         -3 |         -5 |        -38 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\products\routes.admin.unit.ts                             | TypeScript |        -18 |         -3 |         -4 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\routes.admin.ts                                           | TypeScript |        -30 |         -3 |         -4 |        -37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\tags\routes.admin.tag.ts                                  | TypeScript |        -18 |         -3 |         -4 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\admin\users\routes.admin.user.ts                                | TypeScript |        -23 |         -3 |         -5 |        -31 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\auth\controller.auth.ts                                         | TypeScript |       -143 |        -17 |        -21 |       -181 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\auth\routes.auth.ts                                             | TypeScript |        -29 |         -5 |         -7 |        -41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\cart\controller.cart.ts                                         | TypeScript |       -128 |         -3 |        -16 |       -147 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\cart\routes.cart.ts                                             | TypeScript |        -24 |         -4 |         -8 |        -36 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\chatbot\controller.chatbot.ts                                   | TypeScript |        -98 |        -10 |        -21 |       -129 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\chatbot\routes.chatbot.ts                                       | TypeScript |        -22 |         -4 |         -6 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\coupon\controller.coupon.ts                                     | TypeScript |        -80 |         -2 |        -16 |        -98 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\coupon\routes.coupon.ts                                         | TypeScript |        -20 |         -6 |         -6 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\controller.address.ts                                 | TypeScript |        -70 |         -6 |        -14 |        -90 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\controller.city.ts                                    | TypeScript |        -88 |          0 |        -23 |       -111 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\controller.customer.ts                                | TypeScript |       -114 |          0 |        -25 |       -139 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\controller.neighborhood.ts                            | TypeScript |       -101 |          0 |        -23 |       -124 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\routes.address.ts                                     | TypeScript |        -24 |         -5 |         -5 |        -34 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\routes.city.ts                                        | TypeScript |        -19 |         -3 |         -5 |        -27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\routes.customer.ts                                    | TypeScript |        -24 |         -3 |         -5 |        -32 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\customers\routes.neighborhood.ts                                | TypeScript |        -23 |         -3 |         -5 |        -31 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\mcp\controller.mcp.ts                                           | TypeScript |        -73 |        -11 |        -20 |       -104 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\mcp\routes.mcp.ts                                               | TypeScript |        -11 |         -3 |         -5 |        -19 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\middlewares\auth.middleware.ts                                  | TypeScript |        -66 |         -2 |        -16 |        -84 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\middlewares\logger.middleware.ts                                | TypeScript |       -141 |        -25 |        -27 |       -193 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\middlewares\rate-limit.middleware.ts                            | TypeScript |        -95 |        -10 |        -15 |       -120 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\middlewares\upload.middleware.ts                                | TypeScript |        -61 |        -13 |         -8 |        -82 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\monitoring\controller.monitoring.ts                             | TypeScript |       -433 |         -8 |        -29 |       -470 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\monitoring\routes.monitoring.ts                                 | TypeScript |        -18 |         -2 |         -5 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\order\controller.order-status.ts                                | TypeScript |       -137 |        -11 |        -28 |       -176 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\order\controller.order.ts                                       | TypeScript |       -230 |        -10 |        -29 |       -269 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\order\routes.order-status.ts                                    | TypeScript |        -53 |         -5 |         -6 |        -64 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\order\routes.order.ts                                           | TypeScript |        -65 |         -6 |         -5 |        -76 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\payment\controller.payment-method.ts                            | TypeScript |       -107 |         -8 |        -22 |       -137 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\payment\controller.payment.ts                                   | TypeScript |       -512 |        -24 |        -84 |       -620 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\payment\routes.payment-method.ts                                | TypeScript |        -41 |         -5 |         -7 |        -53 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\payment\routes.payment.ts                                       | TypeScript |        -43 |         -8 |         -9 |        -60 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\controller.category.ts                                 | TypeScript |        -75 |        -14 |        -33 |       -122 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\controller.product.ts                                  | TypeScript |       -257 |         -7 |        -18 |       -282 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\controller.tag.ts                                      | TypeScript |        -62 |         -1 |        -11 |        -74 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\controller.unit.ts                                     | TypeScript |        -73 |        -11 |        -28 |       -112 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\routes.category..ts                                    | TypeScript |        -18 |         -2 |         -5 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\routes.product.ts                                      | TypeScript |        -30 |        -26 |         -8 |        -64 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\routes.tag.ts                                          | TypeScript |        -15 |         -4 |         -6 |        -25 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\products\routes.unit.ts                                         | TypeScript |        -18 |         -2 |         -4 |        -24 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\routes.ts                                                       | TypeScript |        -79 |         -7 |        -13 |        -99 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\sales\controller.ts                                             | TypeScript |       -107 |         -1 |        -23 |       -131 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\sales\routes.ts                                                 | TypeScript |        -46 |         -5 |         -8 |        -59 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\presentation\server.ts                                                       | TypeScript |       -105 |        -12 |        -21 |       -138 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\seeders\index.ts                                                             | TypeScript |        -33 |         -4 |         -8 |        -45 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\seeders\order-status.seeder.ts                                               | TypeScript |       -133 |         -6 |        -13 |       -152 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\src\seeders\payment-method.seeder.ts                                             | TypeScript |        -99 |         -6 |        -15 |       -120 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\auth\register-user.dto.test.js                                 | JavaScript |         65 |         25 |          1 |         91 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\auth\register-user.dto.test.ts                                 | TypeScript |         63 |         25 |         19 |        107 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-city.dto.test.js                              | JavaScript |         63 |         25 |          1 |         89 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-city.dto.test.ts                              | TypeScript |         61 |         25 |         19 |        105 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-customer.dto.test.js                          | JavaScript |        170 |         54 |          1 |        225 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-customer.dto.test.ts                          | TypeScript |        165 |         54 |         41 |        260 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-neighborhood.dto.test.js                      | JavaScript |         94 |         34 |          1 |        129 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-neighborhood.dto.test.ts                      | TypeScript |         89 |         34 |         26 |        149 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-city.dto.test.js                              | JavaScript |         61 |         26 |          1 |         88 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-city.dto.test.ts                              | TypeScript |         59 |         26 |         20 |        105 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-customer.dto.test.js                          | JavaScript |         75 |         25 |          1 |        101 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-customer.dto.test.ts                          | TypeScript |         70 |         25 |         20 |        115 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-neighborhood.dto.test.js                      | JavaScript |         78 |         31 |          1 |        110 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-neighborhood.dto.test.ts                      | TypeScript |         73 |         31 |         24 |        128 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\create-payment.dto.test.js                             | JavaScript |        194 |         28 |          1 |        223 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\create-payment.dto.test.ts                             | TypeScript |        196 |         28 |         67 |        291 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\process-webhook.dto.test.js                            | JavaScript |         88 |         28 |          1 |        117 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\process-webhook.dto.test.ts                            | TypeScript |         95 |         28 |         28 |        151 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\update-payment-status.dto.test.js                      | JavaScript |         94 |         31 |          1 |        126 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\update-payment-status.dto.test.ts                      | TypeScript |         98 |         31 |         28 |        157 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\verify-payment.dto.test.js                             | JavaScript |         88 |         30 |          1 |        119 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\verify-payment.dto.test.ts                             | TypeScript |         89 |         30 |         28 |        147 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-category.dto.test.js                           | JavaScript |         77 |         31 |          1 |        109 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-category.dto.test.ts                           | TypeScript |         75 |         31 |         21 |        127 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-product.dto.test.js                            | JavaScript |        172 |         44 |          1 |        217 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-product.dto.test.ts                            | TypeScript |        183 |         48 |         37 |        268 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-unit.dto.test.js                               | JavaScript |         98 |         38 |          1 |        137 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-unit.dto.test.ts                               | TypeScript |         96 |         38 |         29 |        163 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-category.dto.test.js                           | JavaScript |         83 |         36 |          1 |        120 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-category.dto.test.ts                           | TypeScript |         81 |         36 |         28 |        145 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-product.dto.test.js                            | JavaScript |        106 |         36 |          1 |        143 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-product.dto.test.ts                            | TypeScript |        101 |         36 |         28 |        165 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-unit.dto.test.js                               | JavaScript |         85 |         31 |          1 |        117 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-unit.dto.test.ts                               | TypeScript |         83 |         31 |         23 |        137 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\sales\create-sale.dto.test.js                                  | JavaScript |        162 |         55 |          1 |        218 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\sales\create-sale.dto.test.ts                                  | TypeScript |        184 |         55 |         41 |        280 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\sales\update-sale-status.dto.test.js                           | JavaScript |         82 |         37 |          1 |        120 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\sales\update-sale-status.dto.test.ts                           | TypeScript |         79 |         37 |         25 |        141 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\shared\pagination.dto.test.js                                  | JavaScript |         52 |         23 |          1 |         76 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\shared\pagination.dto.test.ts                                  | TypeScript |         49 |         23 |         16 |         88 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\city.entity.test.js                              | JavaScript |         60 |         29 |          1 |         90 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\city.entity.test.ts                              | TypeScript |         58 |         29 |         19 |        106 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\customer.entity.test.js                          | JavaScript |         70 |         21 |          1 |         92 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\customer.entity.test.ts                          | TypeScript |        118 |         21 |         17 |        156 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\neighborhood.entity.test.js                      | JavaScript |         68 |         25 |          1 |         94 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\neighborhood.entity.test.ts                      | TypeScript |        118 |         25 |         20 |        163 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\payment\payment.entity.test.js                             | JavaScript |        121 |         27 |          1 |        149 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\payment\payment.entity.test.ts                             | TypeScript |        338 |         43 |         33 |        414 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\auth\register-user.use-case.test.js                       | JavaScript |         82 |         22 |          1 |        105 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\auth\register-user.use-case.test.ts                       | TypeScript |        117 |         17 |         27 |        161 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-city.use-case.test.js                    | JavaScript |        102 |         32 |          1 |        135 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-city.use-case.test.ts                    | TypeScript |         99 |         32 |         28 |        159 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-customer.use-case.test.js                | JavaScript |        126 |         30 |          1 |        157 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-customer.use-case.test.ts                | TypeScript |        145 |         31 |         32 |        208 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-neighborhood.use-case.test.js            | JavaScript |        134 |         37 |          1 |        172 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-neighborhood.use-case.test.ts            | TypeScript |        142 |         37 |         36 |        215 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-city.use-case.test.js                    | JavaScript |         83 |         21 |          1 |        105 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-city.use-case.test.ts                    | TypeScript |         73 |         21 |         23 |        117 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-customer.use-case.test.js                | JavaScript |        119 |         18 |          1 |        138 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-customer.use-case.test.ts                | TypeScript |        119 |         18 |         29 |        166 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-neighborhood.use-case.test.js            | JavaScript |        114 |         18 |          1 |        133 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-neighborhood.use-case.test.ts            | TypeScript |         87 |         18 |         26 |        131 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-city-by-name.use-case.test.js              | JavaScript |        121 |         32 |          1 |        154 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-city-by-name.use-case.test.ts              | TypeScript |         96 |         32 |         38 |        166 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-customers-by-neighborhood.use-case.test.js | JavaScript |        220 |         47 |          1 |        268 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-customers-by-neighborhood.use-case.test.ts | TypeScript |        206 |         47 |         62 |        315 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-neighborhoods-by-city.use-case.test.js     | JavaScript |        210 |         47 |          1 |        258 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-neighborhoods-by-city.use-case.test.ts     | TypeScript |        172 |         47 |         59 |        278 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-cities.use-case.test.js                 | JavaScript |        133 |         32 |          1 |        166 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-cities.use-case.test.ts                 | TypeScript |        108 |         32 |         38 |        178 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-customers.use-case.test.js              | JavaScript |        154 |         32 |          1 |        187 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-customers.use-case.test.ts              | TypeScript |        153 |         32 |         41 |        226 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-neighborhoods.use-case.test.js          | JavaScript |        147 |         33 |          1 |        181 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-neighborhoods.use-case.test.ts          | TypeScript |        120 |         33 |         40 |        193 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-city-by-id.use-case.test.js                 | JavaScript |        101 |         21 |          1 |        123 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-city-by-id.use-case.test.ts                 | TypeScript |         76 |         21 |         27 |        124 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-customer-by-email.use-case.test.js          | JavaScript |        118 |         24 |          1 |        143 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-customer-by-email.use-case.test.ts          | TypeScript |        118 |         24 |         32 |        174 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-customer-by-id.use-case.test.js             | JavaScript |        116 |         20 |          1 |        137 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-customer-by-id.use-case.test.ts             | TypeScript |        116 |         20 |         29 |        165 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-neighborhood-by-id.use-case.test.js         | JavaScript |        110 |         20 |          1 |        131 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-neighborhood-by-id.use-case.test.ts         | TypeScript |         83 |         20 |         26 |        129 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-city.use-case.test.js                    | JavaScript |        158 |         30 |          1 |        189 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-city.use-case.test.ts                    | TypeScript |        133 |         30 |         43 |        206 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-customer.use-case.test.js                | JavaScript |        184 |         39 |          1 |        224 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-customer.use-case.test.ts                | TypeScript |        188 |         39 |         45 |        272 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-neighborhood.use-case.test.js            | JavaScript |        182 |         43 |          1 |        226 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-neighborhood.use-case.test.ts            | TypeScript |        194 |         43 |         50 |        287 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\product\create-product.use-case.test.js                   | JavaScript |         94 |         24 |          1 |        119 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\product\create-product.use-case.test.ts                   | TypeScript |        114 |         25 |         21 |        160 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\auth\auth-routes.test.js                                       | JavaScript |        169 |         30 |          1 |        200 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\auth\auth-routes.test.ts                                       | TypeScript |        246 |         15 |         38 |        299 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\logger-abstraction.test.ts                                     | TypeScript |         29 |          2 |          6 |         37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\mcp\mcp-routes.integration.test.ts                             | TypeScript |        126 |          9 |         30 |        165 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\mcp\mcp.routes.test.new.ts                                     | TypeScript |        116 |          9 |         27 |        152 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\mcp\mcp.routes.test.ts                                         | TypeScript |        116 |          9 |         27 |        152 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\monitoring\monitoring-routes.integration.test.ts               | TypeScript |        174 |         21 |         35 |        230 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\monitoring\monitoring.integration.test.ts                      | TypeScript |        107 |          0 |         28 |        135 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\order\select-payment-method.integration.test.ts                | TypeScript |        303 |         16 |         28 |        347 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\products\product-routes.test.js                                | JavaScript |        286 |         58 |          1 |        345 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\products\product-routes.test.ts                                | TypeScript |        240 |         25 |         30 |        295 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\telegram-notification.test.ts                                  | TypeScript |         75 |          5 |         13 |         93 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\CUSTOM_EXAMPLE_FIX.md                                          | Markdown   |         71 |          0 |         25 |         96 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\README.md                                                      | Markdown   |        154 |          0 |         68 |        222 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\artillery-config.yml                                           | YAML       |        303 |          0 |          5 |        308 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\artillery.test.ts                                              | TypeScript |        154 |         22 |         42 |        218 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\basic-load-fixed.test.ts                                       | TypeScript |        170 |         18 |         38 |        226 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\basic-load.test.ts                                             | TypeScript |        170 |         18 |         38 |        226 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\connectivity.test.ts                                           | TypeScript |         43 |          8 |         19 |         70 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\custom-example.test.ts                                         | TypeScript |        185 |         26 |         67 |        278 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\endpoint-specific.test.ts                                      | TypeScript |        174 |         23 |         59 |        256 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\performance-config.ts                                          | TypeScript |         64 |         15 |         14 |         93 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\performance-utils.ts                                           | TypeScript |        121 |         30 |         28 |        179 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\simple.test.ts                                                 | TypeScript |         56 |          6 |         18 |         80 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\presentation\auth\controller.auth.test.js                                  | JavaScript |        130 |         42 |          1 |        173 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\presentation\auth\controller.auth.test.ts                                  | TypeScript |        159 |         57 |         47 |        263 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\presentation\products\controller.product.test.js                           | JavaScript |        226 |         61 |          1 |        288 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\presentation\products\controller.product.test.ts                           | TypeScript |        262 |         55 |         51 |        368 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\smoke\health-check.smoke.test.ts                                           | TypeScript |      2,661 |        202 |        464 |      3,327 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\test-logger.ts                                                             | TypeScript |         28 |          5 |          8 |         41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\data\mongodb\models\coupon\coupon.model.test.ts                       | TypeScript |        360 |          5 |         91 |        456 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\auth\forgot-password.dto.test.ts                          | TypeScript |         91 |          1 |         29 |        121 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\auth\login-user.dto.test.ts                               | TypeScript |        115 |          1 |         34 |        150 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\auth\register-user.dto.test.ts                            | TypeScript |        191 |          1 |         51 |        243 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\auth\reset-password.dto.test.ts                           | TypeScript |        192 |          1 |         52 |        245 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\coupon\create-coupon.dto.test.ts                          | TypeScript |        320 |          9 |         79 |        408 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\coupon\update-coupon.dto.test.ts                          | TypeScript |        394 |         11 |        118 |        523 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\mcp\mcp-call.dto.test.ts                                  | TypeScript |         95 |          1 |         37 |        133 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\order\select-payment-method.dto.test.ts                   | TypeScript |         80 |          1 |         21 |        102 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\create-coupon.use-case.test.ts                | TypeScript |        105 |          1 |         28 |        134 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\delete-coupon.use-case.test.ts                | TypeScript |        103 |          1 |         30 |        134 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\get-all-coupons.use-case.test.ts              | TypeScript |        119 |          1 |         33 |        153 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\get-coupon-by-id.use-case.test.ts             | TypeScript |        132 |          1 |         37 |        170 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\update-coupon.use-case.test.ts                | TypeScript |        188 |          5 |         47 |        240 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\mcp\call-tool.use-case.test.ts                       | TypeScript |         74 |         10 |         20 |        104 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\mcp\list-tools.use-case.test.ts                      | TypeScript |         55 |          9 |         13 |         77 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\order\select-payment-method.use-case.test.ts         | TypeScript |        181 |          1 |         38 |        220 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\create-tag.use-case.test.ts              | TypeScript |         89 |         16 |         24 |        129 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\delete-tag.use-case.test.ts              | TypeScript |         98 |         18 |         26 |        142 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\get-all-tags.use-case.test.ts            | TypeScript |        106 |         24 |         23 |        153 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\get-tag-by-id.use-case.test.ts           | TypeScript |        135 |         27 |         35 |        197 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\update-tag.use-case.test.ts              | TypeScript |        143 |         31 |         37 |        211 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\adapters\cloudinary.adapter.test.ts                    | TypeScript |        179 |          7 |         43 |        229 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\adapters\mercado-pago-payment.adapter.test.ts          | TypeScript |         72 |          1 |         14 |         87 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\adapters\nodemailer.adapter.test.ts                    | TypeScript |        229 |         14 |         50 |        293 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\adapters\telegram-notification.adapter.test.ts         | TypeScript |        217 |          4 |         42 |        263 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\repositories\mcp\mcp.repository.impl.test.ts           | TypeScript |         52 |         11 |         14 |         77 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\presentation\controllers\mcp.controller.test.ts                       | TypeScript |         79 |         17 |         21 |        117 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\global-setup.js                                                      | JavaScript |         32 |          4 |          1 |         37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\global-setup.ts                                                      | TypeScript |         18 |          4 |          5 |         27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\global-teardown.js                                                   | JavaScript |         20 |          2 |          1 |         23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\global-teardown.ts                                                   | TypeScript |          6 |          2 |          1 |          9 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\setup.js                                                             | JavaScript |         41 |          5 |          1 |         47 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\setup.ts                                                             | TypeScript |         21 |          7 |          9 |         37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\test-utils.js                                                        | JavaScript |         38 |          4 |          1 |         43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\test-utils.ts                                                        | TypeScript |         35 |          4 |          4 |         43 |
+| Total                                                                                                                              |            |      2,613 |      2,028 |        356 |      4,997 |
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+

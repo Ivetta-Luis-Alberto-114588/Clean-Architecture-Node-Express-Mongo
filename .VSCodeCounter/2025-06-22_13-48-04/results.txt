@@ -1,0 +1,235 @@
+Date : 2025-06-22 13:48:04
+Directory : c:\Users\Usuario\Desktop\Practica Angular\14-back\tests
+Total : 156 files,  21917 codes, 3850 comments, 3821 blanks, all 29588 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| TypeScript |        100 |     15,333 |      2,252 |      3,670 |     21,255 |
+| JavaScript |         53 |      6,056 |      1,598 |         53 |      7,707 |
+| YAML       |          1 |        303 |          0 |          5 |        308 |
+| Markdown   |          2 |        225 |          0 |         93 |        318 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                               | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                                  |        156 |     21,917 |      3,850 |      3,821 |     29,588 |
+| . (Files)                                                                                                                          |          1 |         28 |          5 |          8 |         41 |
+| domain                                                                                                                             |         90 |     10,394 |      2,801 |      1,454 |     14,649 |
+| domain\dtos                                                                                                                        |         40 |      3,976 |      1,340 |        588 |      5,904 |
+| domain\dtos\auth                                                                                                                   |          2 |        128 |         50 |         20 |        198 |
+| domain\dtos\customers                                                                                                              |         12 |      1,058 |        390 |        156 |      1,604 |
+| domain\dtos\payment                                                                                                                |          8 |        942 |        234 |        155 |      1,331 |
+| domain\dtos\products                                                                                                               |         12 |      1,240 |        436 |        172 |      1,848 |
+| domain\dtos\sales                                                                                                                  |          4 |        507 |        184 |         68 |        759 |
+| domain\dtos\shared                                                                                                                 |          2 |        101 |         46 |         17 |        164 |
+| domain\entities                                                                                                                    |          8 |        951 |        220 |         93 |      1,264 |
+| domain\entities\customers                                                                                                          |          6 |        492 |        150 |         59 |        701 |
+| domain\entities\payment                                                                                                            |          2 |        459 |         70 |         34 |        563 |
+| domain\use-cases                                                                                                                   |         42 |      5,467 |      1,241 |        773 |      7,481 |
+| domain\use-cases\auth                                                                                                              |          2 |        199 |         39 |         28 |        266 |
+| domain\use-cases\customers                                                                                                         |         38 |      5,060 |      1,153 |        723 |      6,936 |
+| domain\use-cases\product                                                                                                           |          2 |        208 |         49 |         22 |        279 |
+| integration                                                                                                                        |         12 |      1,987 |        199 |        264 |      2,450 |
+| integration (Files)                                                                                                                |          2 |        104 |          7 |         19 |        130 |
+| integration\auth                                                                                                                   |          2 |        415 |         45 |         39 |        499 |
+| integration\mcp                                                                                                                    |          3 |        358 |         27 |         84 |        469 |
+| integration\monitoring                                                                                                             |          2 |        281 |         21 |         63 |        365 |
+| integration\order                                                                                                                  |          1 |        303 |         16 |         28 |        347 |
+| integration\products                                                                                                               |          2 |        526 |         83 |         31 |        640 |
+| performance                                                                                                                        |         12 |      1,665 |        166 |        421 |      2,252 |
+| presentation                                                                                                                       |          4 |        777 |        215 |        100 |      1,092 |
+| presentation\auth                                                                                                                  |          2 |        289 |         99 |         48 |        436 |
+| presentation\products                                                                                                              |          2 |        488 |        116 |         52 |        656 |
+| smoke                                                                                                                              |          1 |      2,661 |        202 |        464 |      3,327 |
+| unit                                                                                                                               |         28 |      4,194 |        230 |      1,087 |      5,511 |
+| unit\data                                                                                                                          |          1 |        360 |          5 |         91 |        456 |
+| unit\data\mongodb                                                                                                                  |          1 |        360 |          5 |         91 |        456 |
+| unit\data\mongodb\models                                                                                                           |          1 |        360 |          5 |         91 |        456 |
+| unit\data\mongodb\models\coupon                                                                                                    |          1 |        360 |          5 |         91 |        456 |
+| unit\domain                                                                                                                        |         21 |      3,006 |        171 |        812 |      3,989 |
+| unit\domain\dtos                                                                                                                   |          8 |      1,478 |         26 |        421 |      1,925 |
+| unit\domain\dtos\auth                                                                                                              |          4 |        589 |          4 |        166 |        759 |
+| unit\domain\dtos\coupon                                                                                                            |          2 |        714 |         20 |        197 |        931 |
+| unit\domain\dtos\mcp                                                                                                               |          1 |         95 |          1 |         37 |        133 |
+| unit\domain\dtos\order                                                                                                             |          1 |         80 |          1 |         21 |        102 |
+| unit\domain\use-cases                                                                                                              |         13 |      1,528 |        145 |        391 |      2,064 |
+| unit\domain\use-cases\coupon                                                                                                       |          5 |        647 |          9 |        175 |        831 |
+| unit\domain\use-cases\mcp                                                                                                          |          2 |        129 |         19 |         33 |        181 |
+| unit\domain\use-cases\order                                                                                                        |          1 |        181 |          1 |         38 |        220 |
+| unit\domain\use-cases\product                                                                                                      |          5 |        571 |        116 |        145 |        832 |
+| unit\domain\use-cases\product\tag                                                                                                  |          5 |        571 |        116 |        145 |        832 |
+| unit\infrastructure                                                                                                                |          5 |        749 |         37 |        163 |        949 |
+| unit\infrastructure\adapters                                                                                                       |          4 |        697 |         26 |        149 |        872 |
+| unit\infrastructure\repositories                                                                                                   |          1 |         52 |         11 |         14 |         77 |
+| unit\infrastructure\repositories\mcp                                                                                               |          1 |         52 |         11 |         14 |         77 |
+| unit\presentation                                                                                                                  |          1 |         79 |         17 |         21 |        117 |
+| unit\presentation\controllers                                                                                                      |          1 |         79 |         17 |         21 |        117 |
+| utils                                                                                                                              |          8 |        211 |         32 |         23 |        266 |
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                                                                           | language   | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\auth\register-user.dto.test.js                                 | JavaScript |         65 |         25 |          1 |         91 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\auth\register-user.dto.test.ts                                 | TypeScript |         63 |         25 |         19 |        107 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-city.dto.test.js                              | JavaScript |         63 |         25 |          1 |         89 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-city.dto.test.ts                              | TypeScript |         61 |         25 |         19 |        105 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-customer.dto.test.js                          | JavaScript |        170 |         54 |          1 |        225 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-customer.dto.test.ts                          | TypeScript |        165 |         54 |         41 |        260 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-neighborhood.dto.test.js                      | JavaScript |         94 |         34 |          1 |        129 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\create-neighborhood.dto.test.ts                      | TypeScript |         89 |         34 |         26 |        149 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-city.dto.test.js                              | JavaScript |         61 |         26 |          1 |         88 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-city.dto.test.ts                              | TypeScript |         59 |         26 |         20 |        105 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-customer.dto.test.js                          | JavaScript |         75 |         25 |          1 |        101 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-customer.dto.test.ts                          | TypeScript |         70 |         25 |         20 |        115 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-neighborhood.dto.test.js                      | JavaScript |         78 |         31 |          1 |        110 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\customers\update-neighborhood.dto.test.ts                      | TypeScript |         73 |         31 |         24 |        128 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\create-payment.dto.test.js                             | JavaScript |        194 |         28 |          1 |        223 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\create-payment.dto.test.ts                             | TypeScript |        196 |         28 |         67 |        291 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\process-webhook.dto.test.js                            | JavaScript |         88 |         28 |          1 |        117 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\process-webhook.dto.test.ts                            | TypeScript |         95 |         28 |         28 |        151 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\update-payment-status.dto.test.js                      | JavaScript |         94 |         31 |          1 |        126 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\update-payment-status.dto.test.ts                      | TypeScript |         98 |         31 |         28 |        157 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\verify-payment.dto.test.js                             | JavaScript |         88 |         30 |          1 |        119 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\payment\verify-payment.dto.test.ts                             | TypeScript |         89 |         30 |         28 |        147 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-category.dto.test.js                           | JavaScript |         77 |         31 |          1 |        109 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-category.dto.test.ts                           | TypeScript |         75 |         31 |         21 |        127 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-product.dto.test.js                            | JavaScript |        172 |         44 |          1 |        217 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-product.dto.test.ts                            | TypeScript |        183 |         48 |         37 |        268 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-unit.dto.test.js                               | JavaScript |         98 |         38 |          1 |        137 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\create-unit.dto.test.ts                               | TypeScript |         96 |         38 |         29 |        163 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-category.dto.test.js                           | JavaScript |         83 |         36 |          1 |        120 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-category.dto.test.ts                           | TypeScript |         81 |         36 |         28 |        145 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-product.dto.test.js                            | JavaScript |        106 |         36 |          1 |        143 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-product.dto.test.ts                            | TypeScript |        101 |         36 |         28 |        165 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-unit.dto.test.js                               | JavaScript |         85 |         31 |          1 |        117 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\products\update-unit.dto.test.ts                               | TypeScript |         83 |         31 |         23 |        137 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\sales\create-sale.dto.test.js                                  | JavaScript |        162 |         55 |          1 |        218 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\sales\create-sale.dto.test.ts                                  | TypeScript |        184 |         55 |         41 |        280 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\sales\update-sale-status.dto.test.js                           | JavaScript |         82 |         37 |          1 |        120 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\sales\update-sale-status.dto.test.ts                           | TypeScript |         79 |         37 |         25 |        141 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\shared\pagination.dto.test.js                                  | JavaScript |         52 |         23 |          1 |         76 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\dtos\shared\pagination.dto.test.ts                                  | TypeScript |         49 |         23 |         16 |         88 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\city.entity.test.js                              | JavaScript |         60 |         29 |          1 |         90 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\city.entity.test.ts                              | TypeScript |         58 |         29 |         19 |        106 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\customer.entity.test.js                          | JavaScript |         70 |         21 |          1 |         92 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\customer.entity.test.ts                          | TypeScript |        118 |         21 |         17 |        156 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\neighborhood.entity.test.js                      | JavaScript |         68 |         25 |          1 |         94 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\customers\neighborhood.entity.test.ts                      | TypeScript |        118 |         25 |         20 |        163 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\payment\payment.entity.test.js                             | JavaScript |        121 |         27 |          1 |        149 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\entities\payment\payment.entity.test.ts                             | TypeScript |        338 |         43 |         33 |        414 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\auth\register-user.use-case.test.js                       | JavaScript |         82 |         22 |          1 |        105 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\auth\register-user.use-case.test.ts                       | TypeScript |        117 |         17 |         27 |        161 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-city.use-case.test.js                    | JavaScript |        102 |         32 |          1 |        135 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-city.use-case.test.ts                    | TypeScript |         99 |         32 |         28 |        159 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-customer.use-case.test.js                | JavaScript |        126 |         30 |          1 |        157 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-customer.use-case.test.ts                | TypeScript |        145 |         31 |         32 |        208 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-neighborhood.use-case.test.js            | JavaScript |        134 |         37 |          1 |        172 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\create-neighborhood.use-case.test.ts            | TypeScript |        142 |         37 |         36 |        215 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-city.use-case.test.js                    | JavaScript |         83 |         21 |          1 |        105 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-city.use-case.test.ts                    | TypeScript |         73 |         21 |         23 |        117 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-customer.use-case.test.js                | JavaScript |        119 |         18 |          1 |        138 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-customer.use-case.test.ts                | TypeScript |        119 |         18 |         29 |        166 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-neighborhood.use-case.test.js            | JavaScript |        114 |         18 |          1 |        133 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\delete-neighborhood.use-case.test.ts            | TypeScript |         87 |         18 |         26 |        131 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-city-by-name.use-case.test.js              | JavaScript |        121 |         32 |          1 |        154 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-city-by-name.use-case.test.ts              | TypeScript |         96 |         32 |         38 |        166 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-customers-by-neighborhood.use-case.test.js | JavaScript |        220 |         47 |          1 |        268 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-customers-by-neighborhood.use-case.test.ts | TypeScript |        206 |         47 |         62 |        315 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-neighborhoods-by-city.use-case.test.js     | JavaScript |        210 |         47 |          1 |        258 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\find-neighborhoods-by-city.use-case.test.ts     | TypeScript |        172 |         47 |         59 |        278 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-cities.use-case.test.js                 | JavaScript |        133 |         32 |          1 |        166 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-cities.use-case.test.ts                 | TypeScript |        108 |         32 |         38 |        178 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-customers.use-case.test.js              | JavaScript |        154 |         32 |          1 |        187 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-customers.use-case.test.ts              | TypeScript |        153 |         32 |         41 |        226 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-neighborhoods.use-case.test.js          | JavaScript |        147 |         33 |          1 |        181 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-all-neighborhoods.use-case.test.ts          | TypeScript |        120 |         33 |         40 |        193 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-city-by-id.use-case.test.js                 | JavaScript |        101 |         21 |          1 |        123 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-city-by-id.use-case.test.ts                 | TypeScript |         76 |         21 |         27 |        124 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-customer-by-email.use-case.test.js          | JavaScript |        118 |         24 |          1 |        143 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-customer-by-email.use-case.test.ts          | TypeScript |        118 |         24 |         32 |        174 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-customer-by-id.use-case.test.js             | JavaScript |        116 |         20 |          1 |        137 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-customer-by-id.use-case.test.ts             | TypeScript |        116 |         20 |         29 |        165 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-neighborhood-by-id.use-case.test.js         | JavaScript |        110 |         20 |          1 |        131 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\get-neighborhood-by-id.use-case.test.ts         | TypeScript |         83 |         20 |         26 |        129 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-city.use-case.test.js                    | JavaScript |        158 |         30 |          1 |        189 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-city.use-case.test.ts                    | TypeScript |        133 |         30 |         43 |        206 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-customer.use-case.test.js                | JavaScript |        184 |         39 |          1 |        224 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-customer.use-case.test.ts                | TypeScript |        188 |         39 |         45 |        272 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-neighborhood.use-case.test.js            | JavaScript |        182 |         43 |          1 |        226 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\customers\update-neighborhood.use-case.test.ts            | TypeScript |        194 |         43 |         50 |        287 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\product\create-product.use-case.test.js                   | JavaScript |         94 |         24 |          1 |        119 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\domain\use-cases\product\create-product.use-case.test.ts                   | TypeScript |        114 |         25 |         21 |        160 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\auth\auth-routes.test.js                                       | JavaScript |        169 |         30 |          1 |        200 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\auth\auth-routes.test.ts                                       | TypeScript |        246 |         15 |         38 |        299 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\logger-abstraction.test.ts                                     | TypeScript |         29 |          2 |          6 |         37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\mcp\mcp-routes.integration.test.ts                             | TypeScript |        126 |          9 |         30 |        165 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\mcp\mcp.routes.test.new.ts                                     | TypeScript |        116 |          9 |         27 |        152 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\mcp\mcp.routes.test.ts                                         | TypeScript |        116 |          9 |         27 |        152 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\monitoring\monitoring-routes.integration.test.ts               | TypeScript |        174 |         21 |         35 |        230 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\monitoring\monitoring.integration.test.ts                      | TypeScript |        107 |          0 |         28 |        135 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\order\select-payment-method.integration.test.ts                | TypeScript |        303 |         16 |         28 |        347 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\products\product-routes.test.js                                | JavaScript |        286 |         58 |          1 |        345 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\products\product-routes.test.ts                                | TypeScript |        240 |         25 |         30 |        295 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\integration\telegram-notification.test.ts                                  | TypeScript |         75 |          5 |         13 |         93 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\CUSTOM_EXAMPLE_FIX.md                                          | Markdown   |         71 |          0 |         25 |         96 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\README.md                                                      | Markdown   |        154 |          0 |         68 |        222 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\artillery-config.yml                                           | YAML       |        303 |          0 |          5 |        308 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\artillery.test.ts                                              | TypeScript |        154 |         22 |         42 |        218 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\basic-load-fixed.test.ts                                       | TypeScript |        170 |         18 |         38 |        226 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\basic-load.test.ts                                             | TypeScript |        170 |         18 |         38 |        226 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\connectivity.test.ts                                           | TypeScript |         43 |          8 |         19 |         70 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\custom-example.test.ts                                         | TypeScript |        185 |         26 |         67 |        278 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\endpoint-specific.test.ts                                      | TypeScript |        174 |         23 |         59 |        256 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\performance-config.ts                                          | TypeScript |         64 |         15 |         14 |         93 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\performance-utils.ts                                           | TypeScript |        121 |         30 |         28 |        179 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\performance\simple.test.ts                                                 | TypeScript |         56 |          6 |         18 |         80 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\presentation\auth\controller.auth.test.js                                  | JavaScript |        130 |         42 |          1 |        173 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\presentation\auth\controller.auth.test.ts                                  | TypeScript |        159 |         57 |         47 |        263 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\presentation\products\controller.product.test.js                           | JavaScript |        226 |         61 |          1 |        288 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\presentation\products\controller.product.test.ts                           | TypeScript |        262 |         55 |         51 |        368 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\smoke\health-check.smoke.test.ts                                           | TypeScript |      2,661 |        202 |        464 |      3,327 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\test-logger.ts                                                             | TypeScript |         28 |          5 |          8 |         41 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\data\mongodb\models\coupon\coupon.model.test.ts                       | TypeScript |        360 |          5 |         91 |        456 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\auth\forgot-password.dto.test.ts                          | TypeScript |         91 |          1 |         29 |        121 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\auth\login-user.dto.test.ts                               | TypeScript |        115 |          1 |         34 |        150 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\auth\register-user.dto.test.ts                            | TypeScript |        191 |          1 |         51 |        243 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\auth\reset-password.dto.test.ts                           | TypeScript |        192 |          1 |         52 |        245 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\coupon\create-coupon.dto.test.ts                          | TypeScript |        320 |          9 |         79 |        408 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\coupon\update-coupon.dto.test.ts                          | TypeScript |        394 |         11 |        118 |        523 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\mcp\mcp-call.dto.test.ts                                  | TypeScript |         95 |          1 |         37 |        133 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\dtos\order\select-payment-method.dto.test.ts                   | TypeScript |         80 |          1 |         21 |        102 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\create-coupon.use-case.test.ts                | TypeScript |        105 |          1 |         28 |        134 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\delete-coupon.use-case.test.ts                | TypeScript |        103 |          1 |         30 |        134 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\get-all-coupons.use-case.test.ts              | TypeScript |        119 |          1 |         33 |        153 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\get-coupon-by-id.use-case.test.ts             | TypeScript |        132 |          1 |         37 |        170 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\coupon\update-coupon.use-case.test.ts                | TypeScript |        188 |          5 |         47 |        240 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\mcp\call-tool.use-case.test.ts                       | TypeScript |         74 |         10 |         20 |        104 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\mcp\list-tools.use-case.test.ts                      | TypeScript |         55 |          9 |         13 |         77 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\order\select-payment-method.use-case.test.ts         | TypeScript |        181 |          1 |         38 |        220 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\create-tag.use-case.test.ts              | TypeScript |         89 |         16 |         24 |        129 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\delete-tag.use-case.test.ts              | TypeScript |         98 |         18 |         26 |        142 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\get-all-tags.use-case.test.ts            | TypeScript |        106 |         24 |         23 |        153 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\get-tag-by-id.use-case.test.ts           | TypeScript |        135 |         27 |         35 |        197 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\domain\use-cases\product\tag\update-tag.use-case.test.ts              | TypeScript |        143 |         31 |         37 |        211 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\adapters\cloudinary.adapter.test.ts                    | TypeScript |        179 |          7 |         43 |        229 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\adapters\mercado-pago-payment.adapter.test.ts          | TypeScript |         72 |          1 |         14 |         87 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\adapters\nodemailer.adapter.test.ts                    | TypeScript |        229 |         14 |         50 |        293 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\adapters\telegram-notification.adapter.test.ts         | TypeScript |        217 |          4 |         42 |        263 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\infrastructure\repositories\mcp\mcp.repository.impl.test.ts           | TypeScript |         52 |         11 |         14 |         77 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\unit\presentation\controllers\mcp.controller.test.ts                       | TypeScript |         79 |         17 |         21 |        117 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\global-setup.js                                                      | JavaScript |         32 |          4 |          1 |         37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\global-setup.ts                                                      | TypeScript |         18 |          4 |          5 |         27 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\global-teardown.js                                                   | JavaScript |         20 |          2 |          1 |         23 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\global-teardown.ts                                                   | TypeScript |          6 |          2 |          1 |          9 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\setup.js                                                             | JavaScript |         41 |          5 |          1 |         47 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\setup.ts                                                             | TypeScript |         21 |          7 |          9 |         37 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\test-utils.js                                                        | JavaScript |         38 |          4 |          1 |         43 |
+| c:\Users\Usuario\Desktop\Practica Angular\14-back\tests\utils\test-utils.ts                                                        | TypeScript |         35 |          4 |          4 |         43 |
+| Total                                                                                                                              |            |     21,917 |      3,850 |      3,821 |     29,588 |
++------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
