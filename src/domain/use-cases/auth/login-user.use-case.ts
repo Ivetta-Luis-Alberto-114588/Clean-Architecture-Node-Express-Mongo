@@ -17,7 +17,7 @@ interface IUserWithToken{
         name: string,
         email: string,
         password: string,
-        role: string[]
+        roles: string[]
         token: string,
     }
 }
@@ -45,14 +45,10 @@ export class LoginUserUseCase implements ILoginUserUseCase {
         try {
             //crear usuario
             const user = await this.authRepository.login(loginUserDto)
-            
-
-            //token
+                //token
             const token = await this.signToken({id: user.id}, '2h')
 
             if(!token) throw CustomError.internalServerError("Login-use-case, Error generating token")
-
-
 
             return {
                 user: {
@@ -60,7 +56,7 @@ export class LoginUserUseCase implements ILoginUserUseCase {
                     name: user.name,
                     email: user.email,
                     password: user.password,
-                    role: user.role,
+                    roles: user.roles,
                     token: token,
                 },
             }

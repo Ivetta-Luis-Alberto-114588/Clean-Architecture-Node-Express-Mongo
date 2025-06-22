@@ -201,7 +201,7 @@ describe('Health Check - Smoke Tests', () => {
             expect(response.body.user.token.length).toBeGreaterThan(0);            // Verificar que devuelve información del usuario
             expect(response.body.user.email).toBe('smoke-admin@test.com');
             expect(response.body.user.name).toBe('smoke test admin'); // El nombre se convierte a minúsculas en el backend
-            expect(response.body.user.role).toContain('ADMIN_ROLE'); // Vuelvo a usar 'role' como estaba originalmente
+            expect(response.body.user.roles).toContain('ADMIN_ROLE'); // Corregido a usar 'roles'
         });
 
         it('should reject invalid credentials', async () => {
@@ -2025,7 +2025,7 @@ describe('Health Check - Smoke Tests', () => {
                 name: `Test User Orders ${Date.now()}`,
                 email: `testorders${Date.now()}@test.com`,
                 password: 'Test123456',
-                role: 'USER_ROLE'
+                roles: 'USER_ROLE'
             };
 
             const registerResponse = await request(app)

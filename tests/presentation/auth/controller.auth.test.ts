@@ -82,7 +82,6 @@ describe('AuthController', () => {
     email: 'test@example.com',
     password: 'password123'
   };
-
   // Usuario de respuesta simulado
   const mockUserResponse = {
     user: {
@@ -90,7 +89,7 @@ describe('AuthController', () => {
       name: 'test user',
       email: 'test@example.com',
       password: 'hashed_password',
-      role: ['USER_ROLE'],
+      roles: ['USER_ROLE'],
       token: 'mock-jwt-token'
     }
   };

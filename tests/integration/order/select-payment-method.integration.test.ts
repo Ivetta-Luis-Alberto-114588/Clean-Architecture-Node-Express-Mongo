@@ -67,7 +67,7 @@ describe('Order Payment Method Integration Tests', () => {
             name: 'Test Admin',
             email: 'admin@test.com',
             password: 'hashedpassword123',
-            role: ['ADMIN_ROLE'],
+            roles: ['ADMIN_ROLE'],
             emailValidated: true,
             isActive: true
         });

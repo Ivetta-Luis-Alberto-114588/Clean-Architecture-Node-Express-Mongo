@@ -20,7 +20,7 @@ interface IUserWithToken {
         email: string,
         // Considera NO devolver la contraseña, ni siquiera hasheada
         // password?: string, // Comentado por seguridad
-        role: string[],
+        roles: string[],
         token: string,
     },
 }
@@ -122,16 +122,14 @@ export class RegisterUserUseCase implements IRegisterUserUseCase {
             // Si falla la generación del token, el usuario y cliente (probablemente) están creados.
             logger.error(`Fallo al generar token para usuario recién registrado ${user.id} (${user.email})`);
             throw CustomError.internalServerError("Error al generar el token de autenticación.");
-        }
-
-        // 4. Devolver la respuesta
+        }        // 4. Devolver la respuesta
         return {
             user: {
                 id: user.id,
                 name: user.name,
                 email: user.email,
                 // password: user.password, // No devolver contraseña
-                role: user.role,
+                roles: user.roles,
                 token: token // Devolver el token generado
             },
         };

@@ -32,11 +32,10 @@ export class AuthMiddleware {
             if (!user) return next(CustomError.unauthorized("Invalid token - user not found"));
 
             // Añadir la entidad mapeada, no el documento Mongoose directamente
-            const mappedUser = UserMapper.fromObjectToUserEntity(user);
-            logger.debug("JWT validation successful", {
+            const mappedUser = UserMapper.fromObjectToUserEntity(user);            logger.debug("JWT validation successful", {
                 userId: mappedUser.id,
                 userEmail: mappedUser.email,
-                userRoles: mappedUser.role
+                userRoles: mappedUser.roles
             });
             req.body.user = mappedUser;
             next();
@@ -49,35 +48,29 @@ export class AuthMiddleware {
 
     static checkRole = (allowedRoles: string[]) => {
         return (req: Request, res: Response, next: NextFunction) => {
-            logger.debug("checkRole middleware started", { allowedRoles });
-
-            const user = req.body.user as UserEntity; logger.debug("User from req.body.user", {
+            logger.debug("checkRole middleware started", { allowedRoles });            const user = req.body.user as UserEntity; logger.debug("User from req.body.user", {
                 userExists: !!user,
                 userId: user?.id,
                 userEmail: user?.email,
-                userRoles: user?.role,
-                userRoleType: typeof user?.role,
-                isArray: Array.isArray(user?.role)
+                userRoles: user?.roles,
+                userRoleType: typeof user?.roles,
+                isArray: Array.isArray(user?.roles)
             });
 
             if (!user) {
                 logger.error("AuthMiddleware.checkRole ejecutado sin usuario autenticado en req.body.user");
                 return next(CustomError.internalServerError("Error de autenticación interna"));
-            }
-
-            const hasRequiredRole = user.role.some(role => allowedRoles.includes(role));
+            }            const hasRequiredRole = user.roles.some(role => allowedRoles.includes(role));
             logger.debug("Role check result", {
                 hasRequiredRole,
-                userRoles: user.role,
+                userRoles: user.roles,
                 allowedRoles
-            });
-
-            if (!hasRequiredRole) {
-                logger.warn(`Acceso denegado para usuario ${user.id} (${user.email}). Rol requerido: ${allowedRoles.join('/')}, Rol del usuario: ${user.role.join('/')}`);
+            });            if (!hasRequiredRole) {
+                logger.warn(`Acceso denegado para usuario ${user.id} (${user.email}). Rol requerido: ${allowedRoles.join('/')}, Rol del usuario: ${user.roles.join('/')}`);
                 return next(CustomError.forbiden(`Acceso denegado. Requiere rol: ${allowedRoles.join(' o ')}`));
             }
 
-            logger.debug(`Acceso permitido para usuario ${user.id} con rol ${user.role.join('/')} para roles ${allowedRoles.join('/')}`);
+            logger.debug(`Acceso permitido para usuario ${user.id} con rol ${user.roles.join('/')} para roles ${allowedRoles.join('/')}`);
             next();
         }
     }
