@@ -53,7 +53,7 @@ const orderStatusSchema = new Schema({
 });
 
 // Índices para optimizar consultas
-orderStatusSchema.index({ code: 1 });
+// orderStatusSchema.index({ code: 1 }); // Eliminado: duplicado con unique: true
 orderStatusSchema.index({ isActive: 1 });
 orderStatusSchema.index({ order: 1 });
 orderStatusSchema.index({ isDefault: 1 });

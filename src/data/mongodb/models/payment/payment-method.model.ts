@@ -42,7 +42,7 @@ const paymentMethodSchema = new Schema({
 });
 
 // Índices
-paymentMethodSchema.index({ code: 1 });
+// paymentMethodSchema.index({ code: 1 }); // Eliminado: duplicado con unique: true
 paymentMethodSchema.index({ isActive: 1 });
 
 export const PaymentMethodModel = model('PaymentMethod', paymentMethodSchema);

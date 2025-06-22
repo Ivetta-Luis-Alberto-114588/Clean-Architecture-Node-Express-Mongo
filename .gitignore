@@ -10,3 +10,9 @@ build/
 mongo/
 logs/
 coverage/
+
+# Test reports and results
+test-report.html
+test-results.log
+/reports/
+*.test.html
