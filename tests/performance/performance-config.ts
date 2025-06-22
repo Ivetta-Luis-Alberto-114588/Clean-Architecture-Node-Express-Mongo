@@ -39,8 +39,8 @@ export const LOCAL_CONFIG: PerformanceConfig = {
     duration: '1m',
     rampUpDuration: '15s',
     cooldownDuration: '10s',
-    requestTimeout: 30000,
-    initialWarmupDelay: 5000, // Sin cold start en local
+    requestTimeout: 10000, // Reducido a 10 segundos para local
+    initialWarmupDelay: 2000, // Reducido a 2 segundos para local
 };
 
 export const getConfig = (): PerformanceConfig => {
@@ -54,7 +54,7 @@ export const TEST_ENDPOINTS = {
     // Endpoints públicos (sin autenticación)
     health: '/', // Endpoint raíz que devuelve "Running OK"
     products: '/api/products',
-    categories: '/api/products/categories', // Este puede necesitar parámetros específicos
+    categories: '/api/categories', // Corregido: era /api/products/categories
 
     // Endpoints que requieren autenticación
     auth: {

@@ -1,0 +1,31 @@
+{
+  "config": {
+    "target": "https://sistema-mongo.onrender.com",
+    "phases": [
+      {
+        "duration": 30,
+        "arrivalRate": 5
+      }
+    ],
+    "defaults": {
+      "headers": {
+        "User-Agent": "Artillery-Quick-Test"
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Health Check Only",
+      "flow": [
+        {
+          "get": {
+            "url": "/api/health"
+          }
+        },
+        {
+          "think": 1
+        }
+      ]
+    }
+  ]
+}
