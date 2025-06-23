@@ -437,7 +437,7 @@ export class PaymentController {
         // Respondemos 200 OK para evitar reintentos, pero logueamos el error
         res.status(200).json({ status: 'error', message: `Error interno al procesar DTO: ${dtoError}` });
         return;
-      }      const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto!); // Usar el DTO validado
+      } const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto!); // Usar el DTO validado
 
       if (paymentInfo.status === 'approved') {
         // Buscar el estado "PENDIENTE PAGADO" por código

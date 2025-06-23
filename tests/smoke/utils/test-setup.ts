@@ -14,15 +14,15 @@ export let testServer: server;
 // Shared test utilities
 export const setupSmokeTests = async () => {
     console.log('Setting up smoke tests...');
-    
+
     // Initialize the app
     testServer = new server({
         p_port: 3002, // Puerto diferente para evitar conflictos
         p_routes: MainRoutes.getMainRoutes
     });
-    
+
     app = testServer.app;
-    
+
     // Try to get admin token for tests that need it
     try {
         const adminLoginResponse = await request(app)
@@ -31,7 +31,7 @@ export const setupSmokeTests = async () => {
                 email: 'admin@admin.com',
                 password: 'Abc123456'
             });
-        
+
         if (adminLoginResponse.status === 200 && adminLoginResponse.body.user?.token) {
             adminToken = adminLoginResponse.body.user.token;
             console.log('Admin token obtained for smoke tests');
@@ -50,7 +50,7 @@ export const cleanupSmokeTests = async () => {
 // Common test helpers
 export const createTestUser = async () => {
     const uniqueEmail = `smoke-user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@test.com`;
-    
+
     const response = await request(app)
         .post('/api/auth/register')
         .send({
@@ -58,7 +58,7 @@ export const createTestUser = async () => {
             email: uniqueEmail,
             password: 'validPassword123'
         });
-    
+
     return { response, email: uniqueEmail };
 };
 

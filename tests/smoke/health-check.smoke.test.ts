@@ -3318,7 +3318,8 @@ describe('Health Check - Smoke Tests', () => {
                     expect(adminPM).toHaveProperty('id');
                     expect(adminPM).toHaveProperty('code');
                     expect(adminPM).toHaveProperty('name');
-                    expect(adminPM).toHaveProperty('description');                }
+                    expect(adminPM).toHaveProperty('description');
+                }
             });
         });
 
@@ -3361,10 +3362,11 @@ describe('Health Check - Smoke Tests', () => {
                     expect(response.body).toHaveProperty('name');
                     expect(response.body).toHaveProperty('isActive');
                     expect(response.body.isActive).toBe(true);
-                    
-                    console.log('✅ PENDIENTE PAGADO status found and active');                } else {
+
+                    console.log('✅ PENDIENTE PAGADO status found and active');
+                } else {
                     console.log('⚠️  PENDIENTE PAGADO status not found - webhook will use fallback ID');
-                    
+
                     // Try to verify fallback status exists (using the hardcoded ID)
                     // Check if we can access order statuses without auth first
                     const fallbackResponse = await request(app)
@@ -3372,12 +3374,12 @@ describe('Health Check - Smoke Tests', () => {
                         .expect((res) => {
                             expect([200, 401]).toContain(res.status);
                         });
-                    
+
                     if (fallbackResponse.status === 200) {
                         const fallbackStatus = fallbackResponse.body.orderStatuses?.find(
                             (status: any) => status.id === '675a1a39dd398aae92ab05f8'
                         );
-                        
+
                         if (fallbackStatus) {
                             console.log('✅ Fallback status exists:', fallbackStatus.name);
                         } else {
@@ -3416,7 +3418,7 @@ describe('Health Check - Smoke Tests', () => {
             it('should test payment controller has access to order status repository', async () => {
                 // This is an indirect test - we verify the PaymentController can handle requests
                 // which indicates it was instantiated correctly with all dependencies
-                
+
                 const response = await request(app)
                     .get('/api/payments')
                     .expect((res) => {
@@ -3448,7 +3450,7 @@ describe('Health Check - Smoke Tests', () => {
                 }
 
                 const existingOrder = ordersResponse.body.orders[0];
-                
+
                 // Try to update order status to PENDIENTE PAGADO
                 const statusUpdate = {
                     statusId: testPendientePagadoStatusId,
@@ -3483,7 +3485,7 @@ describe('Health Check - Smoke Tests', () => {
                 // that the OrderStatusRepository.findByCode method would work correctly
 
                 console.log('🧪 Simulating payment approval workflow...');
-                
+
                 // Step 1: Verify we can find the status by code (as the webhook does)
                 const statusResponse = await request(app)
                     .get('/api/order-statuses/code/PENDIENTE PAGADO')
@@ -3493,7 +3495,7 @@ describe('Health Check - Smoke Tests', () => {
 
                 if (statusResponse.status === 200) {
                     console.log('✅ Step 1: Found PENDIENTE PAGADO status by code');
-                    
+
                     // Step 2: Verify the status has the expected properties
                     expect(statusResponse.body).toHaveProperty('id');
                     expect(statusResponse.body).toHaveProperty('code');
@@ -3501,12 +3503,12 @@ describe('Health Check - Smoke Tests', () => {
                     expect(statusResponse.body).toHaveProperty('isActive');
                     expect(statusResponse.body.code).toBe('PENDIENTE PAGADO');
                     expect(statusResponse.body.isActive).toBe(true);
-                    
+
                     console.log('✅ Step 2: Status has correct properties');
                     console.log(`   - ID: ${statusResponse.body.id}`);
                     console.log(`   - Name: ${statusResponse.body.name}`);
                     console.log(`   - Active: ${statusResponse.body.isActive}`);
-                    
+
                     // Step 3: This would be where the webhook updates the order
                     console.log('✅ Step 3: Webhook would use this status ID to update order');
                     console.log('✅ Payment approval workflow simulation complete');
@@ -3532,10 +3534,10 @@ describe('Health Check - Smoke Tests', () => {
 
                 if (statusResponse.status === 200) {
                     const status = statusResponse.body;
-                    
+
                     // Verify it has transition capabilities
                     expect(status).toHaveProperty('canTransitionTo');
-                    
+
                     if (status.canTransitionTo && status.canTransitionTo.length > 0) {
                         console.log('✅ PENDIENTE PAGADO has configured transitions:');
                         status.canTransitionTo.forEach((transitionId: string) => {
@@ -3555,9 +3557,9 @@ describe('Health Check - Smoke Tests', () => {
                     .get('/api/payments')
                     .expect((res) => {
                         expect([200, 401]).toContain(res.status);
-                    });                if (paymentsResponse.status === 401) {
-                    console.log('✅ Payment endpoints require authentication (expected)');
-                } else {
+                    }); if (paymentsResponse.status === 401) {
+                        console.log('✅ Payment endpoints require authentication (expected)');
+                    } else {
                     console.log('✅ Payment endpoints accessible');
                     // Handle both paginated response {total, payments} and array response []
                     if (Array.isArray(paymentsResponse.body)) {
@@ -3572,7 +3574,7 @@ describe('Health Check - Smoke Tests', () => {
 
             it('should verify the complete payment-to-order-status workflow integration', async () => {
                 console.log('🎯 Testing complete payment-to-order-status integration...');
-                
+
                 let workflowSuccess = true;
                 const checks: string[] = [];
 
@@ -3612,7 +3614,7 @@ describe('Health Check - Smoke Tests', () => {
                 // Summary
                 console.log('\n📋 Integration Workflow Check Results:');
                 checks.forEach(check => console.log(`   ${check}`));
-                
+
                 if (workflowSuccess) {
                     console.log('\n🎉 Complete workflow integration: SUCCESS');
                     console.log('   When a payment is approved via MercadoPago webhook:');
@@ -3626,7 +3628,7 @@ describe('Health Check - Smoke Tests', () => {
                     console.log('   2. OrderStatusRepository.findByCode will return null');
                     console.log('   3. Order status will be updated using hardcoded fallback ID');
                 }
-                
+
                 console.log('\n💡 Next steps to fully test:');
                 console.log('   - Create actual MercadoPago webhook with real payment data');
                 console.log('   - Monitor logs to confirm status update workflow');
