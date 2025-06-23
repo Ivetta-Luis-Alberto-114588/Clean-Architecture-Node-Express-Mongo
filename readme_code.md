@@ -4,9 +4,7 @@ debe estar instalado node 20
 
 se puede usar nvm (list, install, use) para tener un manejador de versiones de node
 
-
 NPM RUN DEV
-
 
 npm install, para instalar todos los modulos
 
@@ -79,7 +77,88 @@ Rellenar las variables de entrono
 * MONGO_DB_NAME= nombre_de_la_bd_que_creo
 * JWT_SEED=MiSemilla
 
+
+
+
+
 MERCADO PAGO
+
+
+
+API KEY MercadoPago TEST
+
+1) hay que usar ngrok para poder recibir los webhook de mercado pago
+
+correr ngrok http http://localhost:3000   (aca es donde va a correr mi backend npm run dev)
+
+2) en navegador abrir ventana incognito,tengo que iniciar https://www.mercadopago.com.ar/developers/
+
+ingresar los datos del vendedor que soy yo en esta ventana incognito # usuario: TESTUSER174603780 contraseña: 9325521F#e74e#4a37#
+
+me voy a integraciones / webhooks / url para pruebas y pego la url de ngrok
+
+(por ejemplo https://7f10-190-138-95-153.ngrok-free.app)
+
+despues puedo simular un pago desde el navegador de mercado pago
+
+lo que va hacer es un post a esa direccion, y como le dije a ngrok que redirija a mi localhost:3000 y ahi esta mi backend va a recibir
+
+ese post y lo va a procesar
+
+3) ahora debo configurar las variables de entorno de mi backend
+
+para que pueda recibir los webhooks de mercado pago y procesarlos
+
+mi backend debe estar corriendo con los datos del vendedor
+
+Vendedor1:
+
+(estas son las variables de entorno)
+
+public key: APP_USR-e3edd4b6-8e44-42b4-b2d4-999d3c855fd9
+
+access token: APP_USR-3328213698076160-102119-335770b2644c50b25c25652c527d7ce5-2036389505
+
+con todo esto ya tengo mi backend corriendo y escuchando los webhooks de mercado pago en modo pruebas
+
+4) ahora debo abrir una nueva ventana de incognito con un nuevo navegador para simular que soy un comprador
+
+debo entrar con estas credenciales Comprador1:
+
+url: https://www.mercadopago.com.ar/developers/
+
+usuario: TESTUSER1283783729,
+
+contraseña: FBB90AC2#25c3#4199#
+
+mail: test_user_1283783729@testuser.com
+
+5) ahora debo abrir el frontend en modo incognito y simular que soy un comprador
+
+url: http://localhost:4200
+
+6) ahora debo hacer una compra con el comprador1, por lo cual me debo loguear en el frontend
+
+2) abrir en el mismo modo incognito el front para probar como si fuese el Comprador1
+
+url: http://localhost:4200
+
+3) pagar con tarjeta de debito con estos datos en 1 sola cuota
+
+tarjeta: 5031 7557 3453 0604
+
+nombre: APRO
+
+vencimiento:11/30
+
+codigo seguridad: 123
+
+dni: 12345678
+
+
+
+
+#### esto de abajo es viejo
 
 hay que usar ngrok para poder recibir los webhook de mercado pago
 
@@ -107,12 +186,6 @@ Vendedor1:
     (esto no se pone en ningun lado)
 	usuario: TESTUSER174603780,
 	contraseña: 9325521F#e74e#4a37#
-
-
-
-
-
-
 
 TENER EN CUENTA LOS PLAZOS DE ACREDITACION DE MP
 

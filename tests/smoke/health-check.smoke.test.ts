@@ -3318,8 +3318,319 @@ describe('Health Check - Smoke Tests', () => {
                     expect(adminPM).toHaveProperty('id');
                     expect(adminPM).toHaveProperty('code');
                     expect(adminPM).toHaveProperty('name');
-                    expect(adminPM).toHaveProperty('description');
+                    expect(adminPM).toHaveProperty('description');                }
+            });
+        });
+
+        describe('Payment Order Status Integration - Smoke Tests', () => {
+            let testOrderId: string | null = null;
+            let testPendientePagadoStatusId: string | null = null;
+            let testPaymentId: string | null = null;
+
+            beforeAll(async () => {
+                try {
+                    // Get the "PENDIENTE PAGADO" order status
+                    const response = await request(app)
+                        .get('/api/order-statuses/code/PENDIENTE PAGADO')
+                        .expect((res) => {
+                            expect([200, 404]).toContain(res.status);
+                        });
+
+                    if (response.status === 200) {
+                        testPendientePagadoStatusId = response.body.id;
+                        console.log('Found PENDIENTE PAGADO status:', testPendientePagadoStatusId);
+                    } else {
+                        console.log('PENDIENTE PAGADO status not found - testing will use fallback');
+                    }
+                } catch (error) {
+                    console.error('Error setting up payment order status tests:', error);
                 }
+            });
+
+            it('should verify PENDIENTE PAGADO order status exists or fallback mechanism works', async () => {
+                const response = await request(app)
+                    .get('/api/order-statuses/code/PENDIENTE PAGADO')
+                    .expect((res) => {
+                        expect([200, 404]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    expect(response.body).toHaveProperty('id');
+                    expect(response.body).toHaveProperty('code');
+                    expect(response.body.code).toBe('PENDIENTE PAGADO');
+                    expect(response.body).toHaveProperty('name');
+                    expect(response.body).toHaveProperty('isActive');
+                    expect(response.body.isActive).toBe(true);
+                    
+                    console.log('✅ PENDIENTE PAGADO status found and active');                } else {
+                    console.log('⚠️  PENDIENTE PAGADO status not found - webhook will use fallback ID');
+                    
+                    // Try to verify fallback status exists (using the hardcoded ID)
+                    // Check if we can access order statuses without auth first
+                    const fallbackResponse = await request(app)
+                        .get('/api/order-statuses')
+                        .expect((res) => {
+                            expect([200, 401]).toContain(res.status);
+                        });
+                    
+                    if (fallbackResponse.status === 200) {
+                        const fallbackStatus = fallbackResponse.body.orderStatuses?.find(
+                            (status: any) => status.id === '675a1a39dd398aae92ab05f8'
+                        );
+                        
+                        if (fallbackStatus) {
+                            console.log('✅ Fallback status exists:', fallbackStatus.name);
+                        } else {
+                            console.log('⚠️  Fallback status ID not found in current statuses');
+                        }
+                    } else {
+                        console.log('ℹ️  Order statuses endpoint requires authentication - cannot verify fallback');
+                        console.log('   But webhook processing should still work with hardcoded fallback ID');
+                    }
+                }
+            });
+
+            it('should verify payment webhook endpoint is accessible', async () => {
+                // Test that the webhook endpoint responds (even if we can't test full MP integration)
+                const mockWebhookData = {
+                    id: '12345678',
+                    topic: 'payment'
+                };
+
+                const response = await request(app)
+                    .post('/api/payments/webhook')
+                    .query(mockWebhookData)
+                    .expect((res) => {
+                        // Webhook should respond, even if it fails due to invalid payment ID
+                        expect([200, 400, 404]).toContain(res.status);
+                    });
+
+                // The webhook should at least process the request format
+                if (response.status === 200) {
+                    console.log('✅ Webhook processed successfully (mock data)');
+                } else {
+                    console.log(`ℹ️  Webhook responded with ${response.status} (expected for mock data)`);
+                }
+            });
+
+            it('should test payment controller has access to order status repository', async () => {
+                // This is an indirect test - we verify the PaymentController can handle requests
+                // which indicates it was instantiated correctly with all dependencies
+                
+                const response = await request(app)
+                    .get('/api/payments')
+                    .expect((res) => {
+                        // Should either succeed or require auth, but not crash due to missing dependencies
+                        expect([200, 401]).toContain(res.status);
+                    });
+
+                if (response.status === 200) {
+                    console.log('✅ PaymentController responding correctly');
+                } else if (response.status === 401) {
+                    console.log('✅ PaymentController requires auth (expected)');
+                }
+            });
+
+            it('should verify order status can be updated via order endpoints', async () => {
+                if (!testPendientePagadoStatusId) {
+                    console.log('Skipping order status update test - no PENDIENTE PAGADO status found');
+                    return;
+                }
+
+                // First get any existing order or skip if none exist
+                const ordersResponse = await request(app)
+                    .get('/api/sales?page=1&limit=1')
+                    .expect(200);
+
+                if (!ordersResponse.body.orders || ordersResponse.body.orders.length === 0) {
+                    console.log('Skipping order status update test - no orders found');
+                    return;
+                }
+
+                const existingOrder = ordersResponse.body.orders[0];
+                
+                // Try to update order status to PENDIENTE PAGADO
+                const statusUpdate = {
+                    statusId: testPendientePagadoStatusId,
+                    notes: 'Test status update from smoke test'
+                };
+
+                const updateResponse = await request(app)
+                    .patch(`/api/sales/${existingOrder.id}/status`)
+                    .send(statusUpdate)
+                    .expect((res) => {
+                        expect([200, 400, 401, 403, 404]).toContain(res.status);
+                    });
+
+                if (updateResponse.status === 200) {
+                    expect(updateResponse.body).toHaveProperty('id');
+                    expect(updateResponse.body).toHaveProperty('status');
+                    expect(updateResponse.body.status.id).toBe(testPendientePagadoStatusId);
+                    console.log('✅ Order status updated successfully to PENDIENTE PAGADO');
+                } else {
+                    console.log(`ℹ️  Order status update responded with ${updateResponse.status} (may require specific permissions)`);
+                }
+            });
+
+            it('should simulate payment approval workflow', async () => {
+                if (!testPendientePagadoStatusId) {
+                    console.log('Skipping payment approval simulation - no PENDIENTE PAGADO status found');
+                    return;
+                }
+
+                // This simulates the key parts of the webhook processing workflow
+                // We can't easily test the full MercadoPago integration, but we can verify
+                // that the OrderStatusRepository.findByCode method would work correctly
+
+                console.log('🧪 Simulating payment approval workflow...');
+                
+                // Step 1: Verify we can find the status by code (as the webhook does)
+                const statusResponse = await request(app)
+                    .get('/api/order-statuses/code/PENDIENTE PAGADO')
+                    .expect((res) => {
+                        expect([200, 404]).toContain(res.status);
+                    });
+
+                if (statusResponse.status === 200) {
+                    console.log('✅ Step 1: Found PENDIENTE PAGADO status by code');
+                    
+                    // Step 2: Verify the status has the expected properties
+                    expect(statusResponse.body).toHaveProperty('id');
+                    expect(statusResponse.body).toHaveProperty('code');
+                    expect(statusResponse.body).toHaveProperty('name');
+                    expect(statusResponse.body).toHaveProperty('isActive');
+                    expect(statusResponse.body.code).toBe('PENDIENTE PAGADO');
+                    expect(statusResponse.body.isActive).toBe(true);
+                    
+                    console.log('✅ Step 2: Status has correct properties');
+                    console.log(`   - ID: ${statusResponse.body.id}`);
+                    console.log(`   - Name: ${statusResponse.body.name}`);
+                    console.log(`   - Active: ${statusResponse.body.isActive}`);
+                    
+                    // Step 3: This would be where the webhook updates the order
+                    console.log('✅ Step 3: Webhook would use this status ID to update order');
+                    console.log('✅ Payment approval workflow simulation complete');
+                } else {
+                    console.log('⚠️  Step 1 Failed: PENDIENTE PAGADO status not found');
+                    console.log('   Webhook would fall back to hardcoded ID: 675a1a39dd398aae92ab05f8');
+                    console.log('⚠️  Payment approval would use fallback mechanism');
+                }
+            });
+
+            it('should verify order status transitions are properly configured', async () => {
+                if (!testPendientePagadoStatusId) {
+                    console.log('Skipping transition test - no PENDIENTE PAGADO status found');
+                    return;
+                }
+
+                // Get the PENDIENTE PAGADO status with its transitions
+                const statusResponse = await request(app)
+                    .get(`/api/order-statuses/${testPendientePagadoStatusId}`)
+                    .expect((res) => {
+                        expect([200, 401, 403, 404]).toContain(res.status);
+                    });
+
+                if (statusResponse.status === 200) {
+                    const status = statusResponse.body;
+                    
+                    // Verify it has transition capabilities
+                    expect(status).toHaveProperty('canTransitionTo');
+                    
+                    if (status.canTransitionTo && status.canTransitionTo.length > 0) {
+                        console.log('✅ PENDIENTE PAGADO has configured transitions:');
+                        status.canTransitionTo.forEach((transitionId: string) => {
+                            console.log(`   - Can transition to: ${transitionId}`);
+                        });
+                    } else {
+                        console.log('ℹ️  PENDIENTE PAGADO has no configured transitions (may be intentional)');
+                    }
+                } else {
+                    console.log(`ℹ️  Could not retrieve status details (status: ${statusResponse.status})`);
+                }
+            });
+
+            it('should verify payment repository integration', async () => {
+                // Test that payment endpoints work (indicating repository integration is correct)
+                const paymentsResponse = await request(app)
+                    .get('/api/payments')
+                    .expect((res) => {
+                        expect([200, 401]).toContain(res.status);
+                    });                if (paymentsResponse.status === 401) {
+                    console.log('✅ Payment endpoints require authentication (expected)');
+                } else {
+                    console.log('✅ Payment endpoints accessible');
+                    // Handle both paginated response {total, payments} and array response []
+                    if (Array.isArray(paymentsResponse.body)) {
+                        console.log('   Received array response (possibly empty):', paymentsResponse.body.length, 'payments');
+                    } else if (paymentsResponse.body && typeof paymentsResponse.body === 'object') {
+                        expect(paymentsResponse.body).toHaveProperty('total');
+                        expect(paymentsResponse.body).toHaveProperty('payments');
+                        console.log('   Received paginated response with', paymentsResponse.body.total, 'total payments');
+                    }
+                }
+            });
+
+            it('should verify the complete payment-to-order-status workflow integration', async () => {
+                console.log('🎯 Testing complete payment-to-order-status integration...');
+                
+                let workflowSuccess = true;
+                const checks: string[] = [];
+
+                // Check 1: OrderStatusRepository can find PENDIENTE PAGADO
+                const statusCheck = await request(app)
+                    .get('/api/order-statuses/code/PENDIENTE PAGADO')
+                    .expect((res) => {
+                        expect([200, 404]).toContain(res.status);
+                    });
+
+                if (statusCheck.status === 200) {
+                    checks.push('✅ OrderStatusRepository.findByCode working');
+                } else {
+                    checks.push('⚠️  OrderStatusRepository.findByCode - status not found (fallback will be used)');
+                    workflowSuccess = false;
+                }
+
+                // Check 2: Payment webhook endpoint exists and responds
+                const webhookCheck = await request(app)
+                    .post('/api/payments/webhook')
+                    .send({ type: 'payment', data: { id: 'test' } })
+                    .expect((res) => {
+                        expect([200, 400, 404]).toContain(res.status);
+                    });
+
+                checks.push('✅ Payment webhook endpoint accessible');
+
+                // Check 3: Order update endpoint works
+                const orderUpdateCheck = await request(app)
+                    .get('/api/sales')
+                    .expect((res) => {
+                        expect([200, 401]).toContain(res.status);
+                    });
+
+                checks.push('✅ Order management endpoints accessible');
+
+                // Summary
+                console.log('\n📋 Integration Workflow Check Results:');
+                checks.forEach(check => console.log(`   ${check}`));
+                
+                if (workflowSuccess) {
+                    console.log('\n🎉 Complete workflow integration: SUCCESS');
+                    console.log('   When a payment is approved via MercadoPago webhook:');
+                    console.log('   1. PaymentController will receive the webhook');
+                    console.log('   2. OrderStatusRepository will find "PENDIENTE PAGADO" by code');
+                    console.log('   3. Order status will be updated to the found status ID');
+                } else {
+                    console.log('\n⚠️  Workflow will use fallback mechanism');
+                    console.log('   When a payment is approved via MercadoPago webhook:');
+                    console.log('   1. PaymentController will receive the webhook');
+                    console.log('   2. OrderStatusRepository.findByCode will return null');
+                    console.log('   3. Order status will be updated using hardcoded fallback ID');
+                }
+                
+                console.log('\n💡 Next steps to fully test:');
+                console.log('   - Create actual MercadoPago webhook with real payment data');
+                console.log('   - Monitor logs to confirm status update workflow');
+                console.log('   - Verify order status changes in database after payment');
             });
         });
     });

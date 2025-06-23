@@ -6,6 +6,7 @@ import { CustomError } from "../../domain/errors/custom.error";
 import { PaymentRepository } from "../../domain/repositories/payment/payment.repository";
 import { OrderRepository } from "../../domain/repositories/order/order.repository";
 import { CustomerRepository } from "../../domain/repositories/customers/customer.repository";
+import { OrderStatusRepository } from "../../domain/repositories/order/order-status.repository";
 import { CreatePaymentDto } from "../../domain/dtos/payment/create-payment.dto";
 import { ProcessWebhookDto } from "../../domain/dtos/payment/process-webhook.dto";
 import { UpdatePaymentStatusDto } from "../../domain/dtos/payment/update-payment-status.dto";
@@ -31,6 +32,7 @@ export class PaymentController {
     private readonly paymentRepository: PaymentRepository,
     private readonly orderRepository: OrderRepository,
     private readonly customerRepository: CustomerRepository,
+    private readonly orderStatusRepository: OrderStatusRepository,
     private readonly paymentService: IPaymentService,
     private readonly logger: ILogger
   ) { }
@@ -435,13 +437,24 @@ export class PaymentController {
         // Respondemos 200 OK para evitar reintentos, pero logueamos el error
         res.status(200).json({ status: 'error', message: `Error interno al procesar DTO: ${dtoError}` });
         return;
-      } const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto!); // Usar el DTO validado
+      }      const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto!); // Usar el DTO validado
 
       if (paymentInfo.status === 'approved') {
-        await this.orderRepository.updateStatus(payment.saleId, {
-          statusId: '683a1a39dd398aae92ab05fa', // COMPLETED status ID
-          notes: `Pago aprobado con ID ${paymentInfo.id}`
-        });
+        // Buscar el estado "PENDIENTE PAGADO" por código
+        const paidStatus = await this.orderStatusRepository.findByCode('PENDIENTE PAGADO');
+        if (paidStatus) {
+          await this.orderRepository.updateStatus(payment.saleId, {
+            statusId: paidStatus.id,
+            notes: `Pago aprobado con ID ${paymentInfo.id}`
+          });
+        } else {
+          this.logger.error('No se encontró el estado "PENDIENTE PAGADO"');
+          // Fallback al ID hardcodeado si no se encuentra el estado por código
+          await this.orderRepository.updateStatus(payment.saleId, {
+            statusId: '675a1a39dd398aae92ab05f8', // PENDIENTE PAGADO status ID
+            notes: `Pago aprobado con ID ${paymentInfo.id} (fallback)`
+          });
+        }
       }
 
       res.status(200).json({

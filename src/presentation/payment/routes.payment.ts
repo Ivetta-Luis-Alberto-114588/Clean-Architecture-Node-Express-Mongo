@@ -4,28 +4,31 @@ import { PaymentMongoDataSourceImpl } from "../../infrastructure/datasources/pay
 import { PaymentRepositoryImpl } from "../../infrastructure/repositories/payment/payment.repository.impl";
 import { OrderMongoDataSourceImpl } from "../../infrastructure/datasources/order/order.mongo.datasource.impl";
 import { CustomerMongoDataSourceImpl } from "../../infrastructure/datasources/customers/customer.mongo.datasource.impl";
+import { OrderStatusMongoDataSourceImpl } from "../../infrastructure/datasources/order/order-status.mongo.datasource.impl";
 import { OrderRepositoryImpl } from "../../infrastructure/repositories/order/order.repository.impl";
 import { CustomerRepositoryImpl } from "../../infrastructure/repositories/customers/customer.repository.impl";
+import { OrderStatusRepositoryImpl } from "../../infrastructure/repositories/order/order-status.repository.impl";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { loggerService } from "../../configs/logger";
 import { paymentService } from "../../configs/payment";
 
 export class PaymentRoutes {
   static get getPaymentRoutes(): Router {
-    const router = Router();
-
-    // Inicializamos las dependencias
+    const router = Router();    // Inicializamos las dependencias
     const paymentDatasource = new PaymentMongoDataSourceImpl();
     const saleDatasource = new OrderMongoDataSourceImpl();
-    const customerDatasource = new CustomerMongoDataSourceImpl();    // Inicializar repositorios
+    const customerDatasource = new CustomerMongoDataSourceImpl();
+    const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();    // Inicializar repositorios
     const paymentRepository = new PaymentRepositoryImpl(paymentDatasource);
     const saleRepository = new OrderRepositoryImpl(saleDatasource);
     const customerRepository = new CustomerRepositoryImpl(customerDatasource);
+    const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);
 
     const controller = new PaymentController(
       paymentRepository,
       saleRepository,
       customerRepository,
+      orderStatusRepository,
       paymentService,
       loggerService
     );
