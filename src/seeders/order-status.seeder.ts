@@ -23,34 +23,44 @@ const orderStatusSeeds: OrderStatusSeed[] = [
         order: 1,
         isActive: true,
         isDefault: true,
-        canTransitionTo: ['CONFIRMED', 'AWAITING_PAYMENT', 'CANCELLED']
+        canTransitionTo: ['CONFIRMED', 'AWAITING_PAYMENT', 'PENDIENTE PAGADO', 'CANCELLED']
+    },
+    {
+        code: 'PENDIENTE PAGADO',
+        name: 'Pendiente Pagado',
+        description: 'El pedido ha sido pagado y está pendiente de procesamiento',
+        color: '#28a745',
+        order: 2,
+        isActive: true,
+        isDefault: false,
+        canTransitionTo: ['CONFIRMED', 'COMPLETED', 'CANCELLED']
     },
     {
         code: 'CONFIRMED',
         name: 'Confirmado',
         description: 'El pedido ha sido confirmado pero no pagado',
         color: '#17a2b8',
-        order: 2,
+        order: 3,
         isActive: true,
         isDefault: false,
-        canTransitionTo: ['AWAITING_PAYMENT', 'COMPLETED', 'CANCELLED']
+        canTransitionTo: ['AWAITING_PAYMENT', 'PENDIENTE PAGADO', 'COMPLETED', 'CANCELLED']
     },
     {
         code: 'AWAITING_PAYMENT',
         name: 'Esperando Pago',
         description: 'El pedido está esperando confirmación de pago',
         color: '#fd7e14',
-        order: 3,
+        order: 4,
         isActive: true,
         isDefault: false,
-        canTransitionTo: ['COMPLETED', 'CANCELLED']
+        canTransitionTo: ['PENDIENTE PAGADO', 'COMPLETED', 'CANCELLED']
     },
     {
         code: 'COMPLETED',
         name: 'Completado',
         description: 'El pedido ha sido pagado y completado',
         color: '#28a745',
-        order: 4,
+        order: 5,
         isActive: true,
         isDefault: false,
         canTransitionTo: ['CANCELLED']
@@ -60,7 +70,7 @@ const orderStatusSeeds: OrderStatusSeed[] = [
         name: 'Cancelado',
         description: 'El pedido ha sido cancelado',
         color: '#dc3545',
-        order: 5,
+        order: 6,
         isActive: true,
         isDefault: false,
         canTransitionTo: []

@@ -447,13 +447,18 @@ export class PaymentController {
             statusId: paidStatus.id,
             notes: `Pago aprobado con ID ${paymentInfo.id}`
           });
+          this.logger.info(`✅ Orden ${payment.saleId} actualizada a estado PENDIENTE PAGADO dinámico (ID: ${paidStatus.id})`);
         } else {
-          this.logger.error('No se encontró el estado "PENDIENTE PAGADO"');
-          // Fallback al ID hardcodeado si no se encuentra el estado por código
+          // FALLBACK: Intentar con ID hardcodeado pero loguear mejor
+          const fallbackStatusId = '675a1a39dd398aae92ab05f8';
+          this.logger.warn(`⚠️ Estado 'PENDIENTE PAGADO' no encontrado por código, usando fallback ID: ${fallbackStatusId}`);
+
           await this.orderRepository.updateStatus(payment.saleId, {
-            statusId: '675a1a39dd398aae92ab05f8', // PENDIENTE PAGADO status ID
-            notes: `Pago aprobado con ID ${paymentInfo.id} (fallback)`
+            statusId: fallbackStatusId,
+            notes: `Pago aprobado con ID ${paymentInfo.id} (fallback hardcoded)`
           });
+
+          this.logger.info(`📋 Orden ${payment.saleId} actualizada con fallback a estado PENDIENTE PAGADO (ID: ${fallbackStatusId})`);
         }
       }
 
