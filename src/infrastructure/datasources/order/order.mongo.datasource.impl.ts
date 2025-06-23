@@ -53,9 +53,10 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             return result;
         } catch (castError: any) {
             logger.error(`[OrderDS] findSaleByIdPopulated: OrderModel.findById('${id}') threw an error:`, { error: castError, message: castError.message, stack: castError.stack });
-            throw castError;        }
+            throw castError;
+        }
     }
-    
+
     // --- MÉTODO CREATE (actualizado para usar OrderStatus ID) ---
     async create(
         createOrderDto: CreateOrderDto,
@@ -67,7 +68,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
     ): Promise<OrderEntity> {
         const session = await mongoose.startSession();
         const isTestEnvironment = process.env.NODE_ENV === 'test';
-        
+
         // Only start transaction if not in test environment (MongoMemoryServer doesn't support transactions)
         if (!isTestEnvironment) {
             session.startTransaction();
@@ -75,7 +76,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
         } else {
             logger.info(`[OrderDS] Creando pedido sin TX (test mode) (Cliente: ${finalCustomerId})`);
         }
-        
+
         try {
             const saleItems = [];
             let subtotalBeforeTax = 0; // Subtotal después del descuento pero sin IVA
@@ -116,9 +117,9 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             if (saleItems.length === 0) throw CustomError.badRequest('La venta debe tener productos');
 
             const discountRate = calculatedDiscountRate;
-            const discountAmount = Math.round(totalDiscountAmount * 100) / 100;            const subtotalWithTax = Math.round((subtotalBeforeTax + totalTaxAmount) * 100) / 100;
+            const discountAmount = Math.round(totalDiscountAmount * 100) / 100; const subtotalWithTax = Math.round((subtotalBeforeTax + totalTaxAmount) * 100) / 100;
             const finalTotal = subtotalWithTax; // Ya incluye descuento aplicado correctamente
-            if (finalTotal < 0) throw CustomError.badRequest('Total negativo.');            const saleData = {
+            if (finalTotal < 0) throw CustomError.badRequest('Total negativo.'); const saleData = {
                 customer: finalCustomerId,
                 items: saleItems,
                 subtotal: subtotalBeforeTax, // Subtotal después del descuento pero antes del IVA
@@ -144,7 +145,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
 
             const saleDocArray = await OrderModel.create([saleData], { session });
             const saleDoc = saleDocArray[0];
-            logger.info(`[OrderDS] Pedido ${saleDoc._id} creado en sesión`);            if (couponIdToIncrement) {
+            logger.info(`[OrderDS] Pedido ${saleDoc._id} creado en sesión`); if (couponIdToIncrement) {
                 await this.couponDataSource.incrementUsage(couponIdToIncrement, session);
                 logger.info(`[OrderDS] Uso cupón ${couponIdToIncrement} incrementado`);
             }
@@ -164,7 +165,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
 
         } catch (error) {
             logger.error("[OrderDS] Error en TX crear pedido, rollback...", { error, session: session?.id });
-            
+
             // Only abort transaction if not in test environment
             if (!isTestEnvironment) {
                 await session.abortTransaction();
@@ -172,14 +173,15 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             } else {
                 logger.warn(`[OrderDS] Error crear pedido (test mode - sin TX) para cliente ${finalCustomerId}`, { session: session?.id });
             }
-            
+
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError(`Error interno al crear la venta: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
             logger.info(`[OrderDS] Finalizando sesión Mongoose crear pedido`, { session: session?.id });
-            session.endSession();        }
+            session.endSession();
+        }
     }
-    
+
     // --- MÉTODO getAll MODIFICADO ---
     async getAll(paginationDto: PaginationDto): Promise<{ total: number; orders: OrderEntity[] }> {
         const { page, limit } = paginationDto;
@@ -262,10 +264,10 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
     // --- updateStatus (sin cambios) ---
     async updateStatus(id: string, updateOrderStatusDto: UpdateOrderStatusDto): Promise<OrderEntity> {
         let retries = 3; // Para manejar posibles WriteConflicts
-        let lastError: any = null;        while (retries > 0) {
+        let lastError: any = null; while (retries > 0) {
             const session = await mongoose.startSession();
             const isTestEnvironment = process.env.NODE_ENV === 'test';
-            
+
             // Only start transaction if not in test environment
             if (!isTestEnvironment) {
                 session.startTransaction();
@@ -285,10 +287,11 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                     if (updateOrderStatusDto.notes !== undefined && sale.notes !== updateOrderStatusDto.notes) {
                         sale.notes = updateOrderStatusDto.notes;
                         await sale.save({ session });
-                        logger.info(`[OrderDS] Pedido ${id} ya en estado ${updateOrderStatusDto.statusId}. Solo notas actualizadas.`);                    } else {
+                        logger.info(`[OrderDS] Pedido ${id} ya en estado ${updateOrderStatusDto.statusId}. Solo notas actualizadas.`);
+                    } else {
                         logger.info(`[OrderDS] Pedido ${id} ya está en el estado ${updateOrderStatusDto.statusId}. Sin cambios.`);
                     }
-                    
+
                     // Only commit transaction if not in test environment
                     if (!isTestEnvironment) {
                         await session.commitTransaction();
@@ -354,7 +357,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 sale.status = newStatusId;
                 if (updateOrderStatusDto.notes !== undefined) {
                     sale.notes = updateOrderStatusDto.notes;
-                }                await sale.save({ session });
+                } await sale.save({ session });
                 logger.info(`[OrderDS] Estado pedido ${id} actualizado a ${updateOrderStatusDto.statusId}`);
 
                 // Only commit transaction if not in test environment
@@ -368,9 +371,10 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
 
                 const updatedSaleDoc = await this.findSaleByIdPopulated(id); // Reutilizar helper
                 if (!updatedSaleDoc) throw CustomError.internalServerError("Error recuperando venta actualizada post-commit.");
-                return OrderMapper.fromObjectToSaleEntity(updatedSaleDoc);            } catch (error: any) {
+                return OrderMapper.fromObjectToSaleEntity(updatedSaleDoc);
+            } catch (error: any) {
                 lastError = error;
-                
+
                 // Only abort transaction if not in test environment
                 if (!isTestEnvironment) {
                     await session.abortTransaction();

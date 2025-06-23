@@ -56,14 +56,13 @@ export class CartItemMapper {
                 );
             }
             // Caso 2: productId es solo un ID (string u ObjectId)
-        } else {
-            // Crear un placeholder para ProductEntity
+        } else {            // Crear un placeholder para ProductEntity
             const idString = typeof productId === 'string' ? productId : productId?.toString() ?? 'unknown-id';
             const basePricePlaceholder = Number(priceAtTime) ?? 0;
             const taxRatePlaceholder = Number(taxRate) ?? 21;
 
             // Usar PriceCalculator para consistency
-            const placeholderCalculation = PriceCalculator.calculatePrice(basePricePlaceholder, 0, taxRatePlaceholder);
+            const placeholderCalculation = PriceCalculator.calculateSingleItemPrice(basePricePlaceholder, 0, taxRatePlaceholder);
             const priceWithTaxPlaceholder = placeholderCalculation.finalPrice;
             // Crear placeholders para category y unit
             const placeholderCategory: CategoryEntity = { id: 0, name: 'Desconocida', description: '', isActive: true };
