@@ -19,7 +19,7 @@ import { ProcessWebhookUseCase } from "../../domain/use-cases/payment/process-we
 import { GetPaymentByOrderUseCase } from "../../domain/use-cases/payment/get-payment-by-order.use-case";
 import { GetAllPaymentsUseCase } from "../../domain/use-cases/payment/get-all-payments.use-case";
 import { PaymentEntity, PaymentProvider } from "../../domain/entities/payment/payment.entity"; // Importar PaymentEntity y PaymentProvider
-import { MercadoPagoItem, MercadoPagoPayer, MercadoPagoPayment } from "../../domain/interfaces/payment/mercado-pago.interface"; // Importar interfaces de MP
+import { MercadoPagoItem, MercadoPagoPayer, MercadoPagoPayment, MercadoPagoPaymentStatus } from "../../domain/interfaces/payment/mercado-pago.interface"; // Importar interfaces de MP
 import { IPaymentService } from "../../domain/interfaces/payment.service";
 import { ILogger } from "../../domain/interfaces/logger.interface";
 import { envs } from "../../configs/envs";
@@ -147,6 +147,29 @@ export class PaymentController {
         return;
       }
 
+      // Verificar si ya existe un pago pendiente para esta venta
+      const existingPayment = await PaymentModel.findOne({
+        saleId: saleId,
+        status: { $in: ['pending', 'approved'] }
+      });
+
+      if (existingPayment) {
+        this.logger.warn(`Ya existe un pago ${existingPayment.status} para la venta ${saleId}`, {
+          existingPaymentId: existingPayment._id,
+          status: existingPayment.status
+        });
+        res.status(409).json({
+          error: `Ya existe un pago ${existingPayment.status} para esta venta`,
+          code: "PAYMENT_ALREADY_EXISTS",
+          existingPayment: {
+            id: existingPayment._id,
+            status: existingPayment.status,
+            preferenceId: existingPayment.preferenceId
+          }
+        });
+        return;
+      }
+
       // <<<--- Crear variable separada en lugar de reasignar req.body --- >>>
       const preferenceBody = {
         items: [
@@ -178,15 +201,13 @@ export class PaymentController {
         metadata: { uuid: uuidv4() }
       };
 
-      const preference = await this.paymentService.createPreference(paymentPreference);
-
-      const newPayment = await PaymentModel.create({
+      const preference = await this.paymentService.createPreference(paymentPreference); const newPayment = await PaymentModel.create({
         saleId: saleId,
         customerId: sale.customer.id.toString(),
         amount: sale.total,
         provider: PaymentProvider.MERCADO_PAGO,
         status: 'pending',
-        externalReference: `sale-${saleId}`,
+        externalReference: `sale-${saleId}-${uuidv4()}`, // Usar UUID para garantizar unicidad
         providerPaymentId: '',
         preferenceId: preference.id,
         paymentMethod: 'other',
@@ -218,17 +239,35 @@ export class PaymentController {
               path: 'city'
             }
           }
+        }); res.json({
+          payment: populatedPayment, preference: {
+            id: preference.id,
+            init_point: preference.initPoint,
+            sandbox_init_point: preference.sandboxInitPoint
+          }
         });
-
-      res.json({
-        payment: populatedPayment, preference: {
-          id: preference.id,
-          init_point: preference.initPoint,
-          sandbox_init_point: preference.sandboxInitPoint
+    } catch (error: any) {
+      // Manejo específico de errores de MongoDB
+      if (error.code === 11000) {
+        if (error.keyPattern?.externalReference) {
+          this.logger.error(`Error de clave duplicada en externalReference para saleId: ${req.params.saleId}`, error);
+          res.status(409).json({
+            error: "Ya existe un pago en proceso para esta venta. Por favor, verifica el estado del pago existente.",
+            code: "DUPLICATE_EXTERNAL_REFERENCE"
+          });
+          return;
         }
-      });
-    } catch (error) {
-      // <<<--- Corregir llamada a handleError --- >>>
+        if (error.keyPattern?.preferenceId) {
+          this.logger.error(`Error de clave duplicada en preferenceId para saleId: ${req.params.saleId}`, error);
+          res.status(409).json({
+            error: "Error en la creación de la preferencia de pago. Por favor, intenta nuevamente.",
+            code: "DUPLICATE_PREFERENCE_ID"
+          });
+          return;
+        }
+      }
+
+      // Para otros errores, usar el manejo general
       this.handleError(error, res);
     }
   };
@@ -632,6 +671,107 @@ export class PaymentController {
       });
     } catch (error) {
       // <<<--- Corregir llamada a handleError --- >>>
+      this.handleError(error, res);
+    }
+  };
+
+  // NUEVO: Método para verificar y corregir pagos manualmente
+  manualPaymentVerification = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { orderId } = req.params;
+
+      this.logger.info(`🔍 Verificación manual iniciada para orden: ${orderId}`);
+
+      // Buscar la orden
+      const order = await this.orderRepository.findById(orderId);
+      if (!order) {
+        res.status(404).json({ error: `Orden ${orderId} no encontrada` });
+        return;
+      }
+
+      // Buscar pagos asociados a esta orden
+      const payments = await this.paymentRepository.getPaymentsBySaleId(orderId, { page: 1, limit: 10 });
+
+      if (!payments || payments.length === 0) {
+        res.status(404).json({ error: `No se encontraron pagos para la orden ${orderId}` });
+        return;
+      }
+
+      const results = [];
+
+      for (const payment of payments) {
+        if (payment.providerPaymentId && payment.status !== 'approved') {
+          try {
+            this.logger.info(`🔍 Verificando pago MP: ${payment.providerPaymentId}`);
+
+            // Verificar estado actual en MercadoPago
+            const mpPayment = await this.paymentService.getPayment(payment.providerPaymentId);
+
+            if (String(mpPayment.status) === 'approved' && String(payment.status) !== 'approved') {
+              this.logger.info(`💰 Pago aprobado encontrado, actualizando...`);
+
+              // Actualizar el pago
+              const [error, updateDto] = UpdatePaymentStatusDto.create({
+                paymentId: payment.id,
+                status: mpPayment.status,
+                providerPaymentId: payment.providerPaymentId,
+                metadata: mpPayment
+              });
+
+              if (!error && updateDto) {
+                await this.paymentRepository.updatePaymentStatus(updateDto);
+
+                // Actualizar la orden
+                const paidStatus = await this.orderStatusRepository.findByCode('PENDIENTE PAGADO');
+                const targetStatusId = paidStatus?.id || '675a1a39dd398aae92ab05f8';
+
+                await this.orderRepository.updateStatus(orderId, {
+                  statusId: targetStatusId,
+                  notes: `Pago verificado manualmente - ID ${mpPayment.id}`
+                });
+
+                results.push({
+                  paymentId: payment.id,
+                  status: 'corrected',
+                  mpStatus: mpPayment.status,
+                  orderUpdated: true
+                });
+
+                this.logger.info(`✅ Pago ${payment.id} corregido y orden actualizada`);
+              }
+            } else {
+              results.push({
+                paymentId: payment.id,
+                status: 'no_change_needed',
+                currentStatus: payment.status,
+                mpStatus: mpPayment.status
+              });
+            }
+          } catch (error) {
+            this.logger.error(`❌ Error verificando pago ${payment.id}:`, error);
+            results.push({
+              paymentId: payment.id,
+              status: 'error',
+              error: error instanceof Error ? error.message : String(error)
+            });
+          }
+        } else {
+          results.push({
+            paymentId: payment.id,
+            status: 'already_approved_or_no_provider_id',
+            currentStatus: payment.status
+          });
+        }
+      }
+
+      res.json({
+        orderId,
+        orderCurrentStatus: order.status,
+        verificationsPerformed: results.length,
+        results
+      });
+
+    } catch (error) {
       this.handleError(error, res);
     }
   };

@@ -46,8 +46,10 @@ export class PaymentRoutes {
     router.get("/:id", controller.getPayment);
     router.get("/by-sale/:saleId", controller.getPaymentsBySale);
     router.get("/", controller.getAllPayments);
-    router.post("/verify", controller.verifyPayment);
-    router.get("/preference/:preferenceId", controller.verifyPreferenceStatus);
+    router.post("/verify", controller.verifyPayment); router.get("/preference/:preferenceId", controller.verifyPreferenceStatus);
+
+    // NUEVO: Verificación manual de pagos
+    router.post("/manual-verify/:orderId", controller.manualPaymentVerification);
 
     //estos son los pagos que he hecho en mercado pago del ultimo año
     router.get("/mercadopago/payments", controller.getAllMercadoPagoPayments);
