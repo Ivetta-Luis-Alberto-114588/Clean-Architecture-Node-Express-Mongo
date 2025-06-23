@@ -30,7 +30,7 @@ export async function warmupServer(): Promise<void> {
             });
 
             console.log(`✅ Warmup exitoso! Status: ${response.status}`);
-            
+
             // Solo hacer requests adicionales si el servidor responde
             if (response.status < 500) {
                 try {
@@ -53,13 +53,14 @@ export async function warmupServer(): Promise<void> {
             if (retries < maxRetries) {
                 console.log(`⏳ Esperando 5s antes del siguiente intento...`);
                 await sleep(5000); // Reducido de 10s a 5s
-            }        }
+            }
+        }
     }
 
     // Si llegamos aquí, el warmup falló
     console.error('❌ Warmup del servidor falló después de todos los intentos');
     console.warn('⚠️ Los tests de performance pueden fallar o ser lentos');
-    
+
     // En lugar de lanzar error, permitir que continúen los tests
     // throw new Error('Servidor no disponible para tests de performance');
 }
@@ -101,7 +102,7 @@ export async function getAuthToken(): Promise<string> {
         const response = await makeRequest('POST', '/api/auth/login', {
             email: TEST_DATA.testUser.email,
             password: TEST_DATA.testUser.password
-        });        if (response.status === 200 && response.data?.user?.token) {
+        }); if (response.status === 200 && response.data?.user?.token) {
             return response.data.user.token;
         }
 
@@ -109,7 +110,7 @@ export async function getAuthToken(): Promise<string> {
         console.log('👤 Usuario de prueba no existe, creando...');
         const registerResponse = await makeRequest('POST', '/api/auth/register', {
             ...TEST_DATA.testUser
-        });        if (registerResponse.status === 201 && registerResponse.data?.user?.token) {
+        }); if (registerResponse.status === 201 && registerResponse.data?.user?.token) {
             console.log('✅ Usuario de prueba creado exitosamente');
             return registerResponse.data.user.token;
         }

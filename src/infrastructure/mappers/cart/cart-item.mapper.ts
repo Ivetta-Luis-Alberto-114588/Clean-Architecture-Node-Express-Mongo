@@ -4,6 +4,7 @@ import { CartItemEntity } from "../../../domain/entities/cart/cart-item.entity";
 import { ProductEntity } from "../../../domain/entities/products/product.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
 import { ProductMapper } from "../products/product.mapper"; // Necesario para mapear el producto poblado
+import { PriceCalculator } from "../../../configs/price-calculator";
 import logger from "../../../configs/logger";
 // Importar entidades placeholder si ProductMapper no las maneja internamente
 import { CategoryEntity } from "../../../domain/entities/products/category.entity";
@@ -60,7 +61,10 @@ export class CartItemMapper {
             const idString = typeof productId === 'string' ? productId : productId?.toString() ?? 'unknown-id';
             const basePricePlaceholder = Number(priceAtTime) ?? 0;
             const taxRatePlaceholder = Number(taxRate) ?? 21;
-            const priceWithTaxPlaceholder = Math.round(basePricePlaceholder * (1 + taxRatePlaceholder / 100) * 100) / 100;
+
+            // Usar PriceCalculator para consistency
+            const placeholderCalculation = PriceCalculator.calculatePrice(basePricePlaceholder, 0, taxRatePlaceholder);
+            const priceWithTaxPlaceholder = placeholderCalculation.finalPrice;
             // Crear placeholders para category y unit
             const placeholderCategory: CategoryEntity = { id: 0, name: 'Desconocida', description: '', isActive: true };
             const placeholderUnit: UnitEntity = { id: 0, name: 'Desconocida', description: '', isActive: true };
@@ -86,9 +90,13 @@ export class CartItemMapper {
         const price = Number(priceAtTime) || 0; // Este es el precio SIN IVA guardado
         const rate = Number(taxRate) || 0;     // Tasa de IVA guardada
 
-        // --- Calcular valores específicos para este item ---
-        const unitPriceWithTax = Math.round(price * (1 + rate / 100) * 100) / 100;
-        const subtotalWithTax = Math.round(q * unitPriceWithTax * 100) / 100;
+        // --- Calcular valores usando PriceCalculator para flujo correcto ---
+        // NOTA: En el carrito no aplicamos descuento por item, solo calculamos precio con IVA
+        // Los descuentos se aplicarán más tarde a nivel de orden/cupón
+        const priceCalculation = PriceCalculator.calculateCartItemPrice(price, q, 0, rate);
+
+        const unitPriceWithTax = priceCalculation.unitPriceWithTax;
+        const subtotalWithTax = priceCalculation.subtotalWithTax;
         // --- Fin Cálculos ---
 
         // Crear la instancia de CartItemEntity pasando los 6 argumentos requeridos

@@ -21,7 +21,7 @@ async function isServerAvailable(): Promise<boolean> {
 const config = getConfig();
 
 describe('Endpoint-Specific Performance Tests', () => {
-    let authToken: string;    beforeAll(async () => {
+    let authToken: string; beforeAll(async () => {
         console.log('🎯 Iniciando tests de performance específicos...');
 
         // Warmup
@@ -71,7 +71,7 @@ describe('Endpoint-Specific Performance Tests', () => {
             expect(avgResponseTime).toBeLessThan(8000); // 8 segundos promedio
             expect(maxResponseTime).toBeLessThan(15000); // 15 segundos máximo
 
-        }, 60000);        test('Categories endpoint consistency', async () => {
+        }, 60000); test('Categories endpoint consistency', async () => {
             const serverAvailable = await isServerAvailable();
             if (!serverAvailable) {
                 console.warn('⚠️ Servidor no disponible, saltando test de categorías');
@@ -110,7 +110,7 @@ describe('Endpoint-Specific Performance Tests', () => {
 
             // Todos los requests deben ser exitosos
             const successfulRequests = results.filter(r => r.status >= 200 && r.status < 300);
-            
+
             // Si no hay categorías en la base de datos, el endpoint puede retornar 200 con array vacío
             // Verificamos que al menos algunos requests fueron exitosos
             expect(successfulRequests.length).toBeGreaterThan(0);
@@ -125,7 +125,7 @@ describe('Endpoint-Specific Performance Tests', () => {
                 expect(Math.abs(length - avgDataLength)).toBeLessThan(avgDataLength * 0.1);
             });
 
-        }, 45000);        test('Authentication performance', async () => {
+        }, 45000); test('Authentication performance', async () => {
             const serverAvailable = await isServerAvailable();
             if (!serverAvailable) {
                 console.warn('⚠️ Servidor no disponible, saltando test de autenticación');
@@ -143,7 +143,7 @@ describe('Endpoint-Specific Performance Tests', () => {
             // Test registro
             const { result: registerResult, duration: registerDuration } = await measureResponseTime(async () => {
                 return makeRequest('POST', TEST_ENDPOINTS.auth.register, testUser);
-            });            console.log(`📝 Register took: ${registerDuration}ms`);
+            }); console.log(`📝 Register took: ${registerDuration}ms`);
             expect(registerResult.status).toBe(201);
             expect(registerDuration).toBeLessThan(10000); // 10 segundos para registro
 
@@ -242,7 +242,7 @@ describe('Endpoint-Specific Performance Tests', () => {
             // Contar requests exitosas
             const successfulRequests = results.filter(r => r.status >= 200 && r.status < 400);
             console.log(`✅ ${successfulRequests.length} of ${results.length} concurrent requests were successful`);
-            
+
             // Al menos el 50% de los requests deberían ser exitosos
             expect(successfulRequests.length).toBeGreaterThanOrEqual(Math.floor(results.length / 2));
 

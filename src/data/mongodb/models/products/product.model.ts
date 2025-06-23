@@ -75,11 +75,25 @@ productSchema.index(
 )
 // <<<--- FIN ÍNDICE DE TEXTO --- >>>
 
-// --- Virtuals y toJSON/toObject sin cambios ---
+// --- Virtuals y toJSON/toObject ---
+// Virtual original mantenido para compatibilidad
 productSchema.virtual('priceWithTax').get(function () {
     if (this.price === undefined || this.taxRate === undefined) return 0;
     return Math.round(this.price * (1 + this.taxRate / 100) * 100) / 100;
 });
+
+// Nuevos métodos para cálculo correcto con descuento
+productSchema.methods.calculatePriceAfterDiscount = function (discountRate: number = 0) {
+    const discountAmount = this.price * (discountRate / 100);
+    return Math.round((this.price - discountAmount) * 100) / 100;
+};
+
+productSchema.methods.calculateFinalPrice = function (discountRate: number = 0) {
+    const priceAfterDiscount = this.calculatePriceAfterDiscount(discountRate);
+    const taxAmount = priceAfterDiscount * (this.taxRate / 100);
+    return Math.round((priceAfterDiscount + taxAmount) * 100) / 100;
+};
+
 productSchema.set('toJSON', { virtuals: true });
 productSchema.set('toObject', { virtuals: true });
 

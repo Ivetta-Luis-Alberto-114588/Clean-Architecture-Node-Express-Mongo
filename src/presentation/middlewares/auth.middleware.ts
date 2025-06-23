@@ -32,7 +32,7 @@ export class AuthMiddleware {
             if (!user) return next(CustomError.unauthorized("Invalid token - user not found"));
 
             // Añadir la entidad mapeada, no el documento Mongoose directamente
-            const mappedUser = UserMapper.fromObjectToUserEntity(user);            logger.debug("JWT validation successful", {
+            const mappedUser = UserMapper.fromObjectToUserEntity(user); logger.debug("JWT validation successful", {
                 userId: mappedUser.id,
                 userEmail: mappedUser.email,
                 userRoles: mappedUser.roles
@@ -48,7 +48,7 @@ export class AuthMiddleware {
 
     static checkRole = (allowedRoles: string[]) => {
         return (req: Request, res: Response, next: NextFunction) => {
-            logger.debug("checkRole middleware started", { allowedRoles });            const user = req.body.user as UserEntity; logger.debug("User from req.body.user", {
+            logger.debug("checkRole middleware started", { allowedRoles }); const user = req.body.user as UserEntity; logger.debug("User from req.body.user", {
                 userExists: !!user,
                 userId: user?.id,
                 userEmail: user?.email,
@@ -60,12 +60,12 @@ export class AuthMiddleware {
             if (!user) {
                 logger.error("AuthMiddleware.checkRole ejecutado sin usuario autenticado en req.body.user");
                 return next(CustomError.internalServerError("Error de autenticación interna"));
-            }            const hasRequiredRole = user.roles.some(role => allowedRoles.includes(role));
+            } const hasRequiredRole = user.roles.some(role => allowedRoles.includes(role));
             logger.debug("Role check result", {
                 hasRequiredRole,
                 userRoles: user.roles,
                 allowedRoles
-            });            if (!hasRequiredRole) {
+            }); if (!hasRequiredRole) {
                 logger.warn(`Acceso denegado para usuario ${user.id} (${user.email}). Rol requerido: ${allowedRoles.join('/')}, Rol del usuario: ${user.roles.join('/')}`);
                 return next(CustomError.forbiden(`Acceso denegado. Requiere rol: ${allowedRoles.join(' o ')}`));
             }

@@ -39,7 +39,7 @@ export class AuthController {
             if (error) {
                 console.log("error en controller.auth.registerUser", error);
                 return res.status(400).json({ error });
-            }            const result = await new RegisterUserUseCase(
+            } const result = await new RegisterUserUseCase(
                 this.authRepository,
                 this.customerRepository
             ).execute(registerUserDto!);

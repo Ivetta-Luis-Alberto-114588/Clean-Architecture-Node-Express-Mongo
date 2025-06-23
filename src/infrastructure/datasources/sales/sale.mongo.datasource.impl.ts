@@ -10,6 +10,7 @@ import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
 import { SaleEntity } from "../../../domain/entities/sales/sale.entity";
 import { CustomError } from "../../../domain/errors/custom.error";
 import { SaleMapper } from "../../mappers/sales/sale.mapper";
+import { PriceCalculator } from "../../../configs/price-calculator";
 
 export class SaleMongoDataSourceImpl implements SaleDataSource {
     async create(createSaleDto: CreateSaleDto): Promise<SaleEntity> {
@@ -33,12 +34,12 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
                     unitPrice: item.unitPrice,
                     subtotal: itemSubtotal
                 });
-            }
-
-            // Calcular montos
-            const taxAmount = Math.round((subtotal * createSaleDto.taxRate / 100) * 100) / 100;
+            }            // Calcular montos con el flujo correcto: descuento primero, luego IVA
+            // Nota: Para Sales el descuento se aplica al total general, no por item
+            const subtotalAfterDiscount = Math.round((subtotal * (1 - createSaleDto.discountRate / 100)) * 100) / 100;
+            const taxAmount = Math.round((subtotalAfterDiscount * createSaleDto.taxRate / 100) * 100) / 100;
             const discountAmount = Math.round((subtotal * createSaleDto.discountRate / 100) * 100) / 100;
-            const total = Math.round((subtotal + taxAmount - discountAmount) * 100) / 100;
+            const total = Math.round((subtotalAfterDiscount + taxAmount) * 100) / 100;
 
             // Crear la venta
             const saleData = {
@@ -75,9 +76,9 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
                         { path: 'category' },
                         { path: 'unit' }
                     ]
-                });            if (!completeSale) {
-                throw CustomError.internalServerError("Error retrieving created sale");
-            }
+                }); if (!completeSale) {
+                    throw CustomError.internalServerError("Error retrieving created sale");
+                }
 
             return SaleMapper.fromObjectToSaleEntity(completeSale);
 
@@ -86,7 +87,7 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
             session.endSession();
             throw error;
         }
-    }    async getAll(paginationDto: PaginationDto): Promise<{ total: number; sales: SaleEntity[] }> {
+    } async getAll(paginationDto: PaginationDto): Promise<{ total: number; sales: SaleEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
 
@@ -116,7 +117,7 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
             total,
             sales: sales.map(sale => SaleMapper.fromObjectToSaleEntity(sale))
         };
-    }    async findById(id: string): Promise<SaleEntity> {
+    } async findById(id: string): Promise<SaleEntity> {
         const sale = await SaleModel.findById(id)
             .populate({
                 path: 'customer',
@@ -165,22 +166,22 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
                 updateData,
                 { new: true, session }
             )
-            .populate({
-                path: 'customer',
-                populate: {
-                    path: 'neighborhood',
-                    populate: { path: 'city' }
+                .populate({
+                    path: 'customer',
+                    populate: {
+                        path: 'neighborhood',
+                        populate: { path: 'city' }
+                    }
+                })
+                .populate({
+                    path: 'items.product',
+                    populate: [
+                        { path: 'category' },
+                        { path: 'unit' }
+                    ]
+                }); if (!updatedSale) {
+                    throw CustomError.internalServerError("Error updating sale");
                 }
-            })
-            .populate({
-                path: 'items.product',
-                populate: [
-                    { path: 'category' },
-                    { path: 'unit' }
-                ]
-            });            if (!updatedSale) {
-                throw CustomError.internalServerError("Error updating sale");
-            }
 
             await session.commitTransaction();
             session.endSession();
@@ -192,7 +193,7 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
             session.endSession();
             throw error;
         }
-    }    async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<{ total: number; sales: SaleEntity[] }> {
+    } async findByCustomer(customerId: string, paginationDto: PaginationDto): Promise<{ total: number; sales: SaleEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
 
@@ -222,7 +223,7 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
             total,
             sales: sales.map(sale => SaleMapper.fromObjectToSaleEntity(sale))
         };
-    }    async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<{ total: number; sales: SaleEntity[] }> {
+    } async findByDateRange(startDate: Date, endDate: Date, paginationDto: PaginationDto): Promise<{ total: number; sales: SaleEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
 
@@ -259,7 +260,7 @@ export class SaleMongoDataSourceImpl implements SaleDataSource {
             total,
             sales: sales.map(sale => SaleMapper.fromObjectToSaleEntity(sale))
         };
-    }    async findByStatus(status: string, paginationDto: PaginationDto): Promise<{ total: number; sales: SaleEntity[] }> {
+    } async findByStatus(status: string, paginationDto: PaginationDto): Promise<{ total: number; sales: SaleEntity[] }> {
         const { page, limit } = paginationDto;
         const skip = (page - 1) * limit;
 
