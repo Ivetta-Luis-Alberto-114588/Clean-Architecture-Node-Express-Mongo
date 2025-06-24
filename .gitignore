@@ -16,3 +16,12 @@ test-report.html
 test-results.log
 /reports/
 *.test.html
+details.md
+diff-details.md
+diff.csv
+diff.md
+diff.txt
+results.csv
+results.json
+results.md
+results.txt

@@ -176,7 +176,8 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
             );
             this.logger.info(`[CreateOrderUC] Pedido creado exitosamente: ${createdOrder.id}`);
 
-            // --- 5. Enviar notificación de nueva orden ---
+            // --- 5. Enviar notificación de nueva orden ---            // COMENTADO: La notificación ahora se maneja desde el frontend cuando el pago es exitoso
+            /*
             try {
                 await this.notificationService.sendOrderNotification({
                     orderId: createdOrder.id,
@@ -194,6 +195,9 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                     error: notificationError as Error
                 });
             }
+            */
+            
+            this.logger.info(`[CreateOrderUC] Orden creada exitosamente: ${createdOrder.id}. Notificación se enviará desde frontend cuando pago sea confirmado.`);
 
             return createdOrder;
 
