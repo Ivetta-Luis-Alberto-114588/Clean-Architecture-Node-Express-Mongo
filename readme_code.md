@@ -77,10 +77,6 @@ Rellenar las variables de entrono
 * MONGO_DB_NAME= nombre_de_la_bd_que_creo
 * JWT_SEED=MiSemilla
 
-
-
-
-
 MERCADO PAGO
 
 API KEY MercadoPago TEST
@@ -121,7 +117,7 @@ con todo esto ya tengo mi backend corriendo y escuchando los webhooks de mercado
 
 4) ahora debo abrir una nueva ventana de incognito con un nuevo navegador para simular que soy un comprador
 
-debo entrar con estas credenciales Comprador1:
+#### debo entrar con estas credenciales Comprador1:
 
 url: https://www.mercadopago.com.ar/developers/
 

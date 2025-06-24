@@ -980,7 +980,7 @@ Para configurar Telegram:
 
 #### **DELETE /:id**
 
-- **Descripción**: Elimina una unidad.
+- **Descripción**: Elimina una unidad (verifica que no tenga productos asociados)
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId de la unidad)
 - **Respuesta exitosa (200)**:
@@ -1193,7 +1193,7 @@ Para configurar Telegram:
 
 #### **DELETE /:id**
 
-- **Descripción**: Elimina un barrio.
+- **Descripción**: Elimina un barrio (considera impacto en clientes/direcciones)
 - **Autenticación**: JWT + ADMIN_ROLE requerido
 - **Parámetros de ruta**: `id` (ObjectId del barrio)
 - **Respuesta exitosa (200)**:
@@ -1966,7 +1966,6 @@ Para configurar Telegram:
 
 - **Descripción**: Lista solo los estados de pedido activos (ruta pública)
 - **Autenticación**: No requerida
-- **Query Parameters**: `page`, `limit` (igual que GET /)
 
 #### **GET /default**
 
@@ -2900,1238 +2899,6 @@ Para configurar Telegram:
 
 ---
 
-### Administración (**/api/admin**)
-
-[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
-
-**(Todos los siguientes endpoints requieren autenticación JWT y rol ADMIN_ROLE)**
-
-#### **Productos (**/api/admin/products**)**
-
-##### **GET /**
-
-- **Descripción**: Lista todos los productos (incluyendo activos e inactivos) con paginación
-- **Query Parameters**:
-  - `page`: número de página (opcional, default: 1)
-  - `limit`: elementos por página (opcional, default: 10, max: 100)
-  - `includeInactive`: incluir productos inactivos (opcional, boolean, default: true)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "products": [
-    {
-      "id": "string",
-      "name": "string",
-      "description": "string",
-      "price": "number",
-      "stock": "number",
-      "category": {
-        "id": "string",
-        "name": "string"
-      },
-      "unit": {
-        "id": "string",
-        "name": "string"
-      },
-      "tags": [
-        {
-          "id": "string",
-          "name": "string"
-        }
-      ],
-      "img": "string",
-      "isActive": "boolean",
-      "createdAt": "string (ISO date)"
-    }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
-}
-```
-
-##### **GET /search**
-
-- **Descripción**: Realiza búsquedas y filtrados avanzados sobre todos los productos
-- **Query Parameters**:
-  - `q`: término de búsqueda (opcional, busca en nombre y descripción)
-  - `categories`: IDs de categorías separados por coma (opcional)
-  - `minPrice`: precio mínimo (opcional, number)
-  - `maxPrice`: precio máximo (opcional, number)
-  - `tags`: IDs de tags separados por coma (opcional)
-  - `sortBy`: campo de ordenamiento (opcional: 'name', 'price', 'createdAt', 'stock')
-  - `sortOrder`: orden ('asc' | 'desc', default: 'asc')
-  - `page`, `limit`: paginación
-- **Respuesta exitosa (200)**: Mismo formato que GET /
-
-##### **GET /:id**
-
-- **Descripción**: Obtiene los detalles completos de un producto específico por su ID
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "product": {
-    "id": "string",
-    "name": "string",
-    "description": "string",
-    "price": "number",
-    "stock": "number",
-    "category": {
-      "id": "string",
-      "name": "string",
-      "description": "string"
-    },
-    "unit": {
-      "id": "string",
-      "name": "string",
-      "abbreviation": "string"
-    },
-    "tags": [
-      {
-        "id": "string",
-        "name": "string",
-        "color": "string"
-      }
-    ],
-    "img": "string",
-    "isActive": "boolean",
-    "createdAt": "string (ISO date)",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **POST /**
-
-- **Descripción**: Crea un nuevo producto (permite subir imagen vía multipart/form-data)
-- **Content-Type**: `multipart/form-data`
-- **Campos del formulario**:
-  - `name`: string (requerido)
-  - `description`: string (opcional)
-  - `price`: number (requerido, > 0)
-  - `stock`: number (requerido, >= 0)
-  - `categoryId`: string (requerido)
-  - `unitId`: string (requerido)
-  - `tags`: string (opcional, IDs separados por coma)
-  - `image`: file (opcional, imagen del producto)
-  - `isActive`: boolean (opcional, default: true)
-- **Respuesta exitosa (201)**: Mismo formato que GET /:id
-
-##### **PUT /:id**
-
-- **Descripción**: Actualiza un producto existente (permite subir/reemplazar imagen)
-- **Content-Type**: `multipart/form-data`
-- **Campos del formulario**: Mismos que POST / (todos opcionales)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Product updated successfully",
-  "product": {
-    "id": "string",
-    "name": "string",
-    "price": "number",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **DELETE /:id**
-
-- **Descripción**: Elimina un producto y su imagen asociada
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Product deleted successfully"
-}
-```
-
-##### **GET /by-category/:categoryId**
-
-- **Descripción**: Lista productos (activos e inactivos) de una categoría específica
-- **Query Parameters**: `page`, `limit`, `includeInactive`
-- **Respuesta exitosa (200)**: Mismo formato que GET /
-
-#### **Categorías (**/api/admin/categories**)**
-
-##### **GET /**
-
-- **Descripción**: Lista todas las categorías con paginación
-- **Query Parameters**: `page`, `limit`
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "categories": [
-    {
-      "id": "string",
-      "name": "string",
-      "description": "string",
-      "isActive": "boolean",
-      "productCount": "number",
-      "createdAt": "string (ISO date)"
-    }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
-}
-```
-
-##### **GET /:id**
-
-- **Descripción**: Obtiene una categoría por su ID
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "category": {
-    "id": "string",
-    "name": "string",
-    "description": "string",
-    "isActive": "boolean",
-    "productCount": "number",
-    "createdAt": "string (ISO date)",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **POST /**
-
-- **Descripción**: Crea una nueva categoría
-- **Cuerpo de la petición**:
-
-```json
-{
-  "name": "string (requerido, único)",
-  "description": "string (opcional)",
-  "isActive": "boolean (opcional, default: true)"
-}
-```
-
-- **Respuesta exitosa (201)**: Mismo formato que GET /:id
-
-##### **PUT /:id**
-
-- **Descripción**: Actualiza una categoría existente
-- **Cuerpo de la petición**: Mismos campos que POST / (todos opcionales)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Category updated successfully",
-  "category": {
-    "id": "string",
-    "name": "string",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **DELETE /:id**
-
-- **Descripción**: Elimina una categoría (verifica que no tenga productos asociados)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Category deleted successfully"
-}
-```
-
-#### **Tags (**/api/admin/tags**)**
-
-##### **GET /**
-
-- **Descripción**: Lista todas las etiquetas con paginación
-- **Query Parameters**: `page`, `limit`, `active` (filtrar por estado activo)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "tags": [
-    {
-      "id": "string",
-      "name": "string",
-      "color": "string",
-      "isActive": "boolean",
-      "productCount": "number",
-      "createdAt": "string (ISO date)"
-    }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
-}
-```
-
-##### **POST /**
-
-- **Descripción**: Crea una nueva etiqueta
-- **Cuerpo de la petición**:
-
-```json
-{
-  "name": "string (requerido, único)",
-  "color": "string (opcional, código hex)",
-  "isActive": "boolean (opcional, default: true)"
-}
-```
-
-- **Respuesta exitosa (201)**:
-
-```json
-{
-  "tag": {
-    "id": "string",
-    "name": "string",
-    "color": "string",
-    "isActive": "boolean",
-    "createdAt": "string (ISO date)"
-  }
-}
-```
-
-##### **GET /:id**
-
-- **Descripción**: Obtiene una etiqueta por ID
-- **Respuesta exitosa (200)**: Mismo formato que POST /
-
-##### **PUT /:id**
-
-- **Descripción**: Actualiza una etiqueta
-- **Cuerpo de la petición**: Mismos campos que POST / (todos opcionales)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Tag updated successfully",
-  "tag": {
-    "id": "string",
-    "name": "string",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **DELETE /:id**
-
-- **Descripción**: Elimina o desactiva una etiqueta
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Tag deleted successfully"
-}
-```
-
-#### **Unidades (**/api/admin/units**)**
-
-##### **GET /**
-
-- **Descripción**: Lista todas las unidades de medida con paginación
-- **Query Parameters**: `page`, `limit`
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "units": [
-    {
-      "id": "string",
-      "name": "string",
-      "abbreviation": "string",
-      "productCount": "number",
-      "createdAt": "string (ISO date)"
-    }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
-}
-```
-
-##### **GET /:id**
-
-- **Descripción**: Obtiene una unidad por su ID
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "unit": {
-    "id": "string",
-    "name": "string",
-    "abbreviation": "string",
-    "productCount": "number",
-    "createdAt": "string (ISO date)",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **POST /**
-
-- **Descripción**: Crea una nueva unidad
-- **Cuerpo de la petición**:
-
-```json
-{
-  "name": "string (requerido, único)",
-  "abbreviation": "string (requerido, único, 1-5 caracteres)"
-}
-```
-
-- **Respuesta exitosa (201)**: Mismo formato que GET /:id
-
-##### **PUT /:id**
-
-- **Descripción**: Actualiza una unidad existente
-- **Cuerpo de la petición**: Mismos campos que POST / (todos opcionales)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Unit updated successfully",
-  "unit": {
-    "id": "string",
-    "name": "string",
-    "abbreviation": "string",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **DELETE /:id**
-
-- **Descripción**: Elimina una unidad (verifica que no tenga productos asociados)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Unit deleted successfully"
-}
-```
-
-#### **Pedidos (**/api/admin/orders**)**
-
-##### **GET /**
-
-- **Descripción**: Lista todos los pedidos del sistema con paginación
-- **Query Parameters**: `page`, `limit`, `status` (filtrar por estado)
-- **Respuesta exitosa (200)**: Mismo formato que `/api/sales` GET /
-
-##### **GET /:id**
-
-- **Descripción**: Obtiene los detalles completos de un pedido específico
-- **Respuesta exitosa (200)**: Mismo formato que `/api/sales` GET /:id
-
-##### **PATCH /:id/status**
-
-- **Descripción**: Actualiza el estado de un pedido
-- **Cuerpo de la petición**:
-
-```json
-{
-  "status": "string (requerido: 'pending', 'processing', 'shipped', 'delivered', 'cancelled')"
-}
-```
-
-- **Respuesta exitosa (200)**: Mismo formato que `/api/sales` PATCH /:id/status
-
-##### **GET /by-customer/:customerId**
-
-- **Descripción**: Lista todos los pedidos de un cliente específico
-- **Query Parameters**: `page`, `limit`
-- **Respuesta exitosa (200)**: Mismo formato que GET /
-
-##### **POST /by-date-range**
-
-- **Descripción**: Lista pedidos dentro de un rango de fechas
-- **Cuerpo de la petición**: Mismo formato que `/api/sales` POST /by-date-range
-- **Respuesta exitosa (200)**: Mismo formato que GET /
-
-##### **GET /dashboard-view**
-
-- **Descripción**: Obtiene datos agrupados de pedidos para el panel de administración tipo Kanban
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "dashboard": {
-    "totalOrders": "number",
-    "ordersByStatus": {
-      "pending": {
-        "count": "number",
-        "orders": [
-          {
-            "id": "string",
-            "orderNumber": "string",
-            "customer": {
-              "name": "string",
-              "email": "string"
-            },
-            "total": "number",
-            "createdAt": "string (ISO date)"
-          }
-        ],
-        "metadata": {
-          "name": "string",
-          "color": "string",
-          "order": "number"
-        }
-      }
-    },
-    "stats": {
-      "totalRevenue": "number",
-      "averageOrderValue": "number",
-      "completionRate": "number"
-    }
-  }
-}
-```
-
-#### **Clientes (**/api/admin/customers**)**
-
-##### **GET /**
-
-- **Descripción**: Lista todos los clientes con paginación
-- **Query Parameters**: `page`, `limit`, `search` (buscar por nombre/email)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "customers": [
-    {
-      "id": "string",
-      "name": "string",
-      "email": "string",
-      "phone": "string",
-      "totalOrders": "number",
-      "totalSpent": "number",
-      "lastOrderDate": "string (ISO date)",
-      "createdAt": "string (ISO date)"
-    }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
-}
-```
-
-##### **GET /:id**
-
-- **Descripción**: Obtiene un cliente por su ID con información detallada
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "customer": {
-    "id": "string",
-    "name": "string",
-    "email": "string",
-    "phone": "string",
-    "addresses": [
-      {
-        "id": "string",
-        "street": "string",
-        "number": "string",
-        "neighborhood": "string",
-        "city": "string",
-        "isDefault": "boolean"
-      }
-    ],
-    "orders": [
-      {
-        "id": "string",
-        "orderNumber": "string",
-        "total": "number",
-        "status": "string",
-        "createdAt": "string (ISO date)"
-      }
-    ],
-    "stats": {
-      "totalOrders": "number",
-      "totalSpent": "number",
-      "averageOrderValue": "number"
-    },
-    "createdAt": "string (ISO date)",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **POST /**
-
-- **Descripción**: Crea un nuevo cliente directamente
-- **Cuerpo de la petición**:
-
-```json
-{
-  "name": "string (requerido)",
-  "email": "string (requerido, único)",
-  "phone": "string (opcional)",
-  "address": {
-    "street": "string (opcional)",
-    "number": "string (opcional)",
-    "neighborhood": "string (opcional)",
-    "city": "string (opcional)",
-    "zipCode": "string (opcional)"
-  }
-}
-```
-
-- **Respuesta exitosa (201)**: Mismo formato que GET /:id
-
-##### **PUT /:id**
-
-- **Descripción**: Actualiza la información de un cliente
-- **Cuerpo de la petición**: Mismos campos que POST / (todos opcionales)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Customer updated successfully",
-  "customer": {
-    "id": "string",
-    "name": "string",
-    "email": "string",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **DELETE /:id**
-
-- **Descripción**: Elimina un cliente (considera impacto en pedidos/direcciones)
-- **Query Parameters**:
-  - `force`: eliminación definitiva (opcional, boolean)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Customer deleted successfully"
-}
-```
-
-##### **GET /by-neighborhood/:neighborhoodId**
-
-- **Descripción**: Lista clientes por barrio con paginación
-- **Query Parameters**: `page`, `limit`
-- **Respuesta exitosa (200)**: Mismo formato que GET /
-
-##### **GET /by-email/:email**
-
-- **Descripción**: Busca un cliente por su email
-- **Respuesta exitosa (200)**: Mismo formato que GET /:id
-
-#### **Usuarios (**/api/admin/users**)**
-
-##### **GET /**
-
-- **Descripción**: Lista todos los usuarios registrados
-- **Query Parameters**: `page`, `limit`, `role` (filtrar por rol)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "users": [
-    {
-      "id": "string",
-      "name": "string",
-      "email": "string",
-      "role": ["string"],
-      "isActive": "boolean",
-      "lastLogin": "string (ISO date)",
-      "createdAt": "string (ISO date)"
-    }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
-}
-```
-
-##### **PUT /:id**
-
-- **Descripción**: Actualiza datos de un usuario (operación sensible para asignar/quitar rol ADMIN_ROLE)
-- **Cuerpo de la petición**:
-
-```json
-{
-  "name": "string (opcional)",
-  "email": "string (opcional)",
-  "role": "array (opcional, ['USER_ROLE'] | ['ADMIN_ROLE'] | ['USER_ROLE', 'ADMIN_ROLE'])",
-  "isActive": "boolean (opcional)"
-}
-```
-
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "User updated successfully",
-  "user": {
-    "id": "string",
-    "name": "string",
-    "email": "string",
-    "role": ["string"],
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **DELETE /:id**
-
-- **Descripción**: Elimina una cuenta de usuario (considera si también se elimina el cliente asociado)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "User deleted successfully"
-}
-```
-
-#### **Cupones (**/api/admin/coupons**)**
-
-*Referirse a la sección [Cupones (/api/coupons)](#cupones-apicoupons) para documentación detallada de estos endpoints*
-
-#### **Ciudades (**/api/admin/cities**)**
-
-##### **GET /**
-
-- **Descripción**: Lista todas las ciudades con paginación
-- **Query Parameters**: `page`, `limit`, `search` (buscar por nombre)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "cities": [
-    {
-      "id": "string",
-      "name": "string",
-      "neighborhoodCount": "number",
-      "customerCount": "number",
-      "createdAt": "string (ISO date)"
-    }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
-}
-```
-
-##### **GET /:id**
-
-- **Descripción**: Obtiene una ciudad por su ID
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "city": {
-    "id": "string",
-    "name": "string",
-    "neighborhoods": [
-      {
-        "id": "string",
-        "name": "string",
-        "customerCount": "number"
-      }
-    ],
-    "stats": {
-      "neighborhoodCount": "number",
-      "customerCount": "number"
-    },
-    "createdAt": "string (ISO date)",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **POST /**
-
-- **Descripción**: Crea una nueva ciudad
-- **Cuerpo de la petición**:
-
-```json
-{
-  "name": "string (requerido, único)"
-}
-```
-
-- **Respuesta exitosa (201)**: Mismo formato que GET /:id
-
-##### **PUT /:id**
-
-- **Descripción**: Actualiza una ciudad existente
-- **Cuerpo de la petición**:
-
-```json
-{
-  "name": "string (requerido)"
-}
-```
-
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "City updated successfully",
-  "city": {
-    "id": "string",
-    "name": "string",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **DELETE /:id**
-
-- **Descripción**: Elimina una ciudad (considera impacto en barrios/direcciones)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "City deleted successfully"
-}
-```
-
-##### **GET /by-name/:name**
-
-- **Descripción**: Busca una ciudad por nombre exacto
-- **Respuesta exitosa (200)**: Mismo formato que GET /:id
-
-#### **Barrios (**/api/admin/neighborhoods**)**
-
-##### **GET /**
-
-- **Descripción**: Lista todos los barrios con paginación
-- **Query Parameters**: `page`, `limit`, `cityId` (filtrar por ciudad)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "neighborhoods": [
-    {
-      "id": "string",
-      "name": "string",
-      "city": {
-        "id": "string",
-        "name": "string"
-      },
-      "customerCount": "number",
-      "createdAt": "string (ISO date)"
-    }
-  ],
-  "pagination": {
-    "page": "number",
-    "limit": "number",
-    "total": "number",
-    "totalPages": "number"
-  }
-}
-```
-
-##### **GET /:id**
-
-- **Descripción**: Obtiene un barrio por su ID
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "neighborhood": {
-    "id": "string",
-    "name": "string",
-    "city": {
-      "id": "string",
-      "name": "string"
-    },
-    "customerCount": "number",
-    "createdAt": "string (ISO date)",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **POST /**
-
-- **Descripción**: Crea un nuevo barrio
-- **Cuerpo de la petición**:
-
-```json
-{
-  "name": "string (requerido)",
-  "cityId": "string (requerido)"
-}
-```
-
-- **Respuesta exitosa (201)**: Mismo formato que GET /:id
-
-##### **PUT /:id**
-
-- **Descripción**: Actualiza un barrio existente
-- **Cuerpo de la petición**:
-
-```json
-{
-  "name": "string (opcional)",
-  "cityId": "string (opcional)"
-}
-```
-
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Neighborhood updated successfully",
-  "neighborhood": {
-    "id": "string",
-    "name": "string",
-    "updatedAt": "string (ISO date)"
-  }
-}
-```
-
-##### **DELETE /:id**
-
-- **Descripción**: Elimina un barrio (considera impacto en clientes/direcciones)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Neighborhood deleted successfully"
-}
-```
-
-##### **GET /by-city/:cityId**
-
-- **Descripción**: Lista barrios por ciudad con paginación
-- **Query Parameters**: `page`, `limit`
-- **Respuesta exitosa (200)**: Mismo formato que GET /
-
----
-
-### Cupones (**/api/coupons**)
-
-[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
-
-#### **POST /**
-
-- **Descripción**: Crea un nuevo cupón de descuento.
-- **Autenticación**: JWT requerido
-- **Cuerpo de la petición**:
-
-```json
-{
-  "code": "string (requerido, mínimo 3 caracteres, único)",
-  "discountType": "string (requerido: 'PERCENTAGE' o 'FIXED')",
-  "discountValue": "number (requerido, > 0)",
-  "description": "string (opcional)",
-  "isActive": "boolean (opcional, default: true)",
-  "validFrom": "string (opcional, fecha ISO)",
-  "validUntil": "string (opcional, fecha ISO)",
-  "minPurchaseAmount": "number (opcional, monto mínimo de compra)",
-  "usageLimit": "number (opcional, límite de usos)"
-}
-```
-
-- **Respuesta exitosa (201)**:
-
-```json
-{
-  "id": "string",
-  "code": "string",
-  "discountType": "string",
-  "discountValue": "number",
-  "description": "string",
-  "isActive": "boolean",
-  "validFrom": "string (ISO date)",
-  "validUntil": "string (ISO date)",
-  "minPurchaseAmount": "number",
-  "usageLimit": "number",
-  "usageCount": "number",
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
-```
-
-#### **GET /**
-
-- **Descripción**: Lista todos los cupones con paginación.
-- **Autenticación**: JWT requerido
-- **Query Parameters**:
-  - `page`: number (opcional, default: 1)
-  - `limit`: number (opcional, default: 10)
-  - `activeOnly`: boolean (opcional, mostrar solo cupones activos)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "total": "number",
-  "coupons": [
-    {
-      "id": "string",
-      "code": "string",
-      "discountType": "string",
-      "discountValue": "number",
-      "description": "string",
-      "isActive": "boolean",
-      "validFrom": "string (ISO date)",
-      "validUntil": "string (ISO date)",
-      "minPurchaseAmount": "number",
-      "usageLimit": "number",
-      "usageCount": "number",
-      "createdAt": "string (ISO date)",
-      "updatedAt": "string (ISO date)"
-    }
-  ]
-}
-```
-
-#### **GET /:id**
-
-- **Descripción**: Obtiene los detalles de un cupón específico por su ID.
-- **Autenticación**: JWT requerido
-- **Parámetros de ruta**: `id` (ObjectId del cupón)
-- **Respuesta exitosa (200)**: Misma estructura que POST /
-
-#### **PUT /:id**
-
-- **Descripción**: Actualiza un cupón existente.
-- **Autenticación**: JWT requerido
-- **Parámetros de ruta**: `id` (ObjectId del cupón)
-- **Cuerpo de la petición**: Mismos campos que POST (todos opcionales)
-- **Respuesta exitosa (200)**: Misma estructura que POST /
-
-#### **DELETE /:id**
-
-- **Descripción**: Elimina un cupón del sistema.
-- **Autenticación**: JWT requerido
-- **Parámetros de ruta**: `id` (ObjectId del cupón)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Cupón eliminado exitosamente",
-  "coupon": {
-    "id": "string",
-    "code": "string"
-  }
-}
-```
-
-#### **Tipos de Descuento**
-
-- **PERCENTAGE**: Descuento porcentual (ej: 10% = 10)
-- **FIXED**: Descuento de monto fijo (ej: $100 = 100)
-
-#### **Validaciones**
-
-- El código del cupón debe ser único en el sistema
-- Para descuentos porcentuales, el valor no puede exceder 100
-- La fecha `validFrom` debe ser anterior a `validUntil` si ambas están definidas
-- El `minPurchaseAmount` debe ser positivo si se especifica
-- El `usageLimit` debe ser positivo si se especifica
-
----
-
-### Chatbot (**/api/chatbot**)
-
-[⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
-
-#### **POST /query**
-
-- **Descripción**: Envía una consulta al chatbot para obtener una respuesta basada en RAG.
-- **Autenticación**: No requerida
-- **Cuerpo de la petición**:
-
-```json
-{
-  "message": "string (requerido)",
-  "sessionId": "string (opcional, para continuar una conversación)",
-  "mode": "string (opcional: 'customer' o 'owner', default: 'customer')"
-}
-```
-
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "response": "string (respuesta del chatbot)",
-  "sessionId": "string (ID de la sesión de chat)",
-  "metadata": {
-    "llmUsed": "string",
-    "processingTime": "number",
-    "relevantDocuments": ["array de documentos relevantes"]
-  }
-}
-```
-
-#### **POST /session**
-
-- **Descripción**: Crea una nueva sesión de chat.
-- **Autenticación**: No requerida
-- **Cuerpo de la petición**:
-
-```json
-{
-  "mode": "string (opcional: 'customer' o 'owner', default: 'customer')"
-}
-```
-
-- **Respuesta exitosa (201)**:
-
-```json
-{
-  "sessionId": "string",
-  "mode": "string",
-  "createdAt": "string (ISO date)"
-}
-```
-
-#### **GET /session/:sessionId**
-
-- **Descripción**: Obtiene el historial de una sesión de chat específica.
-- **Autenticación**: No requerida
-- **Parámetros de ruta**: `sessionId` (ID de la sesión)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "sessionId": "string",
-  "mode": "string",
-  "messages": [
-    {
-      "role": "string ('user' o 'assistant')",
-      "content": "string",
-      "timestamp": "string (ISO date)"
-    }
-  ],
-  "createdAt": "string (ISO date)",
-  "updatedAt": "string (ISO date)"
-}
-```
-
-#### **GET /sessions**
-
-- **Descripción**: Lista todas las sesiones de chat (para administradores).
-- **Autenticación**: JWT requerido (admin)
-- **Query Parameters**:
-  - `page`: number (opcional, default: 1)
-  - `limit`: number (opcional, default: 10)
-  - `mode`: string (opcional, filtrar por modo)
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "total": "number",
-  "sessions": [
-    {
-      "sessionId": "string",
-      "mode": "string",
-      "messageCount": "number",
-      "createdAt": "string (ISO date)",
-      "updatedAt": "string (ISO date)"
-    }
-  ]
-}
-```
-
-#### **POST /generate-embeddings**
-
-- **Descripción**: Genera embeddings para la base de conocimiento del chatbot.
-- **Autenticación**: JWT + ADMIN_ROLE requerido
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "Embeddings generados exitosamente",
-  "stats": {
-    "documentsProcessed": "number",
-    "embeddingsGenerated": "number",
-    "processingTime": "number"
-  }
-}
-```
-
-#### **GET /current-llm**
-
-- **Descripción**: Obtiene información sobre el modelo LLM actualmente activo.
-- **Autenticación**: No requerida
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "currentLLM": "string",
-  "availableLLMs": ["array de LLMs disponibles"],
-  "configuration": {
-    "temperature": "number",
-    "maxTokens": "number"
-  }
-}
-```
-
-#### **POST /change-llm**
-
-- **Descripción**: Cambia el modelo LLM utilizado por el chatbot.
-- **Autenticación**: JWT + ADMIN_ROLE requerido
-- **Cuerpo de la petición**:
-
-```json
-{
-  "llmProvider": "string (requerido: 'openai' o 'anthropic')"
-}
-```
-
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "message": "LLM cambiado exitosamente",
-  "newLLM": "string",
-  "previousLLM": "string"
-}
-```
-
-#### **GET /validate-embeddings**
-
-- **Descripción**: Valida el estado de los embeddings en la base de conocimiento.
-- **Autenticación**: JWT + ADMIN_ROLE requerido
-- **Respuesta exitosa (200)**:
-
-```json
-{
-  "isValid": "boolean",
-  "embeddingCount": "number",
-  "lastGenerated": "string (ISO date)",  "recommendations": ["array de recomendaciones"]
-}
-```
-
----
-
 ### Protocolo MCP (Model Context Protocol) (**/api/mcp**)
 
 [⬆️ Volver a Enlaces Rápidos](#-enlaces-rápidos-a-endpoints)
@@ -4307,10 +3074,10 @@ Content-Type: application/json
 
 **Casos de uso típicos:**
 
-* Análisis inteligente de datos de productos obtenidos via MCP
-* Generación de respuestas conversacionales en chatbots
-* Procesamiento de consultas en lenguaje natural sobre el e-commerce
-* Integración con interfaces de chat que combinan datos reales + análisis de IA
+- Análisis inteligente de datos de productos obtenidos via MCP
+- Generación de respuestas conversacionales en chatbots
+- Procesamiento de consultas en lenguaje natural sobre el e-commerce
+- Integración con interfaces de chat que combinan datos reales + análisis de IA
 
 **Ejemplo de uso desde Angular:**
 
@@ -4389,19 +3156,6 @@ async analyzeProducts() {
   "content": [
     {
       "type": "text",
-      "text": "string (resultado de la herramienta en formato legible)"
-    }
-  ]
-}
-```
-
-**Ejemplo de respuesta para get_products:**
-
-```json
-{
-  "content": [
-    {
-      "type": "text",
       "text": "Encontrados 3 productos:\n\n1. **Laptop Gaming Pro** - $899.99\n   - Categoría: Electronics\n   - Tags: gaming, performance\n   - Stock: 15 unidades\n\n2. **Laptop Business** - $750.00\n   - Categoría: Electronics\n   - Tags: business, portable\n   - Stock: 8 unidades\n\n3. **Laptop Student** - $599.99\n   - Categoría: Electronics\n   - Tags: student, budget\n   - Stock: 12 unidades"
     }
   ]
@@ -4420,588 +3174,6 @@ async analyzeProducts() {
   ]
 }
 ```
-
----
-
-#### **🔧 Cómo Usar MCP**
-
-##### **1. Integración con Claude Desktop**
-
-Para usar MCP con Claude Desktop, añade esta configuración a tu archivo `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "ecommerce-backend": {
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-fetch"],
-      "env": {
-        "MCP_FETCH_BASE_URL": "http://localhost:3000/api/mcp"
-      }
-    }
-  }
-}
-```
-
-##### **2. Uso Programático (TypeScript/JavaScript)**
-
-```typescript
-// Instalar: npm install @anthropic-ai/mcp-client
-
-import { Client } from '@anthropic-ai/mcp-client';
-
-// Conectar al servidor MCP
-const client = new Client({
-  baseUrl: 'http://localhost:3000/api/mcp'
-});
-
-// Obtener herramientas disponibles
-const tools = await client.getTools();
-console.log('Herramientas disponibles:', tools);
-
-// Ejecutar una herramienta
-const result = await client.callTool('get_products', {
-  search: 'laptop',
-  maxPrice: 1000,
-  limit: 5
-});
-
-console.log('Productos encontrados:', result.content[0].text);
-
-// Obtener estadísticas del negocio
-const stats = await client.callTool('get_business_stats', {});
-console.log('Estadísticas:', stats.content[0].text);
-```
-
-##### **3. Integración con Angular**
-
-Para integrar MCP en una aplicación Angular, puedes crear un servicio dedicado:
-
-**1. Crear el servicio MCP (`mcp.service.ts`):**
-
-```typescript
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { environment } from '../environments/environment';
-
-export interface MCPTool {
-  name: string;
-  description: string;
-  inputSchema: any;
-}
-
-export interface MCPCallRequest {
-  name: string;
-  arguments: any;
-}
-
-export interface MCPCallResponse {
-  content: Array<{
-    type: string;
-    text: string;
-  }>;
-}
-
-@Injectable({
-  providedIn: 'root'
-})
-export class MCPService {
-  private readonly baseUrl = `${environment.apiUrl}/api/mcp`;
-  private toolsSubject = new BehaviorSubject<MCPTool[]>([]);
-  public tools$ = this.toolsSubject.asObservable();
-
-  constructor(private http: HttpClient) {
-    this.loadTools();
-  }
-
-  // Obtener herramientas disponibles
-  getTools(): Observable<{ tools: MCPTool[] }> {
-    return this.http.get<{ tools: MCPTool[] }>(`${this.baseUrl}/tools`);
-  }
-
-  // Cargar herramientas al inicializar el servicio
-  private loadTools(): void {
-    this.getTools().subscribe({
-      next: (response) => {
-        this.toolsSubject.next(response.tools);
-      },
-      error: (error) => {
-        console.error('Error loading MCP tools:', error);
-      }
-    });
-  }
-
-  // Ejecutar una herramienta
-  callTool(request: MCPCallRequest): Observable<MCPCallResponse> {
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-
-    return this.http.post<MCPCallResponse>(
-      `${this.baseUrl}/call`, 
-      request, 
-      { headers }
-    );
-  }
-
-  // Métodos de conveniencia para herramientas específicas
-  getProducts(filters: {
-    search?: string;
-    category?: string;
-    tags?: string;
-    minPrice?: number;
-    maxPrice?: number;
-    limit?: number;
-  } = {}): Observable<MCPCallResponse> {
-    return this.callTool({
-      name: 'get_products',
-      arguments: filters
-    });
-  }
-
-  getBusinessStats(): Observable<MCPCallResponse> {
-    return this.callTool({
-      name: 'get_business_stats',
-      arguments: {}
-    });
-  }
-
-  getCustomers(filters: {
-    search?: string;
-    limit?: number;
-  } = {}): Observable<MCPCallResponse> {
-    return this.callTool({
-      name: 'get_customers',
-      arguments: filters
-    });
-  }
-
-  getOrders(filters: {
-    status?: string;
-    customerId?: string;
-    startDate?: string;
-    endDate?: string;
-    limit?: number;
-  } = {}): Observable<MCPCallResponse> {
-    return this.callTool({
-      name: 'get_orders',
-      arguments: filters
-    });
-  }
-}
-```
-
-**2. Configurar el environment (`environment.ts`):**
-
-```typescript
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:3000' // URL de tu backend
-};
-```
-
-**3. Usar el servicio en un componente (`dashboard.component.ts`):**
-
-```typescript
-import { Component, OnInit } from '@angular/core';
-import { MCPService, MCPCallResponse } from '../services/mcp.service';
-
-@Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.css']
-})
-export class DashboardComponent implements OnInit {
-  businessStats: string = '';
-  products: string = '';
-  loading = false;
-  error: string | null = null;
-
-  constructor(private mcpService: MCPService) {}
-
-  ngOnInit(): void {
-    this.loadDashboardData();
-  }
-
-  loadDashboardData(): void {
-    this.loading = true;
-    this.error = null;
-
-    // Cargar estadísticas del negocio
-    this.mcpService.getBusinessStats().subscribe({
-      next: (response: MCPCallResponse) => {
-        this.businessStats = response.content[0]?.text || 'No data available';
-        this.loading = false;
-      },
-      error: (error) => {
-        this.error = 'Error loading business stats';
-        this.loading = false;
-        console.error('Error:', error);
-      }
-    });
-
-    // Cargar productos destacados
-    this.mcpService.getProducts({ limit: 5 }).subscribe({
-      next: (response: MCPCallResponse) => {
-        this.products = response.content[0]?.text || 'No products available';
-      },
-      error: (error) => {
-        console.error('Error loading products:', error);
-      }
-    });
-  }
-
-  searchProducts(searchTerm: string): void {
-    if (!searchTerm.trim()) return;
-
-    this.loading = true;
-    this.mcpService.getProducts({ 
-      search: searchTerm, 
-      limit: 10 
-    }).subscribe({
-      next: (response: MCPCallResponse) => {
-        this.products = response.content[0]?.text || 'No products found';
-        this.loading = false;
-      },
-      error: (error) => {
-        this.error = 'Error searching products';
-        this.loading = false;
-        console.error('Error:', error);
-      }
-    });
-  }
-
-  filterProductsByPrice(minPrice: number, maxPrice: number): void {
-    this.loading = true;
-    this.mcpService.getProducts({ 
-      minPrice, 
-      maxPrice, 
-      limit: 15 
-    }).subscribe({
-      next: (response: MCPCallResponse) => {
-        this.products = response.content[0]?.text || 'No products in price range';
-        this.loading = false;
-      },
-      error: (error) => {
-        this.error = 'Error filtering products';
-        this.loading = false;
-        console.error('Error:', error);
-      }
-    });
-  }
-}
-```
-
-**4. Template del componente (`dashboard.component.html`):**
-
-```html
-<div class="dashboard-container">
-  <h1>Dashboard de Negocio</h1>
-  
-  <!-- Loading indicator -->
-  <div *ngIf="loading" class="loading">
-    <p>Cargando datos...</p>
-  </div>
-
-  <!-- Error message -->
-  <div *ngIf="error" class="error-message">
-    <p>{{ error }}</p>
-    <button (click)="loadDashboardData()">Reintentar</button>
-  </div>
-
-  <!-- Business Stats Section -->
-  <div class="stats-section" *ngIf="!loading && !error">
-    <h2>📊 Estadísticas del Negocio</h2>
-    <div class="stats-content">
-      <pre>{{ businessStats }}</pre>
-    </div>
-  </div>
-
-  <!-- Product Search Section -->
-  <div class="search-section">
-    <h2>🔍 Búsqueda de Productos</h2>
-    <div class="search-controls">
-      <input 
-        #searchInput 
-        type="text" 
-        placeholder="Buscar productos..."
-        (keyup.enter)="searchProducts(searchInput.value)">
-      <button (click)="searchProducts(searchInput.value)">Buscar</button>
-    
-      <div class="price-filter">
-        <input #minPrice type="number" placeholder="Precio mín." min="0">
-        <input #maxPrice type="number" placeholder="Precio máx." min="0">
-        <button (click)="filterProductsByPrice(minPrice.value, maxPrice.value)">
-          Filtrar por Precio
-        </button>
-      </div>
-    </div>
-  
-    <div class="products-content" *ngIf="products">
-      <pre>{{ products }}</pre>
-    </div>
-  </div>
-</div>
-```
-
-**5. Estilos del componente (`dashboard.component.css`):**
-
-```css
-.dashboard-container {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.loading {
-  text-align: center;
-  padding: 20px;
-  font-style: italic;
-}
-
-.error-message {
-  background-color: #fee;
-  border: 1px solid #fcc;
-  color: #c33;
-  padding: 15px;
-  border-radius: 5px;
-  margin: 10px 0;
-}
-
-.stats-section, .search-section {
-  margin: 20px 0;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-}
-
-.stats-content, .products-content {
-  background-color: white;
-  padding: 15px;
-  border-radius: 5px;
-  border: 1px solid #eee;
-  font-family: 'Courier New', monospace;
-  white-space: pre-wrap;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.search-controls {
-  margin-bottom: 15px;
-}
-
-.search-controls input, .search-controls button {
-  margin: 5px;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.search-controls button {
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
-}
-
-.search-controls button:hover {
-  background-color: #0056b3;
-}
-
-.price-filter {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid #eee;
-}
-```
-
-**6. No olvides importar HttpClientModule en tu app.module.ts:**
-
-```typescript
-import { HttpClientModule } from '@angular/common/http';
-
-@NgModule({
-  imports: [
-    // ... otros imports
-    HttpClientModule
-  ],
-  // ...
-})
-export class AppModule { }
-```
-
-**💡 Ejemplo de Uso Avanzado:**
-
-```typescript
-// En cualquier componente que necesite datos del MCP
-export class ProductAnalysisComponent implements OnInit {
-  
-  constructor(private mcpService: MCPService) {}
-
-  ngOnInit(): void {
-    // Combinar múltiples llamadas para análisis completo
-    this.performCompleteAnalysis();
-  }
-
-  performCompleteAnalysis(): void {
-    // Análisis de productos por categoría
-    this.mcpService.getProducts({ category: 'electronics', limit: 20 })
-      .subscribe(electronics => {
-        console.log('Electronics:', electronics.content[0].text);
-      });
-
-    // Análisis de pedidos recientes
-    this.mcpService.getOrders({ 
-      status: 'COMPLETED', 
-      startDate: '2025-06-01',
-      limit: 10 
-    }).subscribe(orders => {
-      console.log('Recent orders:', orders.content[0].text);
-    });
-
-    // Estadísticas generales
-    this.mcpService.getBusinessStats()
-      .subscribe(stats => {
-        console.log('Business stats:', stats.content[0].text);
-      });
-  }
-}
-```
-
-Esta integración te permite usar toda la potencia de MCP desde Angular de manera reactiva y tipada, aprovechando las características modernas del framework como Observables, servicios inyectables y binding de datos.
-
-##### **4. Uso con cURL**
-
-```bash
-# Obtener herramientas disponibles
-curl -X GET http://localhost:3000/api/mcp/tools
-
-# Ejecutar búsqueda de productos
-curl -X POST http://localhost:3000/api/mcp/call \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "get_products",
-    "arguments": {
-      "search": "smartphone",
-      "category": "electronics",
-      "limit": 3
-    }
-  }'
-
-# Obtener estadísticas del negocio
-curl -X POST http://localhost:3000/api/mcp/call \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "get_business_stats",
-    "arguments": {}
-  }'
-```
-
-##### **5. Casos de Uso Prácticos**
-
-**Análisis de Inventario:**
-
-```bash
-# Obtener productos con stock bajo
-curl -X POST http://localhost:3000/api/mcp/call \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "get_products",
-    "arguments": {
-      "limit": 20
-    }
-  }'
-```
-
-**Análisis de Clientes:**
-
-```bash
-# Obtener clientes más activos
-curl -X POST http://localhost:3000/api/mcp/call \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "get_customers",
-    "arguments": {
-      "limit": 10
-    }
-  }'
-```
-
-**Monitoreo de Pedidos:**
-
-```bash
-# Obtener pedidos pendientes
-curl -X POST http://localhost:3000/api/mcp/call \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "get_orders",
-    "arguments": {
-      "status": "PENDING",
-      "limit": 15
-    }
-  }'
-```
-
----
-
-#### **🏗️ Arquitectura e Integración**
-
-##### **Componentes del Sistema:**
-
-- **MCP Entity**: Define la estructura de respuesta de las herramientas
-- **MCP DTO**: Valida los parámetros de entrada para las llamadas a herramientas
-- **MCP Datasource**: Interface para definir las operaciones disponibles
-- **MCP Repository**: Implementa la lógica de negocio usando repositorios existentes
-- **Use Cases**: `ListToolsUseCase` y `CallToolUseCase` para manejar las operaciones
-- **Controller**: Expone los endpoints HTTP del protocolo MCP
-
-##### **Integración con el Sistema Existente:**
-
-El sistema MCP reutiliza los repositorios y entities existentes del E-commerce:
-
-- **ProductRepository**: Para operaciones con productos
-- **CustomerRepository**: Para operaciones con clientes
-- **OrderRepository**: Para operaciones con pedidos
-
-Esta integración garantiza que MCP siempre tenga acceso a los datos más actualizados y mantiene la consistencia con el resto del sistema.
-
-##### **Seguridad y Consideraciones:**
-
-- **Endpoints públicos**: MCP no requiere autenticación para permitir integración con herramientas externas
-- **Datos no sensibles**: Solo expone información pública de productos, estadísticas generales y datos no críticos
-- **Rate limiting**: Protegido por los middlewares de rate limiting del sistema
-- **Validación estricta**: Todos los parámetros son validados usando DTOs
-- **Logging**: Todas las operaciones se registran para auditoría
-
----
-
-#### **🧪 Testing y Desarrollo**
-
-Para probar MCP en desarrollo:
-
-```bash
-# Ejecutar tests unitarios
-npm test -- tests/unit/domain/use-cases/mcp/
-npm test -- tests/unit/infrastructure/repositories/mcp/
-
-# Ejecutar tests de integración
-npm test -- tests/integration/mcp/
-
-# Probar endpoints en desarrollo
-npm run dev
-
-# Luego usar cURL o Postman para probar:
-# GET http://localhost:3000/api/mcp/tools
-# POST http://localhost:3000/api/mcp/call
-```
-
-La implementación incluye tests completos que verifican:
-
-- Validación de DTOs
-- Funcionamiento de Use Cases
-- Integración con repositorios
-- Respuestas de endpoints HTTP
 
 ---
 
@@ -5024,19 +3196,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 
 - **Descripción**: Obtiene el estado general de salud del sistema de forma pública para monitoreo básico
 - **Autenticación**: No requerida (endpoint público)
-- **Propósito**:
-  - Verificación rápida del estado de todos los servicios críticos
-  - Ideal para health checks de balanceadores de carga y monitoreo externo
-  - Proporciona vista consolidada sin datos sensibles
-- **Estados del sistema**:
-  - `healthy`: Todos los servicios funcionan correctamente
-  - `degraded`: Algunos servicios tienen warnings pero funcionan
-  - `unhealthy`: Hay servicios con problemas críticos
-- **Interpretación de métricas**:
-  - `storageUsage`: Porcentaje de almacenamiento usado
-  - `hoursUsage`: Porcentaje de horas mensuales consumidas (Render)
-  - `memoryUsage`: Porcentaje de memoria RAM en uso
-  - `transformationsUsage`: Porcentaje de transformaciones de imágenes usadas
+- **Propósito**: Verificación rápida del estado de todos los servicios críticos
 - **Respuesta exitosa (200)**:
 
 ```json
@@ -5268,7 +3428,7 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
   - **MongoDB**: Almacenamiento (MB/GB), conexiones, colecciones individuales
   - **Render**: Horas mensuales, memoria RAM, proyecciones de tráfico
   - **Cloudinary**: Almacenamiento de imágenes, bandwidth, transformaciones, proyecciones
-- **Formato de medidas**: Todas las medidas están en MB/GB para fácil interpretación humana
+- **Formato de medidas**: Todas las medidas están en MB/GB y porcentajes para fácil interpretación humana
 - **Alertas**: Cada servicio incluye su nivel de alerta actual (healthy/warning/critical)
 - **Proyecciones**: Estimaciones de uso futuro basadas en patrones actuales
 - **Respuesta exitosa (200)**:
@@ -5610,30 +3770,260 @@ El sistema de monitoreo proporciona información detallada sobre el estado y ren
 }
 ```
 
-#### **Notas sobre el Sistema de Monitoreo:**
-
-- **🔒 Endpoints Protegidos**: Todos los endpoints excepto `/health` requieren autenticación JWT y rol `ADMIN_ROLE`
-- **📊 Métricas en Tiempo Real**: Los datos se actualizan en tiempo real al momento de la consulta
-- **🚨 Sistema de Alertas**: Detecta automáticamente problemas y genera recomendaciones
-- **📱 Integración**: Diseñado para integrarse fácilmente con dashboards de monitoreo
-- **⚡ Performance**: Optimizado para no impactar el rendimiento de la aplicación principal
-- **🖼️ Monitoreo de Cloudinary**: Incluye métricas de almacenamiento de imágenes, bandwidth y transformaciones con proyecciones de uso
-- **📏 Medidas Humanamente Legibles**: Todas las métricas se muestran en MB/GB y porcentajes para fácil interpretación
-
-#### **Casos de Uso:**
-
-- **Dashboard de Administración**: Mostrar métricas en tiempo real de todos los servicios
-- **Health Checks**: Verificar estado del servicio desde balanceadores de carga
-- **Alertas Proactivas**: Detectar problemas antes de que afecten a los usuarios
-- **Planificación de Recursos**: Analizar tendencias de uso para escalar servicios
-- **Troubleshooting**: Diagnosticar problemas de rendimiento o disponibilidad
-- **Optimización de Costos**: Monitorear uso de servicios de terceros (Cloudinary, Render) para evitar sorpresas en facturación
-- **Gestión de Imágenes**: Controlar almacenamiento y transformaciones de Cloudinary para optimizar performance
-
 ---
 
-##### **GET /by-city/:cityId**
+### Nuevos Endpoints para Detalles de MercadoPago
 
-- **Descripción**: Lista barrios por ciudad con paginación
-- **Query Parameters**: `page`, `limit`
-- **Respuesta exitosa (200)**: Mismo formato que GET /
+#### **GET** `/api/webhooks/:id/mercadopago-details`
+
+**Descripción:** Obtiene información **COMPLETA** de MercadoPago para un webhook específico, consultando directamente la API de MercadoPago con toda la información detallada disponible.
+
+**Características importantes:**
+- ✅ **Fuente de verdad**: Datos directos de MercadoPago (información completa, no simplificada)
+- ✅ **Clave de idempotencia**: Generada automáticamente para trazabilidad única
+- ✅ **Información COMPLETA**: Incluye datos del pagador, tarjeta, comisiones, items, metadata
+- ✅ **Análisis de riesgo**: Calcula nivel de riesgo y puntaje de confianza
+- ✅ **Trazabilidad total**: Para vincular perfectamente con tus ventas
+
+**Parámetros:**
+- `id` (path): ID del webhook capturado
+
+**Headers:**
+```
+Authorization: Bearer <token_admin>
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "webhook": {
+    "id": "685ace8cd4b14b20100c9c72",
+    "eventType": "payment",
+    "processed": true,
+    "createdAt": "2025-06-24T16:13:00.512Z",
+    "ipAddress": "104.23.160.48",
+    "userAgent": "MercadoPago Feed v2.0 payment"
+  },
+  "mercadoPagoData": {
+    // ===== INFORMACIÓN BÁSICA DEL PAGO =====
+    "id": 115718938803,
+    "status": "approved",
+    "status_detail": "accredited",
+    "transaction_amount": 3600.00,
+    "transaction_amount_refunded": 0,
+    "coupon_amount": 0,
+    "currency_id": "ARS",
+    
+    // ===== TRAZABILIDAD Y REFERENCIAS CRÍTICAS =====
+    "external_reference": "sale-6859c035b2bfe2995e1e0f19",
+    "description": "Compra de productos #6859c035",
+    "statement_descriptor": "Mi Negocio",
+    
+    // ===== INFORMACIÓN DEL MÉTODO DE PAGO =====
+    "payment_method_id": "visa",
+    "payment_type_id": "credit_card",
+    "operation_type": "regular_payment",
+    "installments": 1,
+    
+    // ===== FECHAS IMPORTANTES =====
+    "date_created": "2025-06-24T16:13:00.000Z",
+    "date_approved": "2025-06-24T16:13:05.000Z",
+    "date_last_updated": "2025-06-24T16:13:05.000Z",
+    "money_release_date": "2025-06-24T16:13:05.000Z",
+    
+    // ===== INFORMACIÓN COMPLETA DEL PAGADOR =====
+    "payer": {
+      "id": "2036389505",
+      "email": "juan.perez@example.com",
+      "name": "Juan",
+      "surname": "Pérez",
+      "identification": {
+        "type": "DNI",
+        "number": "12345678"
+      },
+      "phone": {
+        "area_code": "11",
+        "number": "44567890"
+      },
+      "address": {
+        "zip_code": "1425",
+        "street_name": "Av. Corrientes",
+        "street_number": 1234
+      }
+    },
+    
+    // ===== DETALLES DE LA TRANSACCIÓN =====
+    "transaction_details": {
+      "net_received_amount": 3422.40,
+      "total_paid_amount": 3600.00,
+      "overpaid_amount": 0,
+      "installment_amount": 3600.00
+    },
+    
+    // ===== DETALLES DE COMISIONES =====
+    "fee_details": [
+      {
+        "type": "mercadopago_fee",
+        "amount": 177.60
+      }
+    ],
+    
+    // ===== INFORMACIÓN DE LA TARJETA (SI APLICA) =====
+    "card": {
+      "id": "1234567890",
+      "first_six_digits": "450995",
+      "last_four_digits": "3456",
+      "expiration_month": 12,
+      "expiration_year": 2028,
+      "cardholder": {
+        "name": "JUAN PEREZ",
+        "identification": {
+          "number": "12345678",
+          "type": "DNI"
+        }
+      }
+    },
+    
+    // ===== IDENTIFICADORES ÚNICOS =====
+    "collector_id": 123456789,
+    
+    // ===== METADATA COMPLETA Y INFORMACIÓN ADICIONAL =====
+    "metadata": {
+      "order_id": "6859c035b2bfe2995e1e0f19",
+      "customer_id": "cust_67890",
+      "cart_items": ["prod_123", "prod_456"]
+    },
+    "additional_info": {
+      "items": [
+        {
+          "id": "prod_123",
+          "title": "Producto 1",
+          "quantity": 2,
+          "unit_price": 1500.00
+        },
+        {
+          "id": "prod_456", 
+          "title": "Producto 2",
+          "quantity": 1,
+          "unit_price": 600.00
+        }
+      ]
+    }
+  },
+  "analysis": {
+    // ===== ANÁLISIS FINANCIERO =====
+    "realAmount": 3600.00,
+    "netAmount": 3422.40,
+    "mpFees": 177.60,
+    "refundedAmount": 0,
+    "couponDiscount": 0,
+    
+    // ===== ESTADO DEL PAGO =====
+    "paymentMethod": "visa (credit_card)",
+    "installments": 1,
+    "approvedAt": "2025-06-24T16:13:05.000Z",
+    "isApproved": true,
+    
+    // ===== CLAVE DE IDEMPOTENCIA ROBUSTA =====
+    "idempotencyKey": "mp_115718938803_sale-6859c035b2bfe2995e1e0f19_2025-06-24",
+    
+    // ===== INFORMACIÓN CRÍTICA PARA VINCULAR CON TU VENTA =====
+    "linkToSale": {
+      "externalReference": "sale-6859c035b2bfe2995e1e0f19",
+      "description": "Compra de productos #6859c035",
+      "statementDescriptor": "Mi Negocio",
+      "suggestedOrderId": "6859c035b2bfe2995e1e0f19",
+      "paymentTimestamp": "2025-06-24T16:13:00.000Z",
+      "approvalTimestamp": "2025-06-24T16:13:05.000Z",
+      
+      // ===== ITEMS COMPRADOS =====
+      "items": [
+        {
+          "id": "prod_123",
+          "title": "Producto 1",
+          "quantity": 2,
+          "unit_price": 1500.00
+        },
+        {
+          "id": "prod_456",
+          "title": "Producto 2", 
+          "quantity": 1,
+          "unit_price": 600.00
+        }
+      ],
+      
+      // ===== INFORMACIÓN DEL COMPRADOR PARA MATCHING =====
+      "buyerInfo": {
+        "email": "juan.perez@example.com",
+        "identification": "12345678",
+        "name": "Juan Pérez"
+      }
+    },
+    
+    // ===== ANÁLISIS DE SEGURIDAD =====
+    "riskLevel": "LOW",
+    "trustScore": 95
+  },
+  "traceability": {
+    "paymentId": "115718938803",
+    "merchantOrderId": null,
+    "webhookFormat": "query_id",
+    "webhookIpAddresses": ["104.23.160.48"],
+    "webhookUserAgent": "MercadoPago Feed v2.0 payment",
+    "webhookSignature": "ts=1750757378,v1=2c46fb7c...",
+    "webhookRequestId": "5a4eac29-4563-4cd9-9eaa-c3b350d47678",
+    "possibleDuplicates": 0
+  }
+}
+```
+
+**Información clave expandida para trazabilidad:**
+
+1. **Clave de idempotencia robusta**: `analysis.idempotencyKey`
+   - Formato: `mp_{PAYMENT_ID}_{EXTERNAL_REFERENCE}_{DATE_CREATED}`
+   - Única para cada pago de MercadoPago, ideal para evitar duplicados
+
+2. **Vincular con tu venta**: `analysis.linkToSale`
+   - `externalReference`: Referencia que enviaste a MP
+   - `suggestedOrderId`: ID de tu orden extraído automáticamente
+   - `items`: Lista completa de productos comprados
+   - `buyerInfo`: Datos del comprador para matching perfecto
+
+3. **Estado real del pago**: `mercadoPagoData.status`
+   - `approved`: Pago aprobado ✅
+   - `rejected`: Pago rechazado ❌ 
+   - `pending`: Pago pendiente ⏳
+   - `refunded`: Pago reembolsado 💰
+
+4. **Análisis financiero completo**:
+   - `realAmount`: Monto real cobrado
+   - `netAmount`: Monto neto que recibes (después de comisiones)
+   - `mpFees`: Comisiones de MercadoPago
+   - `refundedAmount`: Monto reembolsado
+
+5. **Información del pagador y método**:
+   - Datos completos del comprador (email, DNI, teléfono, dirección)
+   - Información de la tarjeta (primeros 6 y últimos 4 dígitos)
+   - Método de pago y cuotas
+
+6. **Análisis de riesgo y confianza**:
+   - `riskLevel`: LOW/MEDIUM/HIGH basado en múltiples factores
+   - `trustScore`: Puntaje de 0-100 sobre la confiabilidad del pago
+
+7. **Trazabilidad de webhooks**: `traceability.possibleDuplicates`
+   - Detecta automáticamente webhooks duplicados del mismo pago
+
+**Casos de uso:**
+- ✅ **Auditoría completa**: Toda la información real del pago
+- ✅ **Reconciliación**: Vincular pagos con ventas usando external_reference e items
+- ✅ **Análisis de riesgo**: Evaluar la confiabilidad de cada transacción
+- ✅ **Detección de fraude**: Analizar patrones sospechosos
+- ✅ **Trazabilidad financiera**: Saber exactamente cuánto cobró MP vs cuánto recibes
+- ✅ **Gestión de reembolsos**: Ver el estado real de devoluciones
+- ✅ **Análisis de métodos de pago**: Entender qué prefieren tus clientes
+
+**Ejemplo:**
+```bash
+curl -X GET "https://tu-backend.render.com/api/webhooks/685ace8cd4b14b20100c9c72/mercadopago-details" \
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
+```
