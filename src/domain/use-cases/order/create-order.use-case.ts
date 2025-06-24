@@ -196,8 +196,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 });
             }
             */
-            
-            this.logger.info(`[CreateOrderUC] Orden creada exitosamente: ${createdOrder.id}. Notificación se enviará desde frontend cuando pago sea confirmado.`);
+              this.logger.info(`[CreateOrderUC] Orden creada exitosamente: ${createdOrder.id}. Notificación se enviará desde frontend cuando pago sea confirmado. VERSION: 2024-06-24-21:15`);
 
             return createdOrder;
 
