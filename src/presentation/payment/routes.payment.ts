@@ -9,6 +9,7 @@ import { OrderRepositoryImpl } from "../../infrastructure/repositories/order/ord
 import { CustomerRepositoryImpl } from "../../infrastructure/repositories/customers/customer.repository.impl";
 import { OrderStatusRepositoryImpl } from "../../infrastructure/repositories/order/order-status.repository.impl";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { WebhookLoggerMiddleware } from "../middlewares/webhook-logger.middleware";
 import { loggerService } from "../../configs/logger";
 import { paymentService } from "../../configs/payment";
 
@@ -31,11 +32,14 @@ export class PaymentRoutes {
       orderStatusRepository,
       paymentService,
       loggerService
-    );
-
-    // Rutas públicas (no requieren autenticación)
+    );    // Rutas públicas (no requieren autenticación)
     // Webhooks y callbacks de MercadoPago
-    router.post("/webhook", controller.processWebhook);
+    router.post(
+      "/webhook", 
+      WebhookLoggerMiddleware.captureRawWebhook,
+      WebhookLoggerMiddleware.updateProcessingResult,
+      controller.processWebhook
+    );
     router.get("/success", controller.paymentSuccess);
     router.get("/failure", controller.paymentFailure);
     router.get("/pending", controller.paymentPending);

@@ -24,6 +24,7 @@ import { IPaymentService } from "../../domain/interfaces/payment.service";
 import { ILogger } from "../../domain/interfaces/logger.interface";
 import { envs } from "../../configs/envs";
 import { PaymentModel } from "../../data/mongodb/models/payment/payment.model";
+import { WebhookLogModel } from "../../data/mongodb/models/webhook/webhook-log.model";
 import { v4 as uuidv4 } from 'uuid';
 // <<<--- FIN IMPORTACIONES --- >>>
 
@@ -416,18 +417,37 @@ export class PaymentController {
   };
 
 
-
   processWebhook = async (req: Request, res: Response): Promise<void> => {
     try {
-      this.logger.info('Webhook recibido:', { query: req.query, body: req.body, headers: req.headers });
+      // El middleware ya capturó los datos crudos
+      this.logger.info('🎯 Webhook recibido y datos crudos guardados:', { 
+        webhookLogId: (req as any).webhookLogId,
+        query: req.query, 
+        body: req.body, 
+        headers: {
+          'content-type': req.headers['content-type'],
+          'user-agent': req.headers['user-agent'],
+          'x-forwarded-for': req.headers['x-forwarded-for'],
+          'x-signature': req.headers['x-signature'], // Importante para MP
+          'x-request-id': req.headers['x-request-id'] // Importante para MP
+        }
+      });
 
       let paymentId;
 
       if (req.query.id && req.query.topic) {
         const topic = req.query.topic as string;
         paymentId = req.query.id as string;
+        this.logger.info(`📝 Webhook formato query: topic=${topic}, paymentId=${paymentId}`);
         if (topic !== 'payment') {
-          this.logger.info(`Ignorando notificación de tipo: ${topic}`);
+          this.logger.info(`⏭️ Ignorando notificación de tipo: ${topic}`);
+          
+          // Actualizar el log con el resultado
+          await this.updateWebhookLog((req as any).webhookLogId, {
+            success: true,
+            error: `Ignorado - topic no relevante: ${topic}`
+          });
+
           res.status(200).json({ message: 'Notificación recibida pero ignorada (topic no relevante)' });
           return;
         }
@@ -435,79 +455,230 @@ export class PaymentController {
       else if (req.body.data && req.body.type) {
         const type = req.body.type as string;
         paymentId = req.body.data.id as string;
+        this.logger.info(`📝 Webhook formato body: type=${type}, paymentId=${paymentId}`);
         if (type !== 'payment') {
-          this.logger.info(`Ignorando notificación de tipo: ${type}`);
+          this.logger.info(`⏭️ Ignorando notificación de tipo: ${type}`);
+          
+          // Actualizar el log con el resultado
+          await this.updateWebhookLog((req as any).webhookLogId, {
+            success: true,
+            error: `Ignorado - type no relevante: ${type}`
+          });
+
           res.status(200).json({ message: 'Notificación recibida pero ignorada (type no relevante)' });
           return;
         }
       } else {
-        this.logger.warn('Formato de notificación no reconocido');
+        this.logger.error('❌ Formato de notificación no reconocido:', { query: req.query, body: req.body });
+        
+        // Actualizar el log con el error
+        await this.updateWebhookLog((req as any).webhookLogId, {
+          success: false,
+          error: 'Formato de notificación no reconocido'
+        });
+
         res.status(400).json({ message: 'Formato de notificación no reconocido' });
         return;
       }
 
       if (!paymentId) {
-        this.logger.warn('ID de pago no encontrado en la notificación');
+        this.logger.error('❌ ID de pago no encontrado en la notificación');
+        
+        // Actualizar el log con el error
+        await this.updateWebhookLog((req as any).webhookLogId, {
+          success: false,
+          error: 'ID de pago no encontrado en la notificación'
+        });
+
         res.status(400).json({ message: 'ID de pago no encontrado en la notificación' });
         return;
-      } const paymentInfo = await this.paymentService.getPayment(paymentId);
+      }
+
+      this.logger.info(`🔍 Consultando pago en MercadoPago: ${paymentId}`);
+      const paymentInfo = await this.paymentService.getPayment(paymentId);
+      this.logger.info(`📊 Información del pago MP:`, {
+        id: paymentInfo.id,
+        status: paymentInfo.status,
+        external_reference: paymentInfo.externalReference,
+        transaction_amount: paymentInfo.transactionAmount
+      });
 
       const payment = await this.paymentRepository.getPaymentByExternalReference(
         paymentInfo.externalReference
       );
 
       if (!payment) {
-        this.logger.warn(`Pago no encontrado para external_reference: ${paymentInfo.externalReference}`);
-        // Respondemos 200 OK aunque no lo encontremos para evitar reintentos de MP
+        this.logger.warn(`⚠️ Pago no encontrado en DB para external_reference: ${paymentInfo.externalReference}`);
+        
+        // Actualizar el log
+        await this.updateWebhookLog((req as any).webhookLogId, {
+          success: true,
+          error: `Pago no encontrado en DB para external_reference: ${paymentInfo.externalReference}`,
+          paymentId: paymentInfo.id
+        });
+
         res.status(200).json({ message: 'Pago no encontrado en DB, notificación ignorada.' });
         return;
       }
 
-      const [dtoError, updatePaymentStatusDto] = UpdatePaymentStatusDto.create({ // <<<--- Capturar error del DTO --- >>>
+      this.logger.info(`✅ Pago encontrado en DB:`, {
+        id: payment.id,
+        saleId: payment.saleId,
+        currentStatus: payment.status,
+        amount: payment.amount
+      });
+
+      // Verificar idempotencia para evitar procesamiento duplicado
+      if (payment.status === paymentInfo.status && payment.providerPaymentId === paymentInfo.id.toString()) {
+        this.logger.info(`🔄 Webhook duplicado ignorado: pago ya procesado con el mismo estado`);
+        
+        // Actualizar el log
+        await this.updateWebhookLog((req as any).webhookLogId, {
+          success: true,
+          error: 'Webhook duplicado - pago ya procesado',
+          paymentId: payment.id,
+          orderId: payment.saleId
+        });
+
+        res.status(200).json({ 
+          message: 'Webhook duplicado - pago ya procesado',
+          paymentStatus: paymentInfo.status 
+        });
+        return;
+      }
+
+      const [dtoError, updatePaymentStatusDto] = UpdatePaymentStatusDto.create({
         paymentId: payment.id,
         status: paymentInfo.status,
         providerPaymentId: paymentInfo.id.toString(),
         metadata: paymentInfo
       });
 
-      // <<<--- Manejar error del DTO --- >>>
       if (dtoError) {
-        this.logger.error('Error creando DTO para actualizar estado', { error: dtoError });
-        // Respondemos 200 OK para evitar reintentos, pero logueamos el error
+        this.logger.error('❌ Error creando DTO para actualizar estado', { error: dtoError });
+        
+        // Actualizar el log con el error
+        await this.updateWebhookLog((req as any).webhookLogId, {
+          success: false,
+          error: `Error creando DTO: ${dtoError}`,
+          paymentId: payment.id,
+          orderId: payment.saleId
+        });
+
         res.status(200).json({ status: 'error', message: `Error interno al procesar DTO: ${dtoError}` });
         return;
-      } const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto!); // Usar el DTO validado
+      }
+
+      this.logger.info(`🔄 Actualizando estado del pago de '${payment.status}' a '${paymentInfo.status}'`);
+      const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto!);
 
       if (paymentInfo.status === 'approved') {
-        // Buscar el estado "PENDIENTE PAGADO" por código
-        const paidStatus = await this.orderStatusRepository.findByCode('PENDIENTE PAGADO');
-        if (paidStatus) {
-          await this.orderRepository.updateStatus(payment.saleId, {
-            statusId: paidStatus.id,
-            notes: `Pago aprobado con ID ${paymentInfo.id}`
-          });
-          this.logger.info(`✅ Orden ${payment.saleId} actualizada a estado PENDIENTE PAGADO dinámico (ID: ${paidStatus.id})`);
-        } else {
-          // FALLBACK: Intentar con ID hardcodeado pero loguear mejor
-          const fallbackStatusId = '675a1a39dd398aae92ab05f8';
-          this.logger.warn(`⚠️ Estado 'PENDIENTE PAGADO' no encontrado por código, usando fallback ID: ${fallbackStatusId}`);
-
-          await this.orderRepository.updateStatus(payment.saleId, {
-            statusId: fallbackStatusId,
-            notes: `Pago aprobado con ID ${paymentInfo.id} (fallback hardcoded)`
-          });
-
-          this.logger.info(`📋 Orden ${payment.saleId} actualizada con fallback a estado PENDIENTE PAGADO (ID: ${fallbackStatusId})`);
+        this.logger.info(`💰 Pago aprobado, actualizando estado de la orden ${payment.saleId}`);
+        
+        // SOLUCIÓN TRANSPARENTE: Buscar dinámicamente con fallback seguro
+        let targetStatusId: string;
+        let statusSource: string;
+        
+        try {
+          // 1. Intentar buscar por código dinámicamente
+          const paidStatus = await this.orderStatusRepository.findByCode('PENDIENTE PAGADO');
+          if (paidStatus) {
+            targetStatusId = paidStatus.id;
+            statusSource = 'dinámico por código';
+            this.logger.info(`✅ Estado encontrado dinámicamente: ${paidStatus.name} (${targetStatusId})`);
+          } else {
+            // 2. Si no existe, usar el hardcoded PERO con warning
+            targetStatusId = '675a1a39dd398aae92ab05f8';
+            statusSource = 'fallback hardcodeado (DEBE CORREGIRSE)';
+            this.logger.warn(`⚠️ Estado 'PENDIENTE PAGADO' no encontrado por código, usando fallback: ${targetStatusId}`);
+          }
+        } catch (statusError) {
+          // 3. Si hay cualquier error, usar fallback
+          targetStatusId = '675a1a39dd398aae92ab05f8';
+          statusSource = 'fallback por error crítico';
+          this.logger.error(`❌ Error crítico buscando estado, usando fallback: ${targetStatusId}`, { error: statusError });
         }
+
+        try {
+          this.logger.info(`🎯 Actualizando orden ${payment.saleId} a estado ${targetStatusId} (${statusSource})`);
+          
+          await this.orderRepository.updateStatus(payment.saleId, {
+            statusId: targetStatusId,
+            notes: `Pago aprobado con ID ${paymentInfo.id} (webhook-${statusSource})`
+          });
+
+          this.logger.info(`🎉 ÉXITO: Orden ${payment.saleId} actualizada a PENDIENTE PAGADO (${statusSource})`);
+          
+          // Actualizar el log con éxito
+          await this.updateWebhookLog((req as any).webhookLogId, {
+            success: true,
+            paymentId: payment.id,
+            orderId: payment.saleId
+          });
+          
+        } catch (orderUpdateError) {
+          this.logger.error(`❌ ERROR crítico actualizando orden ${payment.saleId}:`, { 
+            error: orderUpdateError,
+            targetStatusId,
+            statusSource,
+            paymentId: payment.id
+          });
+          
+          // Actualizar el log con el error
+          await this.updateWebhookLog((req as any).webhookLogId, {
+            success: false,
+            error: `Error actualizando orden: ${orderUpdateError instanceof Error ? orderUpdateError.message : String(orderUpdateError)}`,
+            paymentId: payment.id,
+            orderId: payment.saleId
+          });
+
+          // NO fallar el webhook completo, pero registrar el error crítico
+          res.status(200).json({ 
+            message: 'Pago actualizado pero error en orden',
+            paymentStatus: paymentInfo.status,
+            orderError: 'Error actualizando estado de orden',
+            timestamp: new Date().toISOString()
+          });
+          return;
+        }
+      } else {
+        this.logger.info(`ℹ️ Pago no aprobado (${paymentInfo.status}), no se actualiza orden`);
+        
+        // Actualizar el log
+        await this.updateWebhookLog((req as any).webhookLogId, {
+          success: true,
+          paymentId: payment.id,
+          orderId: payment.saleId
+        });
       }
 
       res.status(200).json({
         message: 'Notificación procesada exitosamente',
-        paymentStatus: paymentInfo.status
+        paymentStatus: paymentInfo.status,
+        orderUpdated: paymentInfo.status === 'approved',
+        timestamp: new Date().toISOString()
       });
+
     } catch (error) {
-      this.logger.error('Error procesando webhook', { error });
-      res.status(200).json({ status: 'error', message: 'Error procesando webhook' });
+      this.logger.error('💥 Error crítico procesando webhook:', { 
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        query: req.query,
+        body: req.body
+      });
+      
+      // Actualizar el log con el error crítico
+      await this.updateWebhookLog((req as any).webhookLogId, {
+        success: false,
+        error: `Error crítico: ${error instanceof Error ? error.message : String(error)}`
+      });
+      
+      // IMPORTANTE: Siempre devolver 200 a MP para evitar reintentos infinitos
+      res.status(200).json({ 
+        status: 'error', 
+        message: 'Error procesando webhook',
+        timestamp: new Date().toISOString()
+      });
     }
   };
 
@@ -775,4 +946,18 @@ export class PaymentController {
       this.handleError(error, res);
     }
   };
+
+  // Método helper para actualizar el log de webhook
+  private async updateWebhookLog(webhookLogId: string, result: any): Promise<void> {
+    if (!webhookLogId) return;
+    
+    try {
+      await WebhookLogModel.findByIdAndUpdate(webhookLogId, {
+        processed: true,
+        processingResult: result
+      });
+    } catch (error) {
+      this.logger.error('Error actualizando log de webhook:', error);
+    }
+  }
 }

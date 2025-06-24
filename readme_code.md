@@ -83,8 +83,6 @@ Rellenar las variables de entrono
 
 MERCADO PAGO
 
-
-
 API KEY MercadoPago TEST
 
 1) hay que usar ngrok para poder recibir los webhook de mercado pago
@@ -138,8 +136,7 @@ mail: test_user_1283783729@testuser.com
 url: http://localhost:4200
 
 6) ahora debo hacer una compra con el comprador1, por lo cual me debo loguear en el frontend
-
-2) abrir en el mismo modo incognito el front para probar como si fuese el Comprador1
+7) abrir en el mismo modo incognito el front para probar como si fuese el Comprador1
 
 url: http://localhost:4200
 
@@ -154,9 +151,6 @@ vencimiento:11/30
 codigo seguridad: 123
 
 dni: 12345678
-
-
-
 
 #### esto de abajo es viejo
 
@@ -190,12 +184,6 @@ Vendedor1:
 TENER EN CUENTA LOS PLAZOS DE ACREDITACION DE MP
 
 https://www.mercadopago.com.ar/costs-section  --> en esta parte se debe configurar los plazos de espera y las comisiones que nos va a cobrar mercado pago --> la seccion se llama "cconfigurar costos por cobro" de checkout . Al 2025-03-04 por cobro al instante es del 6.29%, a 10 dias es el 4.39%
-
-
-
-
-
-
 
 TESTING
 
