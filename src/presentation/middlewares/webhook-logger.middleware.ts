@@ -8,15 +8,15 @@ interface ExtendedRequest extends Request {
 }
 
 export class WebhookLoggerMiddleware {
-  
+
   static captureRawWebhook = async (req: ExtendedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Capturar IP real (considerando proxies)
-      const ipAddress = req.ip || 
-                       req.connection.remoteAddress || 
-                       req.socket.remoteAddress || 
-                       (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
-                       'unknown';
+      const ipAddress = req.ip ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+        'unknown';
 
       // Preparar datos crudos
       const rawData = JSON.stringify({
@@ -76,14 +76,14 @@ export class WebhookLoggerMiddleware {
   };
 
   static updateProcessingResult = async (
-    req: ExtendedRequest, 
-    res: Response, 
+    req: ExtendedRequest,
+    res: Response,
     next: NextFunction
   ): Promise<void> => {
     // Este middleware se ejecuta después del procesamiento
     const originalSend = res.send;
-    
-    res.send = function(body: any) {
+
+    res.send = function (body: any) {
       // Actualizar el resultado del procesamiento
       if (req.webhookLogId) {
         WebhookLogModel.findByIdAndUpdate(
@@ -99,7 +99,7 @@ export class WebhookLoggerMiddleware {
           loggerService.error('Error actualizando resultado de webhook:', error);
         });
       }
-      
+
       return originalSend.call(this, body);
     };
 

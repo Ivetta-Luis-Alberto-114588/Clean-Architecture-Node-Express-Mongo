@@ -3,7 +3,7 @@ import { WebhookController } from './controller.webhook';
 import { AuthMiddleware } from '../middlewares/auth.middleware';
 
 export class WebhookRoutes {
-  
+
   static get routes(): Router {
     const router = Router();
     const webhookController = new WebhookController();

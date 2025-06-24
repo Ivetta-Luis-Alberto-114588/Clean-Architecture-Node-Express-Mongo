@@ -27,7 +27,7 @@ export class WebhookController {
       const filters: any = {};
       if (source) filters.source = source;
       if (eventType) filters.eventType = eventType;
-      if (processed !== undefined) filters.processed = processed === 'true';      const total = await WebhookLogModel.countDocuments(filters);
+      if (processed !== undefined) filters.processed = processed === 'true'; const total = await WebhookLogModel.countDocuments(filters);
       const skip = (paginationDto!.page - 1) * paginationDto!.limit;
       const webhooks = await WebhookLogModel
         .find(filters)
@@ -76,14 +76,14 @@ export class WebhookController {
             _id: null,
             total: { $sum: 1 },
             processed: { $sum: { $cond: ['$processed', 1, 0] } },
-            successful: { 
-              $sum: { 
+            successful: {
+              $sum: {
                 $cond: [
-                  { $and: ['$processed', '$processingResult.success'] }, 
-                  1, 
+                  { $and: ['$processed', '$processingResult.success'] },
+                  1,
                   0
-                ] 
-              } 
+                ]
+              }
             }
           }
         },

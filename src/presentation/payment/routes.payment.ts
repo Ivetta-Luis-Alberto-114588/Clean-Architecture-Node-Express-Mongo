@@ -35,7 +35,7 @@ export class PaymentRoutes {
     );    // Rutas públicas (no requieren autenticación)
     // Webhooks y callbacks de MercadoPago
     router.post(
-      "/webhook", 
+      "/webhook",
       WebhookLoggerMiddleware.captureRawWebhook,
       WebhookLoggerMiddleware.updateProcessingResult,
       controller.processWebhook

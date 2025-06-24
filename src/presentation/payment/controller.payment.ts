@@ -420,10 +420,10 @@ export class PaymentController {
   processWebhook = async (req: Request, res: Response): Promise<void> => {
     try {
       // El middleware ya capturó los datos crudos
-      this.logger.info('🎯 Webhook recibido y datos crudos guardados:', { 
+      this.logger.info('🎯 Webhook recibido y datos crudos guardados:', {
         webhookLogId: (req as any).webhookLogId,
-        query: req.query, 
-        body: req.body, 
+        query: req.query,
+        body: req.body,
         headers: {
           'content-type': req.headers['content-type'],
           'user-agent': req.headers['user-agent'],
@@ -441,7 +441,7 @@ export class PaymentController {
         this.logger.info(`📝 Webhook formato query: topic=${topic}, paymentId=${paymentId}`);
         if (topic !== 'payment') {
           this.logger.info(`⏭️ Ignorando notificación de tipo: ${topic}`);
-          
+
           // Actualizar el log con el resultado
           await this.updateWebhookLog((req as any).webhookLogId, {
             success: true,
@@ -458,7 +458,7 @@ export class PaymentController {
         this.logger.info(`📝 Webhook formato body: type=${type}, paymentId=${paymentId}`);
         if (type !== 'payment') {
           this.logger.info(`⏭️ Ignorando notificación de tipo: ${type}`);
-          
+
           // Actualizar el log con el resultado
           await this.updateWebhookLog((req as any).webhookLogId, {
             success: true,
@@ -470,7 +470,7 @@ export class PaymentController {
         }
       } else {
         this.logger.error('❌ Formato de notificación no reconocido:', { query: req.query, body: req.body });
-        
+
         // Actualizar el log con el error
         await this.updateWebhookLog((req as any).webhookLogId, {
           success: false,
@@ -483,7 +483,7 @@ export class PaymentController {
 
       if (!paymentId) {
         this.logger.error('❌ ID de pago no encontrado en la notificación');
-        
+
         // Actualizar el log con el error
         await this.updateWebhookLog((req as any).webhookLogId, {
           success: false,
@@ -509,7 +509,7 @@ export class PaymentController {
 
       if (!payment) {
         this.logger.warn(`⚠️ Pago no encontrado en DB para external_reference: ${paymentInfo.externalReference}`);
-        
+
         // Actualizar el log
         await this.updateWebhookLog((req as any).webhookLogId, {
           success: true,
@@ -531,7 +531,7 @@ export class PaymentController {
       // Verificar idempotencia para evitar procesamiento duplicado
       if (payment.status === paymentInfo.status && payment.providerPaymentId === paymentInfo.id.toString()) {
         this.logger.info(`🔄 Webhook duplicado ignorado: pago ya procesado con el mismo estado`);
-        
+
         // Actualizar el log
         await this.updateWebhookLog((req as any).webhookLogId, {
           success: true,
@@ -540,9 +540,9 @@ export class PaymentController {
           orderId: payment.saleId
         });
 
-        res.status(200).json({ 
+        res.status(200).json({
           message: 'Webhook duplicado - pago ya procesado',
-          paymentStatus: paymentInfo.status 
+          paymentStatus: paymentInfo.status
         });
         return;
       }
@@ -556,7 +556,7 @@ export class PaymentController {
 
       if (dtoError) {
         this.logger.error('❌ Error creando DTO para actualizar estado', { error: dtoError });
-        
+
         // Actualizar el log con el error
         await this.updateWebhookLog((req as any).webhookLogId, {
           success: false,
@@ -574,11 +574,11 @@ export class PaymentController {
 
       if (paymentInfo.status === 'approved') {
         this.logger.info(`💰 Pago aprobado, actualizando estado de la orden ${payment.saleId}`);
-        
+
         // SOLUCIÓN TRANSPARENTE: Buscar dinámicamente con fallback seguro
         let targetStatusId: string;
         let statusSource: string;
-        
+
         try {
           // 1. Intentar buscar por código dinámicamente
           const paidStatus = await this.orderStatusRepository.findByCode('PENDIENTE PAGADO');
@@ -601,29 +601,29 @@ export class PaymentController {
 
         try {
           this.logger.info(`🎯 Actualizando orden ${payment.saleId} a estado ${targetStatusId} (${statusSource})`);
-          
+
           await this.orderRepository.updateStatus(payment.saleId, {
             statusId: targetStatusId,
             notes: `Pago aprobado con ID ${paymentInfo.id} (webhook-${statusSource})`
           });
 
           this.logger.info(`🎉 ÉXITO: Orden ${payment.saleId} actualizada a PENDIENTE PAGADO (${statusSource})`);
-          
+
           // Actualizar el log con éxito
           await this.updateWebhookLog((req as any).webhookLogId, {
             success: true,
             paymentId: payment.id,
             orderId: payment.saleId
           });
-          
+
         } catch (orderUpdateError) {
-          this.logger.error(`❌ ERROR crítico actualizando orden ${payment.saleId}:`, { 
+          this.logger.error(`❌ ERROR crítico actualizando orden ${payment.saleId}:`, {
             error: orderUpdateError,
             targetStatusId,
             statusSource,
             paymentId: payment.id
           });
-          
+
           // Actualizar el log con el error
           await this.updateWebhookLog((req as any).webhookLogId, {
             success: false,
@@ -633,7 +633,7 @@ export class PaymentController {
           });
 
           // NO fallar el webhook completo, pero registrar el error crítico
-          res.status(200).json({ 
+          res.status(200).json({
             message: 'Pago actualizado pero error en orden',
             paymentStatus: paymentInfo.status,
             orderError: 'Error actualizando estado de orden',
@@ -643,7 +643,7 @@ export class PaymentController {
         }
       } else {
         this.logger.info(`ℹ️ Pago no aprobado (${paymentInfo.status}), no se actualiza orden`);
-        
+
         // Actualizar el log
         await this.updateWebhookLog((req as any).webhookLogId, {
           success: true,
@@ -660,22 +660,22 @@ export class PaymentController {
       });
 
     } catch (error) {
-      this.logger.error('💥 Error crítico procesando webhook:', { 
+      this.logger.error('💥 Error crítico procesando webhook:', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
         query: req.query,
         body: req.body
       });
-      
+
       // Actualizar el log con el error crítico
       await this.updateWebhookLog((req as any).webhookLogId, {
         success: false,
         error: `Error crítico: ${error instanceof Error ? error.message : String(error)}`
       });
-      
+
       // IMPORTANTE: Siempre devolver 200 a MP para evitar reintentos infinitos
-      res.status(200).json({ 
-        status: 'error', 
+      res.status(200).json({
+        status: 'error',
         message: 'Error procesando webhook',
         timestamp: new Date().toISOString()
       });
@@ -950,7 +950,7 @@ export class PaymentController {
   // Método helper para actualizar el log de webhook
   private async updateWebhookLog(webhookLogId: string, result: any): Promise<void> {
     if (!webhookLogId) return;
-    
+
     try {
       await WebhookLogModel.findByIdAndUpdate(webhookLogId, {
         processed: true,
