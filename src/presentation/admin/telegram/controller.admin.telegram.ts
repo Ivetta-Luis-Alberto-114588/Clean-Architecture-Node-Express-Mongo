@@ -7,7 +7,7 @@ import { CustomError } from '../../../domain/errors/custom.error';
 export class TelegramAdminController {
     constructor(
         private readonly telegramService: TelegramNotificationAdapter
-    ) {}
+    ) { }
 
     /**
      * Enviar notificación personalizada de Telegram
@@ -83,7 +83,7 @@ export class TelegramAdminController {
     sendTestMessage = async (req: Request, res: Response) => {
         try {
             const customMessage = req.body.message;
-            const testMessage = customMessage || 
+            const testMessage = customMessage ||
                 `🧪 <b>Mensaje de prueba</b>\n\n` +
                 `✅ El sistema de notificaciones de Telegram está funcionando correctamente.\n` +
                 `⏰ Enviado el: ${new Date().toLocaleString('es-AR')}\n` +

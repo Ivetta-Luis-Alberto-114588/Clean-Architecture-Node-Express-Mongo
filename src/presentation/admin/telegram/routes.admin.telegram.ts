@@ -4,10 +4,10 @@ import { TelegramAdminController } from './controller.admin.telegram';
 import { telegramNotificationService } from '../../../infrastructure/adapters/telegram-notification.adapter';
 
 export class AdminTelegramRoutes {
-    
+
     static getRoutes(): Router {
         const router = Router();
-        
+
         // Crear instancia del controller con la dependencia del servicio
         const controller = new TelegramAdminController(telegramNotificationService);
 
