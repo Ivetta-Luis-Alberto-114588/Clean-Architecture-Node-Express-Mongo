@@ -46,6 +46,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                     populate: [
                         { path: 'category', model: 'Category' },
                         { path: 'unit', model: 'Unit' }
+
                     ]
                 })
                 .lean();

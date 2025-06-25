@@ -167,16 +167,16 @@ export class OrderController {
             .execute(createSaleDto!, userId).then(async (data) => {
                 // Enviar notificación de nueva orden (sin bloquear la respuesta)
                 try {
-                    await notificationService.sendOrderNotification({
-                        orderId: data.id,
-                        customerName: data.customer?.name || 'Cliente',
-                        total: data.total,
-                        items: data.items?.map(detail => ({
-                            name: detail.product?.name || 'Producto',
-                            quantity: detail.quantity,
-                            price: detail.unitPrice
-                        })) || []
-                    });
+                    // await notificationService.sendOrderNotification({
+                    //     orderId: data.id,
+                    //     customerName: data.customer?.name || 'Cliente',
+                    //     total: data.total,
+                    //     items: data.items?.map(detail => ({
+                    //         name: detail.product?.name || 'Producto',
+                    //         quantity: detail.quantity,
+                    //         price: detail.unitPrice
+                    //     })) || []
+                    // });
                     loggerService.info(`Notificación enviada para orden ${data.id}`);
                 } catch (notificationError) {
                     loggerService.warn(`Error al enviar notificación para orden ${data.id}:`, {

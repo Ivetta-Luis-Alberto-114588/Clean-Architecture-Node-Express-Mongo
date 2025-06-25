@@ -12,6 +12,7 @@ import { PaymentMethodMapper } from "../payment/payment-method.mapper";
 import logger from "../../../configs/logger";
 import { CityEntity } from "../../../domain/entities/customers/citiy"; // <<<--- AÑADIR
 import { NeighborhoodEntity } from "../../../domain/entities/customers/neighborhood"; // <<<--- AÑADIR
+import { log } from "console";
 
 export class OrderMapper {
     static fromObjectToSaleEntity(object: any): OrderEntity {
@@ -47,15 +48,22 @@ export class OrderMapper {
 
 
         const saleItems: OrderItemEntity[] = items.map((item: any): OrderItemEntity | null => {
+
             if (!item || !item.product) {
                 logger.warn('SaleMapper: Skipping invalid item in sale', { item, saleId: _id || id });
                 return null;
             }
+
             let productEntity: ProductEntity;
+
+            logger.debug("desde fromObjectToSaleEntity saleItems" + JSON.stringify(items))
+
             try {
                 if (typeof item.product === 'object' && item.product !== null) {
                     productEntity = ProductMapper.fromObjectToProductEntity(item.product);
+                    logger.debug("se metio al if del try")
                 } else {
+                    logger.debug("se metio al else del try")
                     const productIdStr = item.product.toString();
                     // <<<--- CORRECCIÓN PLACEHOLDER PRODUCTO --- >>>
                     productEntity = new ProductEntity(
