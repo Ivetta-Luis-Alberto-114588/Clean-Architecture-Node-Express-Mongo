@@ -49,7 +49,7 @@ export class TelegramNotificationAdapter implements NotificationService {
 
     async sendMessageToAdmin(message: string): Promise<void> {
         await this.sendMessage(message, this.telegramChatId);
-    }    async sendOrderNotification(orderData: {
+    } async sendOrderNotification(orderData: {
         orderId: string;
         customerName: string;
         total: number;
@@ -58,8 +58,8 @@ export class TelegramNotificationAdapter implements NotificationService {
         // TEMPORALMENTE DESHABILITADO: Las notificaciones de nueva orden ahora se manejan desde el frontend
         // solo cuando el pago es confirmado exitosamente.
         this.logger.info(`[TelegramAdapter] sendOrderNotification llamado para orden ${orderData.orderId} - DESHABILITADO temporalmente. Se enviará desde frontend cuando pago sea confirmado.`);
-        
-        /*
+
+
         const itemsList = orderData.items
             .map(item => `• ${item.name} x${item.quantity} - $${item.price.toFixed(2)}`)
             .join('\n');
@@ -78,7 +78,7 @@ ${itemsList}
     `.trim();
 
         await this.sendMessageToAdmin(message);
-        */
+
     }
 
     async sendPaymentNotification(paymentData: {

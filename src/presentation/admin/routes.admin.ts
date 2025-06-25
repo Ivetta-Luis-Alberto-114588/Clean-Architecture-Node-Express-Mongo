@@ -11,6 +11,7 @@ import { AdminCustomerRoutes } from "./customers/routes.admin.customer";
 import { AdminUserRoutes } from "./users/routes.admin.user";
 import { AdminCouponRoutes } from "./coupons/routes.admin.coupon";
 import { AdminTagRoutes } from "./tags/routes.admin.tag"; // <<<--- IMPORTAR LAS RUTAS DE TAGS DE ADMIN
+import { AdminTelegramRoutes } from "./telegram/routes.admin.telegram"; // <<<--- IMPORTAR LAS RUTAS DE TELEGRAM DE ADMIN
 
 export class AdminRoutes {
 
@@ -30,6 +31,7 @@ export class AdminRoutes {
         router.use('/coupons', AdminCouponRoutes.getRoutes());
         router.use('/cities', AdminCityRoutes.getRoutes());
         router.use('/neighborhoods', AdminNeighborhoodRoutes.getRoutes());
+        router.use('/telegram', AdminTelegramRoutes.getRoutes()); // <<<--- USAR LAS RUTAS DE TELEGRAM IMPORTADAS
         // router.use('/addresses', AdminAddressRoutes.getRoutes()); // Considera si necesitas esta ruta
 
         return router;
