@@ -1,2 +1,5 @@
 // src/configs/notification.ts
-export { telegramNotificationService as notificationService } from '../infrastructure/adapters/telegram-notification.adapter';
+import { NotificationServiceImpl } from '../infrastructure/services/notification.service';
+import { notificationConfig } from './notification.config';
+
+export const notificationService = new NotificationServiceImpl(notificationConfig);

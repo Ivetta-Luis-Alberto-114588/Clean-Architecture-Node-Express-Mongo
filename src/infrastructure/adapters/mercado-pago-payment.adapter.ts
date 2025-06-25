@@ -20,14 +20,20 @@ import {
 } from '../../domain/interfaces/payment/mercado-pago.interface';
 import { ILogger } from '../../domain/interfaces/logger.interface';
 import { CustomError } from '../../domain/errors/custom.error';
+import { envs } from '../../configs/envs';
 
 export interface MercadoPagoPaymentAdapterConfig {
     accessToken: string;
     baseUrl?: string;
+    // Nuevas propiedades para OAuth
+    clientId?: string;
+    clientSecret?: string;
 }
 
 export class MercadoPagoPaymentAdapter implements IPaymentService {
     private readonly baseUrl: string;
+    private oauthToken: string | null = null;
+    private tokenExpiresAt: Date | null = null;
 
     constructor(
         private readonly config: MercadoPagoPaymentAdapterConfig,
@@ -270,5 +276,110 @@ export class MercadoPagoPaymentAdapter implements IPaymentService {
             return JSON.stringify(error.response.data);
         }
         return error.message || 'Unknown error';
+    }
+
+    /**
+     * Obtiene un token OAuth para consultas más seguras
+     */
+    private async getOAuthToken(): Promise<string> {
+        // Si tenemos un token válido, lo devolvemos
+        if (this.oauthToken && this.tokenExpiresAt && new Date() < this.tokenExpiresAt) {
+            return this.oauthToken;
+        }
+
+        const clientId = this.config.clientId || envs.MERCADO_PAGO_CLIENT_ID;
+        const clientSecret = this.config.clientSecret || envs.MERCADO_PAGO_CLIENT_SECRET;
+
+        if (!clientId || !clientSecret) {
+            throw CustomError.badRequest('OAuth credentials are required for secure payment verification');
+        }
+
+        try {
+            const oauthRequest = {
+                client_secret: clientSecret,
+                client_id: clientId,
+                grant_type: 'client_credentials' as const
+            };
+
+            this.logger.info('🔐 Requesting OAuth token from MercadoPago');
+
+            const response = await axios.post(
+                `${this.baseUrl}/oauth/token`,
+                oauthRequest,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    timeout: 10000
+                }
+            );
+
+            this.oauthToken = response.data.access_token;
+            // Buffer de 5 minutos antes de expiración para estar seguros
+            this.tokenExpiresAt = new Date(Date.now() + (response.data.expires_in - 300) * 1000);
+
+            this.logger.info('✅ OAuth token obtained successfully', {
+                expiresIn: response.data.expires_in,
+                tokenType: response.data.token_type
+            });
+
+            return this.oauthToken;
+
+        } catch (error) {
+            this.logger.error('❌ Error obtaining OAuth token from MercadoPago:', error);
+            throw CustomError.internalServerError(
+                `OAuth authentication failed: ${this.parseError(error)}`
+            );
+        }
+    }
+
+    /**
+     * Verifica el estado de un pago usando OAuth para mayor seguridad
+     */
+    async verifyPaymentWithOAuth(paymentId: string): Promise<any> {
+        try {
+            const oauthToken = await this.getOAuthToken();
+
+            this.logger.info(`🔍 Verifying payment status for ID: ${paymentId} using OAuth`);
+
+            const response = await axios.get(
+                `${this.baseUrl}/v1/payments/${paymentId}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${oauthToken}`,
+                        'Content-Type': 'application/json',
+                        'X-Idempotency-Key': `verify-${paymentId}-${Date.now()}`
+                    },
+                    timeout: 10000
+                }
+            );
+
+            this.logger.info(`✅ Payment status verified successfully for ID: ${paymentId}`, {
+                status: response.data.status,
+                amount: response.data.transaction_amount,
+                verificationTime: new Date().toISOString()
+            });
+
+            return response.data;
+
+        } catch (error) {
+            this.logger.error(`❌ Error verifying payment status for ID: ${paymentId}:`, error);
+            throw CustomError.internalServerError(
+                `Error verifying payment status: ${this.parseError(error)}`
+            );
+        }
+    }
+
+    /**
+     * Método público para verificar el estado usando OAuth o access token regular
+     */
+    async getPaymentStatusSecure(paymentId: string, useOAuth: boolean = true): Promise<PaymentInfo> {
+        if (useOAuth) {
+            const mpPayment = await this.verifyPaymentWithOAuth(paymentId);
+            return this.convertFromMercadoPagoPayment(mpPayment);
+        } else {
+            return this.getPayment(paymentId);
+        }
     }
 }

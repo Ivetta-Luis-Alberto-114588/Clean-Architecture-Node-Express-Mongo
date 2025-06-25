@@ -22,6 +22,7 @@ import { PaymentEntity, PaymentProvider } from "../../domain/entities/payment/pa
 import { MercadoPagoItem, MercadoPagoPayer, MercadoPagoPayment, MercadoPagoPaymentStatus } from "../../domain/interfaces/payment/mercado-pago.interface"; // Importar interfaces de MP
 import { IPaymentService } from "../../domain/interfaces/payment.service";
 import { ILogger } from "../../domain/interfaces/logger.interface";
+import { NotificationService } from "../../domain/interfaces/notification.interface";
 import { envs } from "../../configs/envs";
 import { PaymentModel } from "../../data/mongodb/models/payment/payment.model";
 import { WebhookLogModel } from "../../data/mongodb/models/webhook/webhook-log.model";
@@ -35,7 +36,8 @@ export class PaymentController {
     private readonly customerRepository: CustomerRepository,
     private readonly orderStatusRepository: OrderStatusRepository,
     private readonly paymentService: IPaymentService,
-    private readonly logger: ILogger
+    private readonly logger: ILogger,
+    private readonly notificationService?: NotificationService
   ) { }
   private handleError = (error: unknown, res: Response) => {
     if (error instanceof CustomError) {
@@ -685,67 +687,338 @@ export class PaymentController {
 
   paymentSuccess = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { saleId, payment_id, external_reference, status } = req.query;
-      this.logger.info('Pago exitoso:', { saleId, payment_id, external_reference, status });
+      const { payment_id, external_reference, saleId, status, merchant_order_id } = req.query;
 
-      if (payment_id && (external_reference || saleId)) { // Asegurar que tenemos una referencia
-        const paymentIdForVerification = external_reference?.toString() || saleId?.toString();
-        if (paymentIdForVerification) {
-          const [error, verifyPaymentDto] = VerifyPaymentDto.create({
-            // Necesitamos el ID de *nuestro* registro de pago, no el de MP.
-            // Asumimos que external_reference o saleId pueden mapear a nuestro paymentId.
-            // ¡ESTO PUEDE REQUERIR AJUSTES! Buscar el pago por external_reference primero.
-            paymentId: paymentIdForVerification, // ¡OJO! Esto podría no ser nuestro ID interno.
-            providerPaymentId: payment_id.toString()
+      this.logger.info('🎉 Payment success callback received', {
+        payment_id,
+        external_reference,
+        saleId,
+        status,
+        merchant_order_id,
+        timestamp: new Date().toISOString()
+      });
+
+      let verificationResult: {
+        verified: boolean;
+        realStatus: string;
+        localUpdated: boolean;
+        error?: string;
+      } = {
+        verified: false,
+        realStatus: 'unknown',
+        localUpdated: false
+      };
+
+      // 🔥 PASO CRÍTICO: Verificar estado REAL en MercadoPago usando OAuth
+      if (payment_id) {
+        try {
+          this.logger.info(`🔍 Verificando estado real con OAuth para payment: ${payment_id}`);
+
+          // Usar OAuth para verificación más segura
+          const realPaymentInfo = await (this.paymentService as any).verifyPaymentWithOAuth(payment_id.toString());
+
+          this.logger.info(`💰 Estado real verificado con OAuth:`, {
+            mpPaymentId: realPaymentInfo.id,
+            status: realPaymentInfo.status,
+            amount: realPaymentInfo.transaction_amount,
+            external_reference: realPaymentInfo.external_reference,
+            date_approved: realPaymentInfo.date_approved
           });
 
-          if (!error && verifyPaymentDto) {
-            // Buscar nuestro pago por external_reference para obtener el ID correcto
-            const localPayment = await this.paymentRepository.getPaymentByExternalReference(paymentIdForVerification);
-            if (localPayment) {
-              const [errorCorrected, verifyDtoCorrected] = VerifyPaymentDto.create({
-                paymentId: localPayment.id, // Usar el ID local correcto
-                providerPaymentId: payment_id.toString()
-              });
+          verificationResult.verified = true;
+          verificationResult.realStatus = realPaymentInfo.status;
 
-              if (!errorCorrected && verifyDtoCorrected) {
-                const verifyPaymentUseCase = new VerifyPaymentUseCase(
-                  this.paymentRepository,
-                  this.orderRepository
-                );
-                verifyPaymentUseCase.execute(verifyDtoCorrected)
-                  .then(result => this.logger.info('Pago verificado correctamente en success', { paymentId: result.payment.id }))
-                  .catch(error => this.logger.error('Error al verificar pago en success', { error }));
-              } else {
-                this.logger.error('Error creando DTO de verificación corregido', { error: errorCorrected });
-              }
-            } else {
-              console.warn(`No se encontró pago local para external_reference: ${paymentIdForVerification} en callback success`);
-            }
+          // ✅ Si está REALMENTE aprobado, asegurar que esté actualizado localmente
+          if (realPaymentInfo.status === 'approved') {
+            const wasUpdated = await this.ensurePaymentIsUpdatedLocallyWithOAuth(
+              realPaymentInfo,
+              external_reference?.toString() || saleId?.toString()
+            );
+            verificationResult.localUpdated = wasUpdated;
+
+            this.logger.info(`✅ Pago verificado con OAuth y sincronizado localmente`, {
+              paymentId: payment_id,
+              wasUpdated,
+              realStatus: realPaymentInfo.status
+            });
           } else {
-            this.logger.error('Error creando DTO de verificación inicial', { error });
+            this.logger.warn(`⚠️ Pago redirigido a success pero estado real es: ${realPaymentInfo.status}`, {
+              paymentId: payment_id,
+              expectedStatus: 'approved',
+              realStatus: realPaymentInfo.status
+            });
           }
-        } else {
-          console.warn('No se pudo determinar una referencia válida (external_reference o saleId) en callback success');
+
+        } catch (verificationError) {
+          this.logger.error('❌ Error verificando pago con OAuth en success callback:', verificationError);
+          verificationResult.error = verificationError instanceof Error
+            ? verificationError.message
+            : String(verificationError);
+
+          // NO fallar la redirección, pero alertar para revisión manual
+          await this.sendVerificationFailureNotification(payment_id.toString(), verificationError);
         }
       }
 
-      const redirectUrl = `${envs.FRONTEND_URL}/payment/success?saleId=${saleId || external_reference || ''}`;
-      res.redirect(302, redirectUrl); // Usar 302 para redirección temporal
+      // Determinar saleId para la redirección y agregar parámetros de verificación
+      const finalSaleId = saleId || external_reference || '';
+      const verificationParams = new URLSearchParams({
+        saleId: finalSaleId.toString(),
+        verified: verificationResult.verified.toString(),
+        realStatus: verificationResult.realStatus,
+        localUpdated: verificationResult.localUpdated.toString(),
+        oauthVerified: 'true',
+        timestamp: new Date().getTime().toString()
+      });
+
+      if (verificationResult.error) {
+        verificationParams.set('verificationError', 'true');
+      }
+
+      const redirectUrl = `${envs.FRONTEND_URL}/payment/success?${verificationParams.toString()}`;
+
+      this.logger.info(`🔄 Redirecting to success page with OAuth verification:`, {
+        url: redirectUrl,
+        verificationResult
+      });
+
+      res.redirect(302, redirectUrl);
+
     } catch (error) {
-      this.logger.error('Error en paymentSuccess', { error });
-      const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
+      this.logger.error('❌ Error crítico en paymentSuccess:', error);
+
+      // Redirigir a página de error con información
+      const errorParams = new URLSearchParams({
+        error: 'callback_error',
+        message: 'Error procesando verificación de pago',
+        timestamp: new Date().getTime().toString()
+      });
+
+      const redirectUrl = `${envs.FRONTEND_URL}/payment/error?${errorParams.toString()}`;
       res.redirect(302, redirectUrl);
     }
   };
 
+  // ✅ MÉTODO AUXILIAR para asegurar sincronización con OAuth
+  private async ensurePaymentIsUpdatedLocallyWithOAuth(
+    mpPaymentInfo: any,
+    reference: string | string[]
+  ): Promise<boolean> {
+    try {
+      if (!reference) return false;
+
+      const referenceStr = Array.isArray(reference) ? reference[0] : reference;
+
+      this.logger.info(`🔄 Ensuring local payment is updated with OAuth data for reference: ${referenceStr}`);
+
+      // Buscar pago local por external_reference O por saleId
+      let localPayment = await this.paymentRepository.getPaymentByExternalReference(referenceStr);
+
+      if (!localPayment) {
+        const paymentsForSale = await this.paymentRepository.getPaymentsBySaleId(referenceStr, { page: 1, limit: 1 });
+        localPayment = paymentsForSale?.[0] || null;
+      }
+
+      if (localPayment) {
+        // Verificar si necesita actualización
+        const needsUpdate = localPayment.status !== mpPaymentInfo.status ||
+          localPayment.providerPaymentId !== mpPaymentInfo.id.toString();
+
+        if (needsUpdate) {
+          this.logger.info(`🔄 Updating local payment with OAuth verification data`);
+
+          // Actualizar estado local con datos OAuth
+          await this.paymentRepository.updatePaymentStatus({
+            paymentId: localPayment.id,
+            status: mpPaymentInfo.status,
+            providerPaymentId: mpPaymentInfo.id.toString(),
+            metadata: {
+              ...localPayment.metadata,
+              lastOAuthVerification: new Date(),
+              oauthVerificationSource: 'success_callback',
+              mpStatusDetail: mpPaymentInfo.status_detail,
+              mpDateApproved: mpPaymentInfo.date_approved,
+              mpTransactionAmount: mpPaymentInfo.transaction_amount
+            }
+          });
+
+          // Actualizar orden también si el pago está aprobado
+          if (mpPaymentInfo.status === 'approved' && localPayment.saleId) {
+            try {
+              const completedStatus = await this.orderStatusRepository.findByCode('COMPLETED');
+              if (completedStatus) {
+                await this.orderRepository.updateStatus(localPayment.saleId, {
+                  statusId: completedStatus.id,
+                  notes: `Pago verificado con OAuth en success callback - MP ID: ${mpPaymentInfo.id}`
+                });
+
+                this.logger.info(`📋 Order ${localPayment.saleId} updated to COMPLETED via OAuth verification`);
+              }
+            } catch (orderError) {
+              this.logger.error('❌ Error updating order status via OAuth:', orderError);
+            }
+          }
+
+          // Enviar notificación de sincronización exitosa
+          await this.sendSuccessfulSyncNotification(localPayment, mpPaymentInfo);
+
+          return true;
+        } else {
+          this.logger.info(`✅ Local payment already synchronized via OAuth for reference: ${referenceStr}`);
+          return false;
+        }
+      } else {
+        this.logger.warn(`⚠️ No local payment found for OAuth verification, reference: ${referenceStr}`);
+
+        // Notificar que no se encontró el pago local
+        await this.sendPaymentNotFoundNotification(referenceStr, mpPaymentInfo);
+        return false;
+      }
+
+    } catch (error) {
+      this.logger.error('❌ Error ensuring local payment update with OAuth:', error);
+      return false;
+    }
+  }
+
+  // Método para enviar notificación de verificación exitosa
+  private async sendSuccessfulSyncNotification(localPayment: any, mpPaymentInfo: any): Promise<void> {
+    try {
+      if (!this.notificationService) return;
+
+      const notification = {
+        title: '✅ Pago Sincronizado con OAuth',
+        body: `Pago ${mpPaymentInfo.id} verificado y sincronizado exitosamente`,
+        data: {
+          'Payment ID': mpPaymentInfo.id.toString(),
+          'Order ID': localPayment.saleId,
+          'Status': mpPaymentInfo.status,
+          'Amount': `$${mpPaymentInfo.transaction_amount}`,
+          'Verification Method': 'OAuth Success Callback',
+          'Sync Time': new Date().toLocaleString('es-ES')
+        }
+      };
+
+      await this.notificationService.notify(notification);
+    } catch (error) {
+      this.logger.error('Error sending successful sync notification:', error);
+    }
+  }
+
+  // Método para notificar cuando falla la verificación OAuth
+  private async sendVerificationFailureNotification(paymentId: string, error: any): Promise<void> {
+    try {
+      if (!this.notificationService) return;
+
+      const notification = {
+        title: '⚠️ Error en Verificación OAuth',
+        body: `Error verificando pago ${paymentId} con OAuth en success callback`,
+        data: {
+          'Payment ID': paymentId,
+          'Error': error instanceof Error ? error.message : String(error),
+          'Source': 'Success Callback OAuth Verification',
+          'Time': new Date().toLocaleString('es-ES'),
+          'Action Required': 'Revisar manualmente'
+        }
+      };
+
+      await this.notificationService.notify(notification);
+    } catch (notificationError) {
+      this.logger.error('Error sending verification failure notification:', notificationError);
+    }
+  }
+
+  // Método para notificar cuando no se encuentra el pago local
+  private async sendPaymentNotFoundNotification(reference: string, mpPaymentInfo: any): Promise<void> {
+    try {
+      if (!this.notificationService) return;
+
+      const notification = {
+        title: '🔍 Pago Local No Encontrado',
+        body: `Pago ${mpPaymentInfo.id} aprobado en MP pero no existe localmente`,
+        data: {
+          'MP Payment ID': mpPaymentInfo.id.toString(),
+          'Reference': reference,
+          'Status': mpPaymentInfo.status,
+          'Amount': `$${mpPaymentInfo.transaction_amount}`,
+          'Source': 'OAuth Success Callback',
+          'Action Required': 'Crear pago local manualmente'
+        }
+      };
+
+      await this.notificationService.notify(notification);
+    } catch (error) {
+      this.logger.error('Error sending payment not found notification:', error);
+    }
+  }
+
+  // Método auxiliar para actualizar estado local
+  private async updateLocalPaymentStatus(
+    mpPaymentInfo: any,
+    reference: string | string[],
+    source: string
+  ): Promise<void> {
+    try {
+      if (!reference) return;
+
+      const referenceStr = Array.isArray(reference) ? reference[0] : reference;
+
+      let localPayment = await this.paymentRepository.getPaymentByExternalReference(referenceStr);
+
+      if (!localPayment) {
+        const paymentsForSale = await this.paymentRepository.getPaymentsBySaleId(referenceStr, { page: 1, limit: 1 });
+        localPayment = paymentsForSale?.[0] || null;
+      }
+
+      if (localPayment && localPayment.status !== mpPaymentInfo.status) {
+        await this.paymentRepository.updatePaymentStatus({
+          paymentId: localPayment.id,
+          status: mpPaymentInfo.status,
+          providerPaymentId: mpPaymentInfo.id.toString(),
+          metadata: {
+            ...localPayment.metadata,
+            lastSync: new Date(),
+            syncSource: source
+          }
+        });
+
+        this.logger.info(`✅ Local payment status updated to ${mpPaymentInfo.status} from ${source}`);
+      }
+
+    } catch (error) {
+      this.logger.error(`Error updating local payment status from ${source}:`, error);
+    }
+  }
+
   paymentFailure = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { saleId, external_reference } = req.query; // Capturar también external_reference
-      this.logger.info('Pago fallido', { query: req.query });
-      const reference = saleId || external_reference || '';
-      const redirectUrl = `${envs.FRONTEND_URL}/payment/failure?saleId=${reference}`;
+      const { payment_id, external_reference, saleId } = req.query;
+
+      this.logger.info('❌ Payment failure callback received', {
+        payment_id,
+        external_reference,
+        saleId
+      });
+
+      // Verificar estado real para confirmar que falló
+      if (payment_id) {
+        try {
+          const realPaymentInfo = await (this.paymentService as any).verifyPaymentWithOAuth(payment_id.toString());
+          this.logger.info(`💔 Payment failed confirmed - MP Status: ${realPaymentInfo.status}`);
+
+          // Actualizar estado local si es necesario
+          if (realPaymentInfo.status === 'rejected' || realPaymentInfo.status === 'cancelled') {
+            await this.updateLocalPaymentStatus(realPaymentInfo, external_reference?.toString() || saleId?.toString(), 'failure_callback');
+          }
+        } catch (error) {
+          this.logger.error('Error verifying failed payment:', error);
+        }
+      }
+
+      const finalSaleId = saleId || external_reference || '';
+      const redirectUrl = `${envs.FRONTEND_URL}/payment/failure?saleId=${finalSaleId}&verified=true`;
       res.redirect(302, redirectUrl);
+
     } catch (error) {
       this.logger.error('Error en paymentFailure', { error });
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
@@ -755,18 +1028,38 @@ export class PaymentController {
 
   paymentPending = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { saleId, external_reference } = req.query; // Capturar también external_reference
-      this.logger.info('Pago pendiente', { query: req.query });
-      const reference = saleId || external_reference || '';
-      const redirectUrl = `${envs.FRONTEND_URL}/payment/pending?saleId=${reference}`;
+      const { payment_id, external_reference, saleId } = req.query;
+
+      this.logger.info('⏳ Payment pending callback received', {
+        payment_id,
+        external_reference,
+        saleId
+      });
+
+      // Verificar estado real para confirmar que está pendiente
+      if (payment_id) {
+        try {
+          const realPaymentInfo = await (this.paymentService as any).verifyPaymentWithOAuth(payment_id.toString());
+          this.logger.info(`⏳ Payment pending confirmed - MP Status: ${realPaymentInfo.status}`);
+
+          if (realPaymentInfo.status === 'pending' || realPaymentInfo.status === 'in_process') {
+            await this.updateLocalPaymentStatus(realPaymentInfo, external_reference?.toString() || saleId?.toString(), 'pending_callback');
+          }
+        } catch (error) {
+          this.logger.error('Error verifying pending payment:', error);
+        }
+      }
+
+      const finalSaleId = saleId || external_reference || '';
+      const redirectUrl = `${envs.FRONTEND_URL}/payment/pending?saleId=${finalSaleId}&verified=true`;
       res.redirect(302, redirectUrl);
+
     } catch (error) {
       this.logger.error('Error en paymentPending', { error });
       const redirectUrl = `${envs.FRONTEND_URL}/payment/error?message=Error procesando el pago`;
       res.redirect(302, redirectUrl);
     }
   };
-
 
   getAllMercadoPagoPayments = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -940,6 +1233,70 @@ export class PaymentController {
         orderCurrentStatus: order.status,
         verificationsPerformed: results.length,
         results
+      });
+
+    } catch (error) {
+      this.handleError(error, res);
+    }
+  };
+
+  // Endpoint para que el frontend verifique el estado después del callback
+  getPaymentStatusBySale = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { saleId } = req.params;
+
+      this.logger.info(`🔍 Frontend requesting payment status for sale: ${saleId}`);
+
+      // Buscar pagos para esta venta
+      const payments = await this.paymentRepository.getPaymentsBySaleId(saleId, { page: 1, limit: 1 });
+
+      if (!payments || payments.length === 0) {
+        res.status(404).json({
+          error: 'No se encontraron pagos para esta venta',
+          saleId
+        });
+        return;
+      }
+
+      const payment = payments[0];
+
+      // Si tiene providerPaymentId, verificar estado real en MP
+      let realStatus = payment.status;
+      let lastVerified = null;
+
+      if (payment.providerPaymentId) {
+        try {
+          const mpPayment = await (this.paymentService as any).verifyPaymentWithOAuth(payment.providerPaymentId);
+          realStatus = mpPayment.status;
+          lastVerified = new Date();
+
+          // Si el estado cambió, actualizarlo
+          if (payment.status !== mpPayment.status) {
+            await this.paymentRepository.updatePaymentStatus({
+              paymentId: payment.id,
+              status: mpPayment.status,
+              providerPaymentId: mpPayment.id.toString(),
+              metadata: {
+                ...payment.metadata,
+                lastFrontendVerification: lastVerified
+              }
+            });
+          }
+        } catch (mpError) {
+          this.logger.error('Error verifying payment status with MP:', mpError);
+        }
+      }
+
+      res.json({
+        success: true,
+        payment: {
+          id: payment.id,
+          status: realStatus,
+          amount: payment.amount,
+          providerPaymentId: payment.providerPaymentId,
+          lastVerified,
+          saleId: payment.saleId
+        }
       });
 
     } catch (error) {

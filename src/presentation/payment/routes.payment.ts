@@ -12,6 +12,7 @@ import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { WebhookLoggerMiddleware } from "../middlewares/webhook-logger.middleware";
 import { loggerService } from "../../configs/logger";
 import { paymentService } from "../../configs/payment";
+import { notificationService } from "../../configs/notification";
 
 export class PaymentRoutes {
   static get getPaymentRoutes(): Router {
@@ -31,7 +32,8 @@ export class PaymentRoutes {
       customerRepository,
       orderStatusRepository,
       paymentService,
-      loggerService
+      loggerService,
+      notificationService
     );    // Rutas públicas (no requieren autenticación)
     // Webhooks y callbacks de MercadoPago
     router.post(
@@ -50,7 +52,11 @@ export class PaymentRoutes {
     router.get("/:id", controller.getPayment);
     router.get("/by-sale/:saleId", controller.getPaymentsBySale);
     router.get("/", controller.getAllPayments);
-    router.post("/verify", controller.verifyPayment); router.get("/preference/:preferenceId", controller.verifyPreferenceStatus);
+    router.post("/verify", controller.verifyPayment);
+    router.get("/preference/:preferenceId", controller.verifyPreferenceStatus);
+
+    // Nuevo endpoint para verificar estado por venta (desde frontend)
+    router.get("/status/sale/:saleId", [AuthMiddleware.validateJwt], controller.getPaymentStatusBySale);
 
     // NUEVO: Verificación manual de pagos
     router.post("/manual-verify/:orderId", controller.manualPaymentVerification);

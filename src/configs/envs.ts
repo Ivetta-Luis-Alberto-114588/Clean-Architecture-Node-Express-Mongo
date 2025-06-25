@@ -18,6 +18,10 @@ export const envs = {
     MERCADO_PAGO_ACCESS_TOKEN: get('MERCADO_PAGO_ACCESS_TOKEN').required().asString(),
     MERCADO_PAGO_PUBLIC_KEY: get('MERCADO_PAGO_PUBLIC_KEY').required().asString(),
 
+    // OAuth credentials para verificación segura
+    MERCADO_PAGO_CLIENT_ID: get('MERCADO_PAGO_CLIENT_ID').default('').asString(),
+    MERCADO_PAGO_CLIENT_SECRET: get('MERCADO_PAGO_CLIENT_SECRET').default('').asString(),
+
     // Key de las APIs
     ANTHROPIC_API_KEY: get('ANTHROPIC_API_KEY').required().asString(),
     OPENAI_API_KEY: get('OPENAI_API_KEY').required().asString(),

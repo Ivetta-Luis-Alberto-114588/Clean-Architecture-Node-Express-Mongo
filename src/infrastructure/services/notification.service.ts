@@ -1,5 +1,6 @@
 // src/infrastructure/services/notification.service.ts
-import { NotificationService, NotificationMessage, NotificationChannel } from '../../domain/interfaces/notification.interface';
+import { NotificationService as BaseNotificationService, NotificationMessage, NotificationChannel } from '../../domain/interfaces/notification.interface';
+import { NotificationService as ServiceNotificationService } from '../../domain/interfaces/services/notification.service';
 import { NotificationConfig } from '../../configs/notification.config';
 import { TelegramChannel } from '../notifications/telegram.channel';
 import { EmailChannel } from '../notifications/email.channel';
@@ -7,7 +8,7 @@ import { TelegramAdapter } from '../adapters/telegram.adapter';
 import { WinstonLoggerAdapter } from '../adapters/winston-logger.adapter';
 import { ILogger } from '../../domain/interfaces/logger.interface';
 
-export class NotificationServiceImpl implements NotificationService {
+export class NotificationServiceImpl implements BaseNotificationService, ServiceNotificationService {
     private channels: NotificationChannel[] = [];
     private logger: ILogger;
 
@@ -60,6 +61,49 @@ export class NotificationServiceImpl implements NotificationService {
         this.logger.info('Notification sent to all configured channels');
     }
 
+    async sendMessage(message: string, chatId?: string): Promise<void> {
+        const notification: NotificationMessage = {
+            title: 'Mensaje',
+            body: message,
+            data: { chatId }
+        };
+        await this.notify(notification);
+    }
+
+    async sendMessageToAdmin(message: string): Promise<void> {
+        const notification: NotificationMessage = {
+            title: 'Mensaje para Administrador',
+            body: message,
+            data: { isAdminMessage: true }
+        };
+        await this.notify(notification);
+    }
+
+    async sendPaymentNotification(paymentData: {
+        orderId: string;
+        amount: number;
+        paymentMethod: string;
+        status: string;
+    }): Promise<void> {
+        const notification: NotificationMessage = {
+            title: '💳 Notificación de Pago',
+            body: `Pago ${paymentData.status} para orden ${paymentData.orderId}`,
+            data: {
+                'Orden ID': paymentData.orderId,
+                'Monto': `$${paymentData.amount}`,
+                'Método de Pago': paymentData.paymentMethod,
+                'Estado': paymentData.status
+            }
+        };
+        await this.notify(notification);
+    }
+
+    async sendOrderNotification(orderData: {
+        orderId: string;
+        customerName: string;
+        total: number;
+        items: Array<{ name: string; quantity: number; price: number; }>;
+    }): Promise<void>;
     async sendOrderNotification(orderData: {
         orderId: string;
         customerName: string;
@@ -71,9 +115,17 @@ export class NotificationServiceImpl implements NotificationService {
             price: number;
         }>;
         orderDate: Date;
-    }): Promise<void> {
-        const itemsList = orderData.items
-            .map(item => `${item.productName} (x${item.quantity}) - $${item.price}`)
+    }): Promise<void>;
+    async sendOrderNotification(orderData: any): Promise<void> {
+        // Normalizar los datos para que funcione con ambas interfaces
+        const normalizedItems = orderData.items.map((item: any) => ({
+            productName: item.productName || item.name,
+            quantity: item.quantity,
+            price: item.price
+        }));
+
+        const itemsList = normalizedItems
+            .map((item: any) => `${item.productName} (x${item.quantity}) - $${item.price}`)
             .join('\n');
 
         const message: NotificationMessage = {
@@ -82,9 +134,9 @@ export class NotificationServiceImpl implements NotificationService {
             data: {
                 'ID de Orden': orderData.orderId,
                 'Cliente': orderData.customerName,
-                'Email': orderData.customerEmail,
+                'Email': orderData.customerEmail || 'No proporcionado',
                 'Total': `$${orderData.total}`,
-                'Fecha': orderData.orderDate.toLocaleString('es-ES'),
+                'Fecha': orderData.orderDate ? orderData.orderDate.toLocaleString('es-ES') : new Date().toLocaleString('es-ES'),
                 'Productos': itemsList
             }
         };
