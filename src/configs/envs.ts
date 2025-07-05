@@ -1,7 +1,23 @@
 import "dotenv/config"
 import { get } from "env-var"
 
+// Environment validation logging
+console.log('[ENV] Loading environment variables...');
+console.log('[ENV] NODE_ENV:', process.env.NODE_ENV);
+console.log('[ENV] PORT:', process.env.PORT);
+console.log('[ENV] Environment variables count:', Object.keys(process.env).length);
 
+// Check critical environment variables
+const criticalEnvs = [
+    'PORT', 'MONGO_URL', 'MONGO_DB_NAME', 'JWT_SEED', 
+    'MERCADO_PAGO_ACCESS_TOKEN', 'FRONTEND_URL', 'NODE_ENV'
+];
+
+console.log('[ENV] Checking critical environment variables:');
+criticalEnvs.forEach(envVar => {
+    const exists = !!process.env[envVar];
+    console.log(`[ENV]   ${envVar}: ${exists ? 'SET' : 'MISSING'}`);
+});
 
 export const envs = {
 
@@ -51,3 +67,13 @@ export const envs = {
     TELEGRAM_BOT_TOKEN: get('TELEGRAM_BOT_TOKEN').default('').asString(),
     TELEGRAM_CHAT_ID: get('TELEGRAM_CHAT_ID').default('').asString(),
 }
+
+console.log('[ENV] Environment variables loaded successfully');
+console.log('[ENV] Configuration:', {
+    port: envs.PORT,
+    dbName: envs.MONGO_DB_NAME,
+    nodeEnv: envs.NODE_ENV,
+    hasTelegramToken: !!envs.TELEGRAM_BOT_TOKEN,
+    hasEmailUser: !!envs.EMAIL_USER,
+    frontendUrl: envs.FRONTEND_URL
+});
