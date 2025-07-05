@@ -69,7 +69,10 @@ export class MercadoPagoPaymentAdapter implements IPaymentService {
             return this.convertFromMercadoPagoPreference(response.data);
 
         } catch (error) {
-            this.logger.error('Error creating payment preference in Mercado Pago:', error);
+            this.logger.error('Error creating payment preference in Mercado Pago:', {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+            });
             throw CustomError.internalServerError(
                 `Error creating payment preference: ${this.parseError(error)}`
             );
@@ -96,7 +99,11 @@ export class MercadoPagoPaymentAdapter implements IPaymentService {
             return this.convertFromMercadoPagoPayment(response.data);
 
         } catch (error) {
-            this.logger.error(`Error getting payment ${paymentId} from Mercado Pago:`, error);
+            this.logger.error(`Error getting payment ${paymentId} from Mercado Pago:`, {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined,
+                paymentId
+            });
             throw CustomError.internalServerError(
                 `Error getting payment: ${this.parseError(error)}`
             );
@@ -123,7 +130,11 @@ export class MercadoPagoPaymentAdapter implements IPaymentService {
             return this.convertFromMercadoPagoPreference(response.data);
 
         } catch (error) {
-            this.logger.error(`Error getting preference ${preferenceId} from Mercado Pago:`, error);
+            this.logger.error(`Error getting preference ${preferenceId} from Mercado Pago:`, {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined,
+                preferenceId
+            });
             throw CustomError.internalServerError(
                 `Error getting preference: ${this.parseError(error)}`
             );
@@ -169,7 +180,10 @@ export class MercadoPagoPaymentAdapter implements IPaymentService {
             };
 
         } catch (error) {
-            this.logger.error('Error searching payments in Mercado Pago:', error);
+            this.logger.error('Error searching payments in Mercado Pago:', {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+            });
             throw CustomError.internalServerError(
                 `Error searching payments: ${this.parseError(error)}`
             );
@@ -327,7 +341,10 @@ export class MercadoPagoPaymentAdapter implements IPaymentService {
             return this.oauthToken;
 
         } catch (error) {
-            this.logger.error('❌ Error obtaining OAuth token from MercadoPago:', error);
+            this.logger.error('❌ Error obtaining OAuth token from MercadoPago:', {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+            });
             throw CustomError.internalServerError(
                 `OAuth authentication failed: ${this.parseError(error)}`
             );
@@ -364,7 +381,11 @@ export class MercadoPagoPaymentAdapter implements IPaymentService {
             return response.data;
 
         } catch (error) {
-            this.logger.error(`❌ Error verifying payment status for ID: ${paymentId}:`, error);
+            this.logger.error(`❌ Error verifying payment status for ID: ${paymentId}:`, {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined,
+                paymentId
+            });
             throw CustomError.internalServerError(
                 `Error verifying payment status: ${this.parseError(error)}`
             );

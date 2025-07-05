@@ -18,9 +18,10 @@ export class TelegramNotificationAdapter implements NotificationService {
         const targetChatId = chatId || this.telegramChatId;
 
         try {
-            this.logger.info('Sending Telegram message', {
+            this.logger.info(`🔍 [TelegramAdapter] Iniciando envío de mensaje`, {
                 chatId: targetChatId,
-                messageLength: message.length
+                messageLength: message.length,
+                botToken: this.telegramBotToken ? 'CONFIGURADO' : 'NO CONFIGURADO'
             });
 
             const response = await fetch(`${this.telegramApiUrl}/sendMessage`, {
@@ -37,34 +38,46 @@ export class TelegramNotificationAdapter implements NotificationService {
 
             if (!response.ok) {
                 const errorData = await response.json();
+                this.logger.error(`❌ [TelegramAdapter] Telegram API error:`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    errorData: errorData
+                });
                 throw new Error(`Telegram API error: ${errorData.description || 'Unknown error'}`);
             }
 
-            this.logger.info('Telegram message sent successfully', { chatId: targetChatId });
+            const responseData = await response.json();
+            this.logger.info(`✅ [TelegramAdapter] Telegram message sent successfully`, { 
+                chatId: targetChatId,
+                messageId: responseData.result?.message_id
+            });
         } catch (error) {
-            this.logger.error('Failed to send Telegram message', { error: error as Error, chatId: targetChatId, messageLength: message.length });
+            this.logger.error(`❌ [TelegramAdapter] Failed to send Telegram message`, { 
+                error: error instanceof Error ? error.message : String(error),
+                chatId: targetChatId, 
+                messageLength: message.length,
+                stack: error instanceof Error ? error.stack : undefined
+            });
             throw error;
         }
     }
 
     async sendMessageToAdmin(message: string): Promise<void> {
         await this.sendMessage(message, this.telegramChatId);
-    } async sendOrderNotification(orderData: {
+    }    async sendOrderNotification(orderData: {
         orderId: string;
         customerName: string;
         total: number;
         items: Array<{ name: string; quantity: number; price: number }>;
     }): Promise<void> {
-        // TEMPORALMENTE DESHABILITADO: Las notificaciones de nueva orden ahora se manejan desde el frontend
-        // solo cuando el pago es confirmado exitosamente.
-        this.logger.info(`[TelegramAdapter] sendOrderNotification llamado para orden ${orderData.orderId} - DESHABILITADO temporalmente. Se enviará desde frontend cuando pago sea confirmado.`);
+        this.logger.info(`🔍 [TelegramAdapter] sendOrderNotification llamado para orden ${orderData.orderId}`);
+        
+        try {
+            const itemsList = orderData.items
+                .map(item => `• ${item.name} x${item.quantity} - $${item.price.toFixed(2)}`)
+                .join('\n');
 
-
-        const itemsList = orderData.items
-            .map(item => `• ${item.name} x${item.quantity} - $${item.price.toFixed(2)}`)
-            .join('\n');
-
-        const message = `
+            const message = `
 🛒 <b>Nueva Orden Recibida</b>
 
 📋 <b>ID:</b> ${orderData.orderId}
@@ -75,9 +88,19 @@ export class TelegramNotificationAdapter implements NotificationService {
 ${itemsList}
 
 ⏰ <b>Fecha:</b> ${new Date().toLocaleString('es-AR')}
-    `.trim();
+        `.trim();
 
-        await this.sendMessageToAdmin(message);
+            this.logger.info(`📤 [TelegramAdapter] Enviando mensaje a admin chat`);
+            await this.sendMessageToAdmin(message);
+            this.logger.info(`✅ [TelegramAdapter] Mensaje enviado exitosamente para orden ${orderData.orderId}`);
+            
+        } catch (error) {
+            this.logger.error(`❌ [TelegramAdapter] Error en sendOrderNotification para orden ${orderData.orderId}:`, {
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+            });
+            throw error; // Re-lanzar el error para que sea capturado por el webhook
+        }
 
     }
 

@@ -44,7 +44,10 @@ export class PaymentController {
       return res.status(error.statusCode).json({ error: error.message });
     }
 
-    this.logger.error("Error en PaymentController:", error);
+    this.logger.error("Error en PaymentController:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return res.status(500).json({ error: "Error interno del servidor" });
   };
 
@@ -598,7 +601,10 @@ export class PaymentController {
           // 3. Si hay cualquier error, usar fallback
           targetStatusId = '675a1a39dd398aae92ab05f8';
           statusSource = 'fallback por error crítico';
-          this.logger.error(`❌ Error crítico buscando estado, usando fallback: ${targetStatusId}`, { error: statusError });
+          this.logger.error(`❌ Error crítico buscando estado, usando fallback: ${targetStatusId}`, { 
+            error: statusError instanceof Error ? statusError.message : String(statusError),
+            stack: statusError instanceof Error ? statusError.stack : undefined
+          });
         }
 
         try {
@@ -613,30 +619,55 @@ export class PaymentController {
 
           // 🚀 ENVIAR NOTIFICACIÓN DE TELEGRAM CUANDO EL PAGO ES APROBADO
           try {
+            this.logger.info(`🔍 [TELEGRAM DEBUG] Iniciando envío de notificación para orden ${payment.saleId}`);
+            
+            // Verificar que el servicio de notificaciones esté disponible
+            if (!this.notificationService) {
+              this.logger.error(`❌ [TELEGRAM DEBUG] notificationService es null/undefined`);
+              throw new Error('NotificationService no está disponible');
+            }
+            
+            this.logger.info(`✅ [TELEGRAM DEBUG] notificationService está disponible`);
+            
             // Obtener la orden completa con todos los datos necesarios
             const order = await this.orderRepository.findById(payment.saleId);
             
-            if (order && this.notificationService) {
-              await this.notificationService.sendOrderNotification({
-                orderId: order.id,
-                customerName: order.customer?.name || 'Cliente',
-                total: order.total,
-                items: order.items?.map(item => ({
-                  name: item.product?.name || 'Producto',
-                  quantity: item.quantity,
-                  price: item.unitPrice
-                })) || []
-              });
-              
-              this.logger.info(`📱 Notificación de Telegram enviada exitosamente para orden ${payment.saleId}`);
-            } else {
-              this.logger.warn(`⚠️ No se pudo enviar notificación de Telegram: orden o servicio no disponible`);
+            if (!order) {
+              this.logger.error(`❌ [TELEGRAM DEBUG] No se pudo encontrar la orden ${payment.saleId}`);
+              throw new Error(`Orden ${payment.saleId} no encontrada`);
             }
-          } catch (notificationError) {
-            this.logger.warn(`⚠️ Error enviando notificación de Telegram para orden ${payment.saleId}:`, {
-              error: notificationError instanceof Error ? notificationError.message : String(notificationError)
+            
+            this.logger.info(`✅ [TELEGRAM DEBUG] Orden encontrada: ${order.id}, Cliente: ${order.customer?.name}`);
+            
+            const notificationData = {
+              orderId: order.id,
+              customerName: order.customer?.name || 'Cliente',
+              total: order.total,
+              items: order.items?.map(item => ({
+                name: item.product?.name || 'Producto',
+                quantity: item.quantity,
+                price: item.unitPrice
+              })) || []
+            };
+            
+            this.logger.info(`� [TELEGRAM DEBUG] Enviando notificación con datos:`, {
+              orderId: notificationData.orderId,
+              customerName: notificationData.customerName,
+              total: notificationData.total,
+              itemsCount: notificationData.items.length
             });
-            // No fallar el webhook por un error de notificación
+            
+            await this.notificationService.sendOrderNotification(notificationData);
+            
+            this.logger.info(`✅ [TELEGRAM DEBUG] Notificación de Telegram enviada exitosamente para orden ${payment.saleId}`);
+            
+          } catch (notificationError) {
+            this.logger.error(`❌ [TELEGRAM DEBUG] Error crítico enviando notificación de Telegram para orden ${payment.saleId}:`, {
+              error: notificationError instanceof Error ? notificationError.message : String(notificationError),
+              stack: notificationError instanceof Error ? notificationError.stack : undefined,
+              errorType: notificationError?.constructor?.name
+            });
+            // No fallar el webhook por un error de notificación, pero log detallado
           }
 
           // Actualizar el log con éxito
@@ -648,7 +679,8 @@ export class PaymentController {
 
         } catch (orderUpdateError) {
           this.logger.error(`❌ ERROR crítico actualizando orden ${payment.saleId}:`, {
-            error: orderUpdateError,
+            error: orderUpdateError instanceof Error ? orderUpdateError.message : String(orderUpdateError),
+            stack: orderUpdateError instanceof Error ? orderUpdateError.stack : undefined,
             targetStatusId,
             statusSource,
             paymentId: payment.id
@@ -693,6 +725,7 @@ export class PaymentController {
       this.logger.error('💥 Error crítico procesando webhook:', {
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
+        errorType: error?.constructor?.name,
         query: req.query,
         body: req.body
       });

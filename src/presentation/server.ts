@@ -3,6 +3,7 @@ import { MainRoutes } from "./routes"
 import { RateLimitMiddleware } from "./middlewares/rate-limit.middleware"
 import { LoggerMiddleware } from "./middlewares/logger.middleware" // Importamos el middleware
 import logger from "../configs/logger" // Importamos el logger
+import { MorganLogger } from "../configs/morgan.config" // Importamos Morgan logger
 import cors from "cors"
 import { envs } from "../configs/envs"
 import path from "path"
@@ -37,8 +38,20 @@ export class server {
             this.app.set('trust proxy', 'loopback, linklocal, uniquelocal');
         }
 
-        // Apply logging middleware first
+        // Apply logging middleware first (generates request ID)
         this.app.use(LoggerMiddleware.getLoggerMiddleware());
+
+        // Configure Morgan for detailed HTTP logging
+        const morganLogger = new MorganLogger({
+            logger: logger,
+            environment: envs.NODE_ENV
+        });
+
+        // Apply Morgan middleware for detailed HTTP request/response logging
+        const morganMiddlewares = morganLogger.getCompleteMiddleware();
+        morganMiddlewares.forEach(middleware => {
+            this.app.use(middleware);
+        });
 
         // Apply rate limiting
         this.app.use(RateLimitMiddleware.getGlobalRateLimit());

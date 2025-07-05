@@ -18,10 +18,19 @@ export class NotificationServiceImpl implements BaseNotificationService, Service
     }
 
     private initializeChannels(): void {
+        this.logger.info(`🔍 [NotificationService] Inicializando canales. ActiveChannels: ${this.config.activeChannels.join(', ')}`);
+        
         this.config.activeChannels.forEach(channelType => {
+            this.logger.info(`🔧 [NotificationService] Configurando canal: ${channelType}`);
+            
             switch (channelType) {
                 case 'telegram':
                     if (this.config.telegram) {
+                        this.logger.info(`✅ [NotificationService] Configuración de Telegram encontrada`, {
+                            botToken: this.config.telegram.botToken ? 'CONFIGURADO' : 'NO CONFIGURADO',
+                            chatId: this.config.telegram.chatId || 'NO CONFIGURADO'
+                        });
+                        
                         const telegramAdapter = new TelegramAdapter(
                             {
                                 botToken: this.config.telegram.botToken,
@@ -30,7 +39,9 @@ export class NotificationServiceImpl implements BaseNotificationService, Service
                             this.logger
                         );
                         this.channels.push(new TelegramChannel(telegramAdapter));
-                        this.logger.info('Telegram notification channel initialized');
+                        this.logger.info('✅ [NotificationService] Telegram notification channel initialized');
+                    } else {
+                        this.logger.warn('⚠️ [NotificationService] Canal telegram solicitado pero configuración no encontrada');
                     }
                     break; case 'email':
                     if (this.config.email) {
@@ -45,17 +56,32 @@ export class NotificationServiceImpl implements BaseNotificationService, Service
     }
 
     async notify(message: NotificationMessage): Promise<void> {
+        this.logger.info(`🔍 [NotificationService] notify() llamado`, {
+            title: message.title,
+            channelsCount: this.channels.length,
+            channelTypes: this.channels.map(ch => ch.constructor.name)
+        });
+        
         if (this.channels.length === 0) {
-            this.logger.warn('No notification channels configured, skipping notification');
+            this.logger.warn('❌ [NotificationService] No notification channels configured, skipping notification');
             return;
         }
 
-        const promises = this.channels.map(channel =>
-            channel.send(message).catch(error => {
-                this.logger.error('Notification channel error:', error);
+        const promises = this.channels.map(async (channel, index) => {
+            try {
+                this.logger.info(`📤 [NotificationService] Enviando mensaje por canal ${index} (${channel.constructor.name})`);
+                await channel.send(message);
+                this.logger.info(`✅ [NotificationService] Mensaje enviado exitosamente por canal ${index} (${channel.constructor.name})`);
+            } catch (error) {
+                this.logger.error(`❌ [NotificationService] Error en canal ${index} (${channel.constructor.name}):`, {
+                    error: error instanceof Error ? error.message : String(error),
+                    stack: error instanceof Error ? error.stack : undefined,
+                    channelType: channel.constructor.name
+                });
                 // No lanzamos el error para que otros canales puedan funcionar
-            })
-        );
+                throw error; // Re-lanzar para que se propague al Promise.allSettled
+            }
+        });
 
         await Promise.allSettled(promises);
         this.logger.info('Notification sent to all configured channels');
