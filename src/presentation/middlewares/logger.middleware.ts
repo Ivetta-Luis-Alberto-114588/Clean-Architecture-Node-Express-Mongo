@@ -27,7 +27,7 @@ export class LoggerMiddleware {
       // Generar un ID único para la solicitud
       const requestId = uuidv4();
       req.id = requestId;
-      
+
       // Hacer el requestId disponible para Morgan
       (req as any).requestId = requestId;
 

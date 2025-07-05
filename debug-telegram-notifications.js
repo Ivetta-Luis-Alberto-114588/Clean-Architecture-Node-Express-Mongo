@@ -29,16 +29,16 @@ console.log('\n3. TEST DE SERVICIO DE TELEGRAM:');
 try {
     const { TelegramAdapter } = require('./src/infrastructure/adapters/telegram.adapter');
     const { WinstonLoggerAdapter } = require('./src/infrastructure/adapters/winston-logger.adapter');
-    
+
     const logger = new WinstonLoggerAdapter();
     const telegramAdapter = new TelegramAdapter({
         botToken: notificationConfig.telegram?.botToken || '',
         defaultChatId: notificationConfig.telegram?.chatId || ''
     }, logger);
-    
+
     const isConfigured = telegramAdapter.isConfigured();
     console.log('   TelegramAdapter configurado:', isConfigured ? '✅ SÍ' : '❌ NO');
-    
+
     if (isConfigured) {
         console.log('   ✅ El adaptador de Telegram está listo para enviar mensajes');
     } else {
@@ -54,7 +54,7 @@ console.log('\n4. TEST DE SERVICIO DE NOTIFICACIONES:');
 try {
     const { NotificationServiceImpl } = require('./src/infrastructure/services/notification.service');
     const notificationService = new NotificationServiceImpl(notificationConfig);
-    
+
     console.log('   ✅ NotificationServiceImpl creado exitosamente');
     console.log('   💡 Este es el servicio que usa el webhook de MercadoPago');
 } catch (error) {

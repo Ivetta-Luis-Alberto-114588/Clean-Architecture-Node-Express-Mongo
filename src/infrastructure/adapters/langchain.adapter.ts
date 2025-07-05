@@ -1,4 +1,3 @@
-// src/infrastructure/adapters/langchain.adapter.ts
 import { RunnableSequence } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -11,6 +10,7 @@ import { TransformersAdapter } from "./transformers.adapter";
 import { EmbeddingModel } from "../../data/mongodb/models/chatbot/chat-models";
 import { ChatMessageEntity, MessageRole } from "../../domain/entities/chatbot/chat-message.entity";
 import mongoose from "mongoose";
+import logger from "../../configs/logger";
 
 export interface VectorSearchResult {
     text: string;
@@ -22,10 +22,34 @@ export class LangchainAdapter {
     private static instance: LangchainAdapter;
     private llmAdapter: LLMAdapter;
     private transformersAdapter: TransformersAdapter;
+    private isAvailable: boolean = true;
 
     private constructor() {
         this.llmAdapter = LLMAdapter.getInstance();
         this.transformersAdapter = TransformersAdapter.getInstance();
+        this.checkAvailability();
+    }
+
+    private checkAvailability(): void {
+        try {
+            // Verificar dependencias de LangChain
+            require('@langchain/core');
+            require('@langchain/openai');
+
+            // Verificar si TransformersAdapter está disponible
+            this.isAvailable = this.transformersAdapter.isFeatureAvailable();
+
+            if (this.isAvailable) {
+                logger.info('🔗 [LangchainAdapter] LangChain y dependencias disponibles');
+            } else {
+                logger.info('⚠️ [LangchainAdapter] Funcionalidades de IA limitadas - TransformersAdapter no disponible');
+            }
+        } catch (error) {
+            this.isAvailable = false;
+            logger.warn('⚠️ [LangchainAdapter] LangChain no disponible - funcionalidades de chatbot deshabilitadas', {
+                error: error.message
+            });
+        }
     }
 
     public static getInstance(): LangchainAdapter {
@@ -35,16 +59,25 @@ export class LangchainAdapter {
         return LangchainAdapter.instance;
     }
 
+    public isFeatureAvailable(): boolean {
+        return this.isAvailable;
+    }
+
     // Buscar información relevante en los embeddings
     async searchSimilarContent(query: string, userType: 'customer' | 'owner', limit: number = 5): Promise<VectorSearchResult[]> {
         try {
+            if (!this.isAvailable) {
+                logger.info('⚠️ [LangchainAdapter] Búsqueda vectorial no disponible - devolviendo resultados vacíos');
+                return [];
+            }
+
             // Obtener embedding para la consulta
             const queryEmbedding = await this.transformersAdapter.embedText(query);
-            
+
             // Preparar las colecciones a buscar según el tipo de usuario
-            const collections = userType === 'owner' 
-            ? ['Product', 'Sale', 'Category', 'Customer', 'City', 'Neighborhood', 'Unit', 'Payment'] 
-            : ['Product', 'Category', 'City', 'Neighborhood', 'Unit']; // Los clientes no ven ventas ni pagos
+            const collections = userType === 'owner'
+                ? ['Product', 'Sale', 'Category', 'Customer', 'City', 'Neighborhood', 'Unit', 'Payment']
+                : ['Product', 'Category', 'City', 'Neighborhood', 'Unit']; // Los clientes no ven ventas ni pagos
 
             // Buscar documentos similares
             const results = await EmbeddingModel.aggregate([
@@ -81,30 +114,30 @@ export class LangchainAdapter {
 
     // Generar respuesta utilizando RAG
     async generateResponse(
-        query: string, 
-        context: string[], 
+        query: string,
+        context: string[],
         chatHistory: ChatMessageEntity[] = [],
         userType: 'customer' | 'owner' = 'customer'
     ): Promise<string> {
         try {
             // Imprimir contexto para depuración
             console.log('Contexto recibido:', context);
-            
+
             // Verificar si hay contexto
             if (context.length === 0) {
                 return "Lo siento, no encontré información relevante para tu consulta.";
             }
-    
+
             // Preparar el modelo LLM
             const llm = await this.llmAdapter.getModel();
-            
+
             // Preparar el historial de chat
             const chatHistoryText = chatHistory
                 .map(msg => `${msg.role === MessageRole.USER ? 'Usuario' : 'Asistente'}: ${msg.content}`)
                 .join('\n');
-    
+
             // Crear un prompt más específico
-            const promptTemplate = userType === 'owner' 
+            const promptTemplate = userType === 'owner'
                 ? `Eres un asistente de análisis de negocios. 
                    Historial de chat: ${chatHistoryText}
                    
@@ -124,10 +157,10 @@ export class LangchainAdapter {
                    Pregunta del usuario: ${query}
                    
                    Responde de manera amable y directa basándote en el contexto proporcionado.`;
-    
+
             // Generar respuesta
             const response = await llm.generateText(promptTemplate);
-            
+
             console.log('Respuesta generada:', response);
             return response;
         } catch (error) {
@@ -137,7 +170,7 @@ export class LangchainAdapter {
     }
 
     private getCustomerPromptTemplate(): PromptTemplate {
-            return PromptTemplate.fromTemplate(`
+        return PromptTemplate.fromTemplate(`
         Eres un asistente virtual de una tienda en línea. Tu objetivo es ayudar a los clientes a encontrar productos y responder sus consultas sobre la tienda, productos, ciudades, barrios y unidades de medida.
         
         Historial de la conversación:
@@ -154,7 +187,7 @@ export class LangchainAdapter {
     }
 
 
-    
+
     private getOwnerPromptTemplate(): PromptTemplate {
         return PromptTemplate.fromTemplate(`
     Eres un asistente de análisis de negocio para el dueño de una tienda en línea. Proporciona análisis, datos y sugerencias basados en la información de ventas, productos, categorías, clientes, ciudades, barrios, unidades de medida y pagos.

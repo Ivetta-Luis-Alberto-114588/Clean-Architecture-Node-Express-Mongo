@@ -20,10 +20,25 @@ import { PaymentModel } from "../../../data/mongodb/models/payment/payment.model
 export class ChatMongoDatasourceImpl implements ChatDatasource {
     private readonly langchainAdapter: LangchainAdapter;
     private readonly transformersAdapter: TransformersAdapter;
+    private readonly isAIAvailable: boolean;
 
     constructor() {
         this.langchainAdapter = LangchainAdapter.getInstance();
         this.transformersAdapter = TransformersAdapter.getInstance();
+        this.isAIAvailable = this.transformersAdapter.isFeatureAvailable();
+    }
+
+    private async safeGenerateEmbedding(text: string): Promise<number[] | null> {
+        if (!this.isAIAvailable) {
+            console.warn('⚠️ [ChatMongoDatasourceImpl] Embeddings no disponibles - saltando generación');
+            return null;
+        }
+        try {
+            return await this.safeGenerateEmbedding(text);
+        } catch (error) {
+            console.error('❌ [ChatMongoDatasourceImpl] Error generando embedding:', error);
+            return null;
+        }
     }
 
     async query(chatQueryDto: ChatQueryDto): Promise<string> {
@@ -33,6 +48,11 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
             // Input validation
             if (!query || query.trim().length === 0) {
                 throw CustomError.badRequest('La consulta no puede estar vacía');
+            }
+
+            // Si las funcionalidades de IA no están disponibles, devolver mensaje informativo
+            if (!this.isAIAvailable) {
+                return 'Lo siento, las funcionalidades de chat inteligente no están disponibles en este momento. Por favor, contacta con nuestro equipo de soporte para obtener ayuda.';
             }
 
             // Obtener historial de mensajes si hay sessionId
@@ -257,22 +277,24 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
             Unidad: ${product.unit && (product.unit as any).name || 'No especificada'}.`;;
 
             // Generar embedding
-            const embedding = await this.transformersAdapter.embedText(text);
+            const embedding = await this.safeGenerateEmbedding(text);
 
-            // Guardar embedding
-            await EmbeddingModel.create({
-                objectId: product._id,
-                collectionName: 'Product',
-                embedding,
-                text,
-                metadata: {
-                    name: product.name,
-                    price: product.price,
-                    stock: product.stock,
-                    category: product.category && (product.category as any).name || 'No especificada',
-                    unit: product.unit && (product.unit as any).name || 'No especificada'
-                }
-            });
+            // Solo guardar si se pudo generar el embedding
+            if (embedding) {
+                await EmbeddingModel.create({
+                    objectId: product._id,
+                    collectionName: 'Product',
+                    embedding,
+                    text,
+                    metadata: {
+                        name: product.name,
+                        price: product.price,
+                        stock: product.stock,
+                        category: product.category && (product.category as any).name || 'No especificada',
+                        unit: product.unit && (product.unit as any).name || 'No especificada'
+                    }
+                });
+            }
         }
 
         console.log(`Embeddings generados para ${products.length} productos`);
@@ -286,19 +308,21 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
             const text = `Categoría: ${category.name}. Descripción: ${category.description || 'No disponible'}.`;
 
             // Generar embedding
-            const embedding = await this.transformersAdapter.embedText(text);
+            const embedding = await this.safeGenerateEmbedding(text);
 
-            // Guardar embedding
-            await EmbeddingModel.create({
-                objectId: category._id,
-                collectionName: 'Category',
-                embedding,
-                text,
-                metadata: {
-                    name: category.name,
-                    description: category.description
-                }
-            });
+            // Solo guardar si se pudo generar el embedding
+            if (embedding) {
+                await EmbeddingModel.create({
+                    objectId: category._id,
+                    collectionName: 'Category',
+                    embedding,
+                    text,
+                    metadata: {
+                        name: category.name,
+                        description: category.description
+                    }
+                });
+            }
         }
 
         console.log(`Embeddings generados para ${categories.length} categorías`);
@@ -339,22 +363,24 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
             Total: ${sale.total}.`;
 
             // Generar embedding
-            const embedding = await this.transformersAdapter.embedText(text);
+            const embedding = await this.safeGenerateEmbedding(text);
 
-            // Guardar embedding
-            await EmbeddingModel.create({
-                objectId: sale._id,
-                collectionName: 'Sale',
-                embedding,
-                text,
-                metadata: {
-                    date: sale.date,
-                    customer: sale.customer && (sale.customer as any).name,
-                    status: sale.status,
-                    total: sale.total,
-                    items: sale.items.length
-                }
-            });
+            // Solo guardar si se pudo generar el embedding
+            if (embedding) {
+                await EmbeddingModel.create({
+                    objectId: sale._id,
+                    collectionName: 'Sale',
+                    embedding,
+                    text,
+                    metadata: {
+                        date: sale.date,
+                        customer: sale.customer && (sale.customer as any).name,
+                        status: sale.status,
+                        total: sale.total,
+                        items: sale.items.length
+                    }
+                });
+            }
         }
 
         console.log(`Embeddings generados para ${sales.length} ventas`);
@@ -379,21 +405,23 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
             Ciudad: ${customer.neighborhood && (customer.neighborhood as any).city.name || 'No especificada'}.`;
 
             // Generar embedding
-            const embedding = await this.transformersAdapter.embedText(text);
+            const embedding = await this.safeGenerateEmbedding(text);
 
-            // Guardar embedding
-            await EmbeddingModel.create({
-                objectId: customer._id,
-                collectionName: 'Customer',
-                embedding,
-                text,
-                metadata: {
-                    name: customer.name,
-                    email: customer.email,
-                    neighborhood: customer.neighborhood && (customer.neighborhood as any).name,
-                    city: customer.neighborhood && (customer.neighborhood as any).city.name
-                }
-            });
+            // Solo guardar si se pudo generar el embedding
+            if (embedding) {
+                await EmbeddingModel.create({
+                    objectId: customer._id,
+                    collectionName: 'Customer',
+                    embedding,
+                    text,
+                    metadata: {
+                        name: customer.name,
+                        email: customer.email,
+                        neighborhood: customer.neighborhood && (customer.neighborhood as any).name,
+                        city: customer.neighborhood && (customer.neighborhood as any).city.name
+                    }
+                });
+            }
         }
 
         console.log(`Embeddings generados para ${customers.length} clientes`);
@@ -410,20 +438,22 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
         Descripción: ${city.description || 'No disponible'}.`;
 
             // Generar embedding
-            const embedding = await this.transformersAdapter.embedText(text);
+            const embedding = await this.safeGenerateEmbedding(text);
 
-            // Guardar embedding
-            await EmbeddingModel.create({
-                objectId: city._id,
-                collectionName: 'City',
-                embedding,
-                text,
-                metadata: {
-                    name: city.name,
-                    description: city.description,
-                    isActive: city.isActive
-                }
-            });
+            // Solo guardar si se pudo generar el embedding
+            if (embedding) {
+                await EmbeddingModel.create({
+                    objectId: city._id,
+                    collectionName: 'City',
+                    embedding,
+                    text,
+                    metadata: {
+                        name: city.name,
+                        description: city.description,
+                        isActive: city.isActive
+                    }
+                });
+            }
         }
 
         console.log(`Embeddings generados para ${cities.length} ciudades`);
@@ -441,21 +471,23 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
         Ciudad: ${neighborhood.city && (neighborhood.city as any).name || 'No especificada'}.`;
 
             // Generar embedding
-            const embedding = await this.transformersAdapter.embedText(text);
+            const embedding = await this.safeGenerateEmbedding(text);
 
-            // Guardar embedding
-            await EmbeddingModel.create({
-                objectId: neighborhood._id,
-                collectionName: 'Neighborhood',
-                embedding,
-                text,
-                metadata: {
-                    name: neighborhood.name,
-                    description: neighborhood.description,
-                    city: neighborhood.city && (neighborhood.city as any).name,
-                    isActive: neighborhood.isActive
-                }
-            });
+            // Solo guardar si se pudo generar el embedding
+            if (embedding) {
+                await EmbeddingModel.create({
+                    objectId: neighborhood._id,
+                    collectionName: 'Neighborhood',
+                    embedding,
+                    text,
+                    metadata: {
+                        name: neighborhood.name,
+                        description: neighborhood.description,
+                        city: neighborhood.city && (neighborhood.city as any).name,
+                        isActive: neighborhood.isActive
+                    }
+                });
+            }
         }
 
         console.log(`Embeddings generados para ${neighborhoods.length} barrios`);
@@ -471,20 +503,22 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
         Descripción: ${unit.description || 'No disponible'}.`;
 
             // Generar embedding
-            const embedding = await this.transformersAdapter.embedText(text);
+            const embedding = await this.safeGenerateEmbedding(text);
 
-            // Guardar embedding
-            await EmbeddingModel.create({
-                objectId: unit._id,
-                collectionName: 'Unit',
-                embedding,
-                text,
-                metadata: {
-                    name: unit.name,
-                    description: unit.description,
-                    isActive: unit.isActive
-                }
-            });
+            // Solo guardar si se pudo generar el embedding
+            if (embedding) {
+                await EmbeddingModel.create({
+                    objectId: unit._id,
+                    collectionName: 'Unit',
+                    embedding,
+                    text,
+                    metadata: {
+                        name: unit.name,
+                        description: unit.description,
+                        isActive: unit.isActive
+                    }
+                });
+            }
         }
 
         console.log(`Embeddings generados para ${units.length} unidades de medida`);
@@ -514,23 +548,25 @@ export class ChatMongoDatasourceImpl implements ChatDatasource {
         Fecha de creación: ${payment.createdAt.toISOString().split('T')[0]}.`;
 
             // Generar embedding
-            const embedding = await this.transformersAdapter.embedText(text);
+            const embedding = await this.safeGenerateEmbedding(text);
 
-            // Guardar embedding
-            await EmbeddingModel.create({
-                objectId: payment._id,
-                collectionName: 'Payment',
-                embedding,
-                text,
-                metadata: {
-                    amount: payment.amount,
-                    status: payment.status,
-                    paymentMethod: payment.paymentMethod,
-                    customer: payment.customerId && (payment.customerId as any).name,
-                    sale: payment.saleId && payment.saleId._id,
-                    createdAt: payment.createdAt
-                }
-            });
+            // Solo guardar si se pudo generar el embedding
+            if (embedding) {
+                await EmbeddingModel.create({
+                    objectId: payment._id,
+                    collectionName: 'Payment',
+                    embedding,
+                    text,
+                    metadata: {
+                        amount: payment.amount,
+                        status: payment.status,
+                        paymentMethod: payment.paymentMethod,
+                        customer: payment.customerId && (payment.customerId as any).name,
+                        sale: payment.saleId && payment.saleId._id,
+                        createdAt: payment.createdAt
+                    }
+                });
+            }
         }
 
         console.log(`Embeddings generados para ${payments.length} pagos`);

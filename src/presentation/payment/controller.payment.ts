@@ -601,7 +601,7 @@ export class PaymentController {
           // 3. Si hay cualquier error, usar fallback
           targetStatusId = '675a1a39dd398aae92ab05f8';
           statusSource = 'fallback por error crítico';
-          this.logger.error(`❌ Error crítico buscando estado, usando fallback: ${targetStatusId}`, { 
+          this.logger.error(`❌ Error crítico buscando estado, usando fallback: ${targetStatusId}`, {
             error: statusError instanceof Error ? statusError.message : String(statusError),
             stack: statusError instanceof Error ? statusError.stack : undefined
           });
@@ -620,25 +620,25 @@ export class PaymentController {
           // 🚀 ENVIAR NOTIFICACIÓN DE TELEGRAM CUANDO EL PAGO ES APROBADO
           try {
             this.logger.info(`🔍 [TELEGRAM DEBUG] Iniciando envío de notificación para orden ${payment.saleId}`);
-            
+
             // Verificar que el servicio de notificaciones esté disponible
             if (!this.notificationService) {
               this.logger.error(`❌ [TELEGRAM DEBUG] notificationService es null/undefined`);
               throw new Error('NotificationService no está disponible');
             }
-            
+
             this.logger.info(`✅ [TELEGRAM DEBUG] notificationService está disponible`);
-            
+
             // Obtener la orden completa con todos los datos necesarios
             const order = await this.orderRepository.findById(payment.saleId);
-            
+
             if (!order) {
               this.logger.error(`❌ [TELEGRAM DEBUG] No se pudo encontrar la orden ${payment.saleId}`);
               throw new Error(`Orden ${payment.saleId} no encontrada`);
             }
-            
+
             this.logger.info(`✅ [TELEGRAM DEBUG] Orden encontrada: ${order.id}, Cliente: ${order.customer?.name}`);
-            
+
             const notificationData = {
               orderId: order.id,
               customerName: order.customer?.name || 'Cliente',
@@ -649,18 +649,18 @@ export class PaymentController {
                 price: item.unitPrice
               })) || []
             };
-            
+
             this.logger.info(`� [TELEGRAM DEBUG] Enviando notificación con datos:`, {
               orderId: notificationData.orderId,
               customerName: notificationData.customerName,
               total: notificationData.total,
               itemsCount: notificationData.items.length
             });
-            
+
             await this.notificationService.sendOrderNotification(notificationData);
-            
+
             this.logger.info(`✅ [TELEGRAM DEBUG] Notificación de Telegram enviada exitosamente para orden ${payment.saleId}`);
-            
+
           } catch (notificationError) {
             this.logger.error(`❌ [TELEGRAM DEBUG] Error crítico enviando notificación de Telegram para orden ${payment.saleId}:`, {
               error: notificationError instanceof Error ? notificationError.message : String(notificationError),

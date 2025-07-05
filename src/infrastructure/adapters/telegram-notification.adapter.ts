@@ -47,14 +47,14 @@ export class TelegramNotificationAdapter implements NotificationService {
             }
 
             const responseData = await response.json();
-            this.logger.info(`✅ [TelegramAdapter] Telegram message sent successfully`, { 
+            this.logger.info(`✅ [TelegramAdapter] Telegram message sent successfully`, {
                 chatId: targetChatId,
                 messageId: responseData.result?.message_id
             });
         } catch (error) {
-            this.logger.error(`❌ [TelegramAdapter] Failed to send Telegram message`, { 
+            this.logger.error(`❌ [TelegramAdapter] Failed to send Telegram message`, {
                 error: error instanceof Error ? error.message : String(error),
-                chatId: targetChatId, 
+                chatId: targetChatId,
                 messageLength: message.length,
                 stack: error instanceof Error ? error.stack : undefined
             });
@@ -64,14 +64,14 @@ export class TelegramNotificationAdapter implements NotificationService {
 
     async sendMessageToAdmin(message: string): Promise<void> {
         await this.sendMessage(message, this.telegramChatId);
-    }    async sendOrderNotification(orderData: {
+    } async sendOrderNotification(orderData: {
         orderId: string;
         customerName: string;
         total: number;
         items: Array<{ name: string; quantity: number; price: number }>;
     }): Promise<void> {
         this.logger.info(`🔍 [TelegramAdapter] sendOrderNotification llamado para orden ${orderData.orderId}`);
-        
+
         try {
             const itemsList = orderData.items
                 .map(item => `• ${item.name} x${item.quantity} - $${item.price.toFixed(2)}`)
@@ -93,7 +93,7 @@ ${itemsList}
             this.logger.info(`📤 [TelegramAdapter] Enviando mensaje a admin chat`);
             await this.sendMessageToAdmin(message);
             this.logger.info(`✅ [TelegramAdapter] Mensaje enviado exitosamente para orden ${orderData.orderId}`);
-            
+
         } catch (error) {
             this.logger.error(`❌ [TelegramAdapter] Error en sendOrderNotification para orden ${orderData.orderId}:`, {
                 error: error instanceof Error ? error.message : String(error),

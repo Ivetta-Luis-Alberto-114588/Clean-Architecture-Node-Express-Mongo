@@ -19,10 +19,10 @@ export class NotificationServiceImpl implements BaseNotificationService, Service
 
     private initializeChannels(): void {
         this.logger.info(`🔍 [NotificationService] Inicializando canales. ActiveChannels: ${this.config.activeChannels.join(', ')}`);
-        
+
         this.config.activeChannels.forEach(channelType => {
             this.logger.info(`🔧 [NotificationService] Configurando canal: ${channelType}`);
-            
+
             switch (channelType) {
                 case 'telegram':
                     if (this.config.telegram) {
@@ -30,7 +30,7 @@ export class NotificationServiceImpl implements BaseNotificationService, Service
                             botToken: this.config.telegram.botToken ? 'CONFIGURADO' : 'NO CONFIGURADO',
                             chatId: this.config.telegram.chatId || 'NO CONFIGURADO'
                         });
-                        
+
                         const telegramAdapter = new TelegramAdapter(
                             {
                                 botToken: this.config.telegram.botToken,
@@ -61,7 +61,7 @@ export class NotificationServiceImpl implements BaseNotificationService, Service
             channelsCount: this.channels.length,
             channelTypes: this.channels.map(ch => ch.constructor.name)
         });
-        
+
         if (this.channels.length === 0) {
             this.logger.warn('❌ [NotificationService] No notification channels configured, skipping notification');
             return;
