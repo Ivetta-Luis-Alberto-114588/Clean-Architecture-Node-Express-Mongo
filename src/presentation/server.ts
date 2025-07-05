@@ -48,10 +48,16 @@ export class server {
         });
 
         // Apply Morgan middleware for detailed HTTP request/response logging
-        const morganMiddlewares = morganLogger.getCompleteMiddleware();
-        morganMiddlewares.forEach(middleware => {
-            this.app.use(middleware);
-        });
+        if (envs.NODE_ENV === 'production') {
+            // Use simple middleware for production to avoid socket issues
+            this.app.use(morganLogger.getSimpleMiddleware());
+        } else {
+            // Use complete middleware for development/test
+            const morganMiddlewares = morganLogger.getCompleteMiddleware();
+            morganMiddlewares.forEach(middleware => {
+                this.app.use(middleware);
+            });
+        }
 
         // Apply rate limiting
         this.app.use(RateLimitMiddleware.getGlobalRateLimit());

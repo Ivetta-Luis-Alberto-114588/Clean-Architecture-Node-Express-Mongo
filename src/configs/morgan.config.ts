@@ -17,57 +17,82 @@ export class MorganLogger {
         this.environment = config.environment;
     }
 
-    // Middleware para capturar el body de la request
+    // Middleware SEGURO para capturar el body de la request
     public captureRequestBody = (req: Request, res: Response, next: Function) => {
-        // Solo capturar si no está ya disponible
-        if (!req.body && req.method !== 'GET') {
+        // Solo capturar si no está ya disponible y es necesario
+        if (!req.body && req.method !== 'GET' && req.method !== 'HEAD') {
             let body = '';
+            let chunks: Buffer[] = [];
 
-            const originalEnd = req.on;
-            req.on = function (event: string, listener: any) {
-                if (event === 'data') {
+            // Interceptar solo si no hay body ya parseado
+            const originalOn = req.on.bind(req);
+            const originalEmit = req.emit.bind(req);
+
+            req.on = function(event: string, listener: any) {
+                if (event === 'data' && typeof listener === 'function') {
                     const originalListener = listener;
-                    listener = (chunk: any) => {
-                        body += chunk.toString();
-                        originalListener(chunk);
+                    const wrappedListener = (chunk: any) => {
+                        if (chunk) {
+                            chunks.push(Buffer.from(chunk));
+                            body += chunk.toString();
+                        }
+                        return originalListener.call(this, chunk);
                     };
-                } else if (event === 'end') {
+                    return originalOn.call(this, event, wrappedListener);
+                } else if (event === 'end' && typeof listener === 'function') {
                     const originalListener = listener;
-                    listener = () => {
+                    const wrappedListener = () => {
                         try {
-                            (req as any).rawBody = body;
-                            if (body) {
-                                (req as any).morganBody = JSON.parse(body);
+                            if (body && !req.body) {
+                                (req as any).rawBody = body;
+                                try {
+                                    (req as any).morganBody = JSON.parse(body);
+                                } catch {
+                                    (req as any).morganBody = body;
+                                }
                             }
                         } catch (error) {
-                            (req as any).morganBody = body;
+                            // Silently fail for body parsing
                         }
-                        originalListener();
+                        return originalListener.call(this);
                     };
+                    return originalOn.call(this, event, wrappedListener);
                 }
-                return originalEnd.call(this, event, listener);
+                return originalOn.call(this, event, listener);
             };
         }
 
         next();
     };
 
-    // Middleware para capturar el body de la response
+    // Middleware SEGURO para capturar el body de la response
     public captureResponseBody = (req: Request, res: Response, next: Function) => {
-        const originalSend = res.send;
-        const originalJson = res.json;
+        try {
+            const originalSend = res.send.bind(res);
+            const originalJson = res.json.bind(res);
 
-        // Interceptar res.send()
-        res.send = function (body: any) {
-            (res as any).responseBody = body;
-            return originalSend.call(this, body);
-        };
+            // Interceptar res.send() de forma segura
+            res.send = function (body: any) {
+                try {
+                    (res as any).responseBody = body;
+                } catch (error) {
+                    // Silently fail for response body capture
+                }
+                return originalSend.call(this, body);
+            };
 
-        // Interceptar res.json()
-        res.json = function (body: any) {
-            (res as any).responseBody = JSON.stringify(body);
-            return originalJson.call(this, body);
-        };
+            // Interceptar res.json() de forma segura
+            res.json = function (body: any) {
+                try {
+                    (res as any).responseBody = JSON.stringify(body);
+                } catch (error) {
+                    // Silently fail for response body capture
+                }
+                return originalJson.call(this, body);
+            };
+        } catch (error) {
+            // Silently fail for response interception
+        }
 
         next();
     };
@@ -76,40 +101,40 @@ export class MorganLogger {
     public setupCustomTokens() {
         // Token para request ID
         morgan.token('requestId', (req: Request) => {
-            return (req as any).requestId || 'unknown';
+            return (req as any).requestId || (req as any).id || 'unknown';
         });
 
-        // Token para request body
+        // Token SEGURO para request body
         morgan.token('requestBody', (req: Request) => {
-            // Priorizar el body ya parseado por Express
-            const body = req.body || (req as any).morganBody || (req as any).parsedBody;
-
-            if (!body || Object.keys(body).length === 0) return '-';
-
             try {
+                // Priorizar el body ya parseado por Express
+                const body = req.body || (req as any).morganBody || (req as any).parsedBody;
+
+                if (!body || Object.keys(body).length === 0) return '-';
+
                 const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
                 // Truncar cuerpos muy largos
                 return bodyStr.length > 500 ? bodyStr.substring(0, 500) + '...[truncated]' : bodyStr;
             } catch (error) {
-                return String(body);
+                return '-';
             }
         });
 
-        // Token para response body
+        // Token SEGURO para response body
         morgan.token('responseBody', (req: Request, res: Response) => {
-            const body = (res as any).responseBody;
-            if (!body) return '-';
-
             try {
+                const body = (res as any).responseBody;
+                if (!body) return '-';
+
                 // Truncar respuestas muy largas
                 const bodyStr = typeof body === 'string' ? body : JSON.stringify(body);
                 return bodyStr.length > 1000 ? bodyStr.substring(0, 1000) + '...' : bodyStr;
             } catch (error) {
-                return String(body);
+                return '-';
             }
         });
 
-        // Token para request headers
+        // Token SEGURO para request headers
         morgan.token('requestHeaders', (req: Request) => {
             try {
                 const filteredHeaders = { ...req.headers };
@@ -124,7 +149,7 @@ export class MorganLogger {
             }
         });
 
-        // Token para response headers
+        // Token SEGURO para response headers
         morgan.token('responseHeaders', (req: Request, res: Response) => {
             try {
                 return JSON.stringify(res.getHeaders());
@@ -158,7 +183,7 @@ export class MorganLogger {
         return ':requestId :method :url :status :response-time ms - :res[content-length]';
     }
 
-    // Crear el middleware de Morgan
+    // Crear el middleware de Morgan SEGURO
     public createMiddleware() {
         this.setupCustomTokens();
 
@@ -169,33 +194,67 @@ export class MorganLogger {
         return morgan(format, {
             stream: {
                 write: (message: string) => {
-                    // Remover el \n final que agrega Morgan
-                    const cleanMessage = message.replace(/\n$/, '');
+                    try {
+                        // Remover el \n final que agrega Morgan
+                        const cleanMessage = message.replace(/\n$/, '');
 
-                    if (this.environment === 'production') {
-                        this.logger.info(cleanMessage);
-                    } else {
-                        // En desarrollo, usar console.log para mejor formateo
-                        console.log(cleanMessage);
+                        if (this.environment === 'production') {
+                            this.logger.info(cleanMessage);
+                        } else {
+                            // En desarrollo, usar console.log para mejor formateo
+                            console.log(cleanMessage);
+                        }
+                    } catch (error) {
+                        // Silently fail for logging
+                        console.error('[MORGAN-ERROR] Failed to log:', error);
                     }
                 }
             },
             skip: (req: Request, res: Response) => {
-                // Saltar logs para rutas de health check en producción
-                if (this.environment === 'production' && req.url === '/api/health') {
-                    return true;
+                try {
+                    // Saltar logs para rutas de health check en producción
+                    if (this.environment === 'production' && (req.url === '/api/health' || req.url === '/')) {
+                        return true;
+                    }
+                    return false;
+                } catch (error) {
+                    return false;
                 }
-                return false;
-            }
+            },
+            // Importante: desactivar la captura automática de body que puede causar conflictos
+            immediate: false
         });
     }
 
-    // Middleware completo que incluye captura de request/response body
+    // Middleware completo SEGURO que incluye captura de request/response body
     public getCompleteMiddleware() {
         return [
             this.captureRequestBody,
             this.captureResponseBody,
             this.createMiddleware()
         ];
+    }
+
+    // Middleware SIMPLE para producción (sin interceptación de body)
+    public getSimpleMiddleware() {
+        this.setupCustomTokens();
+
+        const format = ':requestId :method :url :status :response-time ms - :res[content-length]';
+
+        return morgan(format, {
+            stream: {
+                write: (message: string) => {
+                    try {
+                        const cleanMessage = message.replace(/\n$/, '');
+                        this.logger.info(cleanMessage);
+                    } catch (error) {
+                        console.error('[MORGAN-ERROR] Failed to log:', error);
+                    }
+                }
+            },
+            skip: (req: Request, res: Response) => {
+                return req.url === '/api/health' || req.url === '/';
+            }
+        });
     }
 }
