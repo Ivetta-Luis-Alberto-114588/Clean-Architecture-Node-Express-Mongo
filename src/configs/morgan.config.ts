@@ -28,7 +28,7 @@ export class MorganLogger {
             const originalOn = req.on.bind(req);
             const originalEmit = req.emit.bind(req);
 
-            req.on = function(event: string, listener: any) {
+            req.on = function (event: string, listener: any) {
                 if (event === 'data' && typeof listener === 'function') {
                     const originalListener = listener;
                     const wrappedListener = (chunk: any) => {

@@ -47,7 +47,7 @@ if (isCI) {
         const depPath = path.join(nodeModulesPath, dep);
         const exists = fs.existsSync(depPath);
         console.log(`[PostInstall] Checking ${dep}:`, { path: depPath, exists });
-        
+
         if (exists) {
             console.log(`✅ [PostInstall] ${dep} instalado correctamente`);
         } else {
@@ -58,7 +58,7 @@ if (isCI) {
     // Crear un archivo flag para indicar que estamos en deployment
     const flagPath = path.join(process.cwd(), '.deployment-mode');
     const flagContent = `deployed-at=${new Date().toISOString()}\nplatform=${process.env.RENDER ? 'render' : 'unknown'}\nnode-version=${process.version}`;
-    
+
     try {
         fs.writeFileSync(flagPath, flagContent);
         console.log('[PostInstall] Deployment flag created:', flagPath);

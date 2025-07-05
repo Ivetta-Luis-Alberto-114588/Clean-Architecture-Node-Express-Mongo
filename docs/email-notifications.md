@@ -3,8 +3,10 @@
 ## 📋 Índice
 
 - [🔧 Configuración](#-configuración)
-- [📬 Tipos de Emails](#-tipos-de-emails)
-- [🛠️ API Endpoints](#-api-endpoints)
+- [� Flujo de Notificaciones](#-flujo-de-notificaciones)
+- [�📬 Tipos de Emails](#-tipos-de-emails)
+- [� Sistema de Logging](#-sistema-de-logging)
+- [�🛠️ API Endpoints](#-api-endpoints)
 - [📝 Templates Disponibles](#-templates-disponibles)
 - [📊 Monitoreo y Logs](#-monitoreo-y-logs)
 - [🔧 Troubleshooting](#-troubleshooting)
@@ -16,10 +18,82 @@
 ### Variables de Entorno Requeridas
 
 ```env
-# Nodemailer - Gmail Configuration
-MAILER_SERVICE=gmail
-MAILER_EMAIL=tu-email@gmail.com
-MAILER_SECRET_KEY=tu-app-password
+# Email Configuration (Gmail)
+EMAIL_SERVICE=gmail
+EMAIL_USER=laivetta@gmail.com
+EMAIL_PASS=your-gmail-app-password
+EMAIL_SENDER_NAME=StartUp E-commerce
+```
+
+### 🔑 Configuración de Gmail
+
+1. **Habilitar 2FA** en tu cuenta de Gmail
+2. **Generar App Password:**
+   - Ve a: Configuración de cuenta → Seguridad → Verificación en 2 pasos
+   - Generar contraseña de aplicación
+   - Usar esta contraseña en `EMAIL_PASS`
+
+---
+
+## 🔄 Flujo de Notificaciones Automáticas
+
+### 💰 Email de Pago Aprobado
+
+El sistema envía automáticamente emails cuando un pago es aprobado, **en paralelo con Telegram**:
+
+#### 🔄 Secuencia del Flujo
+
+1. **Webhook de MercadoPago** → `POST /api/payments/webhook`
+2. **Verificación del estado** → `status === 'approved'`
+3. **Búsqueda de la orden** → Por `external_reference`
+4. **Actualización del estado** → Orden a "PENDIENTE PAGADO"
+5. **🚀 ENVÍO PARALELO** → Email + Telegram simultáneamente
+
+#### 📧 Contenido del Email
+
+```html
+Asunto: ✅ Pago Confirmado - Pedido #ORD123456789
+
+Estimado/a Juan Pérez,
+
+Su pago ha sido procesado exitosamente.
+
+📋 Detalles del Pedido:
+• Número: #ORD123456789
+• Total: $25,500.00
+• Estado: Pendiente de Preparación
+
+📦 Productos:
+• Producto A (x2) - $12,000.00
+• Producto B (x1) - $13,500.00
+
+📅 Fecha: 05/07/2025 20:30:15
+
+Pronto nos contactaremos para coordinar la entrega.
+
+Saludos,
+StartUp E-commerce
+```
+
+#### 🔍 Logging Detallado del Email
+
+```typescript
+// Logs específicos del email
+logger.info('📧 [EMAIL] Enviando notificación de pago aprobado', {
+  to: 'customer@email.com',
+  orderId: 'ORD123456789',
+  paymentId: '12345678901',
+  customerName: 'Juan Pérez',
+  totalAmount: 25500
+});
+
+logger.info('📧 [EMAIL] Email enviado exitosamente', {
+  messageId: '<abc123@gmail.com>',
+  to: 'customer@email.com',
+  orderId: 'ORD123456789',
+  duration: '850ms',
+  smtpResponse: '250 2.0.0 OK'
+});
 ```
 
 ### 🔑 Configuración de Gmail

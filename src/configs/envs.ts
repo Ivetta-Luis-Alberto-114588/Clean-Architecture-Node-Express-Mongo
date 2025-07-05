@@ -9,7 +9,7 @@ console.log('[ENV] Environment variables count:', Object.keys(process.env).lengt
 
 // Check critical environment variables
 const criticalEnvs = [
-    'PORT', 'MONGO_URL', 'MONGO_DB_NAME', 'JWT_SEED', 
+    'PORT', 'MONGO_URL', 'MONGO_DB_NAME', 'JWT_SEED',
     'MERCADO_PAGO_ACCESS_TOKEN', 'FRONTEND_URL', 'NODE_ENV'
 ];
 

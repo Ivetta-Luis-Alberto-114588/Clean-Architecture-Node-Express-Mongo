@@ -1,13 +1,14 @@
-# 🔗 Sistema de Webhooks - Captura y Análisis Completo
+# 🔗 Sistema de Webhooks - Flujo Completo de Notificaciones
 
-Sistema robusto para capturar, almacenar y consultar webhooks de MercadoPago con trazabilidad total y obtención de información real desde la API.
+Sistema robusto para capturar webhooks de MercadoPago y activar notificaciones automáticas cuando el estado es "approved".
 
 ## 📑 Índice
 
 - [🎯 Propósito](#-propósito)
+- [🔄 Flujo Completo de Webhook a Notificación](#-flujo-completo-de-webhook-a-notificación)
 - [🏗️ Arquitectura](#-arquitectura)
-- [📋 Endpoints Disponibles](#-endpoints-disponibles)
-- [🔍 Endpoint Estrella](#-endpoint-estrella)
+- [� Sistema de Logging y Trazabilidad](#-sistema-de-logging-y-trazabilidad)
+- [� Endpoints Disponibles](#-endpoints-disponibles)
 - [💡 Casos de Uso](#-casos-de-uso)
 - [🔧 Configuración](#-configuración)
 - [📊 Monitoreo](#-monitoreo)
@@ -16,12 +17,182 @@ Sistema robusto para capturar, almacenar y consultar webhooks de MercadoPago con
 
 El sistema de webhooks permite:
 
-- **🔄 Captura automática** de todos los webhooks recibidos
+- **🔄 Captura automática** de todos los webhooks de MercadoPago
 - **💾 Almacenamiento completo** de datos crudos para auditoría
-- **🔍 Consulta directa** a MercadoPago para información real
-- **🔗 Trazabilidad total** para vincular pagos con ventas
+- **🔍 Procesamiento inteligente** basado en el estado del pago
+- **📧 Activación automática** de notificaciones (Email + Telegram)
+- **🔗 Trazabilidad total** con IDs únicos por webhook
 - **📊 Análisis** de duplicados y problemas
-- **⚠️ Transparencia** sin romper el funcionamiento actual
+
+---
+
+## 🔄 Flujo Completo de Webhook a Notificación
+
+### 📝 Secuencia Paso a Paso
+
+#### 1. 📥 **Recepción del Webhook**
+```
+MercadoPago → POST /api/payments/webhook
+```
+
+**Datos recibidos:**
+```json
+{
+  "id": "12345678901",
+  "topic": "payment",
+  "data": { "id": "12345678901" }
+}
+```
+
+#### 2. 🔍 **Captura y Logging Inmediato**
+```typescript
+// Middleware captura automáticamente
+const webhookTraceId = `webhook-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+logger.info('🎯 Webhook recibido y datos crudos guardados:', {
+  webhookLogId: 'webhook_log_66d8f123456789',
+  query: req.query,
+  body: req.body,
+  headers: {
+    'x-signature': 'abc123...',
+    'x-request-id': 'mp-req-123'
+  }
+});
+```
+
+#### 3. 🔎 **Consulta a MercadoPago**
+```typescript
+// Obtener información real del pago
+const paymentInfo = await this.paymentService.getPayment(paymentId);
+
+logger.info('📊 Información del pago MP:', {
+  id: paymentInfo.id,
+  status: paymentInfo.status,
+  external_reference: paymentInfo.externalReference,
+  transaction_amount: paymentInfo.transactionAmount
+});
+```
+
+#### 4. 🔍 **Búsqueda del Pago Local**
+```typescript
+const payment = await this.paymentRepository.getPaymentByExternalReference(
+  paymentInfo.externalReference
+);
+
+logger.info('✅ Pago encontrado en DB:', {
+  id: payment.id,
+  saleId: payment.saleId,
+  currentStatus: payment.status,
+  amount: payment.amount
+});
+```
+
+#### 5. 🎉 **Detección de Pago Aprobado**
+```typescript
+if (paymentInfo.status === 'approved') {
+  logger.info('🎉 === PAGO APROBADO DETECTADO - INICIO FLUJO ===', {
+    webhookTraceId,
+    paymentId: paymentInfo.id,
+    orderId: payment.saleId,
+    status: paymentInfo.status,
+    amount: paymentInfo.transactionAmount,
+    timestamp: new Date().toISOString()
+  });
+}
+```
+
+#### 6. 📋 **Actualización del Estado de la Orden**
+```typescript
+// Buscar estado "PENDIENTE PAGADO"
+const paidStatus = await this.orderStatusRepository.findByCode('PENDIENTE PAGADO');
+
+// Actualizar orden
+await this.orderRepository.updateStatus(payment.saleId, {
+  statusId: paidStatus.id,
+  notes: `Pago aprobado con ID ${paymentInfo.id}`
+});
+
+logger.info('🎉 ÉXITO: Orden actualizada a PENDIENTE PAGADO', {
+  orderId: payment.saleId,
+  duration: '245ms'
+});
+```
+
+#### 7. � **Activación de Notificaciones Automáticas**
+```typescript
+// Obtener datos completos de la orden
+const order = await this.orderRepository.findById(payment.saleId);
+
+const notificationData = {
+  orderId: order.id,
+  customerName: order.customer?.name || 'Cliente',
+  total: order.total,
+  items: order.items?.map(item => ({
+    name: item.product?.name || 'Producto',
+    quantity: item.quantity,
+    price: item.unitPrice
+  })) || []
+};
+
+logger.info('📤 [NOTIFICATION] === LLAMANDO sendOrderNotification ===', {
+  notificationData: JSON.stringify(notificationData, null, 2),
+  dataValidation: {
+    orderIdValid: !!notificationData.orderId,
+    customerNameValid: !!notificationData.customerName,
+    totalValid: typeof notificationData.total === 'number',
+    itemsValid: Array.isArray(notificationData.items),
+    itemsCount: notificationData.items.length
+  }
+});
+
+// 🔥 ENVÍO SIMULTÁNEO: Email + Telegram
+await this.notificationService.sendOrderNotification(notificationData);
+
+logger.info('✅ [NOTIFICATION] === NOTIFICACIÓN COMPLETADA ===', {
+  orderId: payment.saleId,
+  duration: '1250ms'
+});
+```
+
+---
+
+## 🔍 Sistema de Logging y Trazabilidad
+
+### 🔖 Trace ID Único por Webhook
+
+Cada webhook recibe un ID único para trazabilidad completa:
+
+```typescript
+const webhookTraceId = `webhook-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+// Ejemplo: webhook-1720223845123-k7m9p2x
+```
+
+### 📊 Logs Estructurados
+
+**Formato estándar:**
+```json
+{
+  "timestamp": "2025-07-05T20:30:15.123Z",
+  "level": "info",
+  "service": "tu-api",
+  "environment": "production",
+  "webhookTraceId": "webhook-1720223845123-k7m9p2x",
+  "paymentId": "12345678901",
+  "orderId": "ORD123456789",
+  "action": "payment_approved",
+  "duration": "1250ms"
+}
+```
+
+### 🔍 Búsqueda de Logs por Trace ID
+
+```bash
+# Buscar todos los logs de un webhook específico
+grep "webhook-1720223845123-k7m9p2x" /opt/render/project/src/logs/*.log
+
+# Buscar logs de pagos aprobados
+grep "PAGO APROBADO DETECTADO" /opt/render/project/src/logs/*.log
+```
 
 ## 🏗️ Arquitectura
 

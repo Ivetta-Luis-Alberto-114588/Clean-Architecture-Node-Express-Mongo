@@ -1,18 +1,12 @@
 # 💳 Integración con MercadoPago
 
-## 📋 Índice4. Respuesta de Mercado Pago: La API de Mercado Pago responde con un objeto JSON que contiene toda la información del pago. Aquí vienen los dos datos que tu backend necesita:
+## 📋 Índice
 
-   * status: El estado real del pago (ej: 'approved').
-   * external_reference: El ID de la orden de tu sistema que tú enviaste al crear la preferencia de pago.
-5. Actualización en tu Base de Datos: Ahora, con la respuesta de Mercado Pago en mano, tu backend realiza la lógica final:
-
-   * Primero, verifica el estado: Comprueba si el status es 'approved'.
-   * Luego, busca la orden local: Usa el external_reference (que vino en la respuesta de Mercado Pago) para encontrar la orden correspondiente en tu propia base de datos.
-   * Actualiza el estado: Si el estado era 'approved', cambia el estado de la orden en tu base de datos a "PENDIENTE PAGADO".
-   * **� ENVÍA NOTIFICACIÓN DE TELEGRAM:** Solo cuando el pago es aprobado, se envía automáticamente una notificación de Telegram con los detalles del pedido pagado.onfiguración](#-configuración)
+- [🔧 Configuración](#-configuración)
 - [💰 Procesamiento de Pagos](#-procesamiento-de-pagos)
 - [🔗 Sistema de Webhooks](#-sistema-de-webhooks)
-- [🔍 Trazabilidad y Auditoría](#-trazabilidad-y-auditoría)
+- [� Flujo de Notificaciones Automáticas](#-flujo-de-notificaciones-automáticas)
+- [�🔍 Trazabilidad y Auditoría](#-trazabilidad-y-auditoría)
 - [🛠️ API Endpoints](#-api-endpoints)
 - [📝 Ejemplos de Uso](#-ejemplos-de-uso)
 - [🚨 Troubleshooting](#-troubleshooting)
@@ -24,10 +18,17 @@
 ### Variables de Entorno Requeridas
 
 ```env
-# MercadoPago
-MERCADO_PAGO_ACCESS_TOKEN=APP_USR-your-access-token
-MERCADO_PAGO_PUBLIC_KEY=APP_USR-your-public-key
-MERCADO_PAGO_WEBHOOK_SECRET=your-webhook-secret
+# MercadoPago - Credenciales principales
+MERCADO_PAGO_ACCESS_TOKEN=APP_USR-1234567890123456-070512-abcdef1234567890abcdef1234567890-123456789
+MERCADO_PAGO_PUBLIC_KEY=APP_USR-12345678-abcd-1234-efgh-123456789012
+
+# OAuth credentials para verificación segura (Opcionales)
+MERCADO_PAGO_CLIENT_ID=1234567890123456
+MERCADO_PAGO_CLIENT_SECRET=abcdefghijklmnopqrstuvwxyz123456
+
+# URLs de respuesta
+FRONTEND_URL=https://front-startup.pages.dev
+URL_RESPONSE_WEBHOOK_NGROK=https://sistema-mongo.onrender.com/
 ```
 
 ### Configuración del Adapter
@@ -43,11 +44,152 @@ const mpAdapter = MercadoPagoAdapter.getInstance();
 
 ## 💰 Procesamiento de Pagos
 
-### 🛒 Flujo de Pago Completo Exitoso
+### 🛒 Flujo de Pago Completo
 
-El orden exacto para que quede 100% claro, porque es un punto crucial para la fiabilidad del sistema:
+#### 1. **Creación de Preferencia de Pago**
+```http
+POST /api/payments/create-preference/{saleId}
+```
 
-1. Para iniciar un pago, tu frontend debe conectarse al siguiente endpoint de tu backend:  (POST /api/payments/create-preference)
+El backend crea una preferencia en MercadoPago con:
+```json
+{
+  "items": [{
+    "id": "ORD123456789",
+    "title": "Compra #ORD12345",
+    "quantity": 1,
+    "unit_price": 25500.00
+  }],
+  "back_urls": {
+    "success": "https://front-startup.pages.dev/payment/success",
+    "failure": "https://front-startup.pages.dev/payment/failure",
+    "pending": "https://front-startup.pages.dev/payment/pending"
+  },
+  "notification_url": "https://sistema-mongo.onrender.com/api/payments/webhook",
+  "external_reference": "sale-ORD123456789-uuid-12345"
+}
+```
+
+#### 2. **Pago del Cliente**
+El cliente paga en MercadoPago usando la preferencia creada.
+
+#### 3. **🔥 Webhook Automático**
+MercadoPago envía webhook a tu backend:
+```
+POST https://sistema-mongo.onrender.com/api/payments/webhook
+```
+
+#### 4. **Consulta a la API de MercadoPago**
+Tu backend consulta el estado real:
+```json
+{
+  "id": 12345678901,
+  "status": "approved",
+  "external_reference": "sale-ORD123456789-uuid-12345",
+  "transaction_amount": 25500.00,
+  "date_approved": "2025-07-05T20:30:15.000-04:00"
+}
+```
+
+#### 5. **Actualización Local**
+- Busca la orden por `external_reference`
+- Actualiza estado a "PENDIENTE PAGADO"
+
+#### 6. **🚀 NOTIFICACIONES AUTOMÁTICAS**
+**Solo cuando `status === 'approved'`**:
+- ✅ Email al cliente
+- ✅ Telegram al administrador
+
+---
+
+## 🚀 Flujo de Notificaciones Automáticas
+
+### 💰 Cuando el Pago es Aprobado
+
+```typescript
+if (paymentInfo.status === 'approved') {
+  // 🔥 FLUJO AUTOMÁTICO ACTIVADO
+  
+  // 1. Actualizar orden
+  await this.orderRepository.updateStatus(payment.saleId, {
+    statusId: paidStatusId,
+    notes: `Pago aprobado con ID ${paymentInfo.id}`
+  });
+  
+  // 2. Preparar datos de notificación
+  const notificationData = {
+    orderId: order.id,
+    customerName: order.customer?.name,
+    total: order.total,
+    items: order.items.map(item => ({
+      name: item.product?.name,
+      quantity: item.quantity,
+      price: item.unitPrice
+    }))
+  };
+  
+  // 3. 🚀 ENVÍO SIMULTÁNEO
+  await this.notificationService.sendOrderNotification(notificationData);
+  // Esto envía EMAIL + TELEGRAM en paralelo
+}
+```
+
+### 📧 Email Enviado Automáticamente
+```
+Para: customer@email.com
+Asunto: ✅ Pago Confirmado - Pedido #ORD123456789
+
+Estimado/a Juan Pérez,
+Su pago ha sido procesado exitosamente...
+```
+
+### 📱 Telegram Enviado Automáticamente
+```
+✅ Nuevo Pedido Pagado
+
+📋 Orden: #ORD123456789  
+👤 Cliente: Juan Pérez
+💰 Total: $25,500.00
+⏰ 05/07/2025 20:30:15
+```
+
+---
+
+## 🔍 Trazabilidad y Auditoría
+
+### 🔖 Trace ID por Webhook
+
+Cada webhook recibe un ID único:
+```
+webhook-1720223845123-k7m9p2x
+```
+
+### 📊 Logs Estructurados
+
+```json
+{
+  "webhookTraceId": "webhook-1720223845123-k7m9p2x",
+  "paymentId": "12345678901",
+  "orderId": "ORD123456789",
+  "status": "approved",
+  "amount": 25500,
+  "notificationsSent": ["email", "telegram"],
+  "duration": "1250ms"
+}
+```
+
+### 🔍 Buscar Logs Específicos
+
+```bash
+# Logs de un pago específico
+grep "paymentId.*12345678901" logs/*.log
+
+# Logs de pagos aprobados
+grep "PAGO APROBADO DETECTADO" logs/*.log
+
+# Logs de notificaciones enviadas
+grep "NOTIFICACIÓN COMPLETADA" logs/*.log
+```
 2. Una vez realizado el pago Mercado Pago devuleve una respuesta a un WebHook que esta escuchando en mi backend. Si el pago es exitoso, ocurren dos procesos clave, uno inmediato (sincrónico) y otro de respaldo (asincrónico), para garantizar que la compra se registre correctamente.
 3. En el caso del pago exitoso llega una respuesta al  Webhook: Mercado Pago envía una notificación a tu endpoint (/api/payments/webhook). Esta notificación es muy simple y su dato más importante es el payment_id (el ID que Mercado Pago le asignó al pago).
 4. Mi sistema no confia en la primer respuesta de Mercado Pago (Webhook):  Tu backend toma ese payment_id y hace una petición a la API de Mercado Pago para obtener los detalles completos de esa transacción. No usa el `external_reference` para esta consulta, usa el payment_id que acaba de recibir.

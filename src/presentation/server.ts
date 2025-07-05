@@ -112,7 +112,7 @@ export class server {
                 statusCode
             });
         });
-    } 
+    }
 
     async start() {
         try {
@@ -146,7 +146,7 @@ export class server {
             this.httpServer.on('error', (error: any) => {
                 console.error('[SERVER] HTTP Server error:', error);
                 logger.error('[SERVER] HTTP Server error', { error: error.message, code: error.code });
-                
+
                 if (error.code === 'EADDRINUSE') {
                     console.error(`[SERVER] Port ${this.port} is already in use`);
                     logger.error(`Port ${this.port} is already in use`);

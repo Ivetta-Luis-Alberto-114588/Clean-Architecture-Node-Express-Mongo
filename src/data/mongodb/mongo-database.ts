@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import logger from "../../configs/logger";
 
-interface IOptions{
+interface IOptions {
     p_mongoUrl: string,
     p_dbName: string
 }
@@ -9,13 +9,13 @@ interface IOptions{
 
 export class MongoDatabase {
 
-    static async connect(options: IOptions){
+    static async connect(options: IOptions) {
 
-        const {p_dbName, p_mongoUrl} = options
+        const { p_dbName, p_mongoUrl } = options
 
         try {
             console.log('[MONGODB] Starting MongoDB connection...');
-            logger.info('[MONGODB] Starting MongoDB connection', { 
+            logger.info('[MONGODB] Starting MongoDB connection', {
                 dbName: p_dbName,
                 hasUrl: !!p_mongoUrl,
                 urlLength: p_mongoUrl?.length
@@ -45,7 +45,7 @@ export class MongoDatabase {
                 console.log('[MONGODB] MongoDB disconnected');
                 logger.warn('[MONGODB] MongoDB disconnected');
             });
-            
+
             await mongoose.connect(p_mongoUrl, {
                 dbName: p_dbName,
                 maxPoolSize: 100,  // Aumenta este valor según tu carga
@@ -68,7 +68,7 @@ export class MongoDatabase {
 
         } catch (error) {
             console.error('[MONGODB] Mongo connection error:', error);
-            logger.error('[MONGODB] MongoDB connection failed', { 
+            logger.error('[MONGODB] MongoDB connection failed', {
                 error: error instanceof Error ? error.message : 'Unknown error',
                 stack: error instanceof Error ? error.stack : undefined
             });

@@ -17,7 +17,7 @@ process.on('unhandledRejection', (reason, promise) => {
     process.exit(1);
 });
 
-(()=>{
+(() => {
     console.log('[STARTUP] Starting application...');
     logger.info('[STARTUP] Starting application');
     main()
@@ -41,9 +41,9 @@ async function main() {
         logger.info('[STARTUP] Environment check completed');
 
         console.log('[STARTUP] Connecting to MongoDB...');
-        logger.info('[STARTUP] Connecting to MongoDB', { 
+        logger.info('[STARTUP] Connecting to MongoDB', {
             dbName: envs.MONGO_DB_NAME,
-            hasUrl: !!envs.MONGO_URL 
+            hasUrl: !!envs.MONGO_URL
         });
 
         //await bd
@@ -68,8 +68,8 @@ async function main() {
 
         //server, le debo pasar el puerto y las rutas
         const serverInstance = new server({
-            p_port: envs.PORT, 
-            p_routes: routes 
+            p_port: envs.PORT,
+            p_routes: routes
         });
 
         console.log('[STARTUP] Server instance created, calling start()...');
@@ -82,7 +82,7 @@ async function main() {
 
     } catch (error) {
         console.error('[STARTUP-ERROR] Error in main function:', error);
-        logger.error('[STARTUP-ERROR] Error in main function', { 
+        logger.error('[STARTUP-ERROR] Error in main function', {
             error: error instanceof Error ? error.message : 'Unknown error',
             stack: error instanceof Error ? error.stack : undefined
         });

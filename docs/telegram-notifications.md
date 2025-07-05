@@ -4,8 +4,10 @@
 
 - [🔧 Configuración](#-configuración)
 - [🤖 Bot de Telegram](#-bot-de-telegram)
-- [📬 Tipos de Notificaciones](#-tipos-de-notificaciones)
-- [🛠️ API Endpoints](#-api-endpoints)
+- [� Flujo de Notificaciones](#-flujo-de-notificaciones)
+- [�📬 Tipos de Notificaciones](#-tipos-de-notificaciones)
+- [� Sistema de Logging](#-sistema-de-logging)
+- [�🛠️ API Endpoints](#-api-endpoints)
 - [📊 Monitoreo y Logs](#-monitoreo-y-logs)
 - [🔧 Troubleshooting](#-troubleshooting)
 
@@ -17,9 +19,85 @@
 
 ```env
 # Telegram Bot Configuration
-TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrSTUvwxYZ
-TELEGRAM_ADMIN_CHAT_ID=-1234567890
+TELEGRAM_BOT_TOKEN=7905392744:AAHVobZq3mQtSOW41xd8js7RJSg2aOOl9Tk
+TELEGRAM_CHAT_ID=736207422
+```
+
+### Variables Opcionales
+
+```env
+# Control de notificaciones (por defecto: true)
 TELEGRAM_NOTIFICATIONS_ENABLED=true
+```
+
+---
+
+## 🔄 Flujo de Notificaciones Automáticas
+
+### 💰 Notificación de Pago Aprobado
+
+El sistema envía automáticamente notificaciones de Telegram cuando un pago es aprobado:
+
+#### 🔄 Secuencia del Flujo
+
+1. **Webhook de MercadoPago** → `POST /api/payments/webhook`
+2. **Verificación del estado** → `status === 'approved'`
+3. **Búsqueda de la orden** → Por `external_reference`
+4. **Actualización del estado** → Orden a "PENDIENTE PAGADO"
+5. **🚀 ENVÍO AUTOMÁTICO** → Notificación de Telegram + Email
+
+#### 📝 Ejemplo de Notificación Enviada
+
+```
+✅ Nuevo Pedido Pagado
+
+📋 Orden: #ORD123456789
+👤 Cliente: Juan Pérez
+💰 Total: $25,500.00
+
+📦 Productos:
+• Producto A x2 - $12,000.00
+• Producto B x1 - $13,500.00
+
+⏰ 05/07/2025 20:30:15
+🔗 Sistema E-commerce
+```
+
+#### 🔍 Logging Detallado
+
+El sistema incluye logging exhaustivo para debugging:
+
+```typescript
+// Logs del flujo de notificación
+logger.info('🎉 === PAGO APROBADO DETECTADO - INICIO FLUJO ===', {
+  webhookTraceId: 'webhook-1720223845123-abc123',
+  paymentId: '12345678901',
+  orderId: 'ORD123456789',
+  status: 'approved',
+  amount: 25500,
+  timestamp: '2025-07-05T20:30:15.123Z'
+});
+
+logger.info('📤 [TELEGRAM DEBUG] === LLAMANDO sendOrderNotification ===', {
+  notificationData: {
+    orderId: 'ORD123456789',
+    customerName: 'Juan Pérez',
+    total: 25500,
+    items: [...]
+  },
+  dataValidation: {
+    orderIdValid: true,
+    customerNameValid: true,
+    totalValid: true,
+    itemsValid: true,
+    itemsCount: 2
+  }
+});
+
+logger.info('✅ [TELEGRAM DEBUG] === NOTIFICACIÓN COMPLETADA ===', {
+  orderId: 'ORD123456789',
+  duration: '1250ms'
+});
 ```
 
 ### 🤖 Crear Bot de Telegram
