@@ -578,66 +578,106 @@ export class PaymentController {
       const updatedPayment = await this.paymentRepository.updatePaymentStatus(updatePaymentStatusDto!);
 
       if (paymentInfo.status === 'approved') {
-        this.logger.info(`💰 Pago aprobado, actualizando estado de la orden ${payment.saleId}`);
+        const webhookTraceId = `webhook-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+        this.logger.info(`🎉 === PAGO APROBADO DETECTADO - INICIO FLUJO ===`, {
+          webhookTraceId,
+          paymentId: paymentInfo.id,
+          orderId: payment.saleId,
+          status: paymentInfo.status,
+          amount: paymentInfo.transactionAmount,
+          timestamp: new Date().toISOString(),
+          webhookId: (req as any).webhookLogId,
+          fullPaymentInfo: paymentInfo,
+          localPayment: {
+            id: payment.id,
+            status: payment.status,
+            saleId: payment.saleId,
+            amount: payment.amount
+          }
+        });
+
+        this.logger.info(`💰 [${webhookTraceId}] Pago aprobado, actualizando estado de la orden ${payment.saleId}`);
 
         // SOLUCIÓN TRANSPARENTE: Buscar dinámicamente con fallback seguro
         let targetStatusId: string;
         let statusSource: string;
 
         try {
+          this.logger.info(`🔍 [${webhookTraceId}] Buscando estado 'PENDIENTE PAGADO' dinámicamente...`);
+
           // 1. Intentar buscar por código dinámicamente
           const paidStatus = await this.orderStatusRepository.findByCode('PENDIENTE PAGADO');
           if (paidStatus) {
             targetStatusId = paidStatus.id;
             statusSource = 'dinámico por código';
-            this.logger.info(`✅ Estado encontrado dinámicamente: ${paidStatus.name} (${targetStatusId})`);
+            this.logger.info(`✅ [${webhookTraceId}] Estado encontrado dinámicamente: ${paidStatus.name} (${targetStatusId})`);
           } else {
             // 2. Si no existe, usar el hardcoded PERO con warning
             targetStatusId = '675a1a39dd398aae92ab05f8';
             statusSource = 'fallback hardcodeado (DEBE CORREGIRSE)';
-            this.logger.warn(`⚠️ Estado 'PENDIENTE PAGADO' no encontrado por código, usando fallback: ${targetStatusId}`);
+            this.logger.warn(`⚠️ [${webhookTraceId}] Estado 'PENDIENTE PAGADO' no encontrado por código, usando fallback: ${targetStatusId}`);
           }
         } catch (statusError) {
           // 3. Si hay cualquier error, usar fallback
           targetStatusId = '675a1a39dd398aae92ab05f8';
           statusSource = 'fallback por error crítico';
-          this.logger.error(`❌ Error crítico buscando estado, usando fallback: ${targetStatusId}`, {
+          this.logger.error(`❌ [${webhookTraceId}] Error crítico buscando estado, usando fallback: ${targetStatusId}`, {
             error: statusError instanceof Error ? statusError.message : String(statusError),
             stack: statusError instanceof Error ? statusError.stack : undefined
           });
         }
 
         try {
-          this.logger.info(`🎯 Actualizando orden ${payment.saleId} a estado ${targetStatusId} (${statusSource})`);
+          this.logger.info(`🎯 [${webhookTraceId}] Actualizando orden ${payment.saleId} a estado ${targetStatusId} (${statusSource})`);
 
+          const orderUpdateStartTime = Date.now();
           await this.orderRepository.updateStatus(payment.saleId, {
             statusId: targetStatusId,
             notes: `Pago aprobado con ID ${paymentInfo.id} (webhook-${statusSource})`
           });
+          const orderUpdateDuration = Date.now() - orderUpdateStartTime;
 
-          this.logger.info(`🎉 ÉXITO: Orden ${payment.saleId} actualizada a PENDIENTE PAGADO (${statusSource})`);
+          this.logger.info(`🎉 [${webhookTraceId}] ÉXITO: Orden ${payment.saleId} actualizada a PENDIENTE PAGADO (${statusSource}) en ${orderUpdateDuration}ms`);
 
           // 🚀 ENVIAR NOTIFICACIÓN DE TELEGRAM CUANDO EL PAGO ES APROBADO
           try {
-            this.logger.info(`🔍 [TELEGRAM DEBUG] Iniciando envío de notificación para orden ${payment.saleId}`);
+            this.logger.info(`🔍 [${webhookTraceId}] [TELEGRAM DEBUG] === INICIANDO FLUJO DE NOTIFICACIONES ===`, {
+              orderId: payment.saleId,
+              paymentId: paymentInfo.id,
+              timestamp: new Date().toISOString()
+            });
 
             // Verificar que el servicio de notificaciones esté disponible
             if (!this.notificationService) {
-              this.logger.error(`❌ [TELEGRAM DEBUG] notificationService es null/undefined`);
+              this.logger.error(`❌ [${webhookTraceId}] [TELEGRAM DEBUG] notificationService es null/undefined`);
               throw new Error('NotificationService no está disponible');
             }
 
-            this.logger.info(`✅ [TELEGRAM DEBUG] notificationService está disponible`);
+            this.logger.info(`✅ [${webhookTraceId}] [TELEGRAM DEBUG] notificationService está disponible, tipo: ${this.notificationService.constructor.name}`);
 
             // Obtener la orden completa con todos los datos necesarios
+            this.logger.info(`🔍 [${webhookTraceId}] [TELEGRAM DEBUG] Obteniendo orden completa por ID: ${payment.saleId}`);
+
+            const orderFetchStartTime = Date.now();
             const order = await this.orderRepository.findById(payment.saleId);
+            const orderFetchDuration = Date.now() - orderFetchStartTime;
 
             if (!order) {
-              this.logger.error(`❌ [TELEGRAM DEBUG] No se pudo encontrar la orden ${payment.saleId}`);
+              this.logger.error(`❌ [${webhookTraceId}] [TELEGRAM DEBUG] No se pudo encontrar la orden ${payment.saleId} después de ${orderFetchDuration}ms`);
               throw new Error(`Orden ${payment.saleId} no encontrada`);
             }
 
-            this.logger.info(`✅ [TELEGRAM DEBUG] Orden encontrada: ${order.id}, Cliente: ${order.customer?.name}`);
+            this.logger.info(`✅ [${webhookTraceId}] [TELEGRAM DEBUG] Orden encontrada en ${orderFetchDuration}ms:`, {
+              orderId: order.id,
+              customerName: order.customer?.name,
+              customerEmail: order.customer?.email,
+              total: order.total,
+              itemsCount: order.items?.length || 0,
+              status: order.status,
+              hasCustomer: !!order.customer,
+              hasItems: !!(order.items && order.items.length > 0)
+            });
 
             const notificationData = {
               orderId: order.id,
@@ -657,9 +697,27 @@ export class PaymentController {
               itemsCount: notificationData.items.length
             });
 
-            await this.notificationService.sendOrderNotification(notificationData);
+            this.logger.info(`📤 [TELEGRAM DEBUG] === LLAMANDO sendOrderNotification ===`, {
+              notificationData: JSON.stringify(notificationData, null, 2),
+              dataValidation: {
+                orderIdValid: !!notificationData.orderId,
+                customerNameValid: !!notificationData.customerName,
+                totalValid: typeof notificationData.total === 'number',
+                itemsValid: Array.isArray(notificationData.items),
+                itemsCount: notificationData.items.length
+              },
+              timestamp: new Date().toISOString()
+            });
 
-            this.logger.info(`✅ [TELEGRAM DEBUG] Notificación de Telegram enviada exitosamente para orden ${payment.saleId}`);
+            const notificationStartTime = Date.now();
+            await this.notificationService.sendOrderNotification(notificationData);
+            const notificationDuration = Date.now() - notificationStartTime;
+
+            this.logger.info(`✅ [TELEGRAM DEBUG] === NOTIFICACIÓN COMPLETADA ===`, {
+              orderId: payment.saleId,
+              duration: `${notificationDuration}ms`,
+              timestamp: new Date().toISOString()
+            });
 
           } catch (notificationError) {
             this.logger.error(`❌ [TELEGRAM DEBUG] Error crítico enviando notificación de Telegram para orden ${payment.saleId}:`, {

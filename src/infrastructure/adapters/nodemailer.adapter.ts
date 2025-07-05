@@ -57,24 +57,55 @@ export class NodemailerAdapter implements EmailService { // <<<--- Asegúrate qu
 
     async sendEmail(options: EmailOptions): Promise<boolean> {
         const { to, subject, htmlBody, attachments = [] } = options;
+        const timestamp = new Date().toISOString();
+
+        logger.info(`📧 [NodemailerAdapter] === INICIO ENVÍO EMAIL ===`, {
+            timestamp,
+            to: Array.isArray(to) ? to.join(', ') : to,
+            subject,
+            htmlBodyLength: htmlBody.length,
+            attachmentsCount: attachments.length,
+            from: `"${this.senderName}" <${this.senderEmail}>`
+        });
 
         try {
-            const info = await this.transporter.sendMail({
+            logger.info(`📤 [NodemailerAdapter] Llamando a transporter.sendMail`);
+
+            const mailOptions = {
                 from: `"${this.senderName}" <${this.senderEmail}>`,
                 to: to,
                 subject: subject,
                 html: htmlBody,
                 attachments: attachments,
+            };
+
+            logger.info(`📋 [NodemailerAdapter] Opciones de correo preparadas`, {
+                mailOptions: {
+                    ...mailOptions,
+                    html: htmlBody.substring(0, 200) + (htmlBody.length > 200 ? '...' : '')
+                }
             });
 
-            logger.info(`Email enviado exitosamente a ${Array.isArray(to) ? to.join(', ') : to}. Message ID: ${info.messageId}`);
-            // logger.debug('Preview URL: %s', nodemailer.getTestMessageUrl(info)); // Solo para cuentas Ethereal
+            const info = await this.transporter.sendMail(mailOptions);
+
+            logger.info(`✅ [NodemailerAdapter] === EMAIL ENVIADO EXITOSAMENTE ===`, {
+                to: Array.isArray(to) ? to.join(', ') : to,
+                messageId: info.messageId,
+                response: info.response,
+                accepted: info.accepted,
+                rejected: info.rejected,
+                timestamp: new Date().toISOString()
+            });
+
             return true;
         } catch (error) {
-            logger.error('Error enviando email:', {
-                error: error instanceof Error ? { message: error.message, code: (error as any).code } : error, // Loguear código de error SMTP si existe
-                to,
-                subject
+            logger.error(`💥 [NodemailerAdapter] === ERROR CRÍTICO EN ENVÍO EMAIL ===`, {
+                error: error instanceof Error ? { message: error.message, code: (error as any).code } : error,
+                errorType: error.constructor.name,
+                to: Array.isArray(to) ? to.join(', ') : to,
+                subject,
+                timestamp: new Date().toISOString(),
+                stack: error instanceof Error ? error.stack : undefined
             });
             return false;
         }

@@ -12,71 +12,161 @@ export class TelegramNotificationAdapter implements NotificationService {
         this.telegramBotToken = envs.TELEGRAM_BOT_TOKEN;
         this.telegramChatId = envs.TELEGRAM_CHAT_ID;
         this.telegramApiUrl = `https://api.telegram.org/bot${this.telegramBotToken}`;
+
+        // Log detallado de configuración al instanciar
+        this.logger.info(`🔧 [TelegramAdapter] Constructor ejecutado`, {
+            botTokenPresent: !!this.telegramBotToken,
+            botTokenLength: this.telegramBotToken ? this.telegramBotToken.length : 0,
+            chatIdPresent: !!this.telegramChatId,
+            chatId: this.telegramChatId,
+            apiUrl: this.telegramApiUrl,
+            timestamp: new Date().toISOString()
+        });
     }
 
     async sendMessage(message: string, chatId?: string): Promise<void> {
         const targetChatId = chatId || this.telegramChatId;
+        const timestamp = new Date().toISOString();
 
         try {
-            this.logger.info(`🔍 [TelegramAdapter] Iniciando envío de mensaje`, {
+            this.logger.info(`� [TelegramAdapter] === INICIO ENVÍO MENSAJE ===`, {
+                timestamp,
                 chatId: targetChatId,
                 messageLength: message.length,
-                botToken: this.telegramBotToken ? 'CONFIGURADO' : 'NO CONFIGURADO'
+                botToken: this.telegramBotToken ? `${this.telegramBotToken.substring(0, 10)}...` : 'NO CONFIGURADO',
+                apiUrl: this.telegramApiUrl,
+                messagePreview: message.substring(0, 100) + (message.length > 100 ? '...' : '')
             });
 
-            const response = await fetch(`${this.telegramApiUrl}/sendMessage`, {
+            // Preparar el payload
+            const payload = {
+                chat_id: targetChatId,
+                text: message,
+                parse_mode: 'HTML',
+            };
+
+            this.logger.info(`📤 [TelegramAdapter] Payload preparado`, {
+                payload: JSON.stringify(payload, null, 2),
+                payloadSize: JSON.stringify(payload).length
+            });
+
+            // Realizar la petición
+            this.logger.info(`🌐 [TelegramAdapter] Realizando petición HTTP a Telegram API`);
+
+            const fetchOptions = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    chat_id: targetChatId,
-                    text: message,
-                    parse_mode: 'HTML',
-                }),
+                body: JSON.stringify(payload),
+            };
+
+            this.logger.info(`📋 [TelegramAdapter] Opciones de fetch`, {
+                method: fetchOptions.method,
+                headers: fetchOptions.headers,
+                bodyLength: fetchOptions.body.length
+            });
+
+            const response = await fetch(`${this.telegramApiUrl}/sendMessage`, fetchOptions);
+
+            this.logger.info(`📡 [TelegramAdapter] Respuesta recibida de Telegram API`, {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok,
+                contentType: response.headers.get('content-type'),
+                url: response.url
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                this.logger.error(`❌ [TelegramAdapter] Telegram API error:`, {
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch (parseError) {
+                    errorData = await response.text();
+                }
+
+                this.logger.error(`❌ [TelegramAdapter] Telegram API error - RESPUESTA DETALLADA:`, {
                     status: response.status,
                     statusText: response.statusText,
-                    errorData: errorData
+                    errorData: errorData,
+                    requestPayload: payload,
+                    apiUrl: this.telegramApiUrl,
+                    timestamp: new Date().toISOString()
                 });
-                throw new Error(`Telegram API error: ${errorData.description || 'Unknown error'}`);
+                throw new Error(`Telegram API error: ${errorData.description || errorData || 'Unknown error'}`);
             }
 
             const responseData = await response.json();
-            this.logger.info(`✅ [TelegramAdapter] Telegram message sent successfully`, {
+            this.logger.info(`✅ [TelegramAdapter] === MENSAJE ENVIADO EXITOSAMENTE ===`, {
                 chatId: targetChatId,
-                messageId: responseData.result?.message_id
+                messageId: responseData.result?.message_id,
+                responseData: responseData,
+                timestamp: new Date().toISOString()
             });
+
         } catch (error) {
-            this.logger.error(`❌ [TelegramAdapter] Failed to send Telegram message`, {
+            this.logger.error(`💥 [TelegramAdapter] === ERROR CRÍTICO EN ENVÍO ===`, {
                 error: error instanceof Error ? error.message : String(error),
+                errorType: error.constructor.name,
                 chatId: targetChatId,
                 messageLength: message.length,
-                stack: error instanceof Error ? error.stack : undefined
+                stack: error instanceof Error ? error.stack : undefined,
+                timestamp: new Date().toISOString(),
+                botToken: this.telegramBotToken ? 'PRESENTE' : 'AUSENTE',
+                apiUrl: this.telegramApiUrl
             });
             throw error;
         }
     }
 
     async sendMessageToAdmin(message: string): Promise<void> {
-        await this.sendMessage(message, this.telegramChatId);
+        this.logger.info(`👤 [TelegramAdapter] === INICIO sendMessageToAdmin ===`, {
+            adminChatId: this.telegramChatId,
+            messageLength: message.length,
+            timestamp: new Date().toISOString()
+        });
+
+        try {
+            await this.sendMessage(message, this.telegramChatId);
+            this.logger.info(`✅ [TelegramAdapter] === sendMessageToAdmin COMPLETADO ===`);
+        } catch (error) {
+            this.logger.error(`💥 [TelegramAdapter] === ERROR EN sendMessageToAdmin ===`, {
+                error: error instanceof Error ? error.message : String(error),
+                adminChatId: this.telegramChatId,
+                timestamp: new Date().toISOString()
+            });
+            throw error;
+        }
     } async sendOrderNotification(orderData: {
         orderId: string;
         customerName: string;
         total: number;
         items: Array<{ name: string; quantity: number; price: number }>;
     }): Promise<void> {
-        this.logger.info(`🔍 [TelegramAdapter] sendOrderNotification llamado para orden ${orderData.orderId}`);
+        const timestamp = new Date().toISOString();
+
+        this.logger.info(`🎯 [TelegramAdapter] === INICIO sendOrderNotification ===`, {
+            timestamp,
+            orderId: orderData.orderId,
+            customerName: orderData.customerName,
+            total: orderData.total,
+            itemsCount: orderData.items.length,
+            orderData: JSON.stringify(orderData, null, 2)
+        });
 
         try {
+            // Preparar la lista de items
+            this.logger.info(`📋 [TelegramAdapter] Preparando lista de items`);
             const itemsList = orderData.items
                 .map(item => `• ${item.name} x${item.quantity} - $${item.price.toFixed(2)}`)
                 .join('\n');
 
+            this.logger.info(`📝 [TelegramAdapter] Items formateados`, {
+                itemsList,
+                itemsListLength: itemsList.length
+            });
+
+            // Preparar el mensaje
             const message = `
 🛒 <b>Nueva Orden Recibida</b>
 
@@ -90,18 +180,31 @@ ${itemsList}
 ⏰ <b>Fecha:</b> ${new Date().toLocaleString('es-AR')}
         `.trim();
 
-            this.logger.info(`📤 [TelegramAdapter] Enviando mensaje a admin chat`);
+            this.logger.info(`� [TelegramAdapter] Mensaje preparado para envío`, {
+                messageLength: message.length,
+                messagePreview: message.substring(0, 200) + (message.length > 200 ? '...' : ''),
+                fullMessage: message
+            });
+
+            this.logger.info(`📤 [TelegramAdapter] Llamando a sendMessageToAdmin`);
             await this.sendMessageToAdmin(message);
-            this.logger.info(`✅ [TelegramAdapter] Mensaje enviado exitosamente para orden ${orderData.orderId}`);
+
+            this.logger.info(`🎉 [TelegramAdapter] === ORDEN NOTIFICATION COMPLETADA EXITOSAMENTE ===`, {
+                orderId: orderData.orderId,
+                timestamp: new Date().toISOString()
+            });
 
         } catch (error) {
-            this.logger.error(`❌ [TelegramAdapter] Error en sendOrderNotification para orden ${orderData.orderId}:`, {
+            this.logger.error(`💥 [TelegramAdapter] === ERROR EN sendOrderNotification ===`, {
+                orderId: orderData.orderId,
                 error: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined
+                errorType: error.constructor.name,
+                stack: error instanceof Error ? error.stack : undefined,
+                timestamp: new Date().toISOString(),
+                orderData: JSON.stringify(orderData, null, 2)
             });
             throw error; // Re-lanzar el error para que sea capturado por el webhook
         }
-
     }
 
     async sendPaymentNotification(paymentData: {

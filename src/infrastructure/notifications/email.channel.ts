@@ -5,7 +5,7 @@ import nodemailer from 'nodemailer';
 import logger from '../../configs/logger';
 
 export class EmailChannel implements NotificationChannel {
-    private transporter: nodemailer.Transporter;    constructor(private config: EmailConfig) {
+    private transporter: nodemailer.Transporter; constructor(private config: EmailConfig) {
         this.transporter = nodemailer.createTransport({
             host: this.config.host,
             port: this.config.port,
@@ -18,6 +18,18 @@ export class EmailChannel implements NotificationChannel {
     }
 
     async send(message: NotificationMessage): Promise<void> {
+        const timestamp = new Date().toISOString();
+
+        logger.info(`📧 [EmailChannel] === INICIO ENVÍO EMAIL ===`, {
+            timestamp,
+            title: message.title,
+            bodyLength: message.body ? message.body.length : 0,
+            hasData: !!message.data,
+            dataKeys: message.data ? Object.keys(message.data) : [],
+            to: this.config.to,
+            from: this.config.from
+        });
+
         if (!this.config.to) {
             logger.warn('Email recipient is missing, skipping notification');
             return;
@@ -25,17 +37,46 @@ export class EmailChannel implements NotificationChannel {
 
         const htmlContent = this.formatMessage(message);
 
+        logger.info(`📝 [EmailChannel] HTML content preparado`, {
+            htmlLength: htmlContent.length,
+            htmlPreview: htmlContent.substring(0, 200) + (htmlContent.length > 200 ? '...' : '')
+        });
+
         try {
-            await this.transporter.sendMail({
+            const mailOptions = {
                 from: this.config.from,
                 to: this.config.to,
                 subject: message.title,
                 html: htmlContent
+            };
+
+            logger.info(`📤 [EmailChannel] Enviando email con transporter`, {
+                mailOptions: {
+                    ...mailOptions,
+                    html: htmlContent.substring(0, 100) + '...'
+                }
             });
-            
-            logger.info('Email notification sent successfully');
+
+            const emailStartTime = Date.now();
+            const result = await this.transporter.sendMail(mailOptions);
+            const emailDuration = Date.now() - emailStartTime;
+
+            logger.info(`✅ [EmailChannel] === EMAIL ENVIADO EXITOSAMENTE ===`, {
+                messageId: result.messageId,
+                response: result.response,
+                accepted: result.accepted,
+                rejected: result.rejected,
+                duration: `${emailDuration}ms`,
+                timestamp: new Date().toISOString()
+            });
+
         } catch (error) {
-            logger.error('Error sending email notification:', error);
+            logger.error(`💥 [EmailChannel] === ERROR CRÍTICO EN EMAIL ===`, {
+                error: error instanceof Error ? error.message : String(error),
+                errorType: error.constructor.name,
+                stack: error instanceof Error ? error.stack : undefined,
+                timestamp: new Date().toISOString()
+            });
             throw new Error('Failed to send email notification');
         }
     }

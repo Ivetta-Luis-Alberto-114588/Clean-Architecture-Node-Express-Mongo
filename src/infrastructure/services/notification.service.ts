@@ -56,10 +56,15 @@ export class NotificationServiceImpl implements BaseNotificationService, Service
     }
 
     async notify(message: NotificationMessage): Promise<void> {
-        this.logger.info(`🔍 [NotificationService] notify() llamado`, {
+        const timestamp = new Date().toISOString();
+
+        this.logger.info(`🎯 [NotificationService] === INICIO NOTIFY ===`, {
+            timestamp,
             title: message.title,
+            body: message.body ? message.body.substring(0, 100) + (message.body.length > 100 ? '...' : '') : 'NO BODY',
             channelsCount: this.channels.length,
-            channelTypes: this.channels.map(ch => ch.constructor.name)
+            channelTypes: this.channels.map(ch => ch.constructor.name),
+            messageData: message.data
         });
 
         if (this.channels.length === 0) {
@@ -68,23 +73,65 @@ export class NotificationServiceImpl implements BaseNotificationService, Service
         }
 
         const promises = this.channels.map(async (channel, index) => {
+            const channelStartTime = Date.now();
             try {
-                this.logger.info(`📤 [NotificationService] Enviando mensaje por canal ${index} (${channel.constructor.name})`);
+                this.logger.info(`📤 [NotificationService] === INICIANDO CANAL ${index} ===`, {
+                    channelName: channel.constructor.name,
+                    channelIndex: index,
+                    timestamp: new Date().toISOString()
+                });
+
                 await channel.send(message);
-                this.logger.info(`✅ [NotificationService] Mensaje enviado exitosamente por canal ${index} (${channel.constructor.name})`);
+
+                const channelDuration = Date.now() - channelStartTime;
+                this.logger.info(`✅ [NotificationService] === CANAL ${index} COMPLETADO ===`, {
+                    channelName: channel.constructor.name,
+                    channelIndex: index,
+                    duration: `${channelDuration}ms`,
+                    timestamp: new Date().toISOString()
+                });
+
             } catch (error) {
-                this.logger.error(`❌ [NotificationService] Error en canal ${index} (${channel.constructor.name}):`, {
+                const channelDuration = Date.now() - channelStartTime;
+                this.logger.error(`💥 [NotificationService] === ERROR EN CANAL ${index} ===`, {
                     error: error instanceof Error ? error.message : String(error),
+                    errorType: error.constructor.name,
                     stack: error instanceof Error ? error.stack : undefined,
-                    channelType: channel.constructor.name
+                    channelType: channel.constructor.name,
+                    channelIndex: index,
+                    duration: `${channelDuration}ms`,
+                    timestamp: new Date().toISOString()
                 });
                 // No lanzamos el error para que otros canales puedan funcionar
                 throw error; // Re-lanzar para que se propague al Promise.allSettled
             }
         });
 
-        await Promise.allSettled(promises);
-        this.logger.info('Notification sent to all configured channels');
+        this.logger.info(`⏳ [NotificationService] Esperando resolución de ${promises.length} canales`);
+        const results = await Promise.allSettled(promises);
+
+        // Analizar resultados
+        const successful = results.filter(r => r.status === 'fulfilled').length;
+        const failed = results.filter(r => r.status === 'rejected').length;
+
+        this.logger.info(`📊 [NotificationService] === RESUMEN FINAL ===`, {
+            totalChannels: results.length,
+            successful,
+            failed,
+            timestamp: new Date().toISOString()
+        });
+
+        // Log de errores específicos
+        results.forEach((result, index) => {
+            if (result.status === 'rejected') {
+                this.logger.error(`💥 [NotificationService] Canal ${index} falló:`, {
+                    channelType: this.channels[index].constructor.name,
+                    error: result.reason
+                });
+            }
+        });
+
+        this.logger.info('🏁 [NotificationService] === NOTIFY COMPLETADO ===');
     }
 
     async sendMessage(message: string, chatId?: string): Promise<void> {
