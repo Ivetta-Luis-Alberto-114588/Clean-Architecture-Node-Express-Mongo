@@ -22,7 +22,7 @@ import { PaymentEntity, PaymentProvider } from "../../domain/entities/payment/pa
 import { MercadoPagoItem, MercadoPagoPayer, MercadoPagoPayment, MercadoPagoPaymentStatus } from "../../domain/interfaces/payment/mercado-pago.interface"; // Importar interfaces de MP
 import { IPaymentService } from "../../domain/interfaces/payment.service";
 import { ILogger } from "../../domain/interfaces/logger.interface";
-import { NotificationService } from "../../domain/interfaces/notification.interface";
+import { NotificationService } from "../../domain/interfaces/services/notification.service";
 import { envs } from "../../configs/envs";
 import { PaymentModel } from "../../data/mongodb/models/payment/payment.model";
 import { WebhookLogModel } from "../../data/mongodb/models/webhook/webhook-log.model";
@@ -611,6 +611,34 @@ export class PaymentController {
 
           this.logger.info(`🎉 ÉXITO: Orden ${payment.saleId} actualizada a PENDIENTE PAGADO (${statusSource})`);
 
+          // 🚀 ENVIAR NOTIFICACIÓN DE TELEGRAM CUANDO EL PAGO ES APROBADO
+          try {
+            // Obtener la orden completa con todos los datos necesarios
+            const order = await this.orderRepository.findById(payment.saleId);
+            
+            if (order && this.notificationService) {
+              await this.notificationService.sendOrderNotification({
+                orderId: order.id,
+                customerName: order.customer?.name || 'Cliente',
+                total: order.total,
+                items: order.items?.map(item => ({
+                  name: item.product?.name || 'Producto',
+                  quantity: item.quantity,
+                  price: item.unitPrice
+                })) || []
+              });
+              
+              this.logger.info(`📱 Notificación de Telegram enviada exitosamente para orden ${payment.saleId}`);
+            } else {
+              this.logger.warn(`⚠️ No se pudo enviar notificación de Telegram: orden o servicio no disponible`);
+            }
+          } catch (notificationError) {
+            this.logger.warn(`⚠️ Error enviando notificación de Telegram para orden ${payment.saleId}:`, {
+              error: notificationError instanceof Error ? notificationError.message : String(notificationError)
+            });
+            // No fallar el webhook por un error de notificación
+          }
+
           // Actualizar el log con éxito
           await this.updateWebhookLog((req as any).webhookLogId, {
             success: true,
@@ -886,20 +914,15 @@ export class PaymentController {
     try {
       if (!this.notificationService) return;
 
-      const notification = {
-        title: '✅ Pago Sincronizado con OAuth',
-        body: `Pago ${mpPaymentInfo.id} verificado y sincronizado exitosamente`,
-        data: {
-          'Payment ID': mpPaymentInfo.id.toString(),
-          'Order ID': localPayment.saleId,
-          'Status': mpPaymentInfo.status,
-          'Amount': `$${mpPaymentInfo.transaction_amount}`,
-          'Verification Method': 'OAuth Success Callback',
-          'Sync Time': new Date().toLocaleString('es-ES')
-        }
-      };
+      const message = `✅ Pago Sincronizado con OAuth
+🆔 Payment ID: ${mpPaymentInfo.id}
+📋 Order ID: ${localPayment.saleId}  
+📊 Status: ${mpPaymentInfo.status}
+💰 Amount: $${mpPaymentInfo.transaction_amount}
+🔧 Method: OAuth Success Callback
+⏰ Time: ${new Date().toLocaleString('es-ES')}`;
 
-      await this.notificationService.notify(notification);
+      await this.notificationService.sendMessageToAdmin(message);
     } catch (error) {
       this.logger.error('Error sending successful sync notification:', error);
     }
@@ -910,19 +933,14 @@ export class PaymentController {
     try {
       if (!this.notificationService) return;
 
-      const notification = {
-        title: '⚠️ Error en Verificación OAuth',
-        body: `Error verificando pago ${paymentId} con OAuth en success callback`,
-        data: {
-          'Payment ID': paymentId,
-          'Error': error instanceof Error ? error.message : String(error),
-          'Source': 'Success Callback OAuth Verification',
-          'Time': new Date().toLocaleString('es-ES'),
-          'Action Required': 'Revisar manualmente'
-        }
-      };
+      const message = `⚠️ Error en Verificación OAuth
+🆔 Payment ID: ${paymentId}
+❌ Error: ${error instanceof Error ? error.message : String(error)}
+📍 Source: Success Callback OAuth Verification
+⏰ Time: ${new Date().toLocaleString('es-ES')}
+🔧 Action: Revisar manualmente`;
 
-      await this.notificationService.notify(notification);
+      await this.notificationService.sendMessageToAdmin(message);
     } catch (notificationError) {
       this.logger.error('Error sending verification failure notification:', notificationError);
     }
@@ -933,20 +951,15 @@ export class PaymentController {
     try {
       if (!this.notificationService) return;
 
-      const notification = {
-        title: '🔍 Pago Local No Encontrado',
-        body: `Pago ${mpPaymentInfo.id} aprobado en MP pero no existe localmente`,
-        data: {
-          'MP Payment ID': mpPaymentInfo.id.toString(),
-          'Reference': reference,
-          'Status': mpPaymentInfo.status,
-          'Amount': `$${mpPaymentInfo.transaction_amount}`,
-          'Source': 'OAuth Success Callback',
-          'Action Required': 'Crear pago local manualmente'
-        }
-      };
+      const message = `🔍 Pago Local No Encontrado
+🆔 MP Payment ID: ${mpPaymentInfo.id}
+📋 Reference: ${reference}
+📊 Status: ${mpPaymentInfo.status}
+💰 Amount: $${mpPaymentInfo.transaction_amount}
+📍 Source: OAuth Success Callback
+🔧 Action: Crear pago local manualmente`;
 
-      await this.notificationService.notify(notification);
+      await this.notificationService.sendMessageToAdmin(message);
     } catch (error) {
       this.logger.error('Error sending payment not found notification:', error);
     }

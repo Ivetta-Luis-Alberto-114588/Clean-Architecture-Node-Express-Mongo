@@ -38,7 +38,6 @@ const mpAdapter = MercadoPagoAdapter.getInstance();
 
 ### 🛒 Flujo de Pago Completo Exitoso
 
-
 El orden exacto para que quede 100% claro, porque es un punto crucial para la fiabilidad del sistema:
 
 1. Para iniciar un pago, tu frontend debe conectarse al siguiente endpoint de tu backend:  (POST /api/payments/create-preference)
@@ -61,8 +60,6 @@ El orden exacto para que quede 100% claro, porque es un punto crucial para la fi
 
   Este proceso de doble verificación (la notificación del webhook seguida de una consulta directa a la API) es lo que hace que el sistema sea tan robusto.
 
-
-
 ### 🛒 Flujo de Pago Completo Fallido
 
 Si el pago no es exitoso, esto es lo que sucede en el flujo de respaldo (webhook):
@@ -79,8 +76,6 @@ Si el pago no es exitoso, esto es lo que sucede en el flujo de respaldo (webhook
 
    * Busca la orden en tu base de datos local usando el external_reference.
    * Actualiza el estado de la orden para que coincida con el estado real de Mercado Pago. Por ejemplo, si el status fue 'rejected', el estado de tu orden local se cambiará a "Rechazado".
-
-
 
   ¿Y qué ve el usuario en tiempo real?
 
@@ -99,8 +94,6 @@ Si el pago no es exitoso, esto es lo que sucede en el flujo de respaldo (webhook
 | `pending`            | Actualiza la orden a "Pendiente".  | Es redirigido a una página que le informa que su pago está pendiente de confirmación. |
 
   De esta manera, tu base de datos siempre refleja la realidad de la transacción, y el usuario recibe una respuesta clara e inmediata sobre el resultado de su compra.
-
-
 
 ### 🛒 Flujo de Pago Success pero Api es distinto Approved
 
@@ -127,12 +120,9 @@ Lo que sucede si el usuario es redirigido a success pero la API dice que el pago
   Mercado Pago.
 * Seguridad: Un usuario (o un atacante) no puede simplemente escribir la URL de éxito en su navegador para marcar una orden como pagada. Tu backend siempre lo validará.
 
-
 | Evento                            | Lo que Parece (Redirección) | La Realidad (Verificación API) | Acción Final del Backend                                                                            |
 | :-------------------------------- | :--------------------------- | :------------------------------ | :--------------------------------------------------------------------------------------------------- |
 | Usuario es redirigido a /success. | El pago fue exitoso.         | El estado real es `pending`.  | 1. Actualiza la orden a "Pendiente".`<br>`2. Redirige al usuario a la página de "Pago Pendiente". |
-
-
 
 ### 🛒 Cantidad peticiones OAuth
 
@@ -176,9 +166,6 @@ Se realiza una única consulta segura (OAuth) por cada evento de verificación, 
 * Caching del Token OAuth: Como se menciona en tu documentación, el sistema es aún más eficiente porque obtiene un token de acceso OAuth y lo guarda en caché. Así, para las siguientes consultas (dentro de un
   tiempo de validez), no tiene que renegociar el token, solo usar el que ya tiene para pedir los datos del pago, haciendo el proceso todavía más rápido.
 
-
-
-
 Endpoints específicos para cada tipo de verificación, según la documentación de tu proyecto.
 
   Verificación Automática
@@ -200,8 +187,6 @@ La aplicación utiliza el siguiente endpoint de la API de Mercado Pago, pero es 
 
   Este es el endpoint que tu backend consume internamente.
 
-
-
   Verificación Manual
 
   Para la verificación manual, sí existe un endpoint específico diseñado para que un administrador lo utilice.
@@ -210,7 +195,6 @@ La aplicación utiliza el siguiente endpoint de la API de Mercado Pago, pero es 
 * Cómo funciona: Un administrador (con un token de autenticación válido) puede llamar a este endpoint proporcionando el ID de una orden (orderId). El backend tomará ese ID, buscará el pago asociado y forzará una
   nueva consulta de verificación contra la API de Mercado Pago para sincronizar el estado.
 * Propósito: Es una herramienta de administración para auditar, depurar o resolver cualquier discrepancia que pudiera existir en el estado de un pago.
-
 
  Una vez que el administrador dispara la acción, todo lo que sucede a continuación es 100% automático. Tu backend ejecuta una secuencia de pasos sin necesidad de más intervención   humana:
        * Recibe la petición manual.
@@ -221,17 +205,13 @@ La aplicación utiliza el siguiente endpoint de la API de Mercado Pago, pero es 
 
   En resumen: La decisión de iniciar la verificación es manual, pero el trabajo de consultar y actualizar el estado es completamente automático.
 
-
-
 Este mecanismo asegura que tu sistema sea a prueba de errores y fraudes. La experiencia del usuario se maneja de forma elegante, pero la integridad de tus datos de ventas es siempre la máxima prioridad.
-
 
 1. **Crear Preferencia de Pago**
 2. **Redireccionar al Cliente**
 3. **Recibir Webhook de Notificación**
 4. **Consultar API de MercadoPago**
 5. **Actualizar Estado del Pedido**
-
 
 ### 📦 Crear Preferencia de Pago
 
@@ -269,6 +249,46 @@ Content-Type: application/json
   "sandboxInitPoint": "https://sandbox.mercadopago.com.ar/checkout/v1/redirect?pref_id=123456789-abc-def-ghi"
 }
 ```
+
+### Flujo Verficacion de Pago
+
+ Este es el proceso completo que ocurre cuando utilizas ese endpoint:
+
+`GET /api/payments/status/sale/:saleId`
+
+1. Petición Inicial (Tu Aplicación al Backend):
+
+   * Tú, desde tu aplicación cliente (o usando una herramienta como Postman), haces una llamada al endpoint de tu propio backend: GET /api/payments/status/sale/{id_de_la_orden}.
+   * El saleId que envías es el ID de la `Order` (la venta o pedido) que quieres verificar, que crea el sistema y guarda en la basae de datos
+2. Búsqueda Interna (Backend a Base de Datos):
+
+   * Tu backend recibe la petición.
+   * Lo primero que hace es buscar en tu propia base de datos un registro de pago que esté asociado a ese saleId.
+3. Consulta Externa (Backend a Mercado Pago):
+
+   * Si tu backend encuentra el pago en tu base de datos y ve que tiene un providerPaymentId (el ID que Mercado Pago le asignó), entonces procede al paso crucial:
+   * Realiza una llamada segura usando OAuth a la API oficial de Mercado Pago. La dirección consultada es:
+     `https://api.mercadopago.com/v1/payments/{providerPaymentId}`
+4. Sincronización y Respuesta (Backend a Tu Aplicación):
+
+   * Tu backend recibe la respuesta directa de Mercado Pago, que contiene el estado real y definitivo del pago.
+   * Si el estado en Mercado Pago (approved, rejected, etc.) es diferente al que tenías guardado en tu base de datos, lo actualiza para mantener la consistencia.
+   * Finalmente, tu backend te responde con un objeto JSON que contiene la información verificada. La parte más importante de esta respuesta es el campo status:
+
+    1     {
+    2       "success": true,
+    3       "payment": {
+    4         "id": "el_id_de_tu_pago_en_tu_db",
+    5         "status": "approved", // <-- El estado real obtenido de Mercado Pago
+    6         "amount": 150.50,
+    7         "providerPaymentId": "123456789",
+    8         "lastVerified": "2025-07-01T18:30:00.000Z",
+    9         "saleId": "el_id_de_la_orden"
+   10       }
+   11     }
+
+  En resumen, el endpoint GET /api/payments/status/sale/:saleId actúa como un puente seguro que, partiendo de un ID de orden de tu sistema, consulta a Mercado Pago para darte el estado más fiable y actualizado de  un pago, a la vez que mantiene tu propia base de datos sincronizada.
+
 
 ### ⚙️ Flujo Detallado de Creación de Pago
 
