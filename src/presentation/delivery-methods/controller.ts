@@ -30,15 +30,14 @@ export class DeliveryMethodController {
             const getActiveDeliveryMethodsUseCase = new GetActiveDeliveryMethods(this.deliveryMethodRepository);
             const deliveryMethods = await getActiveDeliveryMethodsUseCase.execute();
 
-            res.json({
-                deliveryMethods: deliveryMethods.map(method => ({
-                    id: method.id,
-                    code: method.code,
-                    name: method.name,
-                    description: method.description,
-                    requiresAddress: method.requiresAddress
-                }))
-            });
+            res.json(deliveryMethods.map(method => ({
+                id: method.id,
+                code: method.code,
+                name: method.name,
+                description: method.description,
+                requiresAddress: method.requiresAddress,
+                isActive: method.isActive
+            })));
 
         } catch (error) {
             this.handleError(error, res);

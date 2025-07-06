@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ALL_ROLES, USER_ROLES } from "../../../configs/roles";
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -8,8 +9,8 @@ const userSchema = new mongoose.Schema({
         lowercase: true
     },
 
-    email:{
-        type: String,       
+    email: {
+        type: String,
         required: [true, "email is required"],  // digo si es requerido o no y el msj de error si no se cumple
         trim: true,
         lowercase: true,
@@ -22,19 +23,19 @@ const userSchema = new mongoose.Schema({
         required: [true, "password is required"]  // digo si es requerido o no y el msj de error si no se cumple
     },
 
-    img:{
+    img: {
         type: String
     },
 
     roles: {
         type: [String],
-        default: ['USER_ROLE'],
-        enum: ['USER_ROLE', 'ADMIN_ROLE']
+        default: [USER_ROLES.USER],
+        enum: ALL_ROLES
     }
 },
-{
-    timestamps: true // Esto añade automáticamente createdAt y updatedAt
-})
+    {
+        timestamps: true // Esto añade automáticamente createdAt y updatedAt
+    })
 
 
 export const UserModel = mongoose.model('User', userSchema)

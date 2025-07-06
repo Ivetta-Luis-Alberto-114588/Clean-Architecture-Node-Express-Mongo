@@ -2,7 +2,11 @@
 
 ## Descripción
 
-Este módulo gestiona los métodos de entrega disponibles para los pedidos. Los métodos de entrega definen cómo el cliente recibirá su pedido (envío a domicilio, retiro en local, etc.).
+Este m### GET /api/admin/delivery-methods
+
+Obtiene todos los métodos de entrega (activos e inactivos) con paginación.
+
+**Autenticación:** Requerida (SUPER_ADMIN) gestiona los métodos de entrega disponibles para los pedidos. Los métodos de entrega definen cómo el cliente recibirá su pedido (envío a domicilio, retiro en local, etc.).
 
 ## Modelo de Datos
 
@@ -69,7 +73,7 @@ fetch('/api/delivery-methods')
 
 ## Endpoints Administrativos
 
-Todos los endpoints administrativos requieren autenticación con rol ADMIN.
+Todos los endpoints administrativos requieren autenticación con rol SUPER_ADMIN.
 
 ### GET /api/admin/delivery-methods
 
@@ -83,7 +87,7 @@ Obtiene todos los métodos de entrega (activos e inactivos).
 
 Crea un nuevo método de entrega.
 
-**Autenticación:** Requerida (ADMIN)
+**Autenticación:** Requerida (SUPER_ADMIN)
 
 **Body:**
 ```json
@@ -109,7 +113,7 @@ Crea un nuevo método de entrega.
 
 Actualiza un método de entrega existente.
 
-**Autenticación:** Requerida (ADMIN)
+**Autenticación:** Requerida (SUPER_ADMIN)
 
 **Parámetros:**
 - `id`: ID del método de entrega
@@ -128,7 +132,7 @@ Actualiza un método de entrega existente.
 
 Elimina un método de entrega.
 
-**Autenticación:** Requerida (ADMIN)
+**Autenticación:** Requerida (SUPER_ADMIN)
 
 **Parámetros:**
 - `id`: ID del método de entrega
@@ -207,7 +211,7 @@ El sistema incluye 2 métodos de entrega por defecto:
 
 - **400**: Datos inválidos en el request
 - **401**: No autenticado (solo endpoints admin)
-- **403**: Sin permisos de administrador
+- **403**: Sin permisos de super administrador
 - **404**: Método de entrega no encontrado
 - **500**: Error interno del servidor
 

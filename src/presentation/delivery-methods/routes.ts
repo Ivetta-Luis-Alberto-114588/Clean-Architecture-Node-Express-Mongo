@@ -5,6 +5,7 @@ import { DeliveryMethodController } from './controller';
 import { AuthMiddleware } from '../middlewares/auth.middleware';
 import { DeliveryMethodMongoDatasourceImpl } from '../../infrastructure/datasources/delivery-methods/delivery-method.mongo.datasource.impl';
 import { DeliveryMethodRepositoryImpl } from '../../infrastructure/repositories/delivery-methods/delivery-method.repository.impl';
+import { ADMIN_ROLES, SUPER_ADMIN_ONLY } from '../../configs/roles';
 
 export class DeliveryMethodRoutes {
 
@@ -46,12 +47,12 @@ export class DeliveryMethodRoutes {
             }
         });
 
-        // Rutas de administrador
-        router.get('/admin', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(['ADMIN_ROLE'])], controller.getAll.bind(controller));
-        router.post('/admin', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(['ADMIN_ROLE'])], controller.create.bind(controller));
-        router.get('/admin/:id', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(['ADMIN_ROLE'])], controller.findById.bind(controller));
-        router.put('/admin/:id', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(['ADMIN_ROLE'])], controller.updateById.bind(controller));
-        router.delete('/admin/:id', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(['ADMIN_ROLE'])], controller.deleteById.bind(controller));
+        // Rutas de administrador - Solo SUPER_ADMIN
+        router.get('/admin', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(SUPER_ADMIN_ONLY)], controller.getAll.bind(controller));
+        router.post('/admin', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(SUPER_ADMIN_ONLY)], controller.create.bind(controller));
+        router.get('/admin/:id', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(SUPER_ADMIN_ONLY)], controller.findById.bind(controller));
+        router.put('/admin/:id', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(SUPER_ADMIN_ONLY)], controller.updateById.bind(controller));
+        router.delete('/admin/:id', [AuthMiddleware.validateJwt, AuthMiddleware.checkRole(SUPER_ADMIN_ONLY)], controller.deleteById.bind(controller));
 
         return router;
     }
