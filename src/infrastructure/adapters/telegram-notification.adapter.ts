@@ -27,6 +27,11 @@ export class TelegramNotificationAdapter implements NotificationService {
     async sendMessage(message: string, chatId?: string): Promise<void> {
         const targetChatId = chatId || this.telegramChatId;
         const timestamp = new Date().toISOString();
+        // Registro genérico para integración: inicio de envío
+        this.logger.info('Sending Telegram message', {
+            chatId: targetChatId,
+            messageLength: message.length
+        });
 
         try {
             this.logger.info(`� [TelegramAdapter] === INICIO ENVÍO MENSAJE ===`, {
@@ -73,7 +78,7 @@ export class TelegramNotificationAdapter implements NotificationService {
                 status: response.status,
                 statusText: response.statusText,
                 ok: response.ok,
-                contentType: response.headers.get('content-type'),
+                contentType: response.headers?.get?.('content-type'),
                 url: response.url
             });
 
@@ -85,15 +90,22 @@ export class TelegramNotificationAdapter implements NotificationService {
                     errorData = await response.text();
                 }
 
+                // Log de error en API con detalles y metadatos esperados por tests
                 this.logger.error(`❌ [TelegramAdapter] Telegram API error - RESPUESTA DETALLADA:`, {
                     status: response.status,
                     statusText: response.statusText,
                     errorData: errorData,
                     requestPayload: payload,
+                    chatId: targetChatId,
+                    messageLength: message.length,
                     apiUrl: this.telegramApiUrl,
                     timestamp: new Date().toISOString()
                 });
-                throw new Error(`Telegram API error: ${errorData.description || errorData || 'Unknown error'}`);
+                // Construir mensaje de error legible y consistente
+                const errorMsg = typeof errorData === 'object'
+                    ? (errorData.description ?? 'Unknown error')
+                    : String(errorData);
+                throw new Error(`Telegram API error: ${errorMsg}`);
             }
 
             const responseData = await response.json();

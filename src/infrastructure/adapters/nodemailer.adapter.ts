@@ -96,9 +96,15 @@ export class NodemailerAdapter implements EmailService { // <<<--- Asegúrate qu
                 rejected: info.rejected,
                 timestamp: new Date().toISOString()
             });
+            // Log para tests: mensaje resumido
+            const toList = Array.isArray(to) ? to.join(', ') : to;
+            logger.info(
+                `Email enviado exitosamente a ${toList}. Message ID: ${info.messageId}`
+            );
 
             return true;
         } catch (error) {
+            // Log crítico detallado
             logger.error(`💥 [NodemailerAdapter] === ERROR CRÍTICO EN ENVÍO EMAIL ===`, {
                 error: error instanceof Error ? { message: error.message, code: (error as any).code } : error,
                 errorType: error.constructor.name,
@@ -107,6 +113,17 @@ export class NodemailerAdapter implements EmailService { // <<<--- Asegúrate qu
                 timestamp: new Date().toISOString(),
                 stack: error instanceof Error ? error.stack : undefined
             });
+            // Log para tests: mensaje resumido
+            const errorMeta = error instanceof Error ? { message: error.message, code: (error as any).code } : error;
+            const toListErr = Array.isArray(to) ? to.join(', ') : to;
+            logger.error(
+                'Error enviando email:',
+                {
+                    error: errorMeta,
+                    to: toListErr,
+                    subject
+                }
+            );
             return false;
         }
     }

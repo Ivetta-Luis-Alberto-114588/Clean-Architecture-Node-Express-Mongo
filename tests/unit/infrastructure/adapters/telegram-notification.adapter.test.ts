@@ -37,6 +37,10 @@ describe('TelegramNotificationAdapter', () => {
         it('should send message successfully with default chat ID', async () => {
             const mockResponse = {
                 ok: true,
+                status: 200,
+                statusText: 'OK',
+                url: 'https://api.telegram.org/bottest-bot-token/sendMessage',
+                headers: new Map([['content-type', 'application/json']]),
                 json: jest.fn().mockResolvedValue({ ok: true })
             };
             mockFetch.mockResolvedValue(mockResponse as any); await telegramAdapter.sendMessage('Test message');
@@ -54,19 +58,24 @@ describe('TelegramNotificationAdapter', () => {
                 }
             );
 
-            expect(mockLogger.info).toHaveBeenCalledWith('Sending Telegram message', {
-                chatId: 'test-chat-id',
-                messageLength: 12
-            });
-
-            expect(mockLogger.info).toHaveBeenCalledWith('Telegram message sent successfully', {
-                chatId: 'test-chat-id'
-            });
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                expect.stringContaining('=== INICIO ENVÍO MENSAJE ==='),
+                expect.objectContaining({
+                    chatId: 'test-chat-id',
+                    messageLength: 12
+                })
+            );
         });
 
         it('should send message with custom chat ID', async () => {
             const mockResponse = {
                 ok: true,
+                status: 200,
+                statusText: 'OK',
+                url: 'https://api.telegram.org/bottest-bot-token/sendMessage',
+                headers: {
+                    get: jest.fn().mockReturnValue('application/json')
+                },
                 json: jest.fn().mockResolvedValue({ ok: true })
             };
             mockFetch.mockResolvedValue(mockResponse as any); await telegramAdapter.sendMessage('Test message', 'custom-chat-id');
@@ -94,7 +103,7 @@ describe('TelegramNotificationAdapter', () => {
                 .rejects.toThrow('Telegram API error: Chat not found');
 
             expect(mockLogger.error).toHaveBeenCalledWith(
-                'Failed to send Telegram message',
+                expect.stringContaining('❌ [TelegramAdapter] Telegram API error'),
                 expect.objectContaining({
                     chatId: 'test-chat-id',
                     messageLength: 12
@@ -121,9 +130,9 @@ describe('TelegramNotificationAdapter', () => {
                 .rejects.toThrow('Network error');
 
             expect(mockLogger.error).toHaveBeenCalledWith(
-                'Failed to send Telegram message',
+                expect.stringContaining('💥 [TelegramAdapter] === ERROR CRÍTICO EN ENVÍO ==='),
                 expect.objectContaining({
-                    error: networkError,
+                    error: 'Network error',
                     chatId: 'test-chat-id',
                     messageLength: 12
                 })
