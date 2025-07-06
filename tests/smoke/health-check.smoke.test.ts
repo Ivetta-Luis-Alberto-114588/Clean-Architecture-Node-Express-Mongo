@@ -658,8 +658,18 @@ describe('Health Check - Smoke Tests', () => {
                 // Crear un pedido de prueba para testing de pagos
                 const { OrderModel } = require('../../src/data/mongodb/models/order/order.model');
                 const { CustomerModel } = require('../../src/data/mongodb/models/customers/customer.model');
+                const { DeliveryMethodModel } = require('../../src/data/mongodb/models/delivery-method.model');
 
                 try {
+                    // Crear delivery method de prueba
+                    const testDeliveryMethod = await DeliveryMethodModel.create({
+                        code: 'SHIPPING',
+                        name: 'Envío a Domicilio',
+                        description: 'Recibe tu pedido en la puerta de tu casa.',
+                        requiresAddress: true,
+                        isActive: true
+                    });
+
                     // Crear customer de prueba
                     const testCustomer = await CustomerModel.create({
                         name: 'Customer for Payment Test',
@@ -673,6 +683,7 @@ describe('Health Check - Smoke Tests', () => {
                     // Crear orden de prueba
                     testOrder = await OrderModel.create({
                         customer: testCustomer._id,
+                        deliveryMethod: testDeliveryMethod._id,
                         items: [{
                             product: createdProductId,
                             quantity: 2,

@@ -7,6 +7,7 @@ import { MainRoutes } from '../../../src/presentation/routes';
 import { OrderModel } from '../../../src/data/mongodb/models/order/order.model';
 import { OrderStatusModel } from '../../../src/data/mongodb/models/order/order-status.model';
 import { PaymentMethodModel } from '../../../src/data/mongodb/models/payment/payment-method.model';
+import { DeliveryMethodModel } from '../../../src/data/mongodb/models/delivery-method.model';
 import { CustomerModel } from '../../../src/data/mongodb/models/customers/customer.model';
 import { UserModel } from '../../../src/data/mongodb/models/user.model';
 import { NeighborhoodModel } from '../../../src/data/mongodb/models/customers/neighborhood.model';
@@ -25,7 +26,8 @@ describe('Order Payment Method Integration Tests', () => {
     let confirmedStatusId: string;
     let awaitingPaymentStatusId: string;
     let cashPaymentMethodId: string;
-    let mercadoPagoPaymentMethodId: string; beforeAll(async () => {
+    let mercadoPagoPaymentMethodId: string;
+    let testDeliveryMethodId: string; beforeAll(async () => {
         // Disconnect existing connection if any
         if (mongoose.connection.readyState !== 0) {
             await mongoose.disconnect();
@@ -143,7 +145,19 @@ describe('Order Payment Method Integration Tests', () => {
             requiresOnlinePayment: true,
             allowsManualConfirmation: false
         });
-        mercadoPagoPaymentMethodId = mercadoPagoPaymentMethod._id.toString();        // Create test customer
+        mercadoPagoPaymentMethodId = mercadoPagoPaymentMethod._id.toString();
+
+        // Create delivery method
+        const deliveryMethod = await DeliveryMethodModel.create({
+            code: 'SHIPPING',
+            name: 'Envío a Domicilio',
+            description: 'Recibe tu pedido en la puerta de tu casa.',
+            requiresAddress: true,
+            isActive: true
+        });
+        testDeliveryMethodId = deliveryMethod._id.toString();
+
+        // Create test customer
         const customer = await CustomerModel.create({
             name: 'Test Customer',
             email: 'test@example.com',
@@ -157,6 +171,7 @@ describe('Order Payment Method Integration Tests', () => {
         // Create test order
         const order = await OrderModel.create({
             customer: testCustomerId,
+            deliveryMethod: testDeliveryMethodId,
             items: [{
                 product: new mongoose.Types.ObjectId(), // Mock product ID
                 quantity: 2,
@@ -271,6 +286,7 @@ describe('Order Payment Method Integration Tests', () => {
             // Create order with high amount (exceeds cash limit)
             const highAmountOrder = await OrderModel.create({
                 customer: testCustomerId,
+                deliveryMethod: testDeliveryMethodId,
                 items: [{
                     product: new mongoose.Types.ObjectId(),
                     quantity: 1,
@@ -309,6 +325,7 @@ describe('Order Payment Method Integration Tests', () => {
             // Create order with low amount
             const lowAmountOrder = await OrderModel.create({
                 customer: testCustomerId,
+                deliveryMethod: testDeliveryMethodId,
                 items: [{
                     product: new mongoose.Types.ObjectId(),
                     quantity: 1,

@@ -18,20 +18,24 @@ const orderSchema = new Schema({
     total: { type: Number, required: true, index: true },
     date: { type: Date, default: Date.now, index: true }, status: { type: Schema.Types.ObjectId, ref: 'OrderStatus', required: true, index: true },
     paymentMethod: { type: Schema.Types.ObjectId, ref: 'PaymentMethod', required: false, index: true },
+    deliveryMethod: { type: Schema.Types.ObjectId, ref: 'DeliveryMethod', required: true, index: true },
     notes: { type: String, default: "" },
 
-    // <<<--- CAMPOS SHIPPING DETAILS ACTUALIZADOS --- >>>
+    // <<<--- CAMPOS SHIPPING DETAILS ACTUALIZADOS (AHORA OPCIONALES) --- >>>
     shippingDetails: {
-        recipientName: { type: String, required: [true, "Shipping recipient name is required"] },
-        phone: { type: String, required: [true, "Shipping phone is required"] },
-        streetAddress: { type: String, required: [true, "Shipping street address is required"] },
-        postalCode: { type: String },
-        neighborhoodName: { type: String, required: [true, "Shipping neighborhood name is required"] },
-        cityName: { type: String, required: [true, "Shipping city name is required"] },
-        additionalInfo: { type: String },
-        originalAddressId: { type: Schema.Types.ObjectId, ref: 'Address', required: false }, // Opcional
-        originalNeighborhoodId: { type: Schema.Types.ObjectId, ref: 'Neighborhood', required: true },
-        originalCityId: { type: Schema.Types.ObjectId, ref: 'City', required: true },
+        type: {
+            recipientName: { type: String, required: [true, "Shipping recipient name is required"] },
+            phone: { type: String, required: [true, "Shipping phone is required"] },
+            streetAddress: { type: String, required: [true, "Shipping street address is required"] },
+            postalCode: { type: String },
+            neighborhoodName: { type: String, required: [true, "Shipping neighborhood name is required"] },
+            cityName: { type: String, required: [true, "Shipping city name is required"] },
+            additionalInfo: { type: String },
+            originalAddressId: { type: Schema.Types.ObjectId, ref: 'Address', required: false }, // Opcional
+            originalNeighborhoodId: { type: Schema.Types.ObjectId, ref: 'Neighborhood', required: true },
+            originalCityId: { type: Schema.Types.ObjectId, ref: 'City', required: true },
+        },
+        required: false // El objeto completo ahora es opcional
     },
     // <<<--- FIN CAMPOS SHIPPING DETAILS --- >>>
 
