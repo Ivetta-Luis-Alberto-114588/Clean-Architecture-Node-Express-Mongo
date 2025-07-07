@@ -24,27 +24,48 @@ export const seedDeliveryMethods = async () => {
 
         const methods = [
             {
-                code: 'SHIPPING',
-                name: 'Envío a Domicilio',
-                description: 'Recibe tu pedido en la puerta de tu casa.',
-                requiresAddress: true,
-                isActive: true,
-            },
-            {
                 code: 'PICKUP',
                 name: 'Retiro en Local',
                 description: 'Acércate a nuestra tienda a retirar tu pedido.',
                 requiresAddress: false,
                 isActive: true,
             },
+            {
+                code: 'DELIVERY',
+                name: 'Entrega a Domicilio',
+                description: 'Recibe tu pedido en la puerta de tu casa.',
+                requiresAddress: true,
+                isActive: true,
+            },
+            {
+                code: 'EXPRESS',
+                name: 'Entrega Express',
+                description: 'Entrega el mismo día (servicio premium).',
+                requiresAddress: true,
+                isActive: true,
+            },
         ];
 
-        // Insertar los nuevos métodos
+        // Insertar los nuevos métodos usando upsert para evitar duplicados
         const createdMethods = [];
         for (const method of methods) {
-            const created = await DeliveryMethodModel.create(method);
-            createdMethods.push(created);
-            console.log(`✅ Created delivery method: ${method.name} (${method.code}) - ID: ${created._id}`);
+            try {
+                // Usar findOneAndUpdate con upsert para evitar duplicados
+                const created = await DeliveryMethodModel.findOneAndUpdate(
+                    { code: method.code }, // Buscar por código
+                    method, // Datos a actualizar/insertar
+                    {
+                        upsert: true, // Crear si no existe
+                        new: true, // Retornar el documento actualizado
+                        runValidators: true // Ejecutar validaciones
+                    }
+                );
+                createdMethods.push(created);
+                console.log(`✅ Upserted delivery method: ${method.name} (${method.code}) - ID: ${created._id}`);
+            } catch (error) {
+                console.error(`❌ Error upserting method ${method.code}:`, error);
+                throw error;
+            }
         }
 
         // Verificar que se insertaron correctamente

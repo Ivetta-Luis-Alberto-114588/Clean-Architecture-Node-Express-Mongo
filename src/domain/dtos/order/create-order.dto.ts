@@ -37,7 +37,7 @@ export class CreateOrderDto {
 
         const {
             items, notes = "", couponCode,
-            paymentMethodId, deliveryMethodId,
+            paymentMethodId, deliveryMethodId, deliveryMethodCode, // Soportar ambos
             selectedAddressId,
             shippingRecipientName, shippingPhone, shippingStreetAddress, shippingPostalCode,
             shippingNeighborhoodId, shippingCityId, shippingAdditionalInfo,
@@ -55,26 +55,49 @@ export class CreateOrderDto {
 
         // --- Validar Método de Entrega ---
         let requiresAddress = true; // Por defecto asumir que sí requiere
-        
-        if (deliveryMethodId) {
-            if (!mongoose.Types.ObjectId.isValid(deliveryMethodId)) {
+        let finalDeliveryMethodId = deliveryMethodId;
+
+        // Soportar deliveryMethodCode además de deliveryMethodId
+        if (deliveryMethodCode && !deliveryMethodId) {
+            try {
+                const { DeliveryMethodModel } = await import('../../../data/mongodb/models/delivery-method.model');
+                const deliveryMethodByCode = await DeliveryMethodModel.findOne({
+                    code: deliveryMethodCode,
+                    isActive: true
+                });
+
+                if (deliveryMethodByCode) {
+                    finalDeliveryMethodId = deliveryMethodByCode._id.toString();
+                } else {
+                    return [`Método de entrega con código '${deliveryMethodCode}' no encontrado`];
+                }
+            } catch (error) {
+                console.error('Error buscando método de entrega por código:', error);
+                return ["Error al buscar método de entrega por código"];
+            }
+        }
+
+        if (finalDeliveryMethodId) {
+            if (!mongoose.Types.ObjectId.isValid(finalDeliveryMethodId)) {
                 return ["ID de método de entrega inválido"];
             }
-            
+
             // Importar y verificar el método de entrega
             try {
                 const { DeliveryMethodModel } = await import('../../../data/mongodb/models/delivery-method.model');
-                const deliveryMethod = await DeliveryMethodModel.findById(deliveryMethodId);
-                
+                const deliveryMethod = await DeliveryMethodModel.findById(finalDeliveryMethodId);
+
                 if (!deliveryMethod) {
                     return ["Método de entrega no encontrado"];
                 }
-                
+
                 if (!deliveryMethod.isActive) {
                     return ["Método de entrega no disponible"];
                 }
-                
+
                 requiresAddress = deliveryMethod.requiresAddress;
+
+                console.log(`[CreateOrderDto] Método de entrega: ${deliveryMethod.code}, requiresAddress: ${requiresAddress}`);
             } catch (error) {
                 console.error('Error verificando método de entrega:', error);
                 return ["Error al verificar método de entrega"];
@@ -96,7 +119,7 @@ export class CreateOrderDto {
 
         if (userId) {
             // --- Usuario Registrado ---
-            
+
             // Solo validar dirección si el método de entrega la requiere
             if (requiresAddress) {
                 if (!finalSelectedAddressId && !finalShippingStreetAddress) return ["Debes seleccionar una dirección guardada (selectedAddressId) o ingresar una nueva dirección de envío.", undefined];
@@ -138,7 +161,7 @@ export class CreateOrderDto {
                 finalShippingCityId = undefined;
                 finalShippingAdditionalInfo = undefined;
             }
-            
+
             // Ignorar datos de cliente del body
             finalCustomerName = undefined;
             finalCustomerEmail = undefined;
@@ -146,12 +169,12 @@ export class CreateOrderDto {
 
         } else {
             // --- Usuario Invitado ---
-            
+
             // Siempre requerir datos del cliente para invitados
             if (!finalCustomerName) return ["Nombre del cliente requerido para invitados", undefined];
             if (!finalCustomerEmail) return ["Email del cliente requerido para invitados", undefined];
             if (!Validators.checkEmail.test(finalCustomerEmail)) return ["Email del cliente inválido", undefined];
-            
+
             // Solo validar dirección si el método de entrega la requiere
             if (requiresAddress) {
                 if (finalSelectedAddressId) return ["Invitados no pueden seleccionar direcciones guardadas", undefined];
@@ -190,7 +213,7 @@ export class CreateOrderDto {
             undefined,
             new CreateOrderDto(
                 items, notes, couponCode,
-                paymentMethodId, deliveryMethodId,
+                paymentMethodId, finalDeliveryMethodId,
                 finalSelectedAddressId,
                 finalShippingRecipientName, finalShippingPhone, finalShippingStreetAddress,
                 finalShippingPostalCode, finalShippingNeighborhoodId, finalShippingCityId, finalShippingAdditionalInfo,

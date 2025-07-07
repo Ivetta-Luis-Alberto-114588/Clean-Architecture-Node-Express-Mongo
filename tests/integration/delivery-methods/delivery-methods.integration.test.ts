@@ -31,21 +31,9 @@ describe('Delivery Methods API Integration Tests', () => {
                 .expect(200);
 
             expect(response.body).toBeInstanceOf(Array);
-            expect(response.body).toHaveLength(2);
+            expect(response.body).toHaveLength(3); // Actualizado: ahora son 3 métodos
 
-            // Verificar estructura del primer método
-            const shippingMethod = response.body.find((method: any) => method.code === 'SHIPPING');
-            expect(shippingMethod).toBeDefined();
-            expect(shippingMethod).toMatchObject({
-                code: 'SHIPPING',
-                name: 'Envío a Domicilio',
-                description: 'Recibe tu pedido en la puerta de tu casa.',
-                requiresAddress: true,
-                isActive: true
-            });
-            expect(shippingMethod.id).toBeDefined();
-
-            // Verificar estructura del segundo método
+            // Verificar método PICKUP
             const pickupMethod = response.body.find((method: any) => method.code === 'PICKUP');
             expect(pickupMethod).toBeDefined();
             expect(pickupMethod).toMatchObject({
@@ -56,17 +44,38 @@ describe('Delivery Methods API Integration Tests', () => {
                 isActive: true
             });
             expect(pickupMethod.id).toBeDefined();
+
+            // Verificar método DELIVERY
+            const deliveryMethod = response.body.find((method: any) => method.code === 'DELIVERY');
+            expect(deliveryMethod).toBeDefined();
+            expect(deliveryMethod).toMatchObject({
+                code: 'DELIVERY',
+                name: 'Entrega a Domicilio',
+                description: 'Recibe tu pedido en la puerta de tu casa.',
+                requiresAddress: true,
+                isActive: true
+            });
+            expect(deliveryMethod.id).toBeDefined();
+
+            // Verificar método EXPRESS
+            const expressMethod = response.body.find((method: any) => method.code === 'EXPRESS');
+            expect(expressMethod).toBeDefined();
+            expect(expressMethod).toMatchObject({
+                code: 'EXPRESS',
+                name: 'Entrega Express',
+                description: 'Entrega el mismo día (servicio premium).',
+                requiresAddress: true,
+                isActive: true
+            });
+            expect(expressMethod.id).toBeDefined();
         });
 
         it('should return only active delivery methods', async () => {
-            // Crear un método inactivo
-            await DeliveryMethodModel.create({
-                code: 'EXPRESS',
-                name: 'Envío Express',
-                description: 'Entrega en 24 horas',
-                requiresAddress: true,
-                isActive: false
-            });
+            // Desactivar el método EXPRESS existente
+            await DeliveryMethodModel.updateOne(
+                { code: 'EXPRESS' },
+                { isActive: false }
+            );
 
             const response = await request(testServer.app)
                 .get('/api/delivery-methods')

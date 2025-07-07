@@ -14,6 +14,7 @@
     "postinstall": "node scripts/postinstall.js || true",
     "generate-embeddings": "node src/infrastructure/adapters/transformers-bridge.mjs",
     "seed": "tsnd src/seeders/index.ts",
+    "seed:delivery-methods": "tsnd src/seeders/delivery-methods.seeder.ts",
     "test": "jest --runInBand --detectOpenHandles --selectProjects unit-integration",
     "test:unit": "jest --testPathPattern=tests/unit --runInBand",
     "test:integration": "jest --testPathPattern=tests/integration --runInBand",
