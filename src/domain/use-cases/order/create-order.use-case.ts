@@ -65,12 +65,12 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 this.logger.info(`[CreateOrderUC] Cliente ${finalCustomerId} encontrado para User ${userId}`);
             } else {
                 this.logger.info(`[CreateOrderUC] Procesando pedido para invitado. Email: ${createOrderDto.customerEmail}`);
-                
+
                 // Verificar datos básicos del cliente
                 if (!createOrderDto.customerEmail || !createOrderDto.customerName) {
                     throw CustomError.badRequest('Faltan datos básicos del cliente invitado (email y nombre).');
                 }
-                
+
                 const existingGuest = await this.customerRepository.findByEmail(createOrderDto.customerEmail);
                 if (existingGuest) {
                     if (existingGuest.userId) throw CustomError.badRequest('Email ya registrado. Inicia sesión.');
@@ -80,7 +80,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 } else {
                     // Para crear un cliente invitado necesitamos al menos un barrio (usaremos uno temporal si no hay dirección)
                     let neighborhoodId = createOrderDto.shippingNeighborhoodId;
-                    
+
                     // Si no hay neighborhoodId, usar uno temporal/default para permitir la creación del cliente
                     if (!neighborhoodId) {
                         // Buscar un barrio por defecto o usar el primero disponible
@@ -101,7 +101,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                         // Verificar que el barrio existe antes de crear cliente
                         await this.neighborhoodRepository.findById(neighborhoodId);
                     }
-                    
+
                     const [errorDto, createGuestDto] = CreateCustomerDto.create({
                         name: createOrderDto.customerName,
                         email: createOrderDto.customerEmail,
@@ -110,7 +110,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                         neighborhoodId: neighborhoodId,
                     });
                     if (errorDto) throw CustomError.badRequest(`Datos cliente invitado inválidos: ${errorDto}`);
-                    
+
                     customerForOrder = await this.customerRepository.create(createGuestDto!);
                     finalCustomerId = customerForOrder.id.toString();
                     this.logger.info(`[CreateOrderUC] Nuevo cliente invitado creado: ${finalCustomerId}`);
@@ -124,7 +124,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 try {
                     const { DeliveryMethodModel } = await import('../../../data/mongodb/models/delivery-method.model');
                     const deliveryMethod = await DeliveryMethodModel.findById(createOrderDto.deliveryMethodId);
-                    
+
                     if (deliveryMethod) {
                         requiresAddress = deliveryMethod.requiresAddress;
                         this.logger.info(`[CreateOrderUC] Método de entrega: ${deliveryMethod.code}, requiresAddress: ${requiresAddress}`);
@@ -247,7 +247,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 });
             }
             */
-              this.logger.info(`[CreateOrderUC] Orden creada exitosamente: ${createdOrder.id}. Notificación se enviará desde frontend cuando pago sea confirmado. VERSION: 2024-06-24-21:15`);
+            this.logger.info(`[CreateOrderUC] Orden creada exitosamente: ${createdOrder.id}. Notificación se enviará desde frontend cuando pago sea confirmado. VERSION: 2024-06-24-21:15`);
 
             return createdOrder;
 

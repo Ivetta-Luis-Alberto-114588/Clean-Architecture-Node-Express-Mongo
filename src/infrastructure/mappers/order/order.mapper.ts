@@ -26,7 +26,7 @@ export class OrderMapper {
         if (!_id && !id) throw CustomError.badRequest('SaleMapper: missing id');
         if (!customer) throw CustomError.badRequest("SaleMapper: missing customer");
         if (!Array.isArray(items)) throw CustomError.badRequest("SaleMapper: items must be an array");
-        
+
         // shippingDetails solo es obligatorio si el método de entrega lo requiere
         // Para métodos como PICKUP, no es necesario
         const hasShippingDetails = shippingDetails && Object.keys(shippingDetails).length > 0;
@@ -94,11 +94,11 @@ export class OrderMapper {
 
         // Solo crear shippingDetails si existen en el objeto (métodos de entrega que requieren dirección)
         const finalShippingDetails: ShippingDetailsEntity | undefined = hasShippingDetails ? {
-            recipientName: shippingDetails.recipientName, 
-            phone: shippingDetails.phone, 
+            recipientName: shippingDetails.recipientName,
+            phone: shippingDetails.phone,
             streetAddress: shippingDetails.streetAddress,
-            postalCode: shippingDetails.postalCode, 
-            neighborhoodName: shippingDetails.neighborhoodName, 
+            postalCode: shippingDetails.postalCode,
+            neighborhoodName: shippingDetails.neighborhoodName,
             cityName: shippingDetails.cityName,
             additionalInfo: shippingDetails.additionalInfo,
         } : undefined;        // Handle OrderStatus mapping

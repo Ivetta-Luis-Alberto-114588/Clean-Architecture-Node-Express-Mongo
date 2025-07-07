@@ -123,8 +123,8 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             const discountRate = calculatedDiscountRate;
             const discountAmount = Math.round(totalDiscountAmount * 100) / 100; const subtotalWithTax = Math.round((subtotalBeforeTax + totalTaxAmount) * 100) / 100;
             const finalTotal = subtotalWithTax; // Ya incluye descuento aplicado correctamente
-            if (finalTotal < 0) throw CustomError.badRequest('Total negativo.'); 
-            
+            if (finalTotal < 0) throw CustomError.badRequest('Total negativo.');
+
             const saleData = {
                 customer: finalCustomerId,
                 items: saleItems,
@@ -132,7 +132,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
                 taxAmount: totalTaxAmount,
                 discountRate: discountRate,
                 discountAmount: discountAmount,
-                total: finalTotal, 
+                total: finalTotal,
                 notes: createOrderDto.notes || "",
                 status: new mongoose.Types.ObjectId(defaultOrderStatusId),
                 deliveryMethod: new mongoose.Types.ObjectId(createOrderDto.deliveryMethodId!), // Siempre debe existir después de validación del DTO
