@@ -19,14 +19,17 @@ export class OrderMapper {
         if (!object) throw CustomError.badRequest('SaleMapper: object is null or undefined');
         const {
             _id, id, customer, items = [], subtotal, taxRate, taxAmount,
-            discountRate, discountAmount, total, date, status, paymentMethod, notes,
+            discountRate, discountAmount, total, date, status, paymentMethod, deliveryMethod, notes,
             shippingDetails
         } = object;
 
         if (!_id && !id) throw CustomError.badRequest('SaleMapper: missing id');
         if (!customer) throw CustomError.badRequest("SaleMapper: missing customer");
         if (!Array.isArray(items)) throw CustomError.badRequest("SaleMapper: items must be an array");
-        if (!shippingDetails) throw CustomError.badRequest("SaleMapper: missing shippingDetails");
+        
+        // shippingDetails solo es obligatorio si el método de entrega lo requiere
+        // Para métodos como PICKUP, no es necesario
+        const hasShippingDetails = shippingDetails && Object.keys(shippingDetails).length > 0;
 
         let customerEntity: CustomerEntity;
         try {
@@ -87,11 +90,18 @@ export class OrderMapper {
                 );
             }
             return { product: productEntity, quantity: Number(item.quantity) || 0, unitPrice: Number(item.unitPrice) || 0, subtotal: Number(item.subtotal) || 0 };
-        }).filter((item): item is OrderItemEntity => item !== null); const finalShippingDetails: ShippingDetailsEntity = {
-            recipientName: shippingDetails.recipientName, phone: shippingDetails.phone, streetAddress: shippingDetails.streetAddress,
-            postalCode: shippingDetails.postalCode, neighborhoodName: shippingDetails.neighborhoodName, cityName: shippingDetails.cityName,
+        }).filter((item): item is OrderItemEntity => item !== null);
+
+        // Solo crear shippingDetails si existen en el objeto (métodos de entrega que requieren dirección)
+        const finalShippingDetails: ShippingDetailsEntity | undefined = hasShippingDetails ? {
+            recipientName: shippingDetails.recipientName, 
+            phone: shippingDetails.phone, 
+            streetAddress: shippingDetails.streetAddress,
+            postalCode: shippingDetails.postalCode, 
+            neighborhoodName: shippingDetails.neighborhoodName, 
+            cityName: shippingDetails.cityName,
             additionalInfo: shippingDetails.additionalInfo,
-        };        // Handle OrderStatus mapping
+        } : undefined;        // Handle OrderStatus mapping
         let statusEntity: OrderStatusEntity;
         try {
             if (typeof status === 'object' && status !== null) {

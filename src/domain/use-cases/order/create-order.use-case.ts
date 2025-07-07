@@ -47,7 +47,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         let couponIdToIncrement: string | null = null;
         let customerForOrder: CustomerEntity;
         let finalCustomerId: string;
-        let resolvedShippingDetails: ResolvedShippingDetails;
+        let resolvedShippingDetails: ResolvedShippingDetails | undefined;
 
         try {
             // --- 0. Obtener estado por defecto para la orden ---
@@ -65,9 +65,12 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 this.logger.info(`[CreateOrderUC] Cliente ${finalCustomerId} encontrado para User ${userId}`);
             } else {
                 this.logger.info(`[CreateOrderUC] Procesando pedido para invitado. Email: ${createOrderDto.customerEmail}`);
-                if (!createOrderDto.customerEmail || !createOrderDto.customerName || !createOrderDto.shippingNeighborhoodId) {
-                    throw CustomError.badRequest('Faltan datos del cliente invitado o barrio de envío.');
+                
+                // Verificar datos básicos del cliente
+                if (!createOrderDto.customerEmail || !createOrderDto.customerName) {
+                    throw CustomError.badRequest('Faltan datos básicos del cliente invitado (email y nombre).');
                 }
+                
                 const existingGuest = await this.customerRepository.findByEmail(createOrderDto.customerEmail);
                 if (existingGuest) {
                     if (existingGuest.userId) throw CustomError.badRequest('Email ya registrado. Inicia sesión.');
@@ -75,76 +78,124 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                     finalCustomerId = existingGuest.id.toString();
                     this.logger.info(`[CreateOrderUC] Cliente invitado existente ${finalCustomerId} encontrado por email.`);
                 } else {
+                    // Para crear un cliente invitado necesitamos al menos un barrio (usaremos uno temporal si no hay dirección)
+                    let neighborhoodId = createOrderDto.shippingNeighborhoodId;
+                    
+                    // Si no hay neighborhoodId, usar uno temporal/default para permitir la creación del cliente
+                    if (!neighborhoodId) {
+                        // Buscar un barrio por defecto o usar el primero disponible
+                        try {
+                            const { NeighborhoodModel } = await import('../../../data/mongodb/models/customers/neighborhood.model');
+                            const defaultNeighborhood = await NeighborhoodModel.findOne().limit(1);
+                            if (defaultNeighborhood) {
+                                neighborhoodId = defaultNeighborhood._id.toString();
+                                this.logger.info(`[CreateOrderUC] Usando barrio temporal para cliente invitado: ${neighborhoodId}`);
+                            } else {
+                                throw CustomError.internalServerError('No hay barrios configurados en el sistema.');
+                            }
+                        } catch (error) {
+                            this.logger.error('Error obteniendo barrio temporal:', error);
+                            throw CustomError.internalServerError('Error al crear cliente invitado.');
+                        }
+                    } else {
+                        // Verificar que el barrio existe antes de crear cliente
+                        await this.neighborhoodRepository.findById(neighborhoodId);
+                    }
+                    
                     const [errorDto, createGuestDto] = CreateCustomerDto.create({
                         name: createOrderDto.customerName,
                         email: createOrderDto.customerEmail,
                         phone: createOrderDto.shippingPhone || '00000000',
                         address: createOrderDto.shippingStreetAddress || 'Dirección Pendiente',
-                        neighborhoodId: createOrderDto.shippingNeighborhoodId,
+                        neighborhoodId: neighborhoodId,
                     });
                     if (errorDto) throw CustomError.badRequest(`Datos cliente invitado inválidos: ${errorDto}`);
-                    // Verificar que el barrio existe antes de crear cliente
-                    await this.neighborhoodRepository.findById(createOrderDto.shippingNeighborhoodId);
+                    
                     customerForOrder = await this.customerRepository.create(createGuestDto!);
                     finalCustomerId = customerForOrder.id.toString();
                     this.logger.info(`[CreateOrderUC] Nuevo cliente invitado creado: ${finalCustomerId}`);
                 }
+            }            // --- 2. Verificar si método de entrega requiere dirección y resolver dirección de envío ---
+            let requiresAddress = true; // Default por seguridad
+            let resolvedShippingDetails: ResolvedShippingDetails | undefined;
+
+            // Verificar el método de entrega para determinar si requiere dirección
+            if (createOrderDto.deliveryMethodId) {
+                try {
+                    const { DeliveryMethodModel } = await import('../../../data/mongodb/models/delivery-method.model');
+                    const deliveryMethod = await DeliveryMethodModel.findById(createOrderDto.deliveryMethodId);
+                    
+                    if (deliveryMethod) {
+                        requiresAddress = deliveryMethod.requiresAddress;
+                        this.logger.info(`[CreateOrderUC] Método de entrega: ${deliveryMethod.code}, requiresAddress: ${requiresAddress}`);
+                    } else {
+                        throw CustomError.badRequest("Método de entrega no encontrado");
+                    }
+                } catch (error) {
+                    this.logger.error('Error obteniendo método de entrega:', error);
+                    throw CustomError.internalServerError("Error al verificar método de entrega");
+                }
             }
 
-            // --- 2. Resolver Dirección de Envío ---
-            if (createOrderDto.selectedAddressId) {
-                if (!userId) throw CustomError.badRequest("Invitados no pueden seleccionar direcciones.");
-                const selectedAddress = await this.customerRepository.findAddressById(createOrderDto.selectedAddressId);
-                if (!selectedAddress) throw CustomError.notFound("Dirección seleccionada no encontrada.");
-                if (selectedAddress.customerId !== finalCustomerId) throw CustomError.forbiden("No tienes permiso para usar esta dirección.");
-                if (!selectedAddress.neighborhood || !selectedAddress.city) throw CustomError.internalServerError(`Dirección ${selectedAddress.id} sin datos de barrio/ciudad.`);
+            // Solo resolver dirección si el método de entrega la requiere
+            if (requiresAddress) {
+                if (createOrderDto.selectedAddressId) {
+                    if (!userId) throw CustomError.badRequest("Invitados no pueden seleccionar direcciones.");
+                    const selectedAddress = await this.customerRepository.findAddressById(createOrderDto.selectedAddressId);
+                    if (!selectedAddress) throw CustomError.notFound("Dirección seleccionada no encontrada.");
+                    if (selectedAddress.customerId !== finalCustomerId) throw CustomError.forbiden("No tienes permiso para usar esta dirección.");
+                    if (!selectedAddress.neighborhood || !selectedAddress.city) throw CustomError.internalServerError(`Dirección ${selectedAddress.id} sin datos de barrio/ciudad.`);
+                    resolvedShippingDetails = {
+                        recipientName: selectedAddress.recipientName, phone: selectedAddress.phone, streetAddress: selectedAddress.streetAddress,
+                        postalCode: selectedAddress.postalCode, neighborhoodName: selectedAddress.neighborhood.name, cityName: selectedAddress.city.name,
+                        additionalInfo: selectedAddress.additionalInfo, originalAddressId: selectedAddress.id,
+                        originalNeighborhoodId: selectedAddress.neighborhood.id.toString(), originalCityId: selectedAddress.city.id.toString(),
+                    };
+                    this.logger.info(`[CreateOrderUC] Usando dirección guardada ${selectedAddress.id}`);
 
-                resolvedShippingDetails = {
-                    recipientName: selectedAddress.recipientName, phone: selectedAddress.phone, streetAddress: selectedAddress.streetAddress,
-                    postalCode: selectedAddress.postalCode, neighborhoodName: selectedAddress.neighborhood.name, cityName: selectedAddress.city.name,
-                    additionalInfo: selectedAddress.additionalInfo, originalAddressId: selectedAddress.id,
-                    originalNeighborhoodId: selectedAddress.neighborhood.id.toString(), originalCityId: selectedAddress.city.id.toString(),
-                };
-                this.logger.info(`[CreateOrderUC] Usando dirección guardada ${selectedAddress.id}`);
+                } else if (createOrderDto.shippingStreetAddress) {
+                    if (!createOrderDto.shippingNeighborhoodId) throw CustomError.badRequest("Falta ID de barrio para dirección de envío.");
+                    const neighborhood = await this.neighborhoodRepository.findById(createOrderDto.shippingNeighborhoodId);
+                    if (!neighborhood) throw CustomError.badRequest("Barrio de envío no encontrado.");
+                    let city = neighborhood.city; // Asumir populado
+                    if (!city || typeof city !== 'object') {
+                        const cityFromRepo = await this.cityRepository.findById(city?.toString() || createOrderDto.shippingCityId || neighborhood.city.id.toString());
+                        if (!cityFromRepo) throw CustomError.badRequest("Ciudad de envío no encontrada.");
+                        city = cityFromRepo;
+                    }
+                    resolvedShippingDetails = {
+                        recipientName: createOrderDto.shippingRecipientName!, phone: createOrderDto.shippingPhone!, streetAddress: createOrderDto.shippingStreetAddress!,
+                        postalCode: createOrderDto.shippingPostalCode, neighborhoodName: neighborhood.name, cityName: city.name,
+                        additionalInfo: createOrderDto.shippingAdditionalInfo, originalAddressId: undefined,
+                        originalNeighborhoodId: neighborhood.id.toString(), originalCityId: city.id.toString(),
+                    };
+                    this.logger.info(`[CreateOrderUC] Usando dirección de envío proporcionada.`);
 
-            } else if (createOrderDto.shippingStreetAddress) {
-                if (!createOrderDto.shippingNeighborhoodId) throw CustomError.badRequest("Falta ID de barrio para dirección de envío.");
-                const neighborhood = await this.neighborhoodRepository.findById(createOrderDto.shippingNeighborhoodId);
-                if (!neighborhood) throw CustomError.badRequest("Barrio de envío no encontrado.");
-                let city = neighborhood.city; // Asumir populado
-                if (!city || typeof city !== 'object') {
-                    const cityFromRepo = await this.cityRepository.findById(city?.toString() || createOrderDto.shippingCityId || neighborhood.city.id.toString());
-                    if (!cityFromRepo) throw CustomError.badRequest("Ciudad de envío no encontrada.");
-                    city = cityFromRepo;
+                } else {
+                    // Ni seleccionó ni proporcionó: Intentar usar la default si es usuario registrado
+                    if (!userId) throw CustomError.badRequest("Invitados deben proporcionar dirección de envío.");
+
+                    this.logger.info(`[CreateOrderUC] No se seleccionó ni proporcionó dirección. Buscando default para cliente ${finalCustomerId}`);
+                    const [pgError, pgDto] = PaginationDto.create(1, 1); // Buscar solo 1
+                    if (pgError) throw CustomError.internalServerError("Error creando paginación para buscar dirección default.");
+                    const addresses = await this.customerRepository.getAddressesByCustomerId(finalCustomerId, pgDto!);
+                    const defaultAddress = addresses.find(a => a.isDefault);
+
+                    if (!defaultAddress) throw CustomError.badRequest("No se encontró dirección predeterminada y no se proporcionó una nueva.");
+                    if (!defaultAddress.neighborhood || !defaultAddress.city) throw CustomError.internalServerError(`Dirección default ${defaultAddress.id} sin datos de barrio/ciudad.`);
+
+                    resolvedShippingDetails = {
+                        recipientName: defaultAddress.recipientName, phone: defaultAddress.phone, streetAddress: defaultAddress.streetAddress,
+                        postalCode: defaultAddress.postalCode, neighborhoodName: defaultAddress.neighborhood.name, cityName: defaultAddress.city.name,
+                        additionalInfo: defaultAddress.additionalInfo, originalAddressId: defaultAddress.id,
+                        originalNeighborhoodId: defaultAddress.neighborhood.id.toString(), originalCityId: defaultAddress.city.id.toString(),
+                    };
+                    this.logger.info(`[CreateOrderUC] Usando dirección default encontrada ${defaultAddress.id}`);
                 }
-                resolvedShippingDetails = {
-                    recipientName: createOrderDto.shippingRecipientName!, phone: createOrderDto.shippingPhone!, streetAddress: createOrderDto.shippingStreetAddress!,
-                    postalCode: createOrderDto.shippingPostalCode, neighborhoodName: neighborhood.name, cityName: city.name,
-                    additionalInfo: createOrderDto.shippingAdditionalInfo, originalAddressId: undefined,
-                    originalNeighborhoodId: neighborhood.id.toString(), originalCityId: city.id.toString(),
-                };
-                this.logger.info(`[CreateOrderUC] Usando dirección de envío proporcionada.`);
-
             } else {
-                // Ni seleccionó ni proporcionó: Intentar usar la default si es usuario registrado
-                if (!userId) throw CustomError.badRequest("Invitados deben proporcionar dirección de envío.");
-
-                this.logger.info(`[CreateOrderUC] No se seleccionó ni proporcionó dirección. Buscando default para cliente ${finalCustomerId}`);
-                const [pgError, pgDto] = PaginationDto.create(1, 1); // Buscar solo 1
-                if (pgError) throw CustomError.internalServerError("Error creando paginación para buscar dirección default.");
-                const addresses = await this.customerRepository.getAddressesByCustomerId(finalCustomerId, pgDto!);
-                const defaultAddress = addresses.find(a => a.isDefault);
-
-                if (!defaultAddress) throw CustomError.badRequest("No se encontró dirección predeterminada y no se proporcionó una nueva.");
-                if (!defaultAddress.neighborhood || !defaultAddress.city) throw CustomError.internalServerError(`Dirección default ${defaultAddress.id} sin datos de barrio/ciudad.`);
-
-                resolvedShippingDetails = {
-                    recipientName: defaultAddress.recipientName, phone: defaultAddress.phone, streetAddress: defaultAddress.streetAddress,
-                    postalCode: defaultAddress.postalCode, neighborhoodName: defaultAddress.neighborhood.name, cityName: defaultAddress.city.name,
-                    additionalInfo: defaultAddress.additionalInfo, originalAddressId: defaultAddress.id,
-                    originalNeighborhoodId: defaultAddress.neighborhood.id.toString(), originalCityId: defaultAddress.city.id.toString(),
-                };
-                this.logger.info(`[CreateOrderUC] Usando dirección default encontrada ${defaultAddress.id}`);
+                // Método de entrega NO requiere dirección (ej: PICKUP)
+                this.logger.info(`[CreateOrderUC] Método de entrega no requiere dirección, omitiendo resolución de dirección`);
+                resolvedShippingDetails = undefined; // No se necesita dirección
             }
 
             // --- 3. Lógica de Cupón ---

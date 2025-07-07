@@ -74,4 +74,65 @@ export class AuthMiddleware {
             next();
         }
     }
+
+    /**
+     * Middleware de validación JWT opcional para rutas que permiten tanto usuarios autenticados como invitados
+     * Si hay token, lo valida. Si no hay token, continúa sin error.
+     */
+    static validateJwtOptional = async (req: Request, res: Response, next: NextFunction) => {
+        logger.debug("validateJwtOptional middleware started");
+
+        const authorization = req.header('Authorization');
+        
+        // Si no hay header de autorización, continuar como invitado
+        if (!authorization) {
+            logger.debug("No authorization header - continuing as guest");
+            return next();
+        }
+        
+        // Si hay header pero no es Bearer, continuar como invitado
+        if (!authorization.startsWith("Bearer ")) {
+            logger.debug("Invalid Bearer format - continuing as guest");
+            return next();
+        }
+
+        const token = authorization.split(' ')[1] || "";
+        
+        // Si no hay token, continuar como invitado
+        if (!token) {
+            logger.debug("No token provided - continuing as guest");
+            return next();
+        }
+
+        try {
+            const payload = await JwtAdapter.validateToken<{ id: string }>(token);
+            
+            if (!payload) {
+                logger.debug("Invalid token - continuing as guest");
+                return next();
+            }
+
+            const user = await UserModel.findById(payload.id);
+            
+            if (!user) {
+                logger.debug("User not found for token - continuing as guest");
+                return next();
+            }
+
+            // Si todo está bien, añadir el usuario autenticado
+            const mappedUser = UserMapper.fromObjectToUserEntity(user);
+            logger.debug("Optional JWT validation successful", {
+                userId: mappedUser.id,
+                userEmail: mappedUser.email,
+                userRoles: mappedUser.roles
+            });
+            req.body.user = mappedUser;
+            next();
+
+        } catch (error) {
+            // En caso de error, continuar como invitado en lugar de fallar
+            logger.debug("Error in optional JWT validation - continuing as guest:", { error });
+            next();
+        }
+    }
 }

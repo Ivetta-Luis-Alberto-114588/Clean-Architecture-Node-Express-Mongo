@@ -59,7 +59,7 @@ export class OrderRoutes {
             loggerService,
             updateOrderUseCase
         );        // Rutas
-        router.post('/', [AuthMiddleware.validateJwt], controller.createSale);
+        router.post('/', [AuthMiddleware.validateJwtOptional], controller.createSale);
         router.get('/my-orders', [AuthMiddleware.validateJwt], controller.getMyOrders);
         router.get('/', controller.getAllSales);
         router.get('/:id', controller.getSaleById);

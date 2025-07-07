@@ -18,7 +18,7 @@ export abstract class OrderRepository {
         calculatedDiscountRate: number,
         couponIdToIncrement: string | null | undefined,
         finalCustomerId: string,
-        shippingDetails: ResolvedShippingDetails,
+        shippingDetails: ResolvedShippingDetails | undefined, // Hacer opcional
         defaultOrderStatusId: string
     ): Promise<OrderEntity>;
 

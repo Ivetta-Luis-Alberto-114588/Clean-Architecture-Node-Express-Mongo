@@ -64,7 +64,7 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
         calculatedDiscountRate: number,
         couponIdToIncrement: string | null | undefined,
         finalCustomerId: string,
-        shippingDetails: ResolvedShippingDetails,
+        shippingDetails: ResolvedShippingDetails | undefined, // Hacer opcional
         defaultOrderStatusId: string
     ): Promise<OrderEntity> {
         const session = await mongoose.startSession();
@@ -86,6 +86,9 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
 
             const customerExists = await CustomerModel.findById(finalCustomerId).session(session).lean();
             if (!customerExists) throw CustomError.notFound(`Cliente ${finalCustomerId} no encontrado.`);
+
+            // Log si el método de entrega requiere dirección o no
+            logger.info(`[OrderDS] Creando pedido. Cliente: ${finalCustomerId}, Shipping requerido: ${shippingDetails ? 'SÍ' : 'NO'}`);
 
             for (const itemDto of createOrderDto.items) {
                 const product = await ProductModel.findById(itemDto.productId).session(session);
@@ -120,27 +123,35 @@ export class OrderMongoDataSourceImpl implements OrderDataSource {
             const discountRate = calculatedDiscountRate;
             const discountAmount = Math.round(totalDiscountAmount * 100) / 100; const subtotalWithTax = Math.round((subtotalBeforeTax + totalTaxAmount) * 100) / 100;
             const finalTotal = subtotalWithTax; // Ya incluye descuento aplicado correctamente
-            if (finalTotal < 0) throw CustomError.badRequest('Total negativo.'); const saleData = {
+            if (finalTotal < 0) throw CustomError.badRequest('Total negativo.'); 
+            
+            const saleData = {
                 customer: finalCustomerId,
                 items: saleItems,
                 subtotal: subtotalBeforeTax, // Subtotal después del descuento pero antes del IVA
                 taxAmount: totalTaxAmount,
                 discountRate: discountRate,
                 discountAmount: discountAmount,
-                total: finalTotal, notes: createOrderDto.notes || "",
+                total: finalTotal, 
+                notes: createOrderDto.notes || "",
                 status: new mongoose.Types.ObjectId(defaultOrderStatusId),
-                shippingDetails: {
-                    recipientName: shippingDetails.recipientName,
-                    phone: shippingDetails.phone,
-                    streetAddress: shippingDetails.streetAddress,
-                    postalCode: shippingDetails.postalCode,
-                    neighborhoodName: shippingDetails.neighborhoodName,
-                    cityName: shippingDetails.cityName,
-                    additionalInfo: shippingDetails.additionalInfo,
-                    originalAddressId: shippingDetails.originalAddressId ? new mongoose.Types.ObjectId(shippingDetails.originalAddressId) : undefined,
-                    originalNeighborhoodId: new mongoose.Types.ObjectId(shippingDetails.originalNeighborhoodId),
-                    originalCityId: new mongoose.Types.ObjectId(shippingDetails.originalCityId),
-                },
+                deliveryMethod: new mongoose.Types.ObjectId(createOrderDto.deliveryMethodId!), // Siempre debe existir después de validación del DTO
+                ...(createOrderDto.paymentMethodId && { paymentMethod: new mongoose.Types.ObjectId(createOrderDto.paymentMethodId) }),
+                // Solo incluir shippingDetails si está definido (requerido por el método de entrega)
+                ...(shippingDetails && {
+                    shippingDetails: {
+                        recipientName: shippingDetails.recipientName,
+                        phone: shippingDetails.phone,
+                        streetAddress: shippingDetails.streetAddress,
+                        postalCode: shippingDetails.postalCode,
+                        neighborhoodName: shippingDetails.neighborhoodName,
+                        cityName: shippingDetails.cityName,
+                        additionalInfo: shippingDetails.additionalInfo,
+                        originalAddressId: shippingDetails.originalAddressId ? new mongoose.Types.ObjectId(shippingDetails.originalAddressId) : undefined,
+                        originalNeighborhoodId: new mongoose.Types.ObjectId(shippingDetails.originalNeighborhoodId),
+                        originalCityId: new mongoose.Types.ObjectId(shippingDetails.originalCityId),
+                    }
+                }),
                 metadata: { couponCodeUsed: createOrderDto.couponCode || null }
             };
 
