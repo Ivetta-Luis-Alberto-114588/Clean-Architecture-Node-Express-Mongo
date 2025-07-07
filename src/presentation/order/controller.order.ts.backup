@@ -52,17 +52,10 @@ export class OrderController {
 
     getOrdersForDashboard = async (req: Request, res: Response): Promise<void> => {
         try {
-            const { page = 1, limit = 10 } = req.query;
-            const [error, paginationDto] = PaginationDto.create(+page, +limit);
-            if (error) {
-                res.status(400).json({ error });
-                return;
-            }
-            const dashboardUseCase = new GetOrdersForDashboardUseCase(this.orderRepository, this.orderStatusRepository);
-            const data = await dashboardUseCase.execute();
+            const data = await new GetOrdersForDashboardUseCase(this.orderRepository, this.orderStatusRepository).execute();
             res.json(data);
-        } catch (err) {
-            this.handleError(err, res);
+        } catch (error) {
+            this.handleError(error, res);
         }
     };
 
@@ -71,7 +64,7 @@ export class OrderController {
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
         if (error) {
             res.status(400).json({ error });
-            loggerService.warn("Error en validación de PaginationDto", { error, query: req.query });
+            loggerService.warn("Error en paginación para getAllSales", { error, query: req.query });
             return;
         }
         new GetAllOrderUseCase(this.orderRepository)
@@ -86,10 +79,13 @@ export class OrderController {
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
         if (error) {
             res.status(400).json({ error });
-            loggerService.warn(`Error en validación de PaginationDto para customer ${customerId}`, { error, query: req.query });
+            loggerService.warn(`Error en paginación para getSalesByCustomer ${customerId}`, { error, query: req.query });
             return;
         }
-        new FindOrderByCustomerUseCase(this.orderRepository, this.customerRepository)
+        new FindOrderByCustomerUseCase(
+            this.orderRepository,
+            this.customerRepository
+        )
             .execute(customerId, paginationDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
@@ -98,49 +94,59 @@ export class OrderController {
     getSalesByDateRange = (req: Request, res: Response): void => {
         const { startDate, endDate } = req.body;
         const { page = 1, limit = 10 } = req.query;
-        const [error, paginationDto] = PaginationDto.create(+page, +limit);
-        if (error) {
-            res.status(400).json({ error });
-            loggerService.warn("Error en validación de PaginationDto para búsqueda por fechas", { error, query: req.query });
-            return;
-        }
+
         if (!startDate || !endDate) {
-            res.status(400).json({ error: "startDate y endDate son requeridos" });
-            loggerService.warn("Fechas de inicio y fin no proporcionadas", { body: req.body });
+            res.status(400).json({ error: "Debe proporcionar fechas de inicio y fin" });
             return;
         }
 
-        // Validar que las fechas sean válidas
-        const parsedStartDate = new Date(startDate);
-        const parsedEndDate = new Date(endDate);
+        try {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
 
-        if (isNaN(parsedStartDate.getTime()) || isNaN(parsedEndDate.getTime())) {
-            res.status(400).json({ error: "Formato de fecha inválido. Use formato ISO (YYYY-MM-DD)" });
-            loggerService.warn("Fechas con formato inválido", { startDate, endDate });
-            return;
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                res.status(400).json({ error: "Formato de fecha inválido" });
+                return;
+            }
+
+            const [error, paginationDto] = PaginationDto.create(+page, +limit);
+            if (error) {
+                res.status(400).json({ error });
+                loggerService.warn(`Error en paginación para getSalesByDateRange`, { error, query: req.query });
+                return;
+            }
+
+            new FindOrderByDateRangeUseCase(this.orderRepository)
+                .execute(start, end, paginationDto!)
+                .then(data => {
+                    loggerService.info(`Se encontraron ${data.total} pedidos en el rango.`);
+                    res.json(data);
+                })
+                .catch(err => this.handleError(err, res));
+        } catch (error) {
+            this.handleError(error, res);
         }
-
-        new FindOrderByDateRangeUseCase(this.orderRepository)
-            .execute(parsedStartDate, parsedEndDate, paginationDto!)
-            .then(data => res.json(data))
-            .catch(err => this.handleError(err, res));
     };
 
     getMyOrders = (req: Request, res: Response): void => {
-        const { page = 1, limit = 10 } = req.query;
         const userId = req.body.user?.id;
+
         if (!userId) {
-            res.status(401).json({ error: "Usuario no autenticado" });
+            this.handleError(CustomError.unauthorized('Usuario no autenticado'), res);
             return;
         }
+
+        const { page = 1, limit = 10 } = req.query;
         const [error, paginationDto] = PaginationDto.create(+page, +limit);
+
         if (error) {
             res.status(400).json({ error });
-            loggerService.warn(`Error en validación de PaginationDto para usuario ${userId}`, { error, query: req.query });
+            loggerService.warn(`Error en paginación para getMyOrders (User: ${userId})`, { error, query: req.query });
             return;
         }
-        const useCase = new GetMyOrdersUseCase(this.orderRepository, this.customerRepository);
-        useCase.execute(userId, paginationDto!)
+
+        new GetMyOrdersUseCase(this.orderRepository, this.customerRepository)
+            .execute(userId, paginationDto!)
             .then(data => res.json(data))
             .catch(err => this.handleError(err, res));
     };
@@ -154,16 +160,16 @@ export class OrderController {
                 res.status(400).json({ error });
                 loggerService.warn("Error en validación de CreateOrderDto", { error, body: req.body, userId });
                 return;
-            }
-
+            } 
+            
             const orderUseCase = new CreateOrderUseCase(
                 this.orderRepository, this.customerRepository, this.productRepository,
                 this.couponRepository, this.neighborhoodRepository, this.cityRepository,
                 this.orderStatusRepository, notificationService, loggerService
             );
-
+            
             const data = await orderUseCase.execute(createSaleDto!, userId);
-
+            
             // Enviar notificación de nueva orden (sin bloquear la respuesta)
             try {
                 // await notificationService.sendOrderNotification({
@@ -184,14 +190,11 @@ export class OrderController {
                 // No lanzamos el error para que no afecte la respuesta de la orden
             }
 
-            res.status(201).json({
-                success: true,
-                message: "Orden creada exitosamente",
-                data
-            });
-        } catch (error) {
-            this.handleError(error, res);
+            res.status(201).json(data);
+        } catch (err) {
+            this.handleError(err, res);
         }
+    };
     };
 
     getSaleById = (req: Request, res: Response): void => {
