@@ -172,102 +172,88 @@ Content-Type: application/json
 }
 ```
 
-**Respuesta:**
+**Respuesta exitosa (200):**
 ```json
 {
-  "message": "Email de recuperación enviado",
-  "emailSent": true
+  "message": "Se ha enviado un enlace de recuperación a tu email"
 }
 ```
 
-#### 📬 Email de Prueba (Admin)
+#### � Restablecer Contraseña
 
 ```http
-POST /api/admin/send-test-email
-Authorization: Bearer <admin-jwt-token>
+POST /api/auth/reset-password
 Content-Type: application/json
 
 {
-  "to": "test@email.com",
-  "subject": "Email de Prueba",
-  "type": "test"
+  "token": "reset-token-here",
+  "newPassword": "NuevaPassword123"
 }
 ```
 
-#### 📊 Email Personalizado (Admin)
-
-```http
-POST /api/admin/send-custom-email
-Authorization: Bearer <admin-jwt-token>
-Content-Type: application/json
-
+**Respuesta exitosa (200):**
+```json
 {
-  "to": "cliente@email.com",
-  "subject": "Asunto Personalizado",
-  "html": "<h1>Contenido HTML</h1>",
-  "text": "Contenido en texto plano"
+  "message": "Contraseña restablecida correctamente"
 }
 ```
+
+> **Nota:** Ambos endpoints son públicos y **no requieren autenticación**.
+
+#### � Endpoints de administración de emails (NO IMPLEMENTADOS)
+
+Los siguientes endpoints aparecen en la documentación pero **no están implementados actualmente** en el backend. Si el frontend los requiere, deben ser desarrollados:
+
+- `POST /api/admin/send-test-email`
+- `POST /api/admin/send-custom-email`
+- `GET /api/admin/emails`
+- `GET /api/admin/emails/stats`
+
+> **Importante:** Si necesitas estos endpoints, consulta con backend para su desarrollo o elimina su uso en frontend.
 
 ### 📈 Monitoreo de Emails
 
-#### 📋 Historial de Emails
+> **Nota:** Los endpoints `/api/admin/emails` y `/api/admin/emails/stats` **no están implementados** en el backend actual. Si se requieren, deben ser desarrollados.
+## 🗺️ Diagramas de Flujo
 
-```http
-GET /api/admin/emails?page=1&limit=20&status=sent
-Authorization: Bearer <admin-jwt-token>
+### 🔄 Flujo de Recuperación de Contraseña
+
+```mermaid
+sequenceDiagram
+    participant User as Usuario
+    participant Front as Frontend
+    participant API as API Backend
+    participant Email as EmailService
+
+    User->>Front: Solicita recuperación (email)
+    Front->>API: POST /api/auth/forgot-password
+    API->>API: Valida email y genera token
+    API->>Email: Envía email con link de reseteo
+    Email-->>User: Email con link de reseteo
+    User->>Front: Hace click en link y envía nueva contraseña
+    Front->>API: POST /api/auth/reset-password
+    API->>API: Valida token y actualiza contraseña
+    API-->>Front: Respuesta de éxito
 ```
 
-**Respuesta:**
-```json
-{
-  "total": 150,
-  "emails": [
-    {
-      "id": "email_123",
-      "to": "cliente@email.com",
-      "subject": "Confirmación de Pedido #123",
-      "type": "order_confirmation",
-      "status": "sent",
-      "sentAt": "2025-01-15T10:30:00Z",
-      "deliveredAt": "2025-01-15T10:30:15Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "totalPages": 8
-  }
-}
-```
+### � Flujo de Notificación de Pago Aprobado
 
-#### 📊 Estadísticas de Emails
+```mermaid
+sequenceDiagram
+    participant MP as MercadoPago
+    participant API as API Backend
+    participant Email as EmailService
+    participant Telegram as TelegramService
+    participant User as Usuario
 
-```http
-GET /api/admin/emails/stats
-Authorization: Bearer <admin-jwt-token>
-```
-
-**Respuesta:**
-```json
-{
-  "general": {
-    "totalSent": 1250,
-    "delivered": 1200,
-    "failed": 50,
-    "deliveryRate": 96.0
-  },
-  "byType": [
-    { "type": "order_confirmation", "sent": 500, "delivered": 485 },
-    { "type": "password_reset", "sent": 200, "delivered": 195 },
-    { "type": "payment_confirmation", "sent": 300, "delivered": 290 }
-  ],
-  "last24Hours": {
-    "sent": 45,
-    "delivered": 43,
-    "failed": 2
-  }
-}
+    MP->>API: POST /api/payments/webhook
+    API->>API: Verifica status === "approved"
+    API->>API: Busca y actualiza orden
+    API->>par Email y Telegram
+    API->>Email: Envía email de pago aprobado
+    API->>Telegram: Envía mensaje a admin
+    Email-->>User: Email de confirmación de pago
+    Telegram-->>API: Notificación enviada
 ```
 
 ---
