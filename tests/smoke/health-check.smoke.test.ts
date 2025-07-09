@@ -659,8 +659,30 @@ describe('Health Check - Smoke Tests', () => {
                 const { OrderModel } = require('../../src/data/mongodb/models/order/order.model');
                 const { CustomerModel } = require('../../src/data/mongodb/models/customers/customer.model');
                 const { DeliveryMethodModel } = require('../../src/data/mongodb/models/delivery-method.model');
+                const { NeighborhoodModel } = require('../../src/data/mongodb/models/customers/neighborhood.model');
+                const { CityModel } = require('../../src/data/mongodb/models/customers/city.model');
 
                 try {
+                    // Crear ciudad y barrio para el test de pagos si no existen
+                    let testCityForPayment = await CityModel.findOne({ name: 'Payment Test City' });
+                    if (!testCityForPayment) {
+                        testCityForPayment = await CityModel.create({
+                            name: 'Payment Test City',
+                            description: 'City for payment tests',
+                            isActive: true
+                        });
+                    }
+
+                    let testNeighborhoodForPayment = await NeighborhoodModel.findOne({ name: 'Payment Test Neighborhood' });
+                    if (!testNeighborhoodForPayment) {
+                        testNeighborhoodForPayment = await NeighborhoodModel.create({
+                            name: 'Payment Test Neighborhood',
+                            description: 'Neighborhood for payment tests',
+                            city: testCityForPayment._id,
+                            isActive: true
+                        });
+                    }
+
                     // Crear delivery method de prueba
                     const testDeliveryMethod = await DeliveryMethodModel.create({
                         code: 'SHIPPING',
@@ -670,13 +692,13 @@ describe('Health Check - Smoke Tests', () => {
                         isActive: true
                     });
 
-                    // Crear customer de prueba
+                    // Crear customer de prueba usando el barrio de prueba
                     const testCustomer = await CustomerModel.create({
                         name: 'Customer for Payment Test',
                         email: 'payment-customer@test.com',
                         phone: '1234567890',
                         address: 'Test Address 123',
-                        neighborhoodId: testUnit._id, // Usar cualquier ObjectId válido
+                        neighborhood: testNeighborhoodForPayment._id, // Usar el ID del barrio de prueba
                         isActive: true
                     });
 
@@ -2177,7 +2199,7 @@ describe('Health Check - Smoke Tests', () => {
         describe('Sales/Orders Management', () => {
             it('should get all sales with pagination (public endpoint)', async () => {
                 const response = await request(app)
-                    .get('/api/sales?page=1&limit=10')
+                    .get('/api/orders?page=1&limit=10')
                     .expect((res) => {
                         expect([200, 400]).toContain(res.status);
                     }); if (response.status === 200) {
@@ -2190,7 +2212,7 @@ describe('Health Check - Smoke Tests', () => {
 
             it('should handle missing pagination parameters for sales', async () => {
                 const response = await request(app)
-                    .get('/api/sales')
+                    .get('/api/orders')
                     .expect((res) => {
                         expect([200, 400]).toContain(res.status);
                     }); if (response.status === 200) {
@@ -2202,8 +2224,9 @@ describe('Health Check - Smoke Tests', () => {
                     }
             });
 
-            it('should require authentication for creating orders', async () => {
-                const orderData = {
+            it('should return 400 for guest order if missing required fields or invalid data', async () => {
+                // Caso: Faltan campos obligatorios (ej: sin customerName)
+                const incompleteOrder = {
                     items: [
                         {
                             productId: testProductId || '507f1f77bcf86cd799439011',
@@ -2211,18 +2234,17 @@ describe('Health Check - Smoke Tests', () => {
                             unitPrice: 100
                         }
                     ],
-                    customerName: 'Test Customer',
-                    customerEmail: 'test@example.com',
+                    // Falta customerName y/o customerEmail
                     shippingRecipientName: 'Test Recipient',
                     shippingPhone: '+1234567890',
                     shippingStreetAddress: 'Test Address 123',
                     shippingNeighborhoodId: testNeighborhoodId || '507f1f77bcf86cd799439011'
                 };
-
-                await request(app)
-                    .post('/api/sales')
-                    .send(orderData)
-                    .expect(401); // Unauthorized without token
+                const response = await request(app)
+                    .post('/api/orders')
+                    .send(incompleteOrder)
+                    .expect(400);
+                expect(response.body.error).toBeDefined();
             });
 
             it('should create order for authenticated user with valid data', async () => {
@@ -2247,7 +2269,7 @@ describe('Health Check - Smoke Tests', () => {
                 };
 
                 const response = await request(app)
-                    .post('/api/sales')
+                    .post('/api/orders')
                     .set('Authorization', `Bearer ${authToken}`)
                     .send(orderData)
                     .expect((res) => {
@@ -2290,7 +2312,7 @@ describe('Health Check - Smoke Tests', () => {
                 };
 
                 const response = await request(app)
-                    .post('/api/sales')
+                    .post('/api/orders')
                     .send(guestOrderData)
                     .expect((res) => {
                         expect([200, 201, 400]).toContain(res.status);
@@ -2315,7 +2337,7 @@ describe('Health Check - Smoke Tests', () => {
 
                 // Test missing items
                 await request(app)
-                    .post('/api/sales')
+                    .post('/api/orders')
                     .set('Authorization', `Bearer ${authToken}`)
                     .send({
                         shippingRecipientName: 'Test',
@@ -2327,7 +2349,7 @@ describe('Health Check - Smoke Tests', () => {
 
                 // Test invalid product ID
                 await request(app)
-                    .post('/api/sales')
+                    .post('/api/orders')
                     .set('Authorization', `Bearer ${authToken}`)
                     .send({
                         items: [
@@ -2346,7 +2368,7 @@ describe('Health Check - Smoke Tests', () => {
 
                 // Test missing shipping data for authenticated user
                 await request(app)
-                    .post('/api/sales')
+                    .post('/api/orders')
                     .set('Authorization', `Bearer ${authToken}`)
                     .send({
                         items: [
@@ -2367,7 +2389,7 @@ describe('Health Check - Smoke Tests', () => {
                 }
 
                 const response = await request(app)
-                    .get(`/api/sales/${testOrderId}`)
+                    .get(`/api/orders/${testOrderId}`)
                     .expect(200);
 
                 expect(response.body).toHaveProperty('id');
@@ -2380,11 +2402,11 @@ describe('Health Check - Smoke Tests', () => {
             it('should return 404 for non-existent order', async () => {
                 const fakeId = '507f1f77bcf86cd799439011';
                 await request(app)
-                    .get(`/api/sales/${fakeId}`)
+                    .get(`/api/orders/${fakeId}`)
                     .expect(404);
             }); it('should return 400, 404 or 500 for invalid order ID format', async () => {
                 await request(app)
-                    .get('/api/sales/invalid-id-format')
+                    .get('/api/orders/invalid-id-format')
                     .expect((res) => {
                         // Accept 400 (validation), 404 (not found), or 500 (internal error)
                         expect([400, 404, 500]).toContain(res.status);
@@ -2398,7 +2420,7 @@ describe('Health Check - Smoke Tests', () => {
                 }
 
                 const response = await request(app)
-                    .get('/api/sales/my-orders?page=1&limit=10')
+                    .get('/api/orders/my-orders?page=1&limit=10')
                     .set('Authorization', `Bearer ${authToken}`)
                     .expect((res) => {
                         expect([200, 400]).toContain(res.status);
@@ -2413,7 +2435,7 @@ describe('Health Check - Smoke Tests', () => {
 
             it('should require authentication for my orders', async () => {
                 await request(app)
-                    .get('/api/sales/my-orders')
+                    .get('/api/orders/my-orders')
                     .expect(401);
             });
 
@@ -2428,7 +2450,7 @@ describe('Health Check - Smoke Tests', () => {
                 };
 
                 const response = await request(app)
-                    .patch(`/api/sales/${testOrderId}/status`)
+                    .patch(`/api/orders/${testOrderId}/status`)
                     .send(statusUpdate)
                     .expect((res) => {
                         expect([200, 400, 404]).toContain(res.status);
@@ -2445,7 +2467,7 @@ describe('Health Check - Smoke Tests', () => {
                 };
 
                 const response = await request(app)
-                    .post('/api/sales/by-date-range?page=1&limit=10')
+                    .post('/api/orders/by-date-range?page=1&limit=10')
                     .send(dateRangeData)
                     .expect((res) => {
                         expect([200, 400]).toContain(res.status);
@@ -2460,7 +2482,7 @@ describe('Health Check - Smoke Tests', () => {
 
             it('should reject date range query with invalid dates', async () => {
                 await request(app)
-                    .post('/api/sales/by-date-range')
+                    .post('/api/orders/by-date-range')
                     .send({
                         startDate: 'invalid-date',
                         endDate: 'invalid-date'
@@ -2468,7 +2490,7 @@ describe('Health Check - Smoke Tests', () => {
                     .expect(400);
 
                 await request(app)
-                    .post('/api/sales/by-date-range')
+                    .post('/api/orders/by-date-range')
                     .send({})
                     .expect(400);
             });
@@ -2480,7 +2502,7 @@ describe('Health Check - Smoke Tests', () => {
                 }
 
                 const response = await request(app)
-                    .get(`/api/sales/by-customer/${testCustomerId}?page=1&limit=10`)
+                    .get(`/api/orders/by-customer/${testCustomerId}?page=1&limit=10`)
                     .expect((res) => {
                         expect([200, 400, 404]).toContain(res.status);
                     });
@@ -3452,7 +3474,7 @@ describe('Health Check - Smoke Tests', () => {
 
                 // First get any existing order or skip if none exist
                 const ordersResponse = await request(app)
-                    .get('/api/sales?page=1&limit=1')
+                    .get('/api/orders?page=1&limit=1')
                     .expect(200);
 
                 if (!ordersResponse.body.orders || ordersResponse.body.orders.length === 0) {
@@ -3469,7 +3491,7 @@ describe('Health Check - Smoke Tests', () => {
                 };
 
                 const updateResponse = await request(app)
-                    .patch(`/api/sales/${existingOrder.id}/status`)
+                    .patch(`/api/orders/${existingOrder.id}/status`)
                     .send(statusUpdate)
                     .expect((res) => {
                         expect([200, 400, 401, 403, 404]).toContain(res.status);
@@ -3615,7 +3637,7 @@ describe('Health Check - Smoke Tests', () => {
 
                 // Check 3: Order update endpoint works
                 const orderUpdateCheck = await request(app)
-                    .get('/api/sales')
+                    .get('/api/orders')
                     .expect((res) => {
                         expect([200, 401]).toContain(res.status);
                     });

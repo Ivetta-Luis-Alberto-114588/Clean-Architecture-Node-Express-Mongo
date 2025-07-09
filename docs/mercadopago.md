@@ -1,83 +1,273 @@
-# 💳 Integración con MercadoPago
+---
+# 💳 Integración MercadoPago – Documentación Actualizada (2025)
 
-## 📋 Índice
-
-- [🔧 Configuración](#-configuración)
-- [💰 Procesamiento de Pagos](#-procesamiento-de-pagos)
-- [🔗 Sistema de Webhooks](#-sistema-de-webhooks)
-- [� Flujo de Notificaciones Automáticas](#-flujo-de-notificaciones-automáticas)
-- [�🔍 Trazabilidad y Auditoría](#-trazabilidad-y-auditoría)
-- [🛠️ API Endpoints](#-api-endpoints)
-- [📝 Ejemplos de Uso](#-ejemplos-de-uso)
-- [🚨 Troubleshooting](#-troubleshooting)
+## Índice
+- [Configuración](#configuración)
+- [Flujo de Pago y Endpoints](#flujo-de-pago-y-endpoints)
+- [Webhooks y Trazabilidad](#webhooks-y-trazabilidad)
+- [Ejemplos de Requests y Responses](#ejemplos-de-requests-y-responses)
+- [Gráfico de Flujo](#gráfico-de-flujo)
+- [Notas Técnicas y Seguridad](#notas-técnicas-y-seguridad)
 
 ---
 
-## 🔧 Configuración
+## Configuración
 
-### Variables de Entorno Requeridas
-
+### Variables de Entorno
 ```env
-# MercadoPago - Credenciales principales
-MERCADO_PAGO_ACCESS_TOKEN=APP_USR-1234567890123456-070512-abcdef1234567890abcdef1234567890-123456789
-MERCADO_PAGO_PUBLIC_KEY=APP_USR-12345678-abcd-1234-efgh-123456789012
-
-# OAuth credentials para verificación segura (Opcionales)
-MERCADO_PAGO_CLIENT_ID=1234567890123456
-MERCADO_PAGO_CLIENT_SECRET=abcdefghijklmnopqrstuvwxyz123456
-
-# URLs de respuesta
+MERCADO_PAGO_ACCESS_TOKEN=...
+MERCADO_PAGO_PUBLIC_KEY=...
+MERCADO_PAGO_CLIENT_ID=...
+MERCADO_PAGO_CLIENT_SECRET=...
 FRONTEND_URL=https://front-startup.pages.dev
 URL_RESPONSE_WEBHOOK_NGROK=https://sistema-mongo.onrender.com/
 ```
 
-### Configuración del Adapter
+### Adapter
+El backend usa un singleton `MercadoPagoAdapter` para todas las operaciones con la API de MercadoPago.
 
-El sistema utiliza un singleton `MercadoPagoAdapter` que maneja todas las interacciones con la API de MercadoPago:
+---
 
-```typescript
-// src/infrastructure/adapters/mercado-pago.adapter.ts
-const mpAdapter = MercadoPagoAdapter.getInstance();
+## Flujo de Pago y Endpoints
+
+### 1. Crear Preferencia de Pago
+- **Endpoint:** `POST /api/payments/sale/:saleId`
+- **Body:** _No requiere body_
+- **Headers:** Ninguno especial
+- **Respuesta:**
+```json
+{
+  "payment": { ... },
+  "preference": {
+    "id": "string",
+    "init_point": "string",
+    "sandbox_init_point": "string"
+  }
+}
+```
+
+### 2. Redirigir al Checkout
+- El frontend redirige a `preference.init_point`.
+
+### 3. Webhook Automático
+- **Endpoint:** `POST /api/payments/webhook`
+- **Headers:** MercadoPago (sin auth)
+- **Respuesta:**
+```json
+{
+  "message": "Notificación procesada exitosamente",
+  "paymentStatus": "approved",
+  "orderUpdated": true,
+  "timestamp": "2025-07-08T12:34:56.789Z"
+}
+```
+- El backend consulta el estado real del pago usando OAuth antes de actualizar la orden.
+
+### 4. Callbacks de Redirección
+- **Endpoints:**
+  - `GET /api/payments/success`
+  - `GET /api/payments/failure`
+  - `GET /api/payments/pending`
+- **Parámetros de redirección:**
+  - `saleId`, `verified`, `realStatus`, `localUpdated`, `oauthVerified`
+- El backend verifica el estado real antes de redirigir.
+
+### 5. Consultas y Verificación de Pagos
+- `GET /api/payments/:id` — Obtener pago por ID
+- `GET /api/payments/by-sale/:saleId` — Pagos por venta
+- `POST /api/payments/verify` — Verifica estado de un pago
+  - **Body:** `{ "paymentId": "string", "providerPaymentId": "string" }`
+- `GET /api/payments/preference/:preferenceId` — Estado de preferencia
+- `GET /api/payments/status/sale/:saleId` — Estado de pago de una venta _(requiere JWT)_
+- `POST /api/payments/manual-verify/:orderId` — Verificación manual _(admin, requiere JWT)_
+- `GET /api/payments/mercadopago/payments` — Pagos hechos en MercadoPago
+- `GET /api/payments/mercadopago/charges` — Cobros hechos en MercadoPago
+
+### 6. Headers y Autorización
+- Endpoints de consulta/verificación: `Authorization: Bearer <token>`
+- Endpoints de administración/webhooks: JWT de admin
+- Webhooks: sin autenticación
+
+---
+
+## Webhooks y Trazabilidad
+
+### Endpoints de Administración
+- `GET /api/webhooks` — Listar webhooks _(admin)_
+- `GET /api/webhooks/stats` — Estadísticas _(admin)_
+- `GET /api/webhooks/:id` — Detalle _(admin)_
+- `GET /api/webhooks/:id/mercadopago-details` — Consulta directa a MercadoPago _(admin)_
+
+### Headers relevantes
+- `x-signature`, `x-request-id` (registrados para trazabilidad)
+
+### Flujo de Estado y Actualización
+- El backend **siempre** consulta el estado real del pago usando OAuth antes de actualizar la orden o redirigir.
+- Si el estado es `approved`, la orden se actualiza a `PENDIENTE PAGADO` y se envían notificaciones (email, Telegram).
+- Si el estado es `rejected` o `pending`, la orden se actualiza acorde y el frontend es redirigido a la página correspondiente.
+
+---
+
+## Ejemplos de Requests y Responses
+
+### Crear Preferencia
+```http
+POST /api/payments/sale/65a1b2c3d4e5f6789012345
+```
+**Respuesta:**
+```json
+{
+  "payment": { ... },
+  "preference": {
+    "id": "123456789-abcd-efgh-1234-567890abcdef",
+    "init_point": "https://www.mercadopago.com.ar/checkout/v1/redirect?pref_id=...",
+    "sandbox_init_point": "https://sandbox.mercadopago.com.ar/checkout/v1/redirect?pref_id=..."
+  }
+}
+```
+
+### Webhook
+```http
+POST /api/payments/webhook
+```
+**Respuesta:**
+```json
+{
+  "message": "Notificación procesada exitosamente",
+  "paymentStatus": "approved",
+  "orderUpdated": true,
+  "timestamp": "2025-07-08T12:34:56.789Z"
+}
+```
+
+### Verificar Estado de Pago (Frontend)
+```http
+GET /api/payments/status/sale/:saleId
+Authorization: Bearer <jwt-token>
+```
+**Respuesta:**
+```json
+{
+  "success": true,
+  "payment": {
+    "id": "payment_id",
+    "status": "approved",
+    "amount": 1500.00,
+    "lastVerified": "2025-06-25T10:30:00Z",
+    "saleId": "order_id"
+  }
+}
+```
+
+### Consulta Directa a MercadoPago (Admin)
+```http
+GET /api/webhooks/{webhookId}/mercadopago-details
+Authorization: Bearer <admin-jwt-token>
 ```
 
 ---
 
-## 💰 Procesamiento de Pagos
+## Gráfico de Flujo
 
-### 🛒 Flujo de Pago Completo
+```mermaid
+sequenceDiagram
+    participant F as Frontend
+    participant B as Backend
+    participant MP as MercadoPago
 
-#### 1. **Creación de Preferencia de Pago**
-```http
-POST /api/payments/create-preference/{saleId}
+    F->>B: POST /api/payments/sale/:saleId
+    B->>MP: Crea preferencia
+    B->>F: Retorna init_point
+    F->>MP: Redirige usuario a init_point
+    MP->>B: POST /api/payments/webhook
+    B->>MP: Consulta estado real (OAuth)
+    MP->>B: Estado real
+    B->>B: Actualiza orden y notifica
+    MP->>F: Redirige a /success|/failure|/pending
+    F->>B: GET /api/payments/status/sale/:saleId
+    B->>MP: Verifica estado real (OAuth)
+    B->>F: Retorna estado verificado
 ```
 
-El backend crea una preferencia en MercadoPago con:
+---
+
+## Notas Técnicas y Seguridad
+- **Idempotencia:** Se usa `X-Idempotency-Key` en la creación de preferencia para evitar duplicados.
+- **OAuth:** Todas las verificaciones críticas usan OAuth para máxima seguridad y sincronización.
+- **Estados de pago soportados:**
+  - `pending`, `approved`, `authorized`, `in_process`, `in_mediation`, `rejected`, `cancelled`, `refunded`, `charged_back`
+- **Notificaciones:** Email y Telegram automáticos al aprobarse el pago.
+- **Auditoría:** Todos los eventos quedan logueados y pueden ser consultados por admin.
+
+---
+
+**Para cualquier duda, consulta los endpoints de administración o revisa los logs del sistema.**
+El cliente paga en MercadoPago usando la preferencia creada.
+
+#### 2. **🔥 Webhook Automático**
+MercadoPago envía webhook a tu backend:
+```http
+POST /api/payments/webhook
+```
+
+**Descripción:**
+- El webhook puede llegar con query params (`?topic=payment&id=...`) o en el body (`type: 'payment'`).
+- El backend procesa el pago, actualiza el estado y dispara notificaciones.
+- Siempre responde 200, incluso en caso de error, para evitar reintentos infinitos.
+
+**Respuesta exitosa:**
 ```json
 {
-  "items": [{
-    "id": "ORD123456789",
-    "title": "Compra #ORD12345",
-    "quantity": 1,
-    "unit_price": 25500.00
-  }],
-  "back_urls": {
-    "success": "https://front-startup.pages.dev/payment/success",
-    "failure": "https://front-startup.pages.dev/payment/failure",
-    "pending": "https://front-startup.pages.dev/payment/pending"
-  },
-  "notification_url": "https://sistema-mongo.onrender.com/api/payments/webhook",
-  "external_reference": "sale-ORD123456789-uuid-12345"
+  "message": "Notificación procesada exitosamente",
+  "paymentStatus": "approved",
+  "orderUpdated": true,
+  "timestamp": "2025-07-08T12:34:56.789Z"
 }
 ```
 
-#### 2. **Pago del Cliente**
-El cliente paga en MercadoPago usando la preferencia creada.
+---
 
-#### 3. **🔥 Webhook Automático**
-MercadoPago envía webhook a tu backend:
-```
-POST https://sistema-mongo.onrender.com/api/payments/webhook
-```
+#### 3. **Callbacks de Redirección (Frontend)**
+
+**GET /api/payments/success**
+**GET /api/payments/failure**
+**GET /api/payments/pending**
+
+Estos endpoints redirigen al frontend con parámetros de verificación y estado real del pago.
+
+---
+
+#### 4. **Verificación y consulta de pagos**
+
+- **GET /api/payments/:id** — Obtiene un pago por su ID.
+- **GET /api/payments/by-sale/:saleId** — Lista pagos asociados a una venta.
+- **POST /api/payments/verify** — Verifica el estado de un pago manualmente. Body:
+  ```json
+  {
+    "paymentId": "string",
+    "providerPaymentId": "string"
+  }
+  ```
+- **GET /api/payments/preference/:preferenceId** — Verifica el estado de una preferencia de pago.
+- **GET /api/payments/status/sale/:saleId** — Devuelve el estado de pago de una venta (requiere JWT).
+- **POST /api/payments/manual-verify/:orderId** — Verificación manual de pagos.
+
+---
+
+#### 5. **Estados y lógica de actualización**
+
+- Cuando el pago es aprobado, la orden se actualiza a `PENDIENTE PAGADO`.
+- Si el pago es verificado vía OAuth en el callback `/success`, la orden puede actualizarse a `COMPLETED`.
+- El frontend debe consultar el estado de la orden tras el pago para mostrar el resultado correcto.
+
+---
+
+#### 6. **Notas técnicas para el frontend**
+
+- Usa siempre los endpoints y nombres de campos exactamente como aquí.
+- El flujo correcto es: crear venta → crear preferencia → redirigir a MercadoPago → esperar callback/webhook → consultar estado.
+- Los callbacks y webhooks pueden llegar en cualquier orden, el frontend debe estar preparado para ambos.
+- Los endpoints de consulta y verificación permiten mostrar el estado real del pago y la orden.
 
 #### 4. **Consulta a la API de MercadoPago**
 Tu backend consulta el estado real:
@@ -201,7 +391,7 @@ grep "NOTIFICACIÓN COMPLETADA" logs/*.log
 
    * Primero, verifica el estado: Comprueba si el status es 'approved'.
    * Luego, busca la orden local: Usa el external_reference (que vino en la respuesta de Mercado Pago) para encontrar la orden correspondiente en tu propia base de datos.
-   * Finalmente, actualiza: Si el estado era 'approved', cambia el estado de la orden en tu base de datos a "pagado" (o el estado que corresponda).
+   * Finalmente, actualiza: Si el estado era 'approved', cambia el estado de la orden en tu base de datos a `CONFIRMED` (o el estado que corresponda según el nuevo flujo).
 
   En resumen, el flujo es:
 

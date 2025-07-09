@@ -1,5 +1,7 @@
 # 📱 Sistema de Notificaciones por Telegram
 
+> **IMPORTANTE:** Esta documentación está alineada con el código backend real (al 09/07/2025). Los endpoints, bodys, respuestas y headers aquí documentados son los únicos soportados. Si el frontend necesita otros, deben implementarse primero en backend.
+
 ## 📋 Índice
 
 - [🔧 Configuración](#-configuración)
@@ -280,106 +282,162 @@ Tiempo estimado: 30-45 min
 
 ---
 
-## 🛠️ API Endpoints
 
-### 📱 Gestión de Notificaciones
+## 🛠️ API Endpoints (actualizados)
 
-#### 📤 Enviar Notificación Manual
+Todos los endpoints requieren autenticación JWT de admin:
 
-```http
-POST /api/admin/telegram/send-notification
-Authorization: Bearer <admin-jwt-token>
-Content-Type: application/json
+**Headers obligatorios:**
+- `Authorization: Bearer <admin-jwt-token>`
+- `Content-Type: application/json` (en POST)
 
-{
-  "message": "🎉 ¡Nueva promoción disponible!",
-  "chatId": "-1234567890",
-  "parseMode": "HTML",
-  "disablePreview": true
-}
-```
+---
 
-#### 📊 Enviar Reporte
+### 📤 Enviar Notificación Manual
 
-```http
-POST /api/admin/telegram/send-report
-Authorization: Bearer <admin-jwt-token>
-Content-Type: application/json
+**POST** `/api/admin/telegram/send-notification`
 
-{
-  "type": "daily",
-  "date": "2025-01-15"
-}
-```
-
-#### ⚙️ Configurar Alertas
-
-```http
-POST /api/admin/telegram/configure-alerts
-Authorization: Bearer <admin-jwt-token>
-Content-Type: application/json
-
-{
-  "newOrders": true,
-  "paymentUpdates": true,
-  "systemErrors": true,
-  "stockAlerts": true,
-  "dailyReports": true,
-  "reportTime": "09:00"
-}
-```
-
-### 📋 Información del Bot
-
-#### 🤖 Estado del Bot
-
-```http
-GET /api/admin/telegram/bot-info
-Authorization: Bearer <admin-jwt-token>
-```
-
-**Respuesta:**
+**Body:**
 ```json
 {
-  "botInfo": {
-    "id": 123456789,
-    "username": "mi_ecommerce_bot",
-    "firstName": "Mi E-commerce Bot",
-    "canJoinGroups": true,
-    "canReadAllGroupMessages": false
-  },
-  "status": "active",
-  "chatId": "-1234567890",
-  "lastMessage": "2025-01-15T10:30:00Z"
+  "message": "Texto a enviar", // obligatorio
+  "chatId": "opcional, string",
+  "parseMode": "opcional, string",
+  "disablePreview": "opcional, boolean"
 }
 ```
 
-#### 📊 Estadísticas de Mensajes
-
-```http
-GET /api/admin/telegram/message-stats
-Authorization: Bearer <admin-jwt-token>
-```
-
-**Respuesta:**
+**Respuesta exitosa:**
 ```json
 {
-  "today": {
-    "sent": 15,
-    "failed": 0,
-    "types": {
-      "newOrders": 8,
-      "payments": 5,
-      "alerts": 2
-    }
-  },
-  "week": {
-    "sent": 125,
-    "failed": 3,
-    "averagePerDay": 17.9
+  "success": true,
+  "message": "Notification sent successfully",
+  "timestamp": "2025-07-09T12:34:56.789Z",
+  "sentTo": "chatId o 'default chat'"
+}
+```
+
+**Errores posibles:**
+- 400: `Message is required and must be a non-empty string`
+- 400: `Message is too long. Maximum 4096 characters allowed.`
+- 400: `Failed to send Telegram notification: ...`
+- 500: `Internal server error while processing Telegram notification`
+
+---
+
+### � Enviar Notificación de Orden Manual
+
+**POST** `/api/admin/telegram/send-order-notification`
+
+**Body:**
+```json
+{
+  "orderId": "string",
+  "customerName": "string",
+  "total": 1234.56,
+  "items": [
+    { "name": "Producto", "quantity": 2, "price": 100 }
+  ]
+}
+```
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "message": "Order notification sent successfully",
+  "orderId": "..."
+}
+```
+
+**Errores posibles:**
+- 400: `orderId, customerName, total, and items are required`
+- 400: `items must be a non-empty array`
+- 400: `Failed to send Telegram notification: ...`
+- 500: `Internal server error while processing Telegram notification`
+
+---
+
+### 🧪 Enviar Mensaje de Prueba
+
+**POST** `/api/admin/telegram/send-test`
+
+**Body:**
+```json
+{
+  "message": "opcional, string"
+}
+```
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "message": "Test message sent successfully",
+  "timestamp": "2025-07-09T12:34:56.789Z"
+}
+```
+
+---
+
+### 🤖 Obtener Información del Bot
+
+**GET** `/api/admin/telegram/bot-info`
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "data": {
+    "botName": "StartUp_test_luis_bot",
+    "status": "active",
+    "defaultChatId": "xxxx",
+    "apiConfigured": true
   }
 }
 ```
+
+---
+
+### ❌ Endpoints NO implementados (no usar)
+
+- `/api/admin/telegram/send-report`
+- `/api/admin/telegram/configure-alerts`
+- `/api/admin/telegram/message-stats`
+- `/api/admin/telegram/test-connection`
+- `/api/admin/telegram/chat-info`
+
+Si el frontend los necesita, deben implementarse primero en backend.
+
+---
+
+## 📊 Flujo de Envío de Notificación (Gráfico)
+
+```mermaid
+flowchart TD
+    A[Admin Frontend] -- POST /send-notification --> B[API Backend]
+    B -- Llama a TelegramNotificationAdapter --> C[Telegram API]
+    C -- Mensaje enviado --> D[Grupo/Canal de Telegram]
+    B -- Respuesta JSON --> A
+
+    subgraph Notificación de Orden
+        E[Admin Frontend] -- POST /send-order-notification --> B
+        B -- Formatea mensaje de orden --> C
+    end
+```
+
+---
+
+## 🛡️ Seguridad y Consideraciones
+
+- Todos los endpoints requieren JWT de admin.
+- El body y la respuesta de cada endpoint deben coincidir exactamente con lo detallado arriba.
+- El endpoint `/send-notification` solo requiere `message` como obligatorio, el resto es opcional.
+- El endpoint `/send-order-notification` requiere todos los campos y un array de items no vacío.
+- El endpoint `/bot-info` devuelve un objeto `data` con los campos reales del bot.
+- No existe endpoint para estadísticas ni para configuración de alertas por API.
+
+---
 
 ---
 

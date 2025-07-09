@@ -18,38 +18,20 @@ const paymentMethodSeeds: PaymentMethodSeed[] = [
     {
         code: 'CASH',
         name: 'Efectivo',
-        description: 'Pago en efectivo al momento de la entrega',
+        description: 'Pago en efectivo al momento de la entrega o retiro en el local.',
         isActive: true,
         requiresOnlinePayment: false,
         allowsManualConfirmation: true,
-        defaultOrderStatusCode: 'CONFIRMED'
+        defaultOrderStatusCode: 'AWAITING_PAYMENT' // Inicia esperando confirmación manual del dueño.
     },
     {
         code: 'MERCADO_PAGO',
         name: 'Mercado Pago',
-        description: 'Pago online con tarjeta de crédito/débito',
+        description: 'Pago online con tarjeta de crédito, débito o dinero en cuenta.',
         isActive: true,
         requiresOnlinePayment: true,
         allowsManualConfirmation: false,
-        defaultOrderStatusCode: 'AWAITING_PAYMENT'
-    },
-    {
-        code: 'BANK_TRANSFER',
-        name: 'Transferencia Bancaria',
-        description: 'Transferencia bancaria manual',
-        isActive: true,
-        requiresOnlinePayment: false,
-        allowsManualConfirmation: true,
-        defaultOrderStatusCode: 'CONFIRMED'
-    },
-    {
-        code: 'PENDING',
-        name: 'Sin Método Seleccionado',
-        description: 'El cliente no ha seleccionado método de pago',
-        isActive: true,
-        requiresOnlinePayment: false,
-        allowsManualConfirmation: false,
-        defaultOrderStatusCode: 'PENDING'
+        defaultOrderStatusCode: 'AWAITING_PAYMENT' // Inicia esperando la confirmación automática del webhook.
     }
 ];
 

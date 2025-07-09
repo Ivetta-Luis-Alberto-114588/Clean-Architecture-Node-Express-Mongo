@@ -32,6 +32,7 @@ export class CustomerMongoDataSourceImpl extends CustomerDataSource {
                 isActive: createCustomerDto.isActive,
                 userId: createCustomerDto.userId
             });
+            // Populate the neighborhood field before mapping to entity
             const populatedCustomer = await customer.populate({ path: 'neighborhood', populate: { path: 'city' } });
             return CustomerMapper.fromObjectToCustomerEntity(populatedCustomer);
         } catch (error: any) {

@@ -152,6 +152,13 @@ GET /api/admin/users?page=1&limit=20&role=USER_ROLE&search=juan&isActive=true
 Authorization: Bearer <admin-jwt-token>
 ```
 
+**Roles permitidos:** `ADMIN_ROLE`, `SUPER_ADMIN_ROLE`
+
+**Header requerido:**
+```
+Authorization: Bearer <jwt-token>
+```
+
 **Respuesta Exitosa (200):**
 ```json
 {
@@ -160,7 +167,7 @@ Authorization: Bearer <admin-jwt-token>
       "id": "64a7f8c9b123456789abcdef",
       "name": "Juan Pérez",
       "email": "juan@email.com",
-      "role": "USER_ROLE",
+      "roles": ["USER_ROLE"],
       "isActive": true,
       "lastLogin": "2024-01-15T09:30:00.000Z",
       "customer": {
@@ -178,6 +185,13 @@ Authorization: Bearer <admin-jwt-token>
 }
 ```
 
+**Ejemplo de error 403:**
+```json
+{
+  "error": "Acceso denegado. Requiere rol: ADMIN_ROLE o SUPER_ADMIN_ROLE"
+}
+```
+
 #### Crear Usuario Administrativo
 ```http
 POST /api/admin/users
@@ -188,10 +202,12 @@ Content-Type: application/json
   "name": "Admin Usuario",
   "email": "admin@empresa.com",
   "password": "AdminPass123",
-  "role": "ADMIN_ROLE",
+  "roles": ["ADMIN_ROLE"],
   "permissions": ["manage_products", "manage_orders", "view_reports"]
 }
 ```
+
+**Nota:** El campo correcto es `roles: string[]` (array), no `role` (string).
 
 #### Actualizar Estado de Usuario
 ```http
@@ -205,11 +221,15 @@ Content-Type: application/json
 }
 ```
 
+**Roles permitidos:** `ADMIN_ROLE`, `SUPER_ADMIN_ROLE`
+
 #### Obtener Estadísticas de Usuario
 ```http
 GET /api/admin/users/:id/stats
 Authorization: Bearer <admin-jwt-token>
 ```
+
+**Roles permitidos:** `ADMIN_ROLE`, `SUPER_ADMIN_ROLE`
 
 ### Gestión Avanzada de Productos
 
@@ -321,6 +341,8 @@ GET /api/admin/orders?page=1&limit=20&status=PENDING&dateFrom=2024-01-01&dateTo=
 Authorization: Bearer <admin-jwt-token>
 ```
 
+**Roles permitidos:** `ADMIN_ROLE`, `SUPER_ADMIN_ROLE`
+
 #### Actualizar Estado de Pedido
 ```http
 PATCH /api/admin/orders/:id/status
@@ -334,6 +356,8 @@ Content-Type: application/json
   "trackingNumber": "TR123456789"
 }
 ```
+
+**Roles permitidos:** `ADMIN_ROLE`, `SUPER_ADMIN_ROLE`
 
 #### Procesar Pedidos en Lote
 ```http
@@ -350,6 +374,8 @@ Content-Type: application/json
   }
 }
 ```
+
+**Roles permitidos:** `ADMIN_ROLE`, `SUPER_ADMIN_ROLE`
 
 ### Reportes y Analytics
 
@@ -1139,8 +1165,6 @@ STOCK_LOW_THRESHOLD=10
 STOCK_CRITICAL_THRESHOLD=5
 ALERT_EMAIL_ENABLED=true
 ALERT_TELEGRAM_ENABLED=true
-```
-
 ### Permisos y Roles
 
 ```typescript
@@ -1151,7 +1175,6 @@ export const ADMIN_PERMISSIONS = {
     VIEW_CHARTS: 'dashboard:view_charts',
     VIEW_ALERTS: 'dashboard:view_alerts'
   },
-  
   PRODUCTS: {
     VIEW: 'products:view',
     CREATE: 'products:create',
@@ -1161,7 +1184,6 @@ export const ADMIN_PERMISSIONS = {
     EXPORT: 'products:export',
     MANAGE_STOCK: 'products:manage_stock'
   },
-  
   ORDERS: {
     VIEW: 'orders:view',
     UPDATE_STATUS: 'orders:update_status',
@@ -1169,7 +1191,6 @@ export const ADMIN_PERMISSIONS = {
     REFUND: 'orders:refund',
     MANAGE_SHIPPING: 'orders:manage_shipping'
   },
-  
   USERS: {
     VIEW: 'users:view',
     CREATE: 'users:create',
@@ -1177,14 +1198,12 @@ export const ADMIN_PERMISSIONS = {
     DELETE: 'users:delete',
     MANAGE_ROLES: 'users:manage_roles'
   },
-  
   REPORTS: {
     VIEW: 'reports:view',
     GENERATE: 'reports:generate',
     EXPORT: 'reports:export',
     VIEW_ANALYTICS: 'reports:view_analytics'
   },
-  
   SETTINGS: {
     VIEW: 'settings:view',
     UPDATE: 'settings:update',
@@ -1197,7 +1216,6 @@ export const ADMIN_ROLES = {
     name: 'Super Administrador',
     permissions: Object.values(ADMIN_PERMISSIONS).flatMap(p => Object.values(p))
   },
-  
   ADMIN: {
     name: 'Administrador',
     permissions: [
@@ -1208,7 +1226,6 @@ export const ADMIN_ROLES = {
       ...Object.values(ADMIN_PERMISSIONS.REPORTS)
     ]
   },
-  
   MANAGER: {
     name: 'Gerente',
     permissions: [
@@ -1220,7 +1237,6 @@ export const ADMIN_ROLES = {
       ADMIN_PERMISSIONS.REPORTS.GENERATE
     ]
   },
-  
   OPERATOR: {
     name: 'Operador',
     permissions: [
@@ -1229,6 +1245,9 @@ export const ADMIN_ROLES = {
       ADMIN_PERMISSIONS.ORDERS.VIEW,
       ADMIN_PERMISSIONS.ORDERS.UPDATE_STATUS
     ]
+  }
+};
+```
   }
 };
 ```
@@ -1246,4 +1265,31 @@ export const ADMIN_ROLES = {
 
 ---
 
-*Última actualización: Enero 2024*
+---
+
+## Autorización y Roles: Resumen para Frontend
+
+- Todos los endpoints protegidos requieren el header:
+  ```
+  Authorization: Bearer <jwt-token>
+  ```
+- El campo de roles en usuario es SIEMPRE `roles: string[]`.
+- Los roles válidos y sus permisos están definidos en el backend (`src/configs/roles.ts`).
+- Ejemplo de error 403:
+  ```json
+  {
+    "error": "Acceso denegado. Requiere rol: ADMIN_ROLE o SUPER_ADMIN_ROLE"
+  }
+  ```
+- Consultar la documentación de roles para mantener consistencia.
+
+```mermaid
+flowchart TD
+    A[Request a endpoint protegido] --> B{JWT válido?}
+    B -- No --> E[401 Unauthorized]
+    B -- Sí --> C{Rol permitido?}
+    C -- No --> F[403 Forbidden]
+    C -- Sí --> D[Acceso concedido]
+```
+
+*Última actualización: Julio 2025*

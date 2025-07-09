@@ -1,4 +1,3 @@
-// src/presentation/sales/routes.ts
 import { Router } from "express";
 import { SalesController } from "./controller";
 import { SaleRepositoryImpl } from "../../infrastructure/repositories/sales/sale.repository.impl";
@@ -7,12 +6,15 @@ import { CustomerMongoDataSourceImpl } from "../../infrastructure/datasources/cu
 import { CustomerRepositoryImpl } from "../../infrastructure/repositories/customers/customer.repository.impl";
 import { ProductMongoDataSourceImpl } from "../../infrastructure/datasources/products/product.mongo.datasource.impl";
 import { ProductRepositoryImpl } from "../../infrastructure/repositories/products/product.repository.impl";
+import { NeighborhoodMongoDataSourceImpl } from "../../infrastructure/datasources/customers/neighborhood.mongo.datasource.impl";
+import { NeighborhoodRepositoryImpl } from "../../infrastructure/repositories/customers/neighborhood.repository.impl";
 import { CreateSaleUseCaseImpl } from "../../domain/use-cases/sales/create-sale.use-case";
 import { GetSaleByIdUseCaseImpl } from "../../domain/use-cases/sales/get-sale-by-id.use-case";
 import { UpdateSaleStatusUseCaseImpl } from "../../domain/use-cases/sales/update-sale-status.use-case";
 import { GetAllSalesUseCaseImpl } from "../../domain/use-cases/sales/get-all-sales.use-case";
 import { GetSalesByCustomerUseCaseImpl } from "../../domain/use-cases/sales/get-sales-by-customer.use-case";
 import { GetSalesByStatusUseCaseImpl } from "../../domain/use-cases/sales/get-sales-by-status.use-case";
+import { AuthMiddleware } from "../middlewares/auth.middleware";
 
 export class SalesRoutes {
 
@@ -27,8 +29,14 @@ export class SalesRoutes {
 
         // Product dependencies
         const productDataSource = new ProductMongoDataSourceImpl();
-        const productRepository = new ProductRepositoryImpl(productDataSource);        // Use cases
-        const createSaleUseCase = new CreateSaleUseCaseImpl(saleRepository, customerRepository, productRepository);
+        const productRepository = new ProductRepositoryImpl(productDataSource);
+
+        // Neighborhood dependencies
+        const neighborhoodDataSource = new NeighborhoodMongoDataSourceImpl();
+        const neighborhoodRepository = new NeighborhoodRepositoryImpl(neighborhoodDataSource);
+
+        // Use cases
+        const createSaleUseCase = new CreateSaleUseCaseImpl(saleRepository, customerRepository, productRepository, neighborhoodRepository);
         const getSaleByIdUseCase = new GetSaleByIdUseCaseImpl(saleRepository);
         const updateSaleStatusUseCase = new UpdateSaleStatusUseCaseImpl(saleRepository);
         const getAllSalesUseCase = new GetAllSalesUseCaseImpl(saleRepository);
@@ -46,7 +54,7 @@ export class SalesRoutes {
         );
 
         // Routes
-        router.post('/', salesController.createSale.bind(salesController));
+        router.post('/', AuthMiddleware.validateJwt, salesController.createSale.bind(salesController));
         router.get('/', salesController.getAllSales.bind(salesController));
         router.get('/:id', salesController.getSaleById.bind(salesController));
         router.patch('/:id/status', salesController.updateSaleStatus.bind(salesController));

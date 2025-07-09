@@ -1,3 +1,4 @@
+
 # 📱 Notificaciones de Telegram
 
 Sistema completo de notificaciones usando Telegram Bot API para alertas en tiempo real.
@@ -68,10 +69,14 @@ const telegramAdapter = TelegramAdapter.getInstance();
 
 ### Administración de Telegram
 **Base URL:** `/api/admin/telegram`
-**Autenticación:** Bearer Token (Admin role requerido)
+**Autenticación:** Bearer Token (rol ADMIN requerido)
+
+> ⚠️ **IMPORTANTE:** Todos los endpoints requieren autenticación JWT válida y rol ADMIN. Si el usuario no es admin, se responde con 401/403.
+
+---
 
 #### `POST /api/admin/telegram/send-notification`
-Enviar mensaje personalizado de Telegram (solo admins).
+Envía mensaje personalizado de Telegram (solo admins).
 
 **Headers:**
 ```
@@ -82,12 +87,16 @@ Content-Type: application/json
 **Body:**
 ```json
 {
-  "message": "Mensaje a enviar",
-  "chatId": "optional_chat_id",
-  "parseMode": "HTML",
-  "disablePreview": false
+  "message": "Mensaje a enviar",      // (obligatorio, string, máx 4096 caracteres)
+  "chatId": "opcional"                // (opcional, string)
+  // "parseMode" y "disablePreview" pueden enviarse pero serán ignorados
 }
 ```
+
+> ℹ️ **Notas:**
+> - El campo `message` es obligatorio y debe ser un string no vacío (máx 4096 caracteres).
+> - El campo `chatId` es opcional. Si no se envía, se usa el chatId por defecto configurado en el backend.
+> - El mensaje siempre se envía en formato **HTML**. Los campos `parseMode` y `disablePreview` NO tienen efecto.
 
 **Respuesta:**
 ```json
@@ -99,8 +108,10 @@ Content-Type: application/json
 }
 ```
 
+---
+
 #### `GET /api/admin/telegram/bot-info`
-Obtener información del bot de Telegram.
+Obtiene información del bot de Telegram.
 
 **Headers:**
 ```
@@ -120,8 +131,10 @@ Authorization: Bearer <admin_token>
 }
 ```
 
+---
+
 #### `POST /api/admin/telegram/send-test`
-Enviar mensaje de prueba para verificar conectividad.
+Envía mensaje de prueba para verificar conectividad.
 
 **Headers:**
 ```
@@ -145,8 +158,10 @@ Content-Type: application/json
 }
 ```
 
+---
+
 #### `POST /api/admin/telegram/send-order-notification`
-Enviar notificación de orden manualmente.
+Envía notificación de orden manualmente.
 
 **Headers:**
 ```
@@ -179,13 +194,32 @@ Content-Type: application/json
 }
 ```
 
+---
+
+### Diagrama de Flujo de Envío de Notificación
+
+```mermaid
+flowchart TD
+    A[Frontend Admin] -- POST /send-notification --> B[API Backend]
+    B -- Valida JWT y rol ADMIN --> C{¿message válido?}
+    C -- No --> D[400 Error]
+    C -- Sí --> E[Envia mensaje a Telegram]
+    E -- OK --> F[200 Success]
+    E -- Error --> G[400/500 Error]
+```
+
+---
+```
+
+
 ## 🔔 Tipos de Notificaciones
 
-### 📦 Nuevo Pedido
+### 📦 Nuevo Pedido (Automática)
 
-**Trigger:** Cuando se confirma un pago exitoso (webhook de MercadoPago)
-**Destinatario:** Chat de administración  
-**Implementación:** Automática desde `PaymentController.processWebhook()`
+- **Trigger:** Cuando se confirma un pago exitoso (webhook de MercadoPago)
+- **Destinatario:** Chat de administración
+- **Implementación:** Automática desde `PaymentController.processWebhook()`
+- **Nota:** Las notificaciones de orden se envían automáticamente **solo cuando el pago es aprobado**, no al crear el pedido inicial.
 
 **Formato:**
 ```
@@ -195,27 +229,25 @@ Content-Type: application/json
 👤 Cliente: Juan Pérez
 💰 Total: $2,500.00
 
-� Items:
+📦 Items:
 • Producto A x2 - $50.25
 • Producto B x1 - $50.25
 
 ⏰ Fecha: 15/01/2025 10:30
 ```
 
-**Nota:** Las notificaciones de orden se envían automáticamente cuando se aprueba un pago, no cuando se crea el pedido inicial.
+### 💳 Pago Confirmado (Automática)
 
-### 💳 Pago Confirmado
-
-**Trigger:** Cuando se confirma un pago via webhook de MercadoPago
-**Destinatario:** Chat de administración
-**Implementación:** Automática desde `PaymentController.processWebhook()`
+- **Trigger:** Cuando se confirma un pago via webhook de MercadoPago
+- **Destinatario:** Chat de administración
+- **Implementación:** Automática desde `PaymentController.processWebhook()`
 
 **Formato:**
 ```
 💳 Notificación de Pago
 
 ✅ Estado: APPROVED
-� Orden: ORDER_123
+📋 Orden: ORDER_123
 💰 Monto: $2,500.00
 🏦 Método: Credit Card
 
@@ -224,8 +256,9 @@ Content-Type: application/json
 
 ### ⚠️ Error Crítico
 
-**Trigger:** Errores en el sistema que requieren atención
-**Destinatario:** Chat de administración
+- **Trigger:** Errores en el sistema que requieren atención
+- **Destinatario:** Chat de administración
+
 **Formato:**
 ```
 🚨 ERROR CRÍTICO
@@ -238,10 +271,11 @@ Content-Type: application/json
 🔧 Requiere atención inmediata
 ```
 
-### 📊 Resumen Diario
+### 📊 Resumen Diario (Futuro)
 
-**Trigger:** Automático todos los días a las 23:59
-**Destinatario:** Chat de administración
+- **Trigger:** Automático todos los días a las 23:59
+- **Destinatario:** Chat de administración
+
 **Formato:**
 ```
 📊 RESUMEN DEL DÍA - 15/01/2025

@@ -194,10 +194,10 @@ describe('Order Payment Method Integration Tests', () => {
             }
         });
         testOrderId = order._id.toString();
-    }; describe('PATCH /api/sales/:orderId/payment-method', () => {
+    }; describe('PATCH /api/orders/:orderId/payment-method', () => {
         it('should successfully select CASH payment method', async () => {
             const response = await request(app)
-                .patch(`/api/sales/${testOrderId}/payment-method`)
+                .patch(`/api/orders/${testOrderId}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
                     paymentMethodCode: 'CASH',
@@ -218,7 +218,7 @@ describe('Order Payment Method Integration Tests', () => {
             expect(updatedOrder?.status?.toString()).toBe(confirmedStatusId);
         }); it('should successfully select MERCADO_PAGO payment method', async () => {
             const response = await request(app)
-                .patch(`/api/sales/${testOrderId}/payment-method`)
+                .patch(`/api/orders/${testOrderId}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
                     paymentMethodCode: 'MERCADO_PAGO'
@@ -235,7 +235,7 @@ describe('Order Payment Method Integration Tests', () => {
             expect(updatedOrder?.status?.toString()).toBe(awaitingPaymentStatusId);
         }); it('should return 400 for invalid order ID', async () => {
             const response = await request(app)
-                .patch('/api/sales/invalid-id/payment-method')
+                .patch('/api/orders/invalid-id/payment-method')
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
                     paymentMethodCode: 'CASH'
@@ -245,7 +245,7 @@ describe('Order Payment Method Integration Tests', () => {
             expect(response.body.error).toContain('ID de orden inválido');
         }); it('should return 400 for missing payment method code', async () => {
             const response = await request(app)
-                .patch(`/api/sales/${testOrderId}/payment-method`)
+                .patch(`/api/orders/${testOrderId}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({})
                 .expect(400);
@@ -255,7 +255,7 @@ describe('Order Payment Method Integration Tests', () => {
             const nonExistentId = new mongoose.Types.ObjectId().toString();
 
             const response = await request(app)
-                .patch(`/api/sales/${nonExistentId}/payment-method`)
+                .patch(`/api/orders/${nonExistentId}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
                     paymentMethodCode: 'CASH'
@@ -265,7 +265,7 @@ describe('Order Payment Method Integration Tests', () => {
             expect(response.body.error).toContain('no encontrada');
         }); it('should return 400 for invalid payment method code', async () => {
             const response = await request(app)
-                .patch(`/api/sales/${testOrderId}/payment-method`)
+                .patch(`/api/orders/${testOrderId}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
                     paymentMethodCode: 'INVALID_METHOD'
@@ -275,7 +275,7 @@ describe('Order Payment Method Integration Tests', () => {
             expect(response.body.error).toContain('paymentMethodCode debe ser uno de');
         }); it('should return 401 without authentication', async () => {
             await request(app)
-                .patch(`/api/sales/${testOrderId}/payment-method`)
+                .patch(`/api/orders/${testOrderId}/payment-method`)
                 .send({
                     paymentMethodCode: 'CASH'
                 })
@@ -308,7 +308,7 @@ describe('Order Payment Method Integration Tests', () => {
                     originalCityId: testCityId
                 }
             }); const response = await request(app)
-                .patch(`/api/sales/${highAmountOrder._id}/payment-method`)
+                .patch(`/api/orders/${highAmountOrder._id}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
                     paymentMethodCode: 'CASH'
@@ -347,7 +347,7 @@ describe('Order Payment Method Integration Tests', () => {
                     originalCityId: testCityId
                 }
             }); const response = await request(app)
-                .patch(`/api/sales/${lowAmountOrder._id}/payment-method`)
+                .patch(`/api/orders/${lowAmountOrder._id}/payment-method`)
                 .set('Authorization', `Bearer ${adminToken}`)
                 .send({
                     paymentMethodCode: 'MERCADO_PAGO'

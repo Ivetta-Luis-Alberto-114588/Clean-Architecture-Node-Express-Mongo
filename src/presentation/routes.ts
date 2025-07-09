@@ -83,9 +83,11 @@ export class MainRoutes {
         router.use("/api/neighborhoods", NeighborhoodRoutes.getNeighborhoodRoutes);
         router.use("/api/customers", CustomerRoutes.getCustomerRoutes);
         router.use("/api/addresses", AddressRoutes.getRoutes);
-        router.use("/api/sales", OrderRoutes.getOrderRoutes); router.use("/api/payments", PaymentRoutes.getPaymentRoutes);
+        router.use("/api/orders", OrderRoutes.getOrderRoutes);
+        router.use("/api/payments", PaymentRoutes.getPaymentRoutes);
         router.use("/api/payment-methods", PaymentMethodRoutes.routes);
-        router.use("/api/chatbot", ChatbotRoutes.getChatbotRoutes); router.use("/api/cart", CartRoutes.getCartRoutes);
+        router.use("/api/chatbot", ChatbotRoutes.getChatbotRoutes);
+        router.use("/api/cart", CartRoutes.getCartRoutes);
         router.use("/api/coupons", CouponRoutes.getCouponRoutes);
         router.use("/api/order-statuses", OrderStatusRoutes.routes);
         router.use("/api/delivery-methods", DeliveryMethodRoutes.routes); // <<<--- DELIVERY METHODS ROUTES// Rutas de Administración
