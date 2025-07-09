@@ -1,7 +1,5 @@
 // src/domain/dtos/sales/create-sale.dto.ts
 import mongoose from "mongoose";
-
-import mongoose from "mongoose";
 import { CreateAddressDto } from "../customers/create-address.dto";
 import { CreateCustomerDto } from "../customers/create-customer.dto";
 
@@ -18,14 +16,14 @@ export class CreateSaleDto {
         public notes: string = "",
         public customerData?: CreateCustomerDto, // For guest users
         public shippingAddress?: CreateAddressDto // For guest users
-    ) {}
+    ) { }
 
     static create(object: { [key: string]: any }): [string?, CreateSaleDto?] {
-        const { 
-            customerId, 
-            items, 
-            taxRate = 21, 
-            discountRate = 0, 
+        const {
+            customerId,
+            items,
+            taxRate = 21,
+            discountRate = 0,
             notes = "",
             customerData,
             shippingAddress
@@ -40,7 +38,7 @@ export class CreateSaleDto {
             if (!mongoose.Types.ObjectId.isValid(customerId)) {
                 return ["customerId debe ser un id válido para MongoDB", undefined];
             }
-            customerIdValidated = customerId;
+            customerIdValidated = String(customerId);
         } else {
             // If no customerId, then customerData and shippingAddress are required
             if (!customerData) {
@@ -56,7 +54,9 @@ export class CreateSaleDto {
             }
             customerDataValidated = customerDto;
 
-            const [addressError, addressDto] = CreateAddressDto.create(shippingAddress);
+            // Se requiere customerId para la validación de dirección
+            // Usamos un string temporal para la validación, luego se asigna el real tras crear el customer
+            const [addressError, addressDto] = CreateAddressDto.create(shippingAddress, "temp-customer-id");
             if (addressError) {
                 return [`Error en shippingAddress: ${addressError}`, undefined];
             }
@@ -83,18 +83,18 @@ export class CreateSaleDto {
                 return ["unitPrice debe ser un número no negativo", undefined];
             }
         }
-        
+
         // Validate taxRate and discountRate
         if (taxRate < 0 || taxRate > 100) {
             return ["taxRate debe estar entre 0 y 100", undefined];
         }
-        
+
         if (discountRate < 0 || discountRate > 100) {
             return ["discountRate debe estar entre 0 y 100", undefined];
         }
 
         return [
-            undefined, 
+            undefined,
             new CreateSaleDto(
                 customerIdValidated,
                 items,

@@ -26,9 +26,10 @@ export class CreateSaleUseCaseImpl implements CreateSaleUseCase {
 
         if (createSaleDto.customerId) {
             // Existing customer
-            customer = await this.customerRepository.findById(createSaleDto.customerId);
+            const customerIdStr = String(createSaleDto.customerId);
+            customer = await this.customerRepository.findById(customerIdStr);
             if (!customer) {
-                throw CustomError.notFound(`Cliente con ID ${createSaleDto.customerId} no encontrado`);
+                throw CustomError.notFound(`Cliente con ID ${customerIdStr} no encontrado`);
             }
         } else if (createSaleDto.customerData && createSaleDto.shippingAddress) {
             // Guest user: create new customer and address
@@ -47,9 +48,11 @@ export class CreateSaleUseCaseImpl implements CreateSaleUseCase {
             }
 
             // Create address and link to customer
+
+            // Creamos la dirección usando el customerId como string
             const createdAddress = await this.customerRepository.createAddress({
                 ...shippingAddress,
-                customerId: customer.id // Link address to newly created customer
+                customerId: String(customer.id) // Link address to newly created customer
             });
 
             if (!createdAddress) {
@@ -57,7 +60,7 @@ export class CreateSaleUseCaseImpl implements CreateSaleUseCase {
             }
 
             // Update the DTO with the new customer's ID
-            createSaleDto.customerId = customer.id;
+            createSaleDto.customerId = String(customer.id);
 
         } else {
             throw CustomError.badRequest("Debe proporcionar customerId o customerData y shippingAddress.");
