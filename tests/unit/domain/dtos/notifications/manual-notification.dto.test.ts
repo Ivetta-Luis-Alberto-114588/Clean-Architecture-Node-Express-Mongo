@@ -1,4 +1,4 @@
-import { ManualNotificationDto } from '../../../../../../src/domain/dtos/notifications/manual-notification.dto';
+import { ManualNotificationDto } from '../../../../../src/domain/dtos/notifications/manual-notification.dto';
 
 describe('ManualNotificationDto', () => {
     describe('create', () => {
