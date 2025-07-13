@@ -21,6 +21,7 @@ import { MonitoringRoutes } from "./monitoring/routes.monitoring";
 import { MCPRoutes } from "./mcp/routes.mcp"; // <<<--- NUEVA IMPORTACIÓN
 import { WebhookRoutes } from "./webhook/routes.webhook"; // <<<--- WEBHOOK ROUTES
 import { DeliveryMethodRoutes } from "./delivery-methods/routes"; // <<<--- DELIVERY METHODS ROUTES
+import { manualNotificationRoutes } from './notifications';
 import mongoose from "mongoose";
 
 export class MainRoutes {
@@ -99,6 +100,9 @@ export class MainRoutes {
 
         // Rutas MCP
         router.use("/api/mcp", MCPRoutes.getMCPRoutes); // <<<--- NUEVA RUTA
+
+        // Rutas de Notificaciones Manuales
+        router.use('/api/notifications', manualNotificationRoutes);
 
         return router
     }
