@@ -26,6 +26,7 @@ import { UpdateOrderUseCase } from "../../domain/use-cases/order/update-order.us
 import { SelectPaymentMethodDto } from "../../domain/dtos/order/select-payment-method.dto";
 import { SelectPaymentMethodUseCase } from "../../domain/use-cases/order/select-payment-method.use-case";
 import { PaymentMethodRepository } from "../../domain/repositories/payment/payment-method.repository";
+import { DeliveryMethodRepository } from "../../domain/repositories/delivery-methods/delivery-method.repository";
 import { ILogger } from "../../domain/interfaces/logger.interface";
 
 export class OrderController {
@@ -37,6 +38,7 @@ export class OrderController {
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
         private readonly orderStatusRepository: OrderStatusRepository,
+        private readonly deliveryMethodRepository: DeliveryMethodRepository,
         private readonly paymentMethodRepository: PaymentMethodRepository,
         private readonly logger: ILogger,
         private readonly updateOrderUseCase: UpdateOrderUseCase
@@ -159,7 +161,7 @@ export class OrderController {
             const orderUseCase = new CreateOrderUseCase(
                 this.orderRepository, this.customerRepository, this.productRepository,
                 this.couponRepository, this.neighborhoodRepository, this.cityRepository,
-                this.orderStatusRepository, notificationService, loggerService
+                this.orderStatusRepository, this.deliveryMethodRepository, notificationService, loggerService
             );
 
             const data = await orderUseCase.execute(createSaleDto!, userId);

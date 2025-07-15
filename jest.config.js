@@ -22,7 +22,6 @@ module.exports = {
     '!src/app.ts',
   ],
   // Configuración para evitar problemas de timing
-  testTimeout: 30000,
   maxWorkers: 1, // Forzar ejecución secuencial
   // Configuración de proyectos separados
   projects: [

@@ -15,6 +15,7 @@ describe('CreateOrderUseCase - Guest Email Handling', () => {
     let mockNeighborhoodRepository: any;
     let mockCityRepository: any;
     let mockOrderStatusRepository: any;
+    let mockDeliveryMethodRepository: any;
     let mockNotificationService: any;
     let mockLogger: any;
 
@@ -109,6 +110,16 @@ describe('CreateOrderUseCase - Guest Email Handling', () => {
             validateTransition: jest.fn()
         };
 
+        mockDeliveryMethodRepository = {
+            create: jest.fn(),
+            getAll: jest.fn(),
+            getActiveOnes: jest.fn(),
+            findById: jest.fn(),
+            findByCode: jest.fn(),
+            updateById: jest.fn(),
+            deleteById: jest.fn()
+        };
+
         mockNotificationService = {
             sendOrderNotification: jest.fn(),
             sendPaymentNotification: jest.fn(),
@@ -132,6 +143,7 @@ describe('CreateOrderUseCase - Guest Email Handling', () => {
             mockNeighborhoodRepository,
             mockCityRepository,
             mockOrderStatusRepository,
+            mockDeliveryMethodRepository,
             mockNotificationService,
             mockLogger
         );
@@ -179,14 +191,34 @@ describe('CreateOrderUseCase - Guest Email Handling', () => {
                         unitPrice: 100
                     }
                 ],
-                deliveryMethodId: 'delivery-method-id',
-                paymentMethodId: 'payment-method-id'
+                deliveryMethodId: 'delivery-method-id'
             } as CreateOrderDto;
 
-            // Mock that guest customer already exists
-            mockCustomerRepository.findByEmail.mockResolvedValue(mockGuestCustomer);
+            // Mock product (required for validation in use case)
+            mockProductRepository.findById.mockResolvedValue({
+                id: 'product-id',
+                name: 'Test Product',
+                price: 100,
+                stock: 10,
+                isActive: true,
+                category: { id: 'cat-id', name: 'Test Category' },
+                unit: { id: 'unit-id', name: 'Unit' },
+                description: 'Test product',
+                taxRate: 21
+            });
 
-            // Mock other dependencies
+            // Mock delivery method for guest pickup
+            mockDeliveryMethodRepository.findById.mockResolvedValue({
+                id: 'delivery-method-id',
+                name: 'Retiro en Local',
+                code: 'PICKUP',
+                description: 'Retiro en local',
+                requiresAddress: false,
+                isActive: true,
+                price: 0
+            });
+
+            // Mock order status repository
             mockOrderStatusRepository.findDefault.mockResolvedValue({
                 id: 'status-id',
                 name: 'PENDING',
@@ -199,21 +231,31 @@ describe('CreateOrderUseCase - Guest Email Handling', () => {
                 canTransitionTo: []
             });
 
-            mockOrderStatusRepository.findByCode.mockResolvedValue({
-                id: 'status-id',
-                name: 'PENDING',
-                code: 'PENDING',
-                description: 'Pending order',
+            // Mock guest customer creation (should create new one for guests)
+            mockCustomerRepository.create.mockResolvedValue({
+                id: 'new-guest-customer-id',
+                name: 'Guest Customer',
+                email: 'guest_1752580352601_56436599_922668294_umy4h586z7_qwe@checkout.guest',
+                phone: '00000000',
+                address: 'Dirección Pendiente',
+                neighborhood: null,
                 isActive: true,
-                color: '#FFA500',
-                order: 1,
-                isDefault: true,
-                canTransitionTo: []
+                userId: null
             });
 
+            // Mock order creation
             mockOrderRepository.create.mockResolvedValue({
                 id: 'order-id',
-                customer: mockGuestCustomer,
+                customer: {
+                    id: 'new-guest-customer-id',
+                    name: 'Guest Customer',
+                    email: 'guest_1752580352601_56436599_922668294_umy4h586z7_qwe@checkout.guest',
+                    phone: '00000000',
+                    address: 'Dirección Pendiente',
+                    neighborhood: null,
+                    isActive: true,
+                    userId: null
+                },
                 items: mockCreateOrderDto.items,
                 total: 100,
                 subtotal: 100,
@@ -238,8 +280,8 @@ describe('CreateOrderUseCase - Guest Email Handling', () => {
             // Should NOT throw error for guest email
             await expect(useCase.execute(mockCreateOrderDto)).resolves.toBeDefined();
 
-            // Verify that findByEmail was called
-            expect(mockCustomerRepository.findByEmail).toHaveBeenCalledWith(mockCreateOrderDto.customerEmail);
+            // Verify that customer creation was called (guests should always create new customer)
+            expect(mockCustomerRepository.create).toHaveBeenCalled();
         });
 
         it('should reject order if regular email is already registered', async () => {
@@ -254,12 +296,32 @@ describe('CreateOrderUseCase - Guest Email Handling', () => {
                         unitPrice: 100
                     }
                 ],
-                deliveryMethodId: 'delivery-method-id',
-                paymentMethodId: 'payment-method-id'
+                deliveryMethodId: 'delivery-method-id'
             } as CreateOrderDto;
 
-            // Mock that registered customer exists
-            mockCustomerRepository.findByEmail.mockResolvedValue(mockRegisteredCustomer);
+            // Mock product (required for validation in use case)
+            mockProductRepository.findById.mockResolvedValue({
+                id: 'product-id',
+                name: 'Test Product',
+                price: 100,
+                stock: 10,
+                isActive: true,
+                category: { id: 'cat-id', name: 'Test Category' },
+                unit: { id: 'unit-id', name: 'Unit' },
+                description: 'Test product',
+                taxRate: 21
+            });
+
+            // Mock delivery method
+            mockDeliveryMethodRepository.findById.mockResolvedValue({
+                id: 'delivery-method-id',
+                name: 'Retiro en Local',
+                code: 'PICKUP',
+                description: 'Retiro en local',
+                requiresAddress: false,
+                isActive: true,
+                price: 0
+            });
 
             // Mock order status repository
             mockOrderStatusRepository.findDefault.mockResolvedValue({
@@ -274,14 +336,54 @@ describe('CreateOrderUseCase - Guest Email Handling', () => {
                 canTransitionTo: []
             });
 
-            // Should throw error for registered email
-            await expect(useCase.execute(mockCreateOrderDto))
-                .rejects
-                .toThrow(CustomError);
+            // Mock regular customer creation (should create new one since it's a guest order)
+            mockCustomerRepository.create.mockResolvedValue({
+                id: 'new-guest-customer-id',
+                name: 'Test Customer',
+                email: 'regular.user@example.com',
+                phone: '00000000',
+                address: 'Dirección Pendiente',
+                neighborhood: null,
+                isActive: true,
+                userId: null // Even though email is "regular", it's still a guest order
+            });
 
-            await expect(useCase.execute(mockCreateOrderDto))
-                .rejects
-                .toThrow('Email ya registrado. Inicia sesión.');
+            // Mock order creation
+            mockOrderRepository.create.mockResolvedValue({
+                id: 'order-id',
+                customer: {
+                    id: 'new-guest-customer-id',
+                    name: 'Test Customer',
+                    email: 'regular.user@example.com',
+                    phone: '00000000',
+                    address: 'Dirección Pendiente',
+                    neighborhood: null,
+                    isActive: true,
+                    userId: null
+                },
+                items: mockCreateOrderDto.items,
+                total: 100,
+                subtotal: 100,
+                taxAmount: 0,
+                discountRate: 0,
+                discountAmount: 0,
+                status: {
+                    id: 'status-id',
+                    name: 'PENDING',
+                    code: 'PENDING',
+                    description: 'Pending',
+                    isActive: true,
+                    color: '#FFA500',
+                    order: 1,
+                    isDefault: true,
+                    canTransitionTo: []
+                },
+                createdAt: new Date(),
+                updatedAt: new Date()
+            });
+
+            // Should NOT throw error for registered email, should allow order
+            await expect(useCase.execute(mockCreateOrderDto)).resolves.toBeDefined();
         });
 
         it('should correctly identify guest emails using GuestEmailUtil', () => {

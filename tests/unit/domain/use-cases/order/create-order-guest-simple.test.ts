@@ -1,3 +1,42 @@
+import { CreateOrderDto } from '../../../../../src/domain/dtos/order/create-order.dto';
+
+describe('Guest + Retiro en local (PICKUP) - Validación de campos', () => {
+    it('should allow guest order with PICKUP method and no address fields', async () => {
+        // Simular método de entrega PICKUP (requiresAddress: false)
+        const deliveryMethodId = '64f1b2c3d4e5f6a7b8c9d0e1';
+        // Mock dinámico de DeliveryMethodModel
+        jest.resetModules();
+        jest.doMock('../../../../../src/data/mongodb/models/delivery-method.model', () => ({
+            DeliveryMethodModel: {
+                findById: async (id: string) => ({
+                    _id: id,
+                    code: 'PICKUP',
+                    isActive: true,
+                    requiresAddress: false,
+                })
+            }
+        }));
+
+        const orderBody = {
+            items: [
+                { productId: '64f1b2c3d4e5f6a7b8c9d0e2', quantity: 1, unitPrice: 100 }
+            ],
+            deliveryMethodId,
+            customerName: 'Invitado',
+            customerEmail: 'guest_123@checkout.guest',
+            // No se envía ningún campo de dirección ni shipping
+        };
+
+        const [error, dto] = await CreateOrderDto.create(orderBody);
+        expect(error).toBeUndefined();
+        expect(dto).toBeDefined();
+        expect(dto!.customerName).toBe('Invitado');
+        expect(dto!.customerEmail).toBe('guest_123@checkout.guest');
+        expect(dto!.shippingStreetAddress).toBeUndefined();
+        expect(dto!.shippingNeighborhoodId).toBeUndefined();
+        expect(dto!.shippingCityId).toBeUndefined();
+    });
+});
 // tests/unit/domain/use-cases/order/create-order-guest-simple.test.ts
 
 import { GuestEmailUtil } from '../../../../../src/domain/utils/guest-email.util';

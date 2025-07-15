@@ -23,21 +23,53 @@ export class CustomerMongoDataSourceImpl extends CustomerDataSource {
     // (Asegúrate que findById, findByUserId, etc. estén aquí y funcionen)
     async create(createCustomerDto: CreateCustomerDto): Promise<CustomerEntity> {
         try {
-            const customer = await CustomerModel.create({
+            const customerData: any = {
                 name: createCustomerDto.name.toLowerCase(),
                 email: createCustomerDto.email.toLowerCase(),
                 phone: createCustomerDto.phone,
                 address: createCustomerDto.address.toLowerCase(),
-                neighborhood: createCustomerDto.neighborhoodId,
                 isActive: createCustomerDto.isActive,
                 userId: createCustomerDto.userId
-            });
-            // Populate the neighborhood field before mapping to entity
-            const populatedCustomer = await customer.populate({ path: 'neighborhood', populate: { path: 'city' } });
+            };
+
+            // Solo agregar neighborhood si está presente
+            if (createCustomerDto.neighborhoodId) {
+                customerData.neighborhood = createCustomerDto.neighborhoodId;
+            }
+
+            const customer = await CustomerModel.create(customerData);
+
+            // Populate the neighborhood field before mapping to entity (solo si existe)
+            const populatedCustomer = createCustomerDto.neighborhoodId
+                ? await customer.populate({ path: 'neighborhood', populate: { path: 'city' } })
+                : customer;
+
             return CustomerMapper.fromObjectToCustomerEntity(populatedCustomer);
         } catch (error: any) {
             logger.error("Error creando cliente:", { error, dto: createCustomerDto });
-            if (error.code === 11000) throw CustomError.badRequest(`El email '${createCustomerDto.email}' ya está registrado.`);
+
+            // Manejo específico de errores de duplicación
+            if (error.code === 11000) {
+                // Solo lanzar error de duplicación si es un usuario registrado (tiene userId)
+                if (createCustomerDto.userId) {
+                    const duplicatedField = error.message.includes('email') ? 'email' :
+                        error.message.includes('userId') ? 'userId' : 'campo desconocido';
+
+                    if (duplicatedField === 'email') {
+                        throw CustomError.badRequest(`Un usuario registrado ya tiene asociado el email '${createCustomerDto.email}'.`);
+                    } else if (duplicatedField === 'userId') {
+                        throw CustomError.badRequest(`Ya existe un cliente asociado a este usuario.`);
+                    } else {
+                        throw CustomError.badRequest(`Error de duplicación en ${duplicatedField}.`);
+                    }
+                } else {
+                    // Para clientes invitados (userId: null), permitir duplicados en todos los campos
+                    // Este error no debería ocurrir con la nueva configuración de índices, pero por seguridad
+                    logger.warn("Error de duplicación para cliente invitado (inesperado):", { error, dto: createCustomerDto });
+                    throw CustomError.internalServerError("Error inesperado creando cliente invitado.");
+                }
+            }
+
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError("CustomerMongoDataSourceImpl, error interno del servidor al crear cliente.");
         }

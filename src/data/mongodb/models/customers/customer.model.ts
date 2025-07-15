@@ -7,9 +7,8 @@ const customerSchema = new mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: 'User', // Referencia al modelo User
         required: false, // No requerido para permitir invitados
-        // Removido unique: true para permitir múltiples clientes invitados con userId: null
         sparse: true,    // Permite múltiples documentos con valor null/undefined (para invitados)
-        index: true,     // Indexar para búsquedas rápidas
+        index: { sparse: true },     // Índice sparse para permitir múltiples null
     },
     // <<<--- FIN NUEVO CAMPO --- >>>
     name: {
@@ -21,11 +20,10 @@ const customerSchema = new mongoose.Schema({
     email: {
         type: String,
         required: [true, "Customer email is required"],
-        unique: true, // <<<--- Mantenemos unique para evitar duplicados de email (invitados o registrados)
         trim: true,
         lowercase: true,
         match: [/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/, "Please enter a valid email address"],
-        index: true, // Indexar email para búsquedas rápidas
+        index: true, // Índice normal para búsquedas rápidas (NO único para permitir casos especiales)
     },
     phone: {
         type: String,
@@ -41,7 +39,7 @@ const customerSchema = new mongoose.Schema({
     neighborhood: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Neighborhood",
-        required: [true, "Neighborhood reference is required"] // Necesitará un default al crear desde User
+        required: false // Hacemos neighborhood opcional para casos como PICKUP
     },
     isActive: {
         type: Boolean,

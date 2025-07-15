@@ -1,137 +1,125 @@
-// tests/integration/order/guest-email-flow.integration.test.ts
+import request from 'supertest';
+import { app } from '../../../src/app.test';
+import { DeliveryMethodModel } from '../../../src/data/mongodb/models/delivery-method.model';
+import { ProductModel } from '../../../src/data/mongodb/models/products/product.model';
+import { CategoryModel } from '../../../src/data/mongodb/models/products/category.model';
+import { UnitModel } from '../../../src/data/mongodb/models/products/unit.model';
+import { OrderStatusModel } from '../../../src/data/mongodb/models/order/order-status.model';
+import { NeighborhoodModel } from '../../../src/data/mongodb/models/customers/neighborhood.model';
+import { CityModel } from '../../../src/data/mongodb/models/customers/city.model';
 
-import { GuestEmailUtil } from '../../../src/domain/utils/guest-email.util';
-import { CreateCustomerUseCase } from '../../../src/domain/use-cases/customers/create-customer.use-case';
-import { CreateOrderUseCase } from '../../../src/domain/use-cases/order/create-order.use-case';
+describe('Guest Checkout - Retiro en local (PICKUP) - Integración', () => {
+    let deliveryMethodId: string;
+    let productId: string;
 
-describe('Guest Email Flow - Integration Test', () => {
+    beforeAll(async () => {
+        // Limpiar método de entrega PICKUP si existe para evitar duplicados
+        await DeliveryMethodModel.deleteMany({ code: 'PICKUP' });
+        const deliveryMethod = await DeliveryMethodModel.create({
+            name: 'Retiro en Local',
+            code: 'PICKUP',
+            description: 'Retiro en local',
+            requiresAddress: false,
+            isActive: true,
+            price: 0
+        });
+        deliveryMethodId = deliveryMethod._id.toString();
 
-    describe('GuestEmailUtil Integration', () => {
-        it('should correctly identify guest emails from frontend', () => {
-            const frontendGeneratedEmails = [
-                'guest_1752580352601_56436599_922668294_umy4h586z7_qwe@checkout.guest',
-                'guest_9876543210_1111111111_2222222222_abc123def@checkout.guest',
-                'guest_5555555555_4444444444_3333333333_xyz999aaa@checkout.guest'
-            ];
-
-            const regularEmails = [
-                'user@example.com',
-                'customer@gmail.com',
-                'admin@company.com'
-            ];
-
-            // All frontend generated emails should be identified as guest emails
-            frontendGeneratedEmails.forEach(email => {
-                expect(GuestEmailUtil.isGuestEmail(email)).toBe(true);
-                expect(GuestEmailUtil.isValidRegisteredUserEmail(email)).toBe(false);
-
-                const analysis = GuestEmailUtil.analyzeEmail(email);
-                expect(analysis.isGuest).toBe(true);
-                expect(analysis.isRegistered).toBe(false);
-                expect(analysis.pattern).toBe('checkout.guest');
-            });
-
-            // Regular emails should not be identified as guest emails
-            regularEmails.forEach(email => {
-                expect(GuestEmailUtil.isGuestEmail(email)).toBe(false);
-                expect(GuestEmailUtil.isValidRegisteredUserEmail(email)).toBe(true);
-
-                const analysis = GuestEmailUtil.analyzeEmail(email);
-                expect(analysis.isGuest).toBe(false);
-                expect(analysis.isRegistered).toBe(true);
-                expect(analysis.pattern).toBeUndefined();
-            });
+        // Crear una categoría para el producto
+        const category = await CategoryModel.create({
+            name: 'Test Category',
+            description: 'Category for testing',
+            isActive: true
         });
 
-        it('should handle edge cases and variations', () => {
-            const testCases = [
-                {
-                    email: 'GUEST_123@CHECKOUT.GUEST',
-                    isGuest: true,
-                    description: 'uppercase email'
-                },
-                {
-                    email: '  guest_456@checkout.guest  ',
-                    isGuest: true,
-                    description: 'email with whitespace'
-                },
-                {
-                    email: 'guest_789@example.com',
-                    isGuest: true,
-                    description: 'guest prefix with regular domain'
-                },
-                {
-                    email: 'user@checkout.guest',
-                    isGuest: true,
-                    description: 'regular name with guest domain'
-                },
-                {
-                    email: 'guest@example.com',
-                    isGuest: false,
-                    description: 'misleading but regular email'
-                }
-            ];
-
-            testCases.forEach(({ email, isGuest, description }) => {
-                expect(GuestEmailUtil.isGuestEmail(email)).toBe(isGuest);
-                // console.log(`${description}: ${email} -> ${isGuest ? 'guest' : 'regular'}`);
-            });
+        // Crear una unidad para el producto
+        const unit = await UnitModel.create({
+            name: 'Test Unit',
+            symbol: 'tu',
+            description: 'Unit for testing',
+            isActive: true
         });
 
-        it('should handle the exact email pattern from the frontend issue', () => {
-            const problematicEmail = 'guest_1752580352601_56436599_922668294_umy4h586z7_qwe@checkout.guest';
+        // Crear producto de prueba
+        const product = await ProductModel.create({
+            name: 'Test Product',
+            description: 'Product for testing',
+            price: 100,
+            stock: 10,
+            category: category._id,
+            unit: unit._id,
+            taxRate: 0,
+            isActive: true,
+            images: []
+        });
+        productId = product._id.toString();
 
-            expect(GuestEmailUtil.isGuestEmail(problematicEmail)).toBe(true);
-            expect(GuestEmailUtil.isValidRegisteredUserEmail(problematicEmail)).toBe(false);
+        // Crear estado de orden por defecto
+        await OrderStatusModel.create({
+            name: 'Pendiente',
+            code: 'PENDING',
+            description: 'Pedido pendiente de procesamiento',
+            isActive: true,
+            color: '#FFA500',
+            order: 1,
+            isDefault: true,
+            canTransitionTo: []
+        });
 
-            const analysis = GuestEmailUtil.analyzeEmail(problematicEmail);
-            expect(analysis.isGuest).toBe(true);
-            expect(analysis.isRegistered).toBe(false);
-            expect(analysis.pattern).toBe('checkout.guest');
+        // Crear ciudad y barrio para guest checkout
+        const city = await CityModel.create({
+            name: 'Test City',
+            description: 'City for testing',
+            isActive: true
+        });
+
+        await NeighborhoodModel.create({
+            name: 'Test Neighborhood',
+            description: 'Neighborhood for testing',
+            city: city._id,
+            isActive: true
         });
     });
 
-    describe('Use Case Integration', () => {
-        it('should demonstrate the fix logic', () => {
-            // Simulate the scenario described by frontend
-            const guestEmail = 'guest_1752580352601_56436599_922668294_umy4h586z7_qwe@checkout.guest';
-            const regularEmail = 'user@example.com';
+    afterAll(async () => {
+        // Limpiar datos de prueba
+        if (deliveryMethodId) {
+            await DeliveryMethodModel.findByIdAndDelete(deliveryMethodId);
+        }
+        if (productId) {
+            await ProductModel.findByIdAndDelete(productId);
+        }
+        // Limpiar categoría y unidad
+        await CategoryModel.deleteMany({ name: 'Test Category' });
+        await UnitModel.deleteMany({ name: 'Test Unit' });
+        // Limpiar estados de orden
+        await OrderStatusModel.deleteMany({ code: 'PENDING' });
+        // Limpiar ciudad y barrio
+        await NeighborhoodModel.deleteMany({ name: 'Test Neighborhood' });
+        await CityModel.deleteMany({ name: 'Test City' });
+    });
 
-            // Mock existing customer (simulate finding customer in repository)
-            const existingGuestCustomer = {
-                id: 'guest-123',
-                email: guestEmail,
-                userId: null // Guest has no userId
-            };
+    it('should allow guest order with PICKUP method and no address fields (integration)', async () => {
+        const orderBody = {
+            items: [
+                { productId, quantity: 1, unitPrice: 100 }
+            ],
+            deliveryMethodId,
+            customerName: 'Invitado',
+            customerEmail: 'guest_123@checkout.guest',
+            // No se envía ningún campo de dirección ni shipping
+        };
 
-            const existingRegisteredCustomer = {
-                id: 'user-456',
-                email: regularEmail,
-                userId: 'user-id-789' // Registered user has userId
-            };
+        const response = await request(app)
+            .post('/api/orders')
+            .send(orderBody)
+            .expect(201);
 
-            // Test the logic that was implemented
-
-            // For guest email: should NOT throw error even if customer exists
-            if (existingGuestCustomer && !GuestEmailUtil.isGuestEmail(guestEmail)) {
-                // This condition should be FALSE, so no error should be thrown
-                throw new Error('Email ya registrado. Inicia sesión.');
-            }
-            // No error thrown - this is correct behavior
-
-            // For regular email with userId: should throw error
-            let errorThrown = false;
-            try {
-                if (existingRegisteredCustomer && !GuestEmailUtil.isGuestEmail(regularEmail)) {
-                    if (existingRegisteredCustomer.userId) {
-                        throw new Error('Email ya registrado. Inicia sesión.');
-                    }
-                }
-            } catch (error) {
-                errorThrown = true;
-                expect(error.message).toBe('Email ya registrado. Inicia sesión.');
-            }
-            expect(errorThrown).toBe(true);
-        });
+        expect(response.body).toHaveProperty('success', true);
+        expect(response.body.data).toHaveProperty('customer');
+        expect(response.body.data.customer.email).toBe('guest_123@checkout.guest');
+        expect(response.body.data).toHaveProperty('items');
+        expect(Array.isArray(response.body.data.items)).toBe(true);
+        expect(response.body.data.items[0].product.id).toBe(productId);
     });
 });

@@ -9,7 +9,7 @@ export class CustomerEntity {
         public email: string,
         public phone: string,
         public address: string,
-        public neighborhood: NeighborhoodEntity,
+        public neighborhood?: NeighborhoodEntity, // Hacer neighborhood opcional
         public isActive: boolean = true,
         public userId?: string | null // <<<--- AÑADIR userId opcional
     ) { }

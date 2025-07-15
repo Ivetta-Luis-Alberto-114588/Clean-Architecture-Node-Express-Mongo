@@ -18,6 +18,8 @@ import { OrderStatusMongoDataSourceImpl } from "../../infrastructure/datasources
 import { OrderStatusRepositoryImpl } from "../../infrastructure/repositories/order/order-status.repository.impl";
 import { PaymentMethodMongoDataSourceImpl } from "../../infrastructure/datasources/payment/payment-method.mongo.datasource.impl";
 import { PaymentMethodRepositoryImpl } from "../../infrastructure/repositories/payment/payment-method.repository.impl";
+import { DeliveryMethodMongoDatasourceImpl } from "../../infrastructure/datasources/delivery-methods/delivery-method.mongo.datasource.impl";
+import { DeliveryMethodRepositoryImpl } from "../../infrastructure/repositories/delivery-methods/delivery-method.repository.impl";
 import { UpdateOrderUseCase } from "../../domain/use-cases/order/update-order.use-case";
 import { loggerService } from "../../configs/logger";
 import { notificationService } from "../../configs/notification";
@@ -34,6 +36,7 @@ export class OrderRoutes {
         const neighborhoodDatasource = new NeighborhoodMongoDataSourceImpl();
         const cityDatasource = new CityMongoDataSourceImpl(); const orderStatusDatasource = new OrderStatusMongoDataSourceImpl();
         const paymentMethodDatasource = new PaymentMethodMongoDataSourceImpl();
+        const deliveryMethodDatasource = new DeliveryMethodMongoDatasourceImpl();
 
         // Repositorios
         const orderRepository = new OrderRepositoryImpl(orderDatasource);
@@ -44,6 +47,7 @@ export class OrderRoutes {
         const cityRepository = new CityRepositoryImpl(cityDatasource);
         const orderStatusRepository = new OrderStatusRepositoryImpl(orderStatusDatasource);
         const paymentMethodRepository = new PaymentMethodRepositoryImpl(paymentMethodDatasource);
+        const deliveryMethodRepository = new DeliveryMethodRepositoryImpl(deliveryMethodDatasource);
 
         // Use cases
         const updateOrderUseCase = new UpdateOrderUseCase(orderRepository);        // Controller con todas las dependencias
@@ -55,6 +59,7 @@ export class OrderRoutes {
             neighborhoodRepository,
             cityRepository,
             orderStatusRepository,
+            deliveryMethodRepository,
             paymentMethodRepository,
             loggerService,
             updateOrderUseCase

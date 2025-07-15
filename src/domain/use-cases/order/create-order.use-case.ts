@@ -15,6 +15,7 @@ import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { NeighborhoodRepository } from "../../repositories/customers/neighborhood.repository";
 import { CityRepository } from "../../repositories/customers/city.repository";
 import { OrderStatusRepository } from "../../repositories/order/order-status.repository";
+import { DeliveryMethodRepository } from "../../repositories/delivery-methods/delivery-method.repository";
 import { GuestEmailUtil } from "../../utils/guest-email.util";
 
 interface ICreateOrderUseCase {
@@ -38,6 +39,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         private readonly neighborhoodRepository: NeighborhoodRepository,
         private readonly cityRepository: CityRepository,
         private readonly orderStatusRepository: OrderStatusRepository,
+        private readonly deliveryMethodRepository: DeliveryMethodRepository,
         private readonly notificationService: NotificationService,
         private readonly logger: ILogger
     ) { }
@@ -72,25 +74,33 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                     throw CustomError.badRequest('Faltan datos básicos del cliente invitado (email y nombre).');
                 }
 
-                const existingGuest = await this.customerRepository.findByEmail(createOrderDto.customerEmail);
-                if (existingGuest) {
-                    // Solo validar email duplicado si NO es un email de invitado generado automáticamente
-                    if (existingGuest.userId && !GuestEmailUtil.isGuestEmail(createOrderDto.customerEmail)) {
-                        throw CustomError.badRequest('Email ya registrado. Inicia sesión.');
+                // Para clientes invitados, SIEMPRE crear un nuevo registro sin verificaciones
+                // Esto permite múltiples invitados con el mismo email, nombre, teléfono, etc.
+                this.logger.info(`[CreateOrderUC] Creando nuevo cliente invitado sin verificaciones de unicidad`);
+
+                // Verificar si el método de entrega requiere dirección
+                let requiresNeighborhood = true;
+                if (createOrderDto.deliveryMethodId) {
+                    try {
+                        const deliveryMethod = await this.deliveryMethodRepository.findById(createOrderDto.deliveryMethodId);
+                        requiresNeighborhood = deliveryMethod?.requiresAddress || false;
+                    } catch (error) {
+                        this.logger.warn('Error verificando método de entrega para neighborhood, asumiendo requiere dirección');
                     }
-                    customerForOrder = existingGuest;
-                    finalCustomerId = existingGuest.id.toString();
-                    this.logger.info(`[CreateOrderUC] Cliente invitado existente ${finalCustomerId} encontrado por email.`);
-                } else {
+                }
+
+                let neighborhoodId: string | undefined;
+
+                if (requiresNeighborhood) {
                     // Para crear un cliente invitado necesitamos al menos un barrio (usaremos uno temporal si no hay dirección)
-                    let neighborhoodId = createOrderDto.shippingNeighborhoodId;
+                    neighborhoodId = createOrderDto.shippingNeighborhoodId;
 
                     // Si no hay neighborhoodId, usar uno temporal/default para permitir la creación del cliente
                     if (!neighborhoodId) {
                         // Buscar un barrio por defecto o usar el primero disponible
                         try {
                             const { NeighborhoodModel } = await import('../../../data/mongodb/models/customers/neighborhood.model');
-                            const defaultNeighborhood = await NeighborhoodModel.findOne().limit(1);
+                            const defaultNeighborhood = await NeighborhoodModel.findOne().populate('city').limit(1);
                             if (defaultNeighborhood) {
                                 neighborhoodId = defaultNeighborhood._id.toString();
                                 this.logger.info(`[CreateOrderUC] Usando barrio temporal para cliente invitado: ${neighborhoodId}`);
@@ -105,29 +115,33 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                         // Verificar que el barrio existe antes de crear cliente
                         await this.neighborhoodRepository.findById(neighborhoodId);
                     }
-
-                    const [errorDto, createGuestDto] = CreateCustomerDto.create({
-                        name: createOrderDto.customerName,
-                        email: createOrderDto.customerEmail,
-                        phone: createOrderDto.shippingPhone || '00000000',
-                        address: createOrderDto.shippingStreetAddress || 'Dirección Pendiente',
-                        neighborhoodId: neighborhoodId,
-                    });
-                    if (errorDto) throw CustomError.badRequest(`Datos cliente invitado inválidos: ${errorDto}`);
-
-                    customerForOrder = await this.customerRepository.create(createGuestDto!);
-                    finalCustomerId = customerForOrder.id.toString();
-                    this.logger.info(`[CreateOrderUC] Nuevo cliente invitado creado: ${finalCustomerId}`);
+                } else {
+                    // Para métodos como PICKUP, no necesitamos neighborhood
+                    neighborhoodId = undefined;
+                    this.logger.info(`[CreateOrderUC] Método de entrega no requiere dirección, creando cliente sin neighborhood`);
                 }
-            }            // --- 2. Verificar si método de entrega requiere dirección y resolver dirección de envío ---
+
+                const [errorDto, createGuestDto] = CreateCustomerDto.create({
+                    name: createOrderDto.customerName,
+                    email: createOrderDto.customerEmail,
+                    phone: createOrderDto.shippingPhone || '00000000',
+                    address: createOrderDto.shippingStreetAddress || 'Dirección Pendiente',
+                    neighborhoodId: neighborhoodId,
+                });
+                if (errorDto) throw CustomError.badRequest(`Datos cliente invitado inválidos: ${errorDto}`);
+
+                customerForOrder = await this.customerRepository.create(createGuestDto!);
+                finalCustomerId = customerForOrder.id.toString();
+                this.logger.info(`[CreateOrderUC] Nuevo cliente invitado creado: ${finalCustomerId}`);
+            }
+
+            // --- 2. Verificar si método de entrega requiere dirección y resolver dirección de envío ---
             let requiresAddress = true; // Default por seguridad
-            let resolvedShippingDetails: ResolvedShippingDetails | undefined;
 
             // Verificar el método de entrega para determinar si requiere dirección
             if (createOrderDto.deliveryMethodId) {
                 try {
-                    const { DeliveryMethodModel } = await import('../../../data/mongodb/models/delivery-method.model');
-                    const deliveryMethod = await DeliveryMethodModel.findById(createOrderDto.deliveryMethodId);
+                    const deliveryMethod = await this.deliveryMethodRepository.findById(createOrderDto.deliveryMethodId);
 
                     if (deliveryMethod) {
                         requiresAddress = deliveryMethod.requiresAddress;
@@ -256,7 +270,11 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
             return createdOrder;
 
         } catch (error) {
-            this.logger.error("[CreateOrderUC] Error ejecutando:", { error: error instanceof Error ? { message: error.message, stack: error.stack } : error, userId, dto: createOrderDto });
+            this.logger.error("[CreateOrderUC] Error ejecutando:", {
+                error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
+                userId: userId || 'guest',
+                dto: createOrderDto
+            });
             if (error instanceof CustomError) throw error;
             throw CustomError.internalServerError(`Error al crear la venta: ${error instanceof Error ? error.message : String(error)}`);
         }

@@ -19,28 +19,29 @@ export class CustomerMapper {
         // Hacer opcionales phone y address en la validación si pueden ser placeholders
         // if(!phone) throw CustomError.badRequest("mapper missing phone");
         // if(!address) throw CustomError.badRequest("mapper missing address");
-        if (!neighborhoodRaw) throw CustomError.badRequest("mapper missing neighborhood");
+
+        // neighborhood es opcional ahora para casos como PICKUP
         if (isActive !== undefined && typeof isActive !== 'boolean')
             throw CustomError.badRequest("mapper isActive must be a boolean");
 
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
         if (!emailRegex.test(email)) throw CustomError.badRequest("mapper invalid email format");
 
-        // Manejo de relación con Neighborhood
-        let neighborhoodEntity: NeighborhoodEntity;
-        if (typeof neighborhoodRaw === 'object' && neighborhoodRaw !== null && ((neighborhoodRaw as any)._id || (neighborhoodRaw as any).id)) {
-            neighborhoodEntity = NeighborhoodMapper.fromObjectToNeighborhoodEntity(neighborhoodRaw);
-        } else if (typeof neighborhoodRaw === 'string' || typeof neighborhoodRaw === 'object') {
-            // If raw ID or string, create placeholder entity
-            neighborhoodEntity = {
-                id: neighborhoodRaw.toString(),
-                name: 'Barrio (No Poblado)',
-                description: '',
-                city: { id: '', name: 'Ciudad (No Poblada)', description: '', isActive: true },
-                isActive: true
-            };
-        } else {
-            throw CustomError.badRequest("mapper invalid neighborhood data");
+        // Manejo de relación con Neighborhood (ahora opcional)
+        let neighborhoodEntity: NeighborhoodEntity | undefined;
+        if (neighborhoodRaw) {
+            if (typeof neighborhoodRaw === 'object' && neighborhoodRaw !== null && ((neighborhoodRaw as any)._id || (neighborhoodRaw as any).id)) {
+                neighborhoodEntity = NeighborhoodMapper.fromObjectToNeighborhoodEntity(neighborhoodRaw);
+            } else if (typeof neighborhoodRaw === 'string' || typeof neighborhoodRaw === 'object') {
+                // If raw ID or string, create placeholder entity
+                neighborhoodEntity = {
+                    id: neighborhoodRaw.toString(),
+                    name: 'Barrio (No Poblado)',
+                    description: '',
+                    city: { id: '', name: 'Ciudad (No Poblada)', description: '', isActive: true },
+                    isActive: true
+                };
+            }
         }
 
 

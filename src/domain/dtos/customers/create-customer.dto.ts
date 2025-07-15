@@ -6,7 +6,7 @@ export class CreateCustomerDto {
         public email: string,
         public phone: string,
         public address: string,
-        public neighborhoodId: string, // Usamos neighborhoodId en lugar de la entidad completa
+        public neighborhoodId?: string, // Hacemos neighborhoodId opcional
         public isActive: boolean = true,
         public userId?: string | null
     ) { }
@@ -31,10 +31,12 @@ export class CreateCustomerDto {
         if (!address) return ["address es requerido", undefined];
         if (address.length < 5) return ["address debe tener al menos 4 caracteres", undefined];
 
-        if (!neighborhoodId) return ["neighborhoodId es requerido", undefined];
-        // Validación simple para ID de MongoDB
-        if (!/^[0-9a-fA-F]{24}$/.test(neighborhoodId)) {
-            return ["neighborhoodId debe ser un id valido para MongoDB", undefined];
+        // neighborhoodId es opcional ahora (para casos como PICKUP)
+        if (neighborhoodId) {
+            // Validación simple para ID de MongoDB solo si se proporciona
+            if (!/^[0-9a-fA-F]{24}$/.test(neighborhoodId)) {
+                return ["neighborhoodId debe ser un id valido para MongoDB", undefined];
+            }
         }
 
         // Validamos que isActive sea un booleano si viene en la petición
