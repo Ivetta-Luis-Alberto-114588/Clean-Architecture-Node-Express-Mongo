@@ -15,6 +15,7 @@ import { PaginationDto } from "../../dtos/shared/pagination.dto";
 import { NeighborhoodRepository } from "../../repositories/customers/neighborhood.repository";
 import { CityRepository } from "../../repositories/customers/city.repository";
 import { OrderStatusRepository } from "../../repositories/order/order-status.repository";
+import { GuestEmailUtil } from "../../utils/guest-email.util";
 
 interface ICreateOrderUseCase {
     execute(createOrderDto: CreateOrderDto, userId?: string): Promise<OrderEntity>;
@@ -73,7 +74,10 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
 
                 const existingGuest = await this.customerRepository.findByEmail(createOrderDto.customerEmail);
                 if (existingGuest) {
-                    if (existingGuest.userId) throw CustomError.badRequest('Email ya registrado. Inicia sesión.');
+                    // Solo validar email duplicado si NO es un email de invitado generado automáticamente
+                    if (existingGuest.userId && !GuestEmailUtil.isGuestEmail(createOrderDto.customerEmail)) {
+                        throw CustomError.badRequest('Email ya registrado. Inicia sesión.');
+                    }
                     customerForOrder = existingGuest;
                     finalCustomerId = existingGuest.id.toString();
                     this.logger.info(`[CreateOrderUC] Cliente invitado existente ${finalCustomerId} encontrado por email.`);
