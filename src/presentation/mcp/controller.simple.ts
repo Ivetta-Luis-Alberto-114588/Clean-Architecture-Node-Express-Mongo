@@ -7,14 +7,14 @@ export class SimpleMCPController {
     // Endpoint de salud
     health = (req: Request, res: Response) => {
         try {
-            return res.status(200).json({
+            res.status(200).json({
                 status: 'OK',
                 service: 'MCP Service',
                 timestamp: new Date().toISOString(),
                 message: 'MCP service is healthy'
             });
         } catch (error) {
-            return res.status(500).json({ error: 'Health check failed' });
+            res.status(500).json({ error: 'Health check failed' });
         }
     };
 
@@ -93,7 +93,7 @@ export class SimpleMCPController {
                 },
             ];
 
-            return res.status(200).json({
+            res.status(200).json({
                 status: 'OK',
                 service: 'MCP Tools',
                 timestamp: new Date().toISOString(),
@@ -106,7 +106,7 @@ export class SimpleMCPController {
 
         } catch (error) {
             logger.error('Error listing tools:', error);
-            return res.status(500).json({
+            res.status(500).json({
                 error: 'Error listing tools',
                 details: error instanceof Error ? error.message : 'Unknown error'
             });
@@ -170,7 +170,7 @@ export class SimpleMCPController {
             };
 
             if (toolExamples[toolName]) {
-                return res.status(200).json({
+                res.status(200).json({
                     status: 'OK',
                     service: 'MCP Tool Documentation',
                     timestamp: new Date().toISOString(),
@@ -178,7 +178,7 @@ export class SimpleMCPController {
                     ...toolExamples[toolName]
                 });
             } else {
-                return res.status(404).json({
+                res.status(404).json({
                     error: 'Tool not found',
                     availableTools: Object.keys(toolExamples)
                 });
@@ -186,7 +186,7 @@ export class SimpleMCPController {
 
         } catch (error) {
             logger.error('Error getting tool documentation:', error);
-            return res.status(500).json({ error: 'Error getting tool documentation' });
+            res.status(500).json({ error: 'Error getting tool documentation' });
         }
     };
 
@@ -196,7 +196,8 @@ export class SimpleMCPController {
             const { toolName, args } = req.body;
 
             if (!toolName) {
-                return res.status(400).json({ error: 'Tool name is required' });
+                res.status(400).json({ error: 'Tool name is required' });
+                return;
             }
 
             // Mapeo de herramientas a endpoints REST
@@ -210,10 +211,11 @@ export class SimpleMCPController {
 
             const endpoint = toolEndpointMap[toolName];
             if (!endpoint) {
-                return res.status(400).json({
+                res.status(400).json({
                     error: `Unknown tool: ${toolName}`,
                     availableTools: Object.keys(toolEndpointMap)
                 });
+                return;
             }
 
             // Construir URL con parámetros
@@ -227,7 +229,7 @@ export class SimpleMCPController {
                 }
             }
 
-            return res.status(200).json({
+            res.status(200).json({
                 status: 'OK',
                 service: 'MCP Tool Call',
                 timestamp: new Date().toISOString(),
@@ -243,7 +245,7 @@ export class SimpleMCPController {
 
         } catch (error) {
             logger.error('Error calling tool:', error);
-            return res.status(500).json({ error: 'Error calling tool' });
+            res.status(500).json({ error: 'Error calling tool' });
         }
     };
 }

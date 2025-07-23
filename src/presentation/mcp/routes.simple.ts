@@ -8,10 +8,10 @@ export class SimpleMCPRoutes {
         const controller = new SimpleMCPController();
 
         // Rutas MCP simplificadas
-        router.get('/health', (req: Request, res: Response) => controller.health(req, res));
-        router.get('/tools', (req: Request, res: Response) => controller.listTools(req, res));
-        router.get('/tools/:toolName', (req: Request, res: Response) => controller.getToolDocumentation(req, res));
-        router.post('/tools/call', (req: Request, res: Response) => controller.callTool(req, res));
+        router.get('/health', (req: Request, res: Response) => { controller.health(req, res); });
+        router.get('/tools', (req: Request, res: Response) => { controller.listTools(req, res); });
+        router.get('/tools/:toolName', (req: Request, res: Response) => { controller.getToolDocumentation(req, res); });
+        router.post('/tools/call', (req: Request, res: Response) => { controller.callTool(req, res); });
 
         return router;
     }
