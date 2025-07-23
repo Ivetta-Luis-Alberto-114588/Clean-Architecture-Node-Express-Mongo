@@ -29,7 +29,7 @@ export class MCPController {
         private readonly callToolUseCase: CallToolUseCase
     ) {
         this.guardrailsService = new MCPGuardrailsService();
-
+        
         // Limpiar sesiones expiradas cada 5 minutos
         setInterval(() => {
             this.guardrailsService.cleanExpiredSessions();
@@ -44,8 +44,7 @@ export class MCPController {
         logger.error('Unexpected error in MCPController:', error);
         return res.status(500).json({ error: 'Internal server error' });
     };
-
-    // Endpoint proxy para Anthropic Claude CON GUARDARRILES
+    // Endpoint proxy para Anthropic Claude
     public anthropicProxy = async (req: Request, res: Response) => {
         try {
             logger.info('Received request for Anthropic proxy');
@@ -72,9 +71,9 @@ export class MCPController {
             }
 
             // **APLICAR GUARDARRILES**
-            const sessionId = req.headers['x-session-id'] as string ||
-                req.ip ||
-                `session_${Date.now()}`;
+            const sessionId = req.headers['x-session-id'] as string || 
+                             req.ip || 
+                             `session_${Date.now()}`;
 
             const guardrailValidation = this.guardrailsService.validateAndProcessRequest(
                 { model, max_tokens, messages, ...otherParams },
@@ -84,7 +83,7 @@ export class MCPController {
             // Si los guardarriles bloquean la request
             if (!guardrailValidation.allowed) {
                 logger.warn(`[Guardrails] Request blocked for session ${sessionId}: ${guardrailValidation.reason}`);
-
+                
                 return res.status(400).json({
                     error: 'Request blocked by guardrails',
                     reason: guardrailValidation.reason,
@@ -108,8 +107,8 @@ export class MCPController {
                 'anthropic-version': '2023-06-01'
             };
 
-            logger.info(`Making request to Anthropic API`, {
-                model: processedRequest.model,
+            logger.info(`Making request to Anthropic API`, { 
+                model: processedRequest.model, 
                 messageCount: processedRequest.messages.length,
                 maxTokens: processedRequest.max_tokens,
                 sessionId,
@@ -173,7 +172,7 @@ export class MCPController {
                         'lo siento, pero no puedo'
                     ];
 
-                    const hasOutOfScopeContent = outOfScopeIndicators.some(indicator =>
+                    const hasOutOfScopeContent = outOfScopeIndicators.some(indicator => 
                         text.includes(indicator)
                     );
 
@@ -202,7 +201,7 @@ export class MCPController {
     public getGuardrailsConfig = async (req: Request, res: Response) => {
         try {
             const config = this.guardrailsService.getConfig();
-
+            
             return res.status(200).json({
                 status: 'OK',
                 service: 'MCP Guardrails Config',
@@ -225,7 +224,7 @@ export class MCPController {
     public getGuardrailsStats = async (req: Request, res: Response) => {
         try {
             const stats = this.guardrailsService.getSessionStats();
-
+            
             return res.status(200).json({
                 status: 'OK',
                 service: 'MCP Guardrails Stats',
@@ -242,13 +241,13 @@ export class MCPController {
     public resetSession = async (req: Request, res: Response) => {
         try {
             const { sessionId } = req.params;
-
+            
             if (!sessionId) {
                 throw CustomError.badRequest('Session ID is required');
             }
 
             this.guardrailsService.resetSession(sessionId);
-
+            
             return res.status(200).json({
                 status: 'OK',
                 service: 'MCP Session Reset',
@@ -266,7 +265,7 @@ export class MCPController {
     public cleanExpiredSessions = async (req: Request, res: Response) => {
         try {
             this.guardrailsService.cleanExpiredSessions();
-
+            
             return res.status(200).json({
                 status: 'OK',
                 service: 'MCP Sessions Cleanup',
@@ -279,7 +278,64 @@ export class MCPController {
         }
     };
 
-    // **ENDPOINTS ORIGINALES DE MCP**
+        } catch (error) {
+            // Manejo específico de errores de Axios/Anthropic
+            if (axios.isAxiosError(error)) {
+                const status = error.response?.status || 500;
+                const message = error.response?.data?.error?.message || 'Error communicating with Anthropic API';
+
+                logger.error(`Anthropic API error (${status}):`, message);
+
+                return res.status(status).json({
+                    error: message,
+                    details: error.response?.data
+                });
+            }
+
+            this.handleError(error, res);
+        }
+    };
+
+    /**
+     * Post-procesar respuesta de Anthropic para aplicar guardarriles
+     */
+    private postProcessAnthropicResponse(response: any, sessionId: string): any {
+        // Verificar si la respuesta intenta salirse del ámbito permitido
+        if (response.content && Array.isArray(response.content)) {
+            for (const content of response.content) {
+                if (content.type === 'text' && content.text) {
+                    // Verificar si la respuesta contiene disclaimers o intentos de salirse del ámbito
+                    const text = content.text.toLowerCase();
+                    const outOfScopeIndicators = [
+                        'no puedo ayudar con eso',
+                        'eso está fuera de mi ámbito',
+                        'no estoy diseñado para',
+                        'no tengo información sobre',
+                        'lo siento, pero no puedo'
+                    ];
+
+                    const hasOutOfScopeContent = outOfScopeIndicators.some(indicator => 
+                        text.includes(indicator)
+                    );
+
+                    if (hasOutOfScopeContent) {
+                        logger.info(`[Guardrails] Response contains out-of-scope content for session ${sessionId}`);
+                        // La respuesta ya es apropiada, mantenerla
+                    }
+                }
+            }
+        }
+
+        // Agregar metadata de guardarriles
+        return {
+            ...response,
+            _guardrails: {
+                sessionId,
+                processed: true,
+                timestamp: new Date().toISOString()
+            }
+        };
+    }
 
     // Endpoint para listar herramientas MCP disponibles
     public listTools = async (req: Request, res: Response) => {
@@ -290,9 +346,13 @@ export class MCPController {
 
             return res.status(200).json({
                 status: 'OK',
-                service: 'MCP Tools List',
+                service: 'MCP Tools',
                 timestamp: new Date().toISOString(),
-                tools
+                tools: tools.map(tool => ({
+                    name: tool.name,
+                    description: tool.description,
+                    inputSchema: tool.inputSchema
+                }))
             });
 
         } catch (error) {
@@ -300,7 +360,7 @@ export class MCPController {
         }
     };
 
-    // Endpoint para ejecutar herramientas MCP
+    // Endpoint para llamar una herramienta MCP específica
     public callTool = async (req: Request, res: Response) => {
         try {
             const { toolName, args } = req.body;
@@ -345,64 +405,156 @@ export class MCPController {
                 status: 'OK',
                 service: 'MCP Tools Info',
                 timestamp: new Date().toISOString(),
-                tools: [
+                availableTools: [
                     {
-                        name: 'get_products',
-                        description: 'Obtiene la lista de productos con opciones de filtrado',
-                        inputSchema: {
-                            type: 'object',
-                            properties: {
-                                search: { type: 'string', description: 'Término de búsqueda en nombre y descripción' },
-                                categoryId: { type: 'string', description: 'ID de la categoría para filtrar' },
-                                minPrice: { type: 'number', description: 'Precio mínimo' },
-                                maxPrice: { type: 'number', description: 'Precio máximo' },
-                                page: { type: 'number', default: 1, description: 'Número de página' },
-                                limit: { type: 'number', default: 10, description: 'Elementos por página' }
+                        name: "get_products",
+                        description: "Obtiene lista de productos con filtros opcionales",
+                        directEndpoint: "GET /api/products",
+                        mcpEndpoint: "POST /api/mcp/tools/call",
+                        parameters: {
+                            page: "número de página (default: 1)",
+                            limit: "productos por página (default: 10)",
+                            search: "término de búsqueda",
+                            categoryId: "ID de categoría",
+                            minPrice: "precio mínimo",
+                            maxPrice: "precio máximo"
+                        },
+                        examples: {
+                            directCall: "GET /api/products?page=1&limit=10",
+                            mcpCall: {
+                                method: "POST",
+                                url: "/api/mcp/tools/call",
+                                body: {
+                                    toolName: "get_products",
+                                    args: { page: 1, limit: 10, search: "laptop" }
+                                }
                             }
                         }
                     },
                     {
-                        name: 'get_customers',
-                        description: 'Obtiene la lista de clientes con opciones de búsqueda',
-                        inputSchema: {
-                            type: 'object',
-                            properties: {
-                                search: { type: 'string', description: 'Buscar por nombre, email o teléfono' },
-                                neighborhoodId: { type: 'string', description: 'ID del barrio para filtrar' },
-                                page: { type: 'number', default: 1, description: 'Número de página' },
-                                limit: { type: 'number', default: 10, description: 'Elementos por página' },
-                                sortBy: { type: 'string', description: 'Campo para ordenar (name, email, createdAt)' },
-                                sortOrder: { type: 'string', enum: ['asc', 'desc'], description: 'Orden de clasificación' }
+                        name: "search_products",
+                        description: "Busca productos por nombre, descripción o categoría",
+                        directEndpoint: "GET /api/products/search",
+                        mcpEndpoint: "POST /api/mcp/tools/call",
+                        parameters: {
+                            q: "término de búsqueda (requerido)",
+                            page: "número de página (default: 1)",
+                            limit: "productos por página (default: 10)",
+                            categories: "categorías separadas por coma",
+                            minPrice: "precio mínimo",
+                            maxPrice: "precio máximo",
+                            sortBy: "campo de ordenamiento",
+                            sortOrder: "asc o desc"
+                        },
+                        examples: {
+                            directCall: "GET /api/products/search?q=lomito&page=1&limit=5",
+                            mcpCall: {
+                                method: "POST",
+                                url: "/api/mcp/tools/call",
+                                body: {
+                                    toolName: "search_products",
+                                    args: { q: "lomito", page: 1, limit: 5 }
+                                }
                             }
                         }
                     },
                     {
-                        name: 'get_orders',
-                        description: 'Obtiene la lista de pedidos con filtros',
-                        inputSchema: {
-                            type: 'object',
-                            properties: {
-                                customerId: { type: 'string', description: 'ID del cliente para filtrar' },
-                                status: { type: 'string', description: 'Estado del pedido' },
-                                dateFrom: { type: 'string', format: 'date', description: 'Fecha inicial (YYYY-MM-DD)' },
-                                dateTo: { type: 'string', format: 'date', description: 'Fecha final (YYYY-MM-DD)' },
-                                page: { type: 'number', default: 1, description: 'Número de página' },
-                                limit: { type: 'number', default: 10, description: 'Elementos por página' }
+                        name: "get_product_by_id",
+                        description: "Obtiene un producto específico por ID",
+                        directEndpoint: "GET /api/products/{id}",
+                        mcpEndpoint: "POST /api/mcp/tools/call",
+                        parameters: {
+                            id: "ID del producto (requerido)"
+                        },
+                        examples: {
+                            directCall: "GET /api/products/60f8b4b8e0b2a3a4b8b4b8b4",
+                            mcpCall: {
+                                method: "POST",
+                                url: "/api/mcp/tools/call",
+                                body: {
+                                    toolName: "get_product_by_id",
+                                    args: { id: "60f8b4b8e0b2a3a4b8b4b8b4" }
+                                }
                             }
                         }
                     },
                     {
-                        name: 'get_product_by_id',
-                        description: 'Obtiene un producto específico por ID',
-                        inputSchema: {
-                            type: 'object',
-                            properties: {
-                                id: { type: 'string', required: true, description: 'ID único del producto' }
-                            },
-                            required: ['id']
+                        name: "get_customers",
+                        description: "Obtiene lista de clientes (requiere autenticación admin)",
+                        directEndpoint: "GET /api/admin/customers",
+                        mcpEndpoint: "POST /api/mcp/tools/call",
+                        parameters: {
+                            page: "número de página (default: 1)",
+                            limit: "clientes por página (default: 10)"
+                        },
+                        examples: {
+                            directCall: "GET /api/admin/customers?page=1&limit=10",
+                            mcpCall: {
+                                method: "POST",
+                                url: "/api/mcp/tools/call",
+                                body: {
+                                    toolName: "get_customers",
+                                    args: { page: 1, limit: 10 }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        name: "search_customers",
+                        description: "Busca clientes por nombre, email o teléfono",
+                        directEndpoint: "GET /api/customers/search",
+                        mcpEndpoint: "POST /api/mcp/tools/call",
+                        parameters: {
+                            q: "término de búsqueda (nombre, email, teléfono)",
+                            neighborhoodId: "ID del barrio para filtrar",
+                            page: "número de página (default: 1)",
+                            limit: "clientes por página (default: 10)",
+                            sortBy: "campo de ordenamiento",
+                            sortOrder: "asc o desc"
+                        },
+                        examples: {
+                            directCall: "GET /api/customers/search?q=juan&page=1&limit=5",
+                            mcpCall: {
+                                method: "POST",
+                                url: "/api/mcp/tools/call",
+                                body: {
+                                    toolName: "search_customers",
+                                    args: { q: "juan", page: 1, limit: 5 }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        name: "get_orders",
+                        description: "Obtiene lista de pedidos (requiere autenticación admin)",
+                        directEndpoint: "GET /api/v1/admin/orders",
+                        mcpEndpoint: "POST /api/mcp/tools/call",
+                        parameters: {
+                            page: "número de página (default: 1)",
+                            limit: "pedidos por página (default: 10)",
+                            customerId: "ID del cliente para filtrar",
+                            status: "estado del pedido",
+                            dateFrom: "fecha desde (YYYY-MM-DD)",
+                            dateTo: "fecha hasta (YYYY-MM-DD)"
+                        },
+                        examples: {
+                            directCall: "GET /api/v1/admin/orders?page=1&limit=10&customerId=60f8b4b8e0b2a3a4b8b4b8b4",
+                            mcpCall: {
+                                method: "POST",
+                                url: "/api/mcp/tools/call",
+                                body: {
+                                    toolName: "get_orders",
+                                    args: { page: 1, limit: 10, customerId: "60f8b4b8e0b2a3a4b8b4b8b4" }
+                                }
+                            }
                         }
                     }
-                ]
+                ],
+                usage: {
+                    note: "Puedes usar los endpoints REST directamente o a través del sistema MCP",
+                    authentication: "Los endpoints de admin requieren autenticación JWT",
+                    baseUrl: `${req.protocol}://${req.get('host')}`
+                }
             });
 
         } catch (error) {
@@ -410,7 +562,7 @@ export class MCPController {
         }
     };
 
-    // Health check del servicio MCP
+    // Endpoint de salud para verificar el servicio
     public health = async (req: Request, res: Response) => {
         try {
             logger.info('Health check requested');
@@ -419,11 +571,7 @@ export class MCPController {
                 status: 'OK',
                 service: 'MCP Service',
                 timestamp: new Date().toISOString(),
-                anthropic_configured: !!envs.ANTHROPIC_API_KEY,
-                guardrails: {
-                    enabled: this.guardrailsService.getConfig().enabled,
-                    activeSessions: this.guardrailsService.getSessionStats().activeSessions
-                }
+                anthropic_configured: !!envs.ANTHROPIC_API_KEY
             });
 
         } catch (error) {
@@ -431,50 +579,60 @@ export class MCPController {
         }
     };
 
-    // Endpoint para listar modelos disponibles de Anthropic
+    // Endpoint para obtener modelos disponibles desde Anthropic
     public listModels = async (req: Request, res: Response) => {
         try {
-            logger.info('List models requested');
+            logger.info('List models requested - querying Anthropic API');
 
+            // Verificar que existe la API key
             if (!envs.ANTHROPIC_API_KEY) {
                 throw CustomError.internalServerError('Anthropic API key not configured');
             }
 
-            // Devolver modelos válidos disponibles
-            const models = this.VALID_CLAUDE_MODELS.map(modelId => {
-                const modelInfo: any = {
-                    id: modelId,
-                    object: 'model',
-                    created: Date.now(),
-                    owned_by: 'anthropic'
-                };
+            // Configurar headers para Anthropic
+            const headers = {
+                'Content-Type': 'application/json',
+                'x-api-key': envs.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01'
+            };
 
-                // Agregar información específica según el modelo
-                if (modelId.includes('sonnet')) {
-                    modelInfo.name = 'Claude 3.5 Sonnet';
-                    modelInfo.description = 'Most intelligent model, best for complex tasks';
-                    modelInfo.max_tokens = 4096;
-                } else if (modelId.includes('haiku')) {
-                    modelInfo.name = 'Claude 3.5 Haiku';
-                    modelInfo.description = 'Fastest model, best for simple tasks';
-                    modelInfo.max_tokens = 4096;
-                } else if (modelId.includes('opus')) {
-                    modelInfo.name = 'Claude 3 Opus';
-                    modelInfo.description = 'Previous generation flagship model';
-                    modelInfo.max_tokens = 4096;
+            logger.info('Making request to Anthropic API for models list');
+
+            // Realizar la petición a la API de Anthropic para obtener modelos
+            const response = await axios.get(
+                'https://api.anthropic.com/v1/models',
+                {
+                    headers,
+                    timeout: 30000 // 30 segundos timeout
                 }
+            );
 
-                return modelInfo;
-            });
+            logger.info('Anthropic models API request successful');
 
+            // Devolver la respuesta de Anthropic con información adicional
             return res.status(200).json({
                 status: 'OK',
-                service: 'Anthropic Models',
+                service: 'MCP Service - Anthropic Models',
                 timestamp: new Date().toISOString(),
-                data: models
+                source: 'Anthropic API',
+                ...response.data
             });
 
         } catch (error) {
+            // Manejo específico de errores de Axios/Anthropic
+            if (axios.isAxiosError(error)) {
+                const status = error.response?.status || 500;
+                const message = error.response?.data?.error?.message || 'Error communicating with Anthropic API';
+
+                logger.error(`Anthropic models API error (${status}):`, message);
+
+                return res.status(status).json({
+                    error: message,
+                    details: error.response?.data,
+                    fallback_models: this.VALID_CLAUDE_MODELS // Fallback a lista local
+                });
+            }
+
             this.handleError(error, res);
         }
     };

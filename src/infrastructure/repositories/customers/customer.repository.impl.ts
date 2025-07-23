@@ -3,6 +3,7 @@ import { CustomerDataSource } from "../../../domain/datasources/customers/custom
 import { CreateCustomerDto } from "../../../domain/dtos/customers/create-customer.dto";
 import { UpdateCustomerDto } from "../../../domain/dtos/customers/update-customer.dto";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
+import { SearchCustomersDto } from "../../../domain/dtos/customers/search-customers.dto";
 import { CustomerEntity } from "../../../domain/entities/customers/customer";
 import { CustomerRepository } from "../../../domain/repositories/customers/customer.repository";
 import { AddressEntity } from "../../../domain/entities/customers/address.entity"; // <<<--- NUEVO
@@ -37,6 +38,9 @@ export class CustomerRepositoryImpl implements CustomerRepository {
     }
     findByUserId(userId: string): Promise<CustomerEntity | null> {
         return this.customerDataSource.findByUserId(userId);
+    }
+    searchCustomers(searchCustomersDto: SearchCustomersDto): Promise<{ total: number; customers: CustomerEntity[] }> {
+        return this.customerDataSource.searchCustomers(searchCustomersDto);
     }
 
     // <<<--- NUEVOS MÉTODOS ADDRESS (delegados) --- >>>

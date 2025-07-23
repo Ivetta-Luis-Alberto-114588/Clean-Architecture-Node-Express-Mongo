@@ -18,6 +18,7 @@ export class AdminCustomerRoutes {
         const controller = new CustomerController(customerRepository, neighborhoodRepository);
 
         // Rutas CRUD Admin
+        router.get('/search', controller.searchCustomers); // Nuevo endpoint de búsqueda
         router.get('/', controller.getAllCustomers);
         router.get('/:id', controller.getCustomerById);
         router.post('/', controller.createCustomer); // Permite al admin crear clientes directamente

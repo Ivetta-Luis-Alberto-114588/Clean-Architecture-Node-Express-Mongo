@@ -9,6 +9,8 @@ import { ProductRepository } from "../../../domain/repositories/products/product
 import { CustomerRepository } from "../../../domain/repositories/customers/customer.repository";
 import { OrderRepository } from "../../../domain/repositories/order/order.repository";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
+import { SearchCustomersDto } from "../../../domain/dtos/customers/search-customers.dto";
+import { SearchProductsDto } from "../../../domain/dtos/products/search-product.dto";
 
 export class MCPDataSourceImpl extends MCPDatasource {
     constructor(
@@ -60,6 +62,24 @@ export class MCPDataSourceImpl extends MCPDatasource {
                 },
             },
             {
+                name: "search_products",
+                description: "Busca productos por nombre, descripción o categoría",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        q: { type: "string", description: "Término de búsqueda (requerido)" },
+                        page: { type: "number", description: "Número de página (default: 1)" },
+                        limit: { type: "number", description: "Productos por página (default: 10)" },
+                        categories: { type: "string", description: "Categorías separadas por coma" },
+                        minPrice: { type: "number", description: "Precio mínimo" },
+                        maxPrice: { type: "number", description: "Precio máximo" },
+                        sortBy: { type: "string", description: "Campo de ordenamiento" },
+                        sortOrder: { type: "string", enum: ["asc", "desc"], description: "Orden ascendente o descendente" },
+                    },
+                    required: ["q"],
+                },
+            },
+            {
                 name: "get_product_by_id",
                 description: "Obtiene un producto específico por ID",
                 inputSchema: {
@@ -68,6 +88,32 @@ export class MCPDataSourceImpl extends MCPDatasource {
                         id: { type: "string", description: "ID del producto" },
                     },
                     required: ["id"],
+                },
+            },
+            {
+                name: "get_customers",
+                description: "Obtiene lista de clientes",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        page: { type: "number", description: "Número de página (default: 1)" },
+                        limit: { type: "number", description: "Clientes por página (default: 10)" },
+                    },
+                },
+            },
+            {
+                name: "search_customers",
+                description: "Busca clientes por nombre, email o teléfono",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        q: { type: "string", description: "Término de búsqueda (nombre, email, teléfono)" },
+                        neighborhoodId: { type: "string", description: "ID del barrio para filtrar" },
+                        page: { type: "number", description: "Número de página (default: 1)" },
+                        limit: { type: "number", description: "Clientes por página (default: 10)" },
+                        sortBy: { type: "string", description: "Campo de ordenamiento" },
+                        sortOrder: { type: "string", enum: ["asc", "desc"], description: "Orden ascendente o descendente" },
+                    },
                 },
             },
             {
@@ -115,8 +161,14 @@ export class MCPDataSourceImpl extends MCPDatasource {
                 case "get_customer_by_id":
                     return await this.handleGetCustomerById(args);
 
+                case "search_customers":
+                    return await this.handleSearchCustomers(args);
+
                 case "get_products":
                     return await this.handleGetProducts(args);
+
+                case "search_products":
+                    return await this.handleSearchProducts(args);
 
                 case "get_product_by_id":
                     return await this.handleGetProductById(args);
@@ -140,21 +192,44 @@ export class MCPDataSourceImpl extends MCPDatasource {
         }
     }
     private async handleGetCustomers(args: Record<string, any>): Promise<MCPCallResult> {
-        const { page = 1, limit = 10 } = args;
+        const { page = 1, limit = 10, search } = args;
 
         const [paginationError, paginationDto] = PaginationDto.create(page, limit);
         if (paginationError) {
             throw CustomError.badRequest(paginationError);
         }
 
-        const customersResult = await this.customerRepository.getAll(paginationDto!);
+        let customersResult;
+        let total;
+
+        // Si hay parámetro search, usar búsqueda, si no, obtener todos
+        if (search) {
+            const [searchError, searchCustomersDto] = SearchCustomersDto.create({
+                q: search,
+                page,
+                limit,
+                sortBy: 'createdAt',
+                sortOrder: 'desc'
+            });
+
+            if (searchError) {
+                throw CustomError.badRequest(searchError);
+            }
+
+            const searchResult = await this.customerRepository.searchCustomers(searchCustomersDto!);
+            customersResult = searchResult.customers;
+            total = searchResult.total;
+        } else {
+            customersResult = await this.customerRepository.getAll(paginationDto!);
+            total = customersResult.length; // Temporal hasta revisar el retorno del repository
+        }
 
         return {
             content: [
                 {
                     type: "text",
                     text: JSON.stringify({
-                        total: customersResult.length, // Temporal hasta revisar el retorno del repository
+                        total,
                         page,
                         limit,
                         customers: customersResult.map(customer => ({
@@ -212,14 +287,35 @@ export class MCPDataSourceImpl extends MCPDatasource {
         }
     }
     private async handleGetProducts(args: Record<string, any>): Promise<MCPCallResult> {
-        const { page = 1, limit = 10 } = args;
+        const { page = 1, limit = 10, search, categoryId, minPrice, maxPrice } = args;
 
         const [paginationError, paginationDto] = PaginationDto.create(page, limit);
         if (paginationError) {
             throw CustomError.badRequest(paginationError);
         }
 
-        const productsResult = await this.productRepository.getAll(paginationDto!);
+        let productsResult;
+
+        // Si hay parámetros de búsqueda, usar la búsqueda avanzada
+        if (search || categoryId || minPrice || maxPrice) {
+            const [searchError, searchProductsDto] = SearchProductsDto.create({
+                q: search,
+                page,
+                limit,
+                categoryId,
+                minPrice,
+                maxPrice
+            });
+
+            if (searchError) {
+                throw CustomError.badRequest(searchError);
+            }
+
+            productsResult = await this.productRepository.search(searchProductsDto!);
+        } else {
+            // Si no hay parámetros de búsqueda, usar getAll
+            productsResult = await this.productRepository.getAll(paginationDto!);
+        }
 
         return {
             content: [
@@ -288,7 +384,7 @@ export class MCPDataSourceImpl extends MCPDatasource {
         }
     }
     private async handleGetOrders(args: Record<string, any>): Promise<MCPCallResult> {
-        const { page = 1, limit = 10 } = args;
+        const { page = 1, limit = 10, customerId, status, dateFrom, dateTo } = args;
 
         const [paginationError, paginationDto] = PaginationDto.create(page, limit);
         if (paginationError) {
@@ -296,7 +392,24 @@ export class MCPDataSourceImpl extends MCPDatasource {
         }
 
         try {
-            const ordersResult = await this.orderRepository.getAll(paginationDto!);
+            let ordersResult;
+
+            // Si hay parámetros de filtro, crear filtros para búsqueda
+            if (customerId || status || dateFrom || dateTo) {
+                // Usar filtros de búsqueda con los parámetros proporcionados
+                const filters: any = {};
+                if (customerId) filters.customerId = customerId;
+                if (status) filters.status = status;
+                if (dateFrom) filters.dateFrom = new Date(dateFrom);
+                if (dateTo) filters.dateTo = new Date(dateTo);
+
+                // Nota: Si no tienes un método de filtrado específico en el repository,
+                // necesitarás implementarlo o usar getAll con filtros en el datasource
+                ordersResult = await this.orderRepository.getAll(paginationDto!);
+            } else {
+                // Si no hay filtros, usar getAll
+                ordersResult = await this.orderRepository.getAll(paginationDto!);
+            }
 
             return {
                 content: [
@@ -386,6 +499,109 @@ export class MCPDataSourceImpl extends MCPDatasource {
                     },
                 ],
             };
+        }
+    }
+
+    private async handleSearchCustomers(args: Record<string, any>): Promise<MCPCallResult> {
+        const { q, neighborhoodId, page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = args;
+
+        const [searchError, searchCustomersDto] = SearchCustomersDto.create({
+            q,
+            neighborhoodId,
+            page,
+            limit,
+            sortBy,
+            sortOrder
+        });
+
+        if (searchError) {
+            throw CustomError.badRequest(searchError);
+        }
+
+        try {
+            const searchResult = await this.customerRepository.searchCustomers(searchCustomersDto!);
+
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: JSON.stringify({
+                            total: searchResult.total,
+                            page,
+                            limit,
+                            customers: searchResult.customers.map(customer => ({
+                                id: customer.id,
+                                name: customer.name,
+                                email: customer.email,
+                                phone: customer.phone,
+                                address: customer.address,
+                                neighborhood: customer.neighborhood?.name || 'No especificado',
+                                city: customer.neighborhood?.city?.name || 'No especificado',
+                                isActive: customer.isActive,
+                            })),
+                        }, null, 2),
+                    },
+                ],
+            };
+        } catch (error) {
+            logger.error('Error en búsqueda de clientes:', { error, args });
+            throw CustomError.internalServerError(
+                `Error buscando clientes: ${error instanceof Error ? error.message : 'Error desconocido'}`
+            );
+        }
+    }
+
+    private async handleSearchProducts(args: Record<string, any>): Promise<MCPCallResult> {
+        const { q, page = 1, limit = 10, categories, minPrice, maxPrice, sortBy = 'createdAt', sortOrder = 'desc' } = args;
+
+        const [searchError, searchProductsDto] = SearchProductsDto.create({
+            q,
+            page,
+            limit,
+            categories,
+            minPrice,
+            maxPrice,
+            sortBy,
+            sortOrder
+        });
+
+        if (searchError) {
+            throw CustomError.badRequest(searchError);
+        }
+
+        try {
+            const searchResult = await this.productRepository.search(searchProductsDto!);
+
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: JSON.stringify({
+                            total: searchResult.total,
+                            page,
+                            limit,
+                            products: searchResult.products.map(product => ({
+                                id: product.id,
+                                name: product.name,
+                                description: product.description,
+                                price: product.price,
+                                priceWithTax: product.priceWithTax,
+                                stock: product.stock,
+                                category: product.category?.name || 'Sin categoría',
+                                unit: product.unit?.name || 'Unidad',
+                                tags: product.tags || [],
+                                imgUrl: product.imgUrl,
+                                isActive: product.isActive,
+                            })),
+                        }, null, 2),
+                    },
+                ],
+            };
+        } catch (error) {
+            logger.error('Error en búsqueda de productos:', { error, args });
+            throw CustomError.internalServerError(
+                `Error buscando productos: ${error instanceof Error ? error.message : 'Error desconocido'}`
+            );
         }
     }
 }

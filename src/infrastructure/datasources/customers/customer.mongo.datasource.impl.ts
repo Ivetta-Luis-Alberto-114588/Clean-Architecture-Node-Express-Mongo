@@ -5,6 +5,7 @@ import { CustomerDataSource } from "../../../domain/datasources/customers/custom
 import { CreateCustomerDto } from "../../../domain/dtos/customers/create-customer.dto";
 import { UpdateCustomerDto } from "../../../domain/dtos/customers/update-customer.dto";
 import { PaginationDto } from "../../../domain/dtos/shared/pagination.dto";
+import { SearchCustomersDto } from "../../../domain/dtos/customers/search-customers.dto";
 import { CustomerEntity } from "../../../domain/entities/customers/customer";
 import { CustomError } from "../../../domain/errors/custom.error";
 import { CustomerMapper } from "../../mappers/customers/customer.mapper";
@@ -444,4 +445,70 @@ export class CustomerMongoDataSourceImpl extends CustomerDataSource {
         }
     }
     // <<<--- FIN IMPLEMENTACIÓN ADDRESS --- >>>
+
+    async searchCustomers(searchCustomersDto: SearchCustomersDto): Promise<{ total: number; customers: CustomerEntity[] }> {
+        try {
+            const { q, neighborhoodId, page, limit, sortBy, sortOrder } = searchCustomersDto;
+            logger.info(`[Customer Search] Búsqueda de clientes - Término: "${q}", Barrio: ${neighborhoodId}, Página: ${page}, Límite: ${limit}`);
+
+            // Construir filtros
+            const filter: any = { isActive: true };
+
+            // Búsqueda por texto (nombre, email, teléfono)
+            if (q) {
+                filter.$or = [
+                    { name: { $regex: q, $options: 'i' } },
+                    { email: { $regex: q, $options: 'i' } },
+                    { phone: { $regex: q, $options: 'i' } }
+                ];
+            }
+
+            // Filtro por barrio
+            if (neighborhoodId) {
+                if (!mongoose.Types.ObjectId.isValid(neighborhoodId)) {
+                    throw CustomError.badRequest("ID de barrio inválido");
+                }
+                filter.neighborhood = neighborhoodId;
+            }
+
+            // Configurar ordenamiento
+            const sortOptions: any = {};
+            sortOptions[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+            logger.debug(`[Customer Search] Filtros aplicados:`, { filter, sortOptions });
+
+            // Ejecutar consulta con paginación
+            const skip = (page - 1) * limit;
+
+            const [customers, total] = await Promise.all([
+                CustomerModel
+                    .find(filter)
+                    .populate({
+                        path: 'neighborhood',
+                        populate: { path: 'city' }
+                    })
+                    .sort(sortOptions)
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                CustomerModel.countDocuments(filter)
+            ]);
+
+            logger.info(`[Customer Search] Encontrados ${customers.length} clientes de ${total} total`);
+
+            const customerEntities = customers.map(customer =>
+                CustomerMapper.fromObjectToCustomerEntity(customer)
+            );
+
+            return {
+                total,
+                customers: customerEntities
+            };
+
+        } catch (error: any) {
+            logger.error("[Customer Search] Error en búsqueda de clientes:", { error, dto: searchCustomersDto });
+            if (error instanceof CustomError) throw error;
+            throw CustomError.internalServerError("Error al buscar clientes");
+        }
+    }
 }

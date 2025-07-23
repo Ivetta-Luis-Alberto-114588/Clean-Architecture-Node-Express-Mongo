@@ -2,6 +2,7 @@
 import { CreateCustomerDto } from "../../dtos/customers/create-customer.dto";
 import { UpdateCustomerDto } from "../../dtos/customers/update-customer.dto";
 import { PaginationDto } from "../../dtos/shared/pagination.dto";
+import { SearchCustomersDto } from "../../dtos/customers/search-customers.dto";
 import { CustomerEntity } from "../../entities/customers/customer";
 import { AddressEntity } from "../../entities/customers/address.entity"; // <<<--- NUEVO
 import { CreateAddressDto } from "../../dtos/customers/create-address.dto"; // <<<--- NUEVO
@@ -17,6 +18,7 @@ export abstract class CustomerDataSource {
     abstract findByEmail(email: string): Promise<CustomerEntity | null>;
     abstract findByNeighborhood(neighborhoodId: string, paginationDto: PaginationDto): Promise<CustomerEntity[]>;
     abstract findByUserId(userId: string): Promise<CustomerEntity | null>;
+    abstract searchCustomers(searchCustomersDto: SearchCustomersDto): Promise<{ total: number; customers: CustomerEntity[] }>;
 
     // <<<--- NUEVOS MÉTODOS ADDRESS --- >>>
     abstract createAddress(createAddressDto: CreateAddressDto): Promise<AddressEntity>;
