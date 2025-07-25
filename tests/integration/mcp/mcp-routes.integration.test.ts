@@ -57,7 +57,11 @@ describe('MCP Routes Integration Tests', () => {
                 status: 'OK',
                 service: 'MCP Service',
                 anthropic_configured: expect.any(Boolean),
-                timestamp: expect.any(String)
+                timestamp: expect.any(String),
+                guardrails: {
+                    enabled: true,
+                    activeSessions: expect.any(Number)
+                }
             });
         });
     });

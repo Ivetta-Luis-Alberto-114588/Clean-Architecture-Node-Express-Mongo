@@ -19,6 +19,7 @@ import { OrderStatusRoutes } from "./order/routes.order-status";
 import { PaymentMethodRoutes } from "./payment/routes.payment-method";
 import { MonitoringRoutes } from "./monitoring/routes.monitoring";
 import { MCPRoutes } from "./mcp/routes.mcp"; // <<<--- NUEVA IMPORTACIÓN
+import { IntelligentRoutes } from "./intelligent/intelligent.routes"; // <<<--- SISTEMA INTELIGENTE
 import { WebhookRoutes } from "./webhook/routes.webhook"; // <<<--- WEBHOOK ROUTES
 import { DeliveryMethodRoutes } from "./delivery-methods/routes"; // <<<--- DELIVERY METHODS ROUTES
 import { manualNotificationRoutes } from './notifications';
@@ -100,6 +101,9 @@ export class MainRoutes {
 
         // Rutas MCP
         router.use("/api/mcp", MCPRoutes.getMCPRoutes); // <<<--- NUEVA RUTA
+
+        // Rutas del Sistema Inteligente (LangChain + Claude)
+        router.use("/api/intelligent", IntelligentRoutes.routes); // <<<--- SISTEMA INTELIGENTE
 
         // Rutas de Notificaciones Manuales
         router.use('/api/notifications', manualNotificationRoutes);

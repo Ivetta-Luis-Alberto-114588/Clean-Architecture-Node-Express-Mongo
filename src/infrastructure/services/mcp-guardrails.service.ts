@@ -33,6 +33,15 @@ export class MCPGuardrailsService {
         lastActivity: number;
     }> = new Map();
 
+    // Estadísticas de uso para monitoreo
+    private stats = {
+        totalRequests: 0,
+        allowedRequests: 0,
+        blockedRequests: 0,
+        blockReasons: {} as Record<string, number>,
+        startTime: Date.now()
+    };
+
     constructor(config?: Partial<MCPGuardrailsConfig>) {
         this.config = { ...MCP_GUARDRAILS_CONFIG, ...config };
     }
@@ -45,7 +54,12 @@ export class MCPGuardrailsService {
         sessionId: string = 'default'
     ): GuardrailValidationResult {
 
+        // Incrementar contador total de requests
+        this.stats.totalRequests++;
+
         if (!this.config.enabled) {
+            this.stats.allowedRequests++;
+            this.logRequest(sessionId, 'allowed', 'guardrails_disabled', request);
             return { allowed: true };
         }
 
@@ -54,18 +68,27 @@ export class MCPGuardrailsService {
         // 1. Validar límites de sesión
         const sessionValidation = this.validateSession(sessionId);
         if (!sessionValidation.allowed) {
+            this.stats.blockedRequests++;
+            this.incrementBlockReason('session_limit');
+            this.logRequest(sessionId, 'blocked', sessionValidation.reason!, request);
             return sessionValidation;
         }
 
         // 2. Validar contenido de mensajes
         const contentValidation = this.validateMessageContent(request.messages);
         if (!contentValidation.allowed) {
+            this.stats.blockedRequests++;
+            this.incrementBlockReason(contentValidation.reason!);
+            this.logRequest(sessionId, 'blocked', contentValidation.reason!, request);
             return contentValidation;
         }
 
         // 3. Validar herramientas
         const toolsValidation = this.validateTools(request.tools);
         if (!toolsValidation.allowed) {
+            this.stats.blockedRequests++;
+            this.incrementBlockReason(toolsValidation.reason!);
+            this.logRequest(sessionId, 'blocked', toolsValidation.reason!, request);
             return toolsValidation;
         }
 
@@ -74,6 +97,10 @@ export class MCPGuardrailsService {
 
         // 5. Actualizar datos de sesión
         this.updateSessionData(sessionId);
+
+        // Request permitido - actualizar estadísticas
+        this.stats.allowedRequests++;
+        this.logRequest(sessionId, 'allowed', 'valid_ecommerce_query', request);
 
         logger.info(`[Guardrails] Request validated successfully`);
 
@@ -295,6 +322,108 @@ export class MCPGuardrailsService {
                 lastActivity: new Date(data.lastActivity).toISOString()
             }))
         };
+    }
+
+    /**
+     * Obtener estadísticas completas de guardarriles
+     */
+    public getDetailedStats(): any {
+        const uptime = (Date.now() - this.stats.startTime) / (1000 * 60); // minutos
+
+        return {
+            activeSessions: this.sessionData.size,
+            totalRequests: this.stats.totalRequests,
+            allowedRequests: this.stats.allowedRequests,
+            blockedRequests: this.stats.blockedRequests,
+            blockReasons: this.stats.blockReasons,
+            allowedRate: this.stats.totalRequests > 0 ?
+                (this.stats.allowedRequests / this.stats.totalRequests * 100).toFixed(2) + '%' : '0%',
+            uptime: `${uptime.toFixed(1)} minutos`,
+            topSessionIds: Array.from(this.sessionData.entries())
+                .sort((a, b) => b[1].messageCount - a[1].messageCount)
+                .slice(0, 10)
+                .map(([id, data]) => ({ id, messageCount: data.messageCount }))
+        };
+    }
+
+    /**
+     * Logging detallado de requests
+     */
+    private logRequest(
+        sessionId: string,
+        action: 'allowed' | 'blocked',
+        reason: string,
+        request: AnthropicRequest
+    ): void {
+        const logData = {
+            timestamp: new Date().toISOString(),
+            sessionId,
+            action,
+            reason,
+            model: request.model,
+            messageCount: request.messages.length,
+            hasTools: !!request.tools && request.tools.length > 0,
+            toolsUsed: request.tools?.map(t => t.name) || [],
+            queryType: this.classifyQuery(request.messages),
+            service: 'mcp-guardrails'
+        };
+
+        if (action === 'allowed') {
+            logger.info('MCP Guardrails - Request processed', logData);
+        } else {
+            logger.warn('MCP Guardrails - Request blocked', logData);
+        }
+    }
+
+    /**
+     * Incrementar contador de razones de bloqueo
+     */
+    private incrementBlockReason(reason: string): void {
+        this.stats.blockReasons[reason] = (this.stats.blockReasons[reason] || 0) + 1;
+    }
+
+    /**
+     * Clasificar tipo de consulta para logging
+     */
+    private classifyQuery(messages: AnthropicMessage[]): string {
+        const lastMessage = messages[messages.length - 1];
+        if (!lastMessage || typeof lastMessage.content !== 'string') {
+            return 'unknown';
+        }
+
+        const content = lastMessage.content.toLowerCase();
+
+        if (content.includes('busca') || content.includes('search') || content.includes('encuentra')) {
+            return 'search_query';
+        }
+        if (content.includes('producto') || content.includes('lomito') || content.includes('empanada')) {
+            return 'product_query';
+        }
+        if (content.includes('cliente') || content.includes('customer')) {
+            return 'customer_query';
+        }
+        if (content.includes('pedido') || content.includes('order')) {
+            return 'order_query';
+        }
+        if (content.includes('precio') || content.includes('price') || content.includes('costo')) {
+            return 'pricing_query';
+        }
+
+        return 'general_ecommerce';
+    }
+
+    /**
+     * Reiniciar estadísticas
+     */
+    public resetStats(): void {
+        this.stats = {
+            totalRequests: 0,
+            allowedRequests: 0,
+            blockedRequests: 0,
+            blockReasons: {},
+            startTime: Date.now()
+        };
+        logger.info('[Guardrails] Statistics reset');
     }
 
     /**

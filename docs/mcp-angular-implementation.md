@@ -4,6 +4,9 @@
 
 Esta guía explica cómo implementar el **Model Context Protocol (MCP)** en una aplicación Angular usando módulos, servicios y componentes. El sistema MCP permite la integración con herramientas de IA y la gestión de datos del e-commerce desde el frontend.
 
+### 🔄 Actualizado (25 Julio 2025)
+**Guardarriles Optimizados**: El sistema ahora permite consultas generales sobre e-commerce sin requerir siempre herramientas MCP, manteniendo las restricciones de seguridad apropiadas.
+
 ---
 
 ## 🏗️ Arquitectura del Sistema
@@ -205,7 +208,7 @@ POST /api/mcp/tools/call
 }
 ```
 
-### **5. Proxy Anthropic (Chat IA)**
+### **5. Proxy Anthropic (Chat IA) - Actualizado con Guardarriles Optimizados**
 ```http
 POST /api/mcp/anthropic
 ```
@@ -213,9 +216,46 @@ POST /api/mcp/anthropic
 **Headers:**
 ```
 Content-Type: application/json
+x-session-id: unique-session-id (recomendado para tracking)
 ```
 
-**Request Body:**
+**Tipos de Consultas Soportadas:**
+
+#### **A) Consultas Generales de E-commerce** (NUEVO - Sin herramientas requeridas)
+```json
+{
+  "model": "claude-3-5-sonnet-20241022",
+  "max_tokens": 200,
+  "messages": [
+    {
+      "role": "user",
+      "content": "¿Qué tipos de productos de comida venden?"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "id": "msg_abc123",
+  "type": "message",
+  "role": "assistant",
+  "content": [
+    {
+      "type": "text",
+      "text": "Ofrecemos una variedad de productos de comida incluyendo lomitos, empanadas, pizzas y combos especiales..."
+    }
+  ],
+  "_guardrails": {
+    "sessionId": "unique-session-id",
+    "processed": true,
+    "timestamp": "2025-07-25T..."
+  }
+}
+```
+
+#### **B) Consultas con Herramientas** (Para datos específicos)
 ```json
 {
   "model": "claude-3-5-sonnet-20241022",
@@ -223,7 +263,7 @@ Content-Type: application/json
   "messages": [
     {
       "role": "user",
-      "content": "Busca productos de lomito y muéstrame los resultados"
+      "content": "Busca productos de lomito y muéstrame precios exactos"
     }
   ],
   "tools": [
@@ -267,6 +307,30 @@ Content-Type: application/json
     "input_tokens": 345,
     "output_tokens": 123
   }
+}
+```
+
+#### **C) Consultas Bloqueadas** (Fuera del ámbito de e-commerce)
+```json
+{
+  "model": "claude-3-5-sonnet-20241022",
+  "max_tokens": 100,
+  "messages": [
+    {
+      "role": "user",
+      "content": "¿Qué opinas sobre política?"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "error": "Request blocked by guardrails",
+  "reason": "blocked_content",
+  "message": "No puedo ayudarte con ese tema. Mi función es asistir exclusivamente con consultas del e-commerce...",
+  "suggestions": "..."
 }
 ```
 
@@ -419,6 +483,41 @@ export interface AnthropicResponse {
     input_tokens: number;
     output_tokens: number;
   };
+  _guardrails?: {
+    sessionId: string;
+    processed: boolean;
+    timestamp: string;
+  };
+}
+
+export interface GuardrailsError {
+  error: string;
+  reason: 'blocked_content' | 'tools_required' | 'session_limit' | 'invalid_request';
+  message: string;
+  suggestions: string;
+}
+
+export interface GuardrailsConfig {
+  enabled: boolean;
+  strictMode: boolean;
+  limits: {
+    maxTokens: number;
+    maxMessagesPerSession: number;
+    maxSessionDuration: number;
+    allowedTopics: string[];
+    blockedKeywords: string[];
+    requiredTools: boolean;
+  };
+  allowedTools: string[];
+}
+
+export interface GuardrailsStats {
+  activeSessions: number;
+  totalRequests: number;
+  allowedRequests: number;
+  blockedRequests: number;
+  blockReasons: Record<string, number>;
+  topSessionIds: string[];
 }
 ```
 
@@ -462,13 +561,105 @@ export class McpService {
   }
 
   // Proxy para Anthropic
-  chatWithAnthropic(request: AnthropicRequest): Observable<AnthropicResponse> {
-    return this.http.post<AnthropicResponse>(`${this.baseUrl}/anthropic`, request);
+  chatWithAnthropic(request: AnthropicRequest, sessionId?: string): Observable<AnthropicResponse> {
+    const headers = sessionId ? { 'x-session-id': sessionId } : {};
+    return this.http.post<AnthropicResponse>(
+      `${this.baseUrl}/anthropic`, 
+      request,
+      { headers }
+    );
+  }
+
+  // Guardarriles - Obtener configuración
+  getGuardrailsConfig(): Observable<MCPResponse<GuardrailsConfig>> {
+    return this.http.get<MCPResponse<GuardrailsConfig>>(`${this.baseUrl}/guardrails/config`);
+  }
+
+  // Guardarriles - Obtener estadísticas
+  getGuardrailsStats(): Observable<MCPResponse<GuardrailsStats>> {
+    return this.http.get<MCPResponse<GuardrailsStats>>(`${this.baseUrl}/guardrails/stats`);
+  }
+
+  // Guardarriles - Reiniciar sesión
+  resetSession(sessionId: string): Observable<MCPResponse> {
+    return this.http.post<MCPResponse>(`${this.baseUrl}/guardrails/sessions/${sessionId}/reset`, {});
+  }
+
+  // Guardarriles - Limpiar sesiones expiradas
+  cleanupSessions(): Observable<MCPResponse> {
+    return this.http.post<MCPResponse>(`${this.baseUrl}/guardrails/sessions/cleanup`, {});
   }
 }
 ```
 
-### **2. Tools Service**
+### **2. Guardrails Service** (NUEVO)
+```typescript
+// core/services/guardrails.service.ts
+
+@Injectable({
+  providedIn: 'root'
+})
+export class GuardrailsService {
+  private currentSessionId: string;
+
+  constructor(private mcpService: McpService) {
+    this.currentSessionId = this.generateSessionId();
+  }
+
+  // Generar ID de sesión único
+  private generateSessionId(): string {
+    return `angular-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  // Obtener ID de sesión actual
+  getCurrentSessionId(): string {
+    return this.currentSessionId;
+  }
+
+  // Renovar sesión
+  renewSession(): string {
+    this.currentSessionId = this.generateSessionId();
+    return this.currentSessionId;
+  }
+
+  // Verificar si una consulta es válida para e-commerce
+  isValidEcommerceQuery(query: string): boolean {
+    const allowedTopics = ['producto', 'cliente', 'pedido', 'venta', 'inventario', 'categoría', 'precio', 'stock'];
+    const blockedKeywords = ['política', 'religión', 'noticias', 'entretenimiento', 'deportes'];
+    
+    const lowerQuery = query.toLowerCase();
+    
+    // Verificar palabras bloqueadas
+    if (blockedKeywords.some(keyword => lowerQuery.includes(keyword))) {
+      return false;
+    }
+    
+    // Verificar temas permitidos
+    return allowedTopics.some(topic => lowerQuery.includes(topic));
+  }
+
+  // Chat con validación automática de guardarriles
+  chatWithValidation(request: AnthropicRequest): Observable<AnthropicResponse | GuardrailsError> {
+    return this.mcpService.chatWithAnthropic(request, this.currentSessionId).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if (error.status === 400 && error.error?.error === 'Request blocked by guardrails') {
+          return of(error.error as GuardrailsError);
+        }
+        throw error;
+      })
+    );
+  }
+
+  // Obtener estadísticas de guardarriles
+  getStats(): Observable<GuardrailsStats> {
+    return this.mcpService.getGuardrailsStats().pipe(
+      map(response => response.data!)
+    );
+  }
+}
+```
+
+### **3. Tools Service** (Actualizado)
 ```typescript
 // core/services/mcp-tools.service.ts
 

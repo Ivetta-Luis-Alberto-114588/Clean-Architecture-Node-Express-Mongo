@@ -1,0 +1,10 @@
+{
+    "model": "claude-3-5-haiku-20241022",
+    "messages": [
+        {
+            "role": "user",
+            "content": "¿Cuál es el precio de la empanada?"
+        }
+    ],
+    "max_tokens": 1500
+}

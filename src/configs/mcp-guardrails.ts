@@ -51,19 +51,18 @@ export interface MCPGuardrailsConfig {
 
 export const MCP_GUARDRAILS_CONFIG: MCPGuardrailsConfig = {
     enabled: true,
-    strictMode: true,
+    strictMode: false, // Menos restrictivo para permitir consultas generales
 
     systemPrompts: {
-        base: `Eres un asistente especializado en el sistema de e-commerce. Tu función es EXCLUSIVAMENTE ayudar con consultas relacionadas con productos, clientes, pedidos y operaciones del negocio.`,
+        base: `Eres un asistente especializado en el sistema de e-commerce. Tu función es ayudar con consultas relacionadas con productos, clientes, pedidos, ventas, inventario y operaciones del negocio. Puedes responder preguntas generales sobre e-commerce y usar herramientas específicas cuando sea necesario para obtener datos exactos.`,
 
-        toolsOnly: `IMPORTANTE: Solo puedes responder preguntas que requieran el uso de las herramientas MCP disponibles. Si una pregunta no requiere usar herramientas del e-commerce, debes declinar educadamente y redirigir hacia temas del negocio.`,
+        toolsOnly: `HERRAMIENTAS DISPONIBLES: Tienes acceso a herramientas para consultar productos, clientes y pedidos específicos. Úsalas cuando necesites datos exactos y actualizados del negocio.`,
 
-        restrictions: `RESTRICCIONES ESTRICTAS:
-- NO puedes responder preguntas generales que no estén relacionadas con este e-commerce
-- NO puedes ayudar con temas externos al negocio (política, noticias, entretenimiento, etc.)
-- NO puedes generar contenido creativo no relacionado con productos o servicios
-- SOLO puedes usar las herramientas MCP proporcionadas para consultar datos del negocio
-- Si no puedes usar una herramienta para responder, declina educadamente`
+        restrictions: `RESTRICCIONES:
+- Mantente enfocado en temas de e-commerce y operaciones comerciales
+- No respondas preguntas sobre política, religión, noticias generales, entretenimiento no relacionado
+- Usa las herramientas MCP disponibles cuando necesites datos específicos del negocio
+- Proporciona información útil sobre e-commerce general cuando no requiera datos específicos`
     },
 
     contentRules: [
@@ -75,8 +74,8 @@ export const MCP_GUARDRAILS_CONFIG: MCPGuardrailsConfig = {
         },
         {
             name: 'tool_required',
-            description: 'Requiere uso de herramientas MCP',
-            enabled: true,
+            description: 'Sugiere uso de herramientas MCP cuando sea útil',
+            enabled: false, // Deshabilitado para permitir respuestas generales
             severity: 'warning'
         },
         {
@@ -125,7 +124,7 @@ export const MCP_GUARDRAILS_CONFIG: MCPGuardrailsConfig = {
             'privado',
             'secreto'
         ],
-        requiredTools: true
+        requiredTools: false // Permitir consultas generales sobre e-commerce
     },
 
     allowedTools: [

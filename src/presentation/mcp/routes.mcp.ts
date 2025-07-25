@@ -43,15 +43,19 @@ export class MCPRoutes {
         const callToolUseCase = new CallToolUseCase(mcpRepository);
 
         // Inicializar el controlador MCP con dependencias
-        const controller = new MCPController(listToolsUseCase, callToolUseCase);
+        // Deshabilitar interval de limpieza en entorno de test
+        const isTestEnvironment = process.env.NODE_ENV === 'test';
+        const controller = new MCPController(listToolsUseCase, callToolUseCase, !isTestEnvironment);
 
         // Rutas para el servicio MCP
         router.get('/health', (req: Request, res: Response) => { controller.health(req, res) });
         router.get('/models', (req: Request, res: Response) => { controller.listModels(req, res) });
 
-        // **RUTAS DE GUARDARRILES**
+        // **RUTAS DE GUARDARRILES** (Actualizadas con nuevas estadísticas)
         router.get('/guardrails/config', (req: Request, res: Response) => { controller.getGuardrailsConfig(req, res) });
         router.get('/guardrails/stats', (req: Request, res: Response) => { controller.getGuardrailsStats(req, res) });
+        router.get('/guardrails/sessions', (req: Request, res: Response) => { controller.getSessionStats(req, res) });
+        router.post('/guardrails/stats/reset', (req: Request, res: Response) => { controller.resetGuardrailsStats(req, res) });
         router.post('/guardrails/sessions/:sessionId/reset', (req: Request, res: Response) => { controller.resetSession(req, res) });
         router.post('/guardrails/sessions/cleanup', (req: Request, res: Response) => { controller.cleanExpiredSessions(req, res) });
         router.post('/anthropic', (req: Request, res: Response) => { controller.anthropicProxy(req, res) });
@@ -60,6 +64,9 @@ export class MCPRoutes {
         router.get('/tools', (req: Request, res: Response) => { controller.listTools(req, res) });
         router.get('/tools/info', (req: Request, res: Response) => { controller.getToolsInfo(req, res) });
         router.post('/tools/call', (req: Request, res: Response) => { controller.callTool(req, res) });
+
+        // Ruta para chat con detección inteligente de herramientas
+        router.post('/chat', (req: Request, res: Response) => { controller.handleChatMessage(req, res) });
 
         return router;
     }

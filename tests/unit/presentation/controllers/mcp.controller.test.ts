@@ -1,6 +1,8 @@
 // tests/unit/presentation/controllers/mcp.controller.test.ts
 import { Request, Response } from 'express';
 import { MCPController } from '../../../../src/presentation/mcp/controller.mcp';
+import { ListToolsUseCase } from '../../../../src/domain/use-cases/mcp/list-tools.use-case';
+import { CallToolUseCase } from '../../../../src/domain/use-cases/mcp/call-tool.use-case';
 import { envs } from '../../../../src/configs/envs';
 
 // Mock del logger
@@ -17,9 +19,20 @@ describe('MCPController', () => {
     let mockResponse: Partial<Response>;
     let mockStatus: jest.Mock;
     let mockJson: jest.Mock;
+    let mockListToolsUseCase: jest.Mocked<ListToolsUseCase>;
+    let mockCallToolUseCase: jest.Mocked<CallToolUseCase>;
 
     beforeEach(() => {
-        controller = new MCPController();
+        // Crear mocks para los use cases
+        mockListToolsUseCase = {
+            execute: jest.fn()
+        } as any;
+
+        mockCallToolUseCase = {
+            execute: jest.fn()
+        } as any;
+
+        controller = new MCPController(mockListToolsUseCase, mockCallToolUseCase, false);
 
         mockStatus = jest.fn().mockReturnThis();
         mockJson = jest.fn().mockReturnThis();
@@ -33,6 +46,7 @@ describe('MCPController', () => {
 
     afterEach(() => {
         jest.clearAllMocks();
+        controller.cleanup();
     });
 
     describe('health', () => {
@@ -42,7 +56,11 @@ describe('MCPController', () => {
                 status: 'OK',
                 service: 'MCP Service',
                 timestamp: expect.any(String),
-                anthropic_configured: expect.any(Boolean)
+                anthropic_configured: expect.any(Boolean),
+                guardrails: {
+                    enabled: true,
+                    activeSessions: expect.any(Number)
+                }
             };
 
             // Act
