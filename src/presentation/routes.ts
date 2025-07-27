@@ -43,7 +43,7 @@ export class MainRoutes {
         });
 
         router.get('/ping', (req: Request, res: Response) => {
-            res.status(200).send('pong');
+            res.status(200).send('pongui!!!');
         });
 
         // Health Check endpoints
