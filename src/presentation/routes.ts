@@ -24,6 +24,7 @@ import { WebhookRoutes } from "./webhook/routes.webhook"; // <<<--- WEBHOOK ROUT
 import { DeliveryMethodRoutes } from "./delivery-methods/routes"; // <<<--- DELIVERY METHODS ROUTES
 import { manualNotificationRoutes } from './notifications';
 import mongoose from "mongoose";
+import { DebugController } from "./debug/debug.controller"; // <<<--- DEBUG CONTROLLER
 
 export class MainRoutes {
 
@@ -43,7 +44,7 @@ export class MainRoutes {
         });
 
         router.get('/ping', (req: Request, res: Response) => {
-            res.status(200).send('pongui!!!');
+            res.status(200).send('pong');
         });
 
         // Health Check endpoints
@@ -74,6 +75,9 @@ export class MainRoutes {
                 });
             }
         });
+
+        // Debug routes (solo en desarrollo)
+        router.use("/api", DebugController.getDebugRoutes());
 
         // Rutas Públicas / de Usuario
         router.use("/api/auth", AuthRoutes.getAuthRoutes);

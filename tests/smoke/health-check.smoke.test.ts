@@ -211,7 +211,7 @@ describe('Health Check - Smoke Tests', () => {
                     email: 'invalid@test.com',
                     password: 'wrongPassword'
                 })
-                .expect(400);
+                .expect(401);
         });
 
         it('should reject login with missing credentials', async () => {

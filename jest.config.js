@@ -1,7 +1,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/tests'],
+  roots: ['<rootDir>/test', '<rootDir>/tests'],
   moduleFileExtensions: ['ts', 'js'],
   testMatch: ['**/*.test.ts', '**/*.spec.ts'],
   transform: {
@@ -14,6 +14,7 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '/dist/',
+    '/test/performance/',
     '/tests/performance/'
   ],
   collectCoverageFrom: [
@@ -21,6 +22,8 @@ module.exports = {
     '!src/presentation/server.ts',
     '!src/app.ts',
   ],
+  // Configuración global de timeout
+  testTimeout: 30000,
   // Configuración para evitar problemas de timing
   maxWorkers: 1, // Forzar ejecución secuencial
   // Configuración de proyectos separados
@@ -29,8 +32,10 @@ module.exports = {
       displayName: 'unit-integration',
       preset: 'ts-jest',
       testEnvironment: 'node',
-      roots: ['<rootDir>/tests'],
+      roots: ['<rootDir>/test', '<rootDir>/tests'],
       testMatch: [
+        '**/test/unit/**/*.test.ts',
+        '**/test/integration/**/*.test.ts',
         '**/tests/unit/**/*.test.ts',
         '**/tests/integration/**/*.test.ts',
         '**/tests/smoke/**/*.test.ts'
@@ -38,19 +43,20 @@ module.exports = {
       setupFilesAfterEnv: ['<rootDir>/tests/utils/setup.ts'],
       globalSetup: '<rootDir>/tests/utils/global-setup.ts',
       globalTeardown: '<rootDir>/tests/utils/global-teardown.ts',
-      testTimeout: 30000,
       maxWorkers: 1,
     },
     {
       displayName: 'performance',
       preset: 'ts-jest',
       testEnvironment: 'node',
-      roots: ['<rootDir>/tests'],
-      testMatch: ['**/tests/performance/**/*.test.ts'],
+      roots: ['<rootDir>/test', '<rootDir>/tests'],
+      testMatch: [
+        '**/test/performance/**/*.test.ts',
+        '**/tests/performance/**/*.test.ts'
+      ],
       setupFilesAfterEnv: ['<rootDir>/tests/utils/setup.ts'],
       globalSetup: '<rootDir>/tests/utils/global-setup.ts',
       globalTeardown: '<rootDir>/tests/utils/global-teardown.ts',
-      testTimeout: 30000,
       maxWorkers: 1,
     }
   ],

@@ -30,15 +30,34 @@ export class server {
     }
 
     private setupApp() {
-        // Configure trust proxy based on environment
+        // Configure trust proxy based on environment - Mejorado
         if (envs.NODE_ENV === 'development' || envs.NODE_ENV === 'test') {
             this.app.set('trust proxy', true);
         } else {
-            this.app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+            // En producción, configurar según tu infraestructura
+            // Si usas CloudFlare, Nginx, AWS ALB, etc., ajustar según corresponda
+            this.app.set('trust proxy', 1); // Confiar solo en el primer proxy
+
+            // Alternativa si sabes las IPs específicas de tus proxies:
+            // this.app.set('trust proxy', ['127.0.0.1', '10.0.0.0/8', '172.16.0.0/12']);
         }
 
         // Apply logging middleware first (generates request ID)
         this.app.use(LoggerMiddleware.getLoggerMiddleware());
+
+        // Debug rate limiting (solo en desarrollo)
+        if (envs.NODE_ENV === 'development') {
+            this.app.use((req, res, next) => {
+                console.log('Rate Limit Debug:', {
+                    ip: req.ip,
+                    forwardedFor: req.headers['x-forwarded-for'],
+                    realIP: req.headers['x-real-ip'],
+                    remoteAddress: req.connection?.remoteAddress,
+                    userAgent: req.headers['user-agent']?.substring(0, 50)
+                });
+                next();
+            });
+        }
 
         // Apply rate limiting
         this.app.use(RateLimitMiddleware.getGlobalRateLimit());

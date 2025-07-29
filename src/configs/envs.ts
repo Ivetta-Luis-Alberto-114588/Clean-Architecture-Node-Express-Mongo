@@ -66,6 +66,22 @@ export const envs = {
     // Telegram Bot para notificaciones
     TELEGRAM_BOT_TOKEN: get('TELEGRAM_BOT_TOKEN').default('').asString(),
     TELEGRAM_CHAT_ID: get('TELEGRAM_CHAT_ID').default('').asString(),
+
+    // Rate Limiting Configuration
+    RATE_LIMIT_GLOBAL_MAX_PRODUCTION: get('RATE_LIMIT_GLOBAL_MAX_PRODUCTION').default(1000).asIntPositive(),
+    RATE_LIMIT_GLOBAL_WINDOW_PRODUCTION: get('RATE_LIMIT_GLOBAL_WINDOW_PRODUCTION').default(900000).asIntPositive(), // 15 min
+    RATE_LIMIT_GLOBAL_MAX_DEVELOPMENT: get('RATE_LIMIT_GLOBAL_MAX_DEVELOPMENT').default(5000).asIntPositive(),
+    RATE_LIMIT_GLOBAL_WINDOW_DEVELOPMENT: get('RATE_LIMIT_GLOBAL_WINDOW_DEVELOPMENT').default(60000).asIntPositive(), // 1 min
+
+    RATE_LIMIT_AUTH_MAX_PRODUCTION: get('RATE_LIMIT_AUTH_MAX_PRODUCTION').default(10).asIntPositive(),
+    RATE_LIMIT_AUTH_WINDOW_PRODUCTION: get('RATE_LIMIT_AUTH_WINDOW_PRODUCTION').default(3600000).asIntPositive(), // 1 hour
+    RATE_LIMIT_AUTH_MAX_DEVELOPMENT: get('RATE_LIMIT_AUTH_MAX_DEVELOPMENT').default(100).asIntPositive(),
+    RATE_LIMIT_AUTH_WINDOW_DEVELOPMENT: get('RATE_LIMIT_AUTH_WINDOW_DEVELOPMENT').default(900000).asIntPositive(), // 15 min
+
+    RATE_LIMIT_GLOBAL_MAX_TEST: get('RATE_LIMIT_GLOBAL_MAX_TEST').default(10000).asIntPositive(),
+    RATE_LIMIT_GLOBAL_WINDOW_TEST: get('RATE_LIMIT_GLOBAL_WINDOW_TEST').default(60000).asIntPositive(),
+    RATE_LIMIT_AUTH_MAX_TEST: get('RATE_LIMIT_AUTH_MAX_TEST').default(1000).asIntPositive(),
+    RATE_LIMIT_AUTH_WINDOW_TEST: get('RATE_LIMIT_AUTH_WINDOW_TEST').default(60000).asIntPositive(),
 }
 
 console.log('[ENV] Environment variables loaded successfully');

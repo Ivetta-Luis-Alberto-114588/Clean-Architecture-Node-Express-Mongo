@@ -19,14 +19,27 @@ declare global {
 
 // Función para crear el limitador global con configuración según entorno
 const createGlobalLimiter = () => {
-    // Valores predeterminados para producción
-    let windowMs = 15 * 60 * 1000; // 15 minutos
-    let max = 1000; // 1000 solicitudes por ventana
+    let windowMs: number;
+    let max: number;
 
-    // Valores más permisivos para entorno de desarrollo/test
-    if (envs.NODE_ENV === 'development' || envs.NODE_ENV === 'test') {
-        windowMs = 1 * 60 * 1000; // 1 minuto
-        max = 5000; // 5000 solicitudes por ventana
+    // Configuración según entorno usando variables de entorno
+    switch (envs.NODE_ENV) {
+        case 'production':
+            windowMs = envs.RATE_LIMIT_GLOBAL_WINDOW_PRODUCTION;
+            max = envs.RATE_LIMIT_GLOBAL_MAX_PRODUCTION;
+            break;
+        case 'development':
+            windowMs = envs.RATE_LIMIT_GLOBAL_WINDOW_DEVELOPMENT;
+            max = envs.RATE_LIMIT_GLOBAL_MAX_DEVELOPMENT;
+            break;
+        case 'test':
+            windowMs = envs.RATE_LIMIT_GLOBAL_WINDOW_TEST;
+            max = envs.RATE_LIMIT_GLOBAL_MAX_TEST;
+            break;
+        default:
+            // Fallback a valores de desarrollo
+            windowMs = envs.RATE_LIMIT_GLOBAL_WINDOW_DEVELOPMENT;
+            max = envs.RATE_LIMIT_GLOBAL_MAX_DEVELOPMENT;
     }
 
     return rateLimit({
@@ -38,7 +51,12 @@ const createGlobalLimiter = () => {
             res.status(429).json({
                 error: 'Límite de solicitudes excedido',
                 message: `Has excedido el límite de solicitudes globales. Por favor, espera ${Math.ceil(windowMs / 60000)} minutos.`,
-                statusCode: 429
+                statusCode: 429,
+                debug: envs.NODE_ENV === 'development' ? {
+                    environment: envs.NODE_ENV,
+                    limit: max,
+                    windowMs: `${Math.ceil(windowMs / 60000)} minutos`
+                } : undefined
             });
         }
     });
@@ -46,14 +64,27 @@ const createGlobalLimiter = () => {
 
 // Función para crear el limitador de autenticación con configuración según entorno
 const createAuthLimiter = () => {
-    // Valores predeterminados para producción
-    let windowMs = 60 * 60 * 1000; // 1 hora
-    let max = 5; // 5 intentos máximos por hora
+    let windowMs: number;
+    let max: number;
 
-    // Valores más permisivos para entorno de desarrollo/test
-    if (envs.NODE_ENV === 'development' || envs.NODE_ENV === 'test') {
-        windowMs = 10 * 60 * 1000; // 10 minutos
-        max = 100; // 100 intentos máximos
+    // Configuración según entorno usando variables de entorno
+    switch (envs.NODE_ENV) {
+        case 'production':
+            windowMs = envs.RATE_LIMIT_AUTH_WINDOW_PRODUCTION;
+            max = envs.RATE_LIMIT_AUTH_MAX_PRODUCTION;
+            break;
+        case 'development':
+            windowMs = envs.RATE_LIMIT_AUTH_WINDOW_DEVELOPMENT;
+            max = envs.RATE_LIMIT_AUTH_MAX_DEVELOPMENT;
+            break;
+        case 'test':
+            windowMs = envs.RATE_LIMIT_AUTH_WINDOW_TEST;
+            max = envs.RATE_LIMIT_AUTH_MAX_TEST;
+            break;
+        default:
+            // Fallback a valores de desarrollo
+            windowMs = envs.RATE_LIMIT_AUTH_WINDOW_DEVELOPMENT;
+            max = envs.RATE_LIMIT_AUTH_MAX_DEVELOPMENT;
     }
 
     return rateLimit({
@@ -70,11 +101,37 @@ const createAuthLimiter = () => {
                 message: `Has excedido el límite de intentos de inicio de sesión. Por favor, espera ${Math.ceil(windowMs / 60000)} minutos.`,
                 statusCode: 429,
                 remainingTime: `${remainingMinutes} minutos`,
-                intentosRestantes: req.rateLimit?.remaining || 0
+                intentosRestantes: req.rateLimit?.remaining || 0,
+                debug: envs.NODE_ENV === 'development' ? {
+                    environment: envs.NODE_ENV,
+                    limit: max,
+                    windowMs: `${Math.ceil(windowMs / 60000)} minutos`
+                } : undefined
             });
         },
         keyGenerator: (req) => {
-            return req.ip || req.headers['x-forwarded-for']?.toString() || 'default-ip';
+            // Intentar obtener la IP real de varias fuentes
+            const forwardedFor = req.headers['x-forwarded-for'];
+            const realIP = req.headers['x-real-ip'];
+            const clientIP = req.ip;
+
+            let finalIP = clientIP;
+
+            if (forwardedFor) {
+                // x-forwarded-for puede contener múltiples IPs separadas por coma
+                finalIP = Array.isArray(forwardedFor)
+                    ? forwardedFor[0]
+                    : forwardedFor.split(',')[0].trim();
+            } else if (realIP) {
+                finalIP = Array.isArray(realIP) ? realIP[0] : realIP;
+            }
+
+            // Si aún no tenemos IP, usar la IP de conexión
+            if (!finalIP || finalIP === '::1' || finalIP === '127.0.0.1') {
+                finalIP = req.connection?.remoteAddress || req.socket?.remoteAddress || 'unknown-ip';
+            }
+
+            return finalIP;
         }
     });
 };
@@ -96,25 +153,92 @@ const errorHandler = (err: any, req: Request, res: Response, next: NextFunction)
 };
 
 export class RateLimitMiddleware {
-    static getGlobalRateLimit() {
-        // Si estamos en modo test, retornamos un middleware vacío
-        if (envs.NODE_ENV === 'test') {
-            return (req: Request, res: Response, next: NextFunction) => next();
+    static getGlobalRateLimit(forceEnable: boolean = false) {
+        // En modo test, podemos deshabilitar completamente si los límites son 0
+        if (envs.NODE_ENV === 'test' && !forceEnable) {
+            // Si los valores de test son 0, deshabilitar completamente
+            if (envs.RATE_LIMIT_GLOBAL_MAX_TEST === 0) {
+                return (req: Request, res: Response, next: NextFunction) => next();
+            }
         }
-        
+
         return createGlobalLimiter();
     }
 
-    static getAuthRateLimit() {
-        // Si estamos en modo test, retornamos un middleware vacío
-        if (envs.NODE_ENV === 'test') {
-            return (req: Request, res: Response, next: NextFunction) => next();
+    static getAuthRateLimit(forceEnable: boolean = false) {
+        // En modo test, podemos deshabilitar completamente si los límites son 0
+        if (envs.NODE_ENV === 'test' && !forceEnable) {
+            // Si los valores de test son 0, deshabilitar completamente
+            if (envs.RATE_LIMIT_AUTH_MAX_TEST === 0) {
+                return (req: Request, res: Response, next: NextFunction) => next();
+            }
         }
-        
+
         return createAuthLimiter();
     }
 
     static getErrorHandler() {
         return errorHandler;
+    }
+
+    // Método útil para obtener la configuración actual
+    static getCurrentConfig() {
+        const env = envs.NODE_ENV;
+
+        let globalConfig, authConfig;
+
+        switch (env) {
+            case 'production':
+                globalConfig = {
+                    max: envs.RATE_LIMIT_GLOBAL_MAX_PRODUCTION,
+                    windowMs: envs.RATE_LIMIT_GLOBAL_WINDOW_PRODUCTION
+                };
+                authConfig = {
+                    max: envs.RATE_LIMIT_AUTH_MAX_PRODUCTION,
+                    windowMs: envs.RATE_LIMIT_AUTH_WINDOW_PRODUCTION
+                };
+                break;
+            case 'development':
+                globalConfig = {
+                    max: envs.RATE_LIMIT_GLOBAL_MAX_DEVELOPMENT,
+                    windowMs: envs.RATE_LIMIT_GLOBAL_WINDOW_DEVELOPMENT
+                };
+                authConfig = {
+                    max: envs.RATE_LIMIT_AUTH_MAX_DEVELOPMENT,
+                    windowMs: envs.RATE_LIMIT_AUTH_WINDOW_DEVELOPMENT
+                };
+                break;
+            case 'test':
+                globalConfig = {
+                    max: envs.RATE_LIMIT_GLOBAL_MAX_TEST,
+                    windowMs: envs.RATE_LIMIT_GLOBAL_WINDOW_TEST
+                };
+                authConfig = {
+                    max: envs.RATE_LIMIT_AUTH_MAX_TEST,
+                    windowMs: envs.RATE_LIMIT_AUTH_WINDOW_TEST
+                };
+                break;
+            default:
+                globalConfig = {
+                    max: envs.RATE_LIMIT_GLOBAL_MAX_DEVELOPMENT,
+                    windowMs: envs.RATE_LIMIT_GLOBAL_WINDOW_DEVELOPMENT
+                };
+                authConfig = {
+                    max: envs.RATE_LIMIT_AUTH_MAX_DEVELOPMENT,
+                    windowMs: envs.RATE_LIMIT_AUTH_WINDOW_DEVELOPMENT
+                };
+        }
+
+        return {
+            environment: env,
+            global: {
+                ...globalConfig,
+                windowMinutes: Math.ceil(globalConfig.windowMs / 60000)
+            },
+            auth: {
+                ...authConfig,
+                windowMinutes: Math.ceil(authConfig.windowMs / 60000)
+            }
+        };
     }
 }
