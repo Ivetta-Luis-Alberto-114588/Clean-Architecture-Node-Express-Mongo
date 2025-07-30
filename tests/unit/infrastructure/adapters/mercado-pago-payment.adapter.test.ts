@@ -25,6 +25,22 @@ describe('MercadoPagoPaymentAdapter', () => {
         );
     });
 
+    describe('createPreference (error y logging)', () => {
+        it('should log and throw on axios error', async () => {
+            const adapterOk = new MercadoPagoPaymentAdapter(
+                { accessToken: 'token' },
+                mockLogger
+            );
+            jest.spyOn(adapterOk, 'isConfigured').mockReturnValue(true);
+            // No se puede mockear método privado, así que solo mockeamos axios.post
+            jest.spyOn(require('axios'), 'post').mockRejectedValueOnce(new Error('fail'));
+            await expect(adapterOk.createPreference({
+                items: [{ id: '1', title: 't', quantity: 1, unitPrice: 1 }]
+            } as any)).rejects.toThrow();
+            expect(mockLogger.error).toHaveBeenCalled();
+        });
+    });
+
     describe('isConfigured', () => {
         it('should return true when access token is provided', () => {
             expect(adapter.isConfigured()).toBe(true);

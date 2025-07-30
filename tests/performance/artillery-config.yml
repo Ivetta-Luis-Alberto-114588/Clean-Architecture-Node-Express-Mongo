@@ -7,7 +7,7 @@
 
 export default {
   config: {
-    target: '{{ $processEnvironment.PERFORMANCE_TARGET || "https://sistema-mongo.onrender.com" }}',
+    target: '{{ $processEnvironment.PERFORMANCE_TARGET || "https://backend-ecomerce.tiendaonline.digital" }}',
     phases: [
       // Warmup phase - crítico para Render
       {

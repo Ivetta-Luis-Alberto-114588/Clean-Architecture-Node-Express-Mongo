@@ -44,6 +44,8 @@
     "test:performance:artillery": "jest --testPathPattern=tests/performance/artillery --detectOpenHandles --forceExit",
     "test:performance:endpoints": "jest --testPathPattern=tests/performance/endpoint-specific --detectOpenHandles --forceExit",
     "performance:warmup": "node -e \"const { warmupServer } = require('./dist/tests/performance/performance-utils'); warmupServer().then(() => console.log('Warmup complete')).catch(console.error);\"",
+    "test:production": "node test-production-load.js",
+    "test:production:quick": "node test-production-quick.js",
     "check:usage": "tsnd scripts/check-usage.ts",
     "monitor": "npm run check:usage",
     "monitor:watch": "nodemon scripts/check-usage.ts"

@@ -10,6 +10,10 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/tests/utils/setup.ts'],
   globalSetup: '<rootDir>/tests/utils/global-setup.ts',
   globalTeardown: '<rootDir>/tests/utils/global-teardown.ts',
+  moduleNameMapper: {
+    '^src/(.*)$': '<rootDir>/src/$1',
+    '^@/(.*)$': '<rootDir>/src/$1',
+  },
   // Excluir tests de performance del run por defecto
   testPathIgnorePatterns: [
     '/node_modules/',

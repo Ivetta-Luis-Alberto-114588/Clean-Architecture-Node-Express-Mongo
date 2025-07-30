@@ -17,9 +17,9 @@ export interface PerformanceConfig {
 }
 
 export const RENDER_CONFIG: PerformanceConfig = {
-    // URL de tu backend en Render (sin /api ya que se agrega en los endpoints)
-    baseUrl: 'https://sistema-mongo.onrender.com',
-    warmupUrl: 'https://sistema-mongo.onrender.com', // Endpoint raíz que devuelve "Running OK"
+    // URL de tu backend en producción (sin /api ya que se agrega en los endpoints)
+    baseUrl: 'https://backend-ecomerce.tiendaonline.digital',
+    warmupUrl: 'https://backend-ecomerce.tiendaonline.digital', // Endpoint raíz que devuelve "Running OK"
 
     // Configuración conservadora para Render free tier
     maxUsers: 30, // Máximo 30 usuarios concurrentes como solicitaste
