@@ -12,7 +12,7 @@ const BASE_URL = 'https://backend-ecomerce.tiendaonline.digital';
 
 // Configuración del test
 const TEST_CONFIG = {
-    maxUsers: 30,
+    maxUsers: 100,
     duration: 60, // 1 minuto
     timeout: 30000, // 30 segundos timeout
     warmupTime: 10000 // 10 segundos de warmup
@@ -105,7 +105,7 @@ async function testPublicEndpoints() {
 async function testIncrementalLoad() {
     console.log('\n🔄 Iniciando test de carga incremental...');
 
-    const loadLevels = [5, 10, 15, 20, 25, 30];
+    const loadLevels = [5, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
     for (const connections of loadLevels) {
         console.log(`\n📊 Testing con ${connections} conexiones concurrentes...`);

@@ -8,46 +8,47 @@ import { GenerateEmbeddingsUseCase } from "../../domain/use-cases/chatbot/genera
 import { LLMAdapter, LLMType } from "../../infrastructure/adapters/llm.adapter";
 
 export class ChatbotController {
-    private readonly llmAdapter = LLMAdapter.getInstance();
-    
+    public readonly llmAdapter = LLMAdapter.getInstance();
+
     constructor(
         private readonly chatRepository: ChatRepository
-    ) {}
+    ) { }
 
     private handleError = (error: unknown, res: Response) => {
         if (error instanceof CustomError) {
             return res.status(error.statusCode).json({ error: error.message });
         }
-        
+
         console.log("Error en ChatbotController:", error);
         return res.status(500).json({ error: "Error interno del servidor" });
     };
 
     // Procesar una consulta al chatbot
-    queryChatbot = (req: Request, res: Response): void => {
+    queryChatbot = async (req: Request, res: Response): Promise<void> => {
         const [error, chatQueryDto] = ChatQueryDto.create(req.body);
-        
         if (error) {
             res.status(400).json({ error });
             console.log("Error en controller.chatbot.queryChatbot:", error);
             return;
         }
-        
-        new QueryChatbotUseCase(this.chatRepository)
-            .execute(chatQueryDto!)
-            .then(data => res.json(data))
-            .catch(err => this.handleError(err, res));
+        try {
+            const data = await new QueryChatbotUseCase(this.chatRepository)
+                .execute(chatQueryDto!);
+            res.json(data);
+        } catch (err) {
+            this.handleError(err, res);
+        }
     };
 
     // Obtener una sesión específica
     getSession = (req: Request, res: Response): void => {
         const { sessionId } = req.params;
-        
+
         if (!sessionId) {
             res.status(400).json({ error: "ID de sesión requerido" });
             return;
         }
-        
+
         this.chatRepository.getSession(sessionId)
             .then(session => {
                 if (!session) {
@@ -68,41 +69,44 @@ export class ChatbotController {
     // Crear una nueva sesión
     createSession = (req: Request, res: Response): void => {
         const { userType = 'customer' } = req.body;
-        
+
         if (userType !== 'customer' && userType !== 'owner') {
             res.status(400).json({ error: "Tipo de usuario debe ser 'customer' o 'owner'" });
             return;
         }
-        
+
         this.chatRepository.createSession(userType)
             .then(session => res.json(session))
             .catch(err => this.handleError(err, res));
     };
 
     // Generar embeddings para los datos
-    generateEmbeddings = (req: Request, res: Response): void => {
-        new GenerateEmbeddingsUseCase(this.chatRepository)
-            .execute()
-            .then(() => res.json({ message: "Embeddings generados exitosamente" }))
-            .catch(err => this.handleError(err, res));
+    generateEmbeddings = async (req: Request, res: Response): Promise<void> => {
+        try {
+            await new GenerateEmbeddingsUseCase(this.chatRepository)
+                .execute();
+            res.json({ message: "Embeddings generados exitosamente" });
+        } catch (err) {
+            this.handleError(err, res);
+        }
     };
 
     // Cambiar el modelo LLM
     changeLLM = (req: Request, res: Response): void => {
         const { model } = req.body;
-        
+
         try {
             // Validar modelo
             if (!Object.values(LLMType).includes(model)) {
-                res.status(400).json({ 
-                    error: `Modelo no válido. Opciones disponibles: ${Object.values(LLMType).join(', ')}` 
+                res.status(400).json({
+                    error: `Modelo no válido. Opciones disponibles: ${Object.values(LLMType).join(', ')}`
                 });
             }
-            
+
             // Cambiar el modelo
             this.llmAdapter.setModel(model);
-            
-            res.json({ 
+
+            res.json({
                 message: `Modelo cambiado exitosamente a ${model}`,
                 currentModel: this.llmAdapter.getCurrentModel()
             });

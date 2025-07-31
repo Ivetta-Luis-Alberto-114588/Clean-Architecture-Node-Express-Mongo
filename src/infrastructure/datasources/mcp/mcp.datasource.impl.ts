@@ -202,7 +202,7 @@ export class MCPDataSourceImpl extends MCPDatasource {
         let customersResult;
         let total;
 
-        // Si hay parámetro search, usar búsqueda, si no, obtener todos
+        // Si hay parámetro search, usar búsqueda avanzada, si no, obtener todos
         if (search) {
             const [searchError, searchCustomersDto] = SearchCustomersDto.create({
                 q: search,
@@ -221,7 +221,7 @@ export class MCPDataSourceImpl extends MCPDatasource {
             total = searchResult.total;
         } else {
             customersResult = await this.customerRepository.getAll(paginationDto!);
-            total = customersResult.length; // Temporal hasta revisar el retorno del repository
+            total = (customersResult as any).total ?? customersResult.length;
         }
 
         return {
@@ -447,59 +447,85 @@ export class MCPDataSourceImpl extends MCPDatasource {
         }
     }
     private async handleSearchDatabase(args: Record<string, any>): Promise<MCPCallResult> {
-        const { query, entities = ['products', 'customers'] } = args;
+        const { query } = args;
+        // Determine entities to search; if not provided, default to both
+        const entities: string[] = Array.isArray(args.entities) ? args.entities : ['products', 'customers'];
 
         if (!query) {
             throw CustomError.badRequest("Query de búsqueda es requerido");
         }
 
         const results: any = {};
+        const errors: string[] = [];
 
-        try {
-            if (entities.includes('products')) {
-                const [paginationError, paginationDto] = PaginationDto.create(1, 5);
-                if (!paginationError) {
+        // Search products if requested
+        if (entities.includes('products')) {
+            const [paginationError, paginationDto] = PaginationDto.create(1, 5);
+            if (!paginationError) {
+                try {
                     const productsResult = await this.productRepository.getAll(paginationDto!);
-                    // Filtro simple por nombre/descripción
-                    const filteredProducts = productsResult.products.filter(p =>
-                        p.name.toLowerCase().includes(query.toLowerCase()) ||
-                        p.description.toLowerCase().includes(query.toLowerCase())
+                    // Asegurar que products sea un array
+                    let products: any[] = [];
+                    if (Array.isArray(productsResult)) {
+                        products = productsResult;
+                    } else if (productsResult && (productsResult as any).products) {
+                        products = (productsResult as any).products;
+                    }
+
+                    const filteredProducts = products.filter((p: any) =>
+                        (p.name && p.name.toLowerCase().includes(query.toLowerCase())) ||
+                        (p.description && p.description.toLowerCase().includes(query.toLowerCase()))
                     );
-                    results.products = filteredProducts.slice(0, 5);
+                    if (filteredProducts.length > 0) {
+                        results.products = filteredProducts.slice(0, 5);
+                    }
+                } catch (err: any) {
+                    errors.push(`Error buscando productos: ${err instanceof Error ? err.message : err}`);
                 }
             }
-
-            if (entities.includes('customers')) {
-                const [paginationError, paginationDto] = PaginationDto.create(1, 5);
-                if (!paginationError) {
-                    const customersResult = await this.customerRepository.getAll(paginationDto!);
-                    // Filtro simple por nombre/email
-                    const filteredCustomers = customersResult.filter(c =>
-                        c.name.toLowerCase().includes(query.toLowerCase()) ||
-                        c.email.toLowerCase().includes(query.toLowerCase())
-                    );
-                    results.customers = filteredCustomers.slice(0, 5);
-                }
-            }
-
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: JSON.stringify(results, null, 2),
-                    },
-                ],
-            };
-        } catch (error) {
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: "Error en búsqueda: " + (error instanceof Error ? error.message : 'Error desconocido'),
-                    },
-                ],
-            };
         }
+
+        // Search customers if requested
+        if (entities.includes('customers')) {
+            const [paginationError, paginationDto] = PaginationDto.create(1, 5);
+            if (!paginationError) {
+                try {
+                    const customersResult = await this.customerRepository.getAll(paginationDto!);
+                    // Asegurar que customers sea un array
+                    let customers: any[] = [];
+                    if (Array.isArray(customersResult)) {
+                        customers = customersResult;
+                    } else if (customersResult && (customersResult as any).customers) {
+                        customers = (customersResult as any).customers;
+                    }
+
+                    const filteredCustomers = customers.filter((c: any) =>
+                        (c.name && c.name.toLowerCase().includes(query.toLowerCase())) ||
+                        (c.email && c.email.toLowerCase().includes(query.toLowerCase()))
+                    );
+                    if (filteredCustomers.length > 0) {
+                        results.customers = filteredCustomers.slice(0, 5);
+                    }
+                } catch (err: any) {
+                    errors.push(`Error buscando clientes: ${err instanceof Error ? err.message : err}`);
+                }
+            }
+        }
+
+        // If any errors occurred, include them in the results
+        if (errors.length > 0) {
+            results.errors = errors;
+        }
+
+        // Always return content with results or empty object
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(results, null, 2),
+                },
+            ],
+        };
     }
 
     private async handleSearchCustomers(args: Record<string, any>): Promise<MCPCallResult> {
