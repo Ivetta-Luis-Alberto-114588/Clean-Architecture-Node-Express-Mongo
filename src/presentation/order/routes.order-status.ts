@@ -5,6 +5,7 @@ import { OrderStatusRepository } from "../../domain/repositories/order/order-sta
 import { OrderStatusRepositoryImpl } from "../../infrastructure/repositories/order/order-status.repository.impl";
 import { OrderStatusMongoDataSourceImpl } from "../../infrastructure/datasources/order/order-status.mongo.datasource.impl";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { ADMIN_ROLES } from "../../configs/roles";
 
 export class OrderStatusRoutes {
     static get routes(): Router {
@@ -20,41 +21,41 @@ export class OrderStatusRoutes {
 
         // Rutas protegidas (solo para administradores)
         // Aplicar middleware directamente a cada ruta protegida
-        router.get('/', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+        router.get('/',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             orderStatusController.getOrderStatuses
         );
-        router.post('/', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+        router.post('/',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             orderStatusController.createOrderStatus
         );
-        router.get('/:id', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+        router.get('/:id',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             orderStatusController.getOrderStatusById
         );
-        router.put('/:id', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+        router.put('/:id',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             orderStatusController.updateOrderStatus
         );
-        router.patch('/:id/transitions', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+        router.patch('/:id/transitions',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             orderStatusController.updateOrderStatusTransitions
         );
-        router.delete('/:id', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+        router.delete('/:id',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             orderStatusController.deleteOrderStatus
         );
 
         // Validación de transiciones
-        router.post('/validate-transition', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+        router.post('/validate-transition',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             orderStatusController.validateTransition
         );
 
