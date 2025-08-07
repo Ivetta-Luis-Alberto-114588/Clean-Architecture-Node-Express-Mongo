@@ -5,6 +5,7 @@ import { PaymentMethodController } from "./controller.payment-method";
 import { PaymentMethodMongoDataSourceImpl } from "../../infrastructure/datasources/payment/payment-method.mongo.datasource.impl";
 import { PaymentMethodRepositoryImpl } from "../../infrastructure/repositories/payment/payment-method.repository.impl";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
+import { ADMIN_ROLES } from "../../configs/roles";
 
 export class PaymentMethodRoutes {
     static get routes(): Router {
@@ -23,27 +24,27 @@ export class PaymentMethodRoutes {
         // Aplicar middleware directamente a cada ruta protegida
         router.get('/', 
             AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+            AuthMiddleware.checkRole(ADMIN_ROLES), 
             paymentMethodController.getPaymentMethods
         );
         router.post('/', 
             AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+            AuthMiddleware.checkRole(ADMIN_ROLES), 
             paymentMethodController.createPaymentMethod
         );
         router.get('/:id', 
             AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+            AuthMiddleware.checkRole(ADMIN_ROLES), 
             paymentMethodController.getPaymentMethodById
         );
         router.put('/:id', 
             AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+            AuthMiddleware.checkRole(ADMIN_ROLES), 
             paymentMethodController.updatePaymentMethod
         );
         router.delete('/:id', 
             AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(['ADMIN_ROLE']), 
+            AuthMiddleware.checkRole(ADMIN_ROLES), 
             paymentMethodController.deletePaymentMethod
         );
 
