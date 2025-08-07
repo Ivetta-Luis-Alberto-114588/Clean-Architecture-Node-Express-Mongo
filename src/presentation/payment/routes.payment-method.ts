@@ -22,29 +22,29 @@ export class PaymentMethodRoutes {
 
         // Rutas protegidas (solo para administradores)
         // Aplicar middleware directamente a cada ruta protegida
-        router.get('/', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(ADMIN_ROLES), 
+        router.get('/',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             paymentMethodController.getPaymentMethods
         );
-        router.post('/', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(ADMIN_ROLES), 
+        router.post('/',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             paymentMethodController.createPaymentMethod
         );
-        router.get('/:id', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(ADMIN_ROLES), 
+        router.get('/:id',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             paymentMethodController.getPaymentMethodById
         );
-        router.put('/:id', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(ADMIN_ROLES), 
+        router.put('/:id',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             paymentMethodController.updatePaymentMethod
         );
-        router.delete('/:id', 
-            AuthMiddleware.validateJwt, 
-            AuthMiddleware.checkRole(ADMIN_ROLES), 
+        router.delete('/:id',
+            AuthMiddleware.validateJwt,
+            AuthMiddleware.checkRole(ADMIN_ROLES),
             paymentMethodController.deletePaymentMethod
         );
 

@@ -1,5 +1,5 @@
 describe('AdminRoutes', () => {
-  it('should be defined', () => {
-    expect(true).toBe(true);
-  });
+    it('should be defined', () => {
+        expect(true).toBe(true);
+    });
 });
